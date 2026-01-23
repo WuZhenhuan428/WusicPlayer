@@ -1,0 +1,100 @@
+#include "PlaylistManager.h"
+
+PlaylistManager::PlaylistManager(QObject *parent)
+    : QObject(parent)
+{
+
+}
+
+PlaylistManager::~PlaylistManager() {}
+
+
+void PlaylistManager::clearList() {
+    m_list.clear();
+}
+
+void PlaylistManager::createList() {
+    QString default_name = QString("New playlist %1").arg(m_list.size()+1);
+    Playlist temp;
+    temp.setPlaylistName(default_name);
+    m_list.push_back(temp);
+
+    emit updatePlaylist();
+}
+
+void PlaylistManager::loadList(const QString& filepath) {
+    qDebug() << "[INFO] Stub of load file: " << filepath;
+    Playlist dst = Audio::parse_list_file(fp);
+    dst.newUuid();
+    m_list.push_back(dst);
+    emit updatePlaylist();
+}
+
+void PlaylistManager::removeList(QUuid& uuid) {
+    Playlist* dst = findPlaylistById(uuid);
+    if (!dst) {
+        qDebug() << "[WARNING] Playlist " << uuid <<"not found";
+        return;
+    }
+    m_currentPlaylist = getNextPlaylist();
+    m_list.erase(*dst);
+}
+
+void PlaylistManager::copyList(const QUuid& src_uuid) {
+    Playlist* dst = findPlaylistById(src_uuid);
+    if (!dst) {
+        qDebug() << "[WARNING] Source playlist " << src_uuid <<"not found";
+        return;
+    }
+    dst->newUuid();
+    m_list.push_back(*dst);
+    emit updatePlaylist();
+}
+
+bool PlaylistManager::isEmpty() {
+    m_list.shrink_to_fit();
+    if (m_list.size() == 0) {
+        return true;
+    }
+    return false;
+}
+
+
+void PlaylistManager::addTrackToPlaylist(const QUuid& playlistId, const QString& filepath) {
+    Playlist* dstList = findPlaylistById(playlistId);
+    if (!dstList) {
+        qDebug() << "[WARNING] Playlist id " << playlistId.toString() << "not found";
+        return;
+    }
+    qDebug() << "[INFO] Add track " << filepath << "to " << playlistId.toString();
+
+    Track newTrack = dstList->addTrack(filepath);
+    TrackMetaData meta = Audio::parse(filepath);
+    meta.uuid = newTrack.uuid;
+    
+    m_metaRepo.insert(meta.uuid, meta);
+}
+
+void PlaylistManager::setPlayMode(PlayMode mode) {
+    if (mode == PlayMode::shuffle_track) {
+        std::random_shuffle(m_playbackQueue.begin(), m_playbackQueue.end());
+    }
+    // other mode...
+
+    emit playbackQueueChanged();
+}
+
+void PlaylistManager::sortByAlbum() {
+    std::sort(
+        m_playbackQueue.begin(),
+        m_playbackQueue.end(),
+        [this](const QUuid& a, const QUuid& b){
+            return m_metaRepo[a].artist < m_metaRepo[b].artist;
+        }
+    );
+    emit playbackQueueChanged();
+}
+
+Playlist* PlaylistManager::findPlaylistById(const QUuid& uuid) {
+
+}

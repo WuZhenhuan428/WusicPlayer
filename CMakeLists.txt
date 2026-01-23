@@ -1,0 +1,65 @@
+cmake_minimum_required(VERSION 3.19)
+project(WusicPlayer LANGUAGES CXX)
+
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Multimedia)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(TAGLIB REQUIRED taglib)
+
+qt_standard_project_setup()
+
+qt_add_executable(WusicPlayer
+    WIN32 MACOSX_BUNDLE
+    main.cpp
+    mainwindow.cpp
+    mainwindow.h
+    player.h player.cpp
+    wtimeprogress.h wtimeprogress.cpp
+
+    # include
+    include/audio.h
+    include/header.h
+
+    # src/playlist
+    src/playlist/playlist.cpp
+    src/playlist/playlist.h
+    src/playlist/playlist_context.cpp
+    src/playlist/playlist_context.h
+    src/playlist/playlist_manager.cpp
+    src/playlist/playlist_manager.h
+    src/playlist/playlist_repo.cpp
+    src/playlist/playlist_repo.h
+    src/playlist/playlist_view_model.cpp
+    src/playlist/playlist_view_model.h
+)
+
+target_include_directories(WusicPlayer
+    PRIVATE
+        src/playlist
+        include
+        ${TAGLIB_INCLUDE_DIRS}
+)
+
+target_link_libraries(WusicPlayer
+    PRIVATE
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Multimedia
+        ${TAGLIB_LIBRARIES}
+)
+
+include(GNUInstallDirs)
+
+install(TARGETS WusicPlayer
+    BUNDLE  DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+qt_generate_deploy_app_script(
+    TARGET WusicPlayer
+    OUTPUT_SCRIPT deploy_script
+    NO_UNSUPPORTED_PLATFORM_ERROR
+)
+install(SCRIPT ${deploy_script})
