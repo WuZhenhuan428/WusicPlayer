@@ -22,8 +22,8 @@ public:
 // Playlist management
 public:
     void clearList();
-    void createList();
-    void loadList(const QString& filepath);
+    QUuid createList();
+    QUuid loadList(const QString& filepath);
     void saveList(const QUuid& uuid, const QString& toPath);
     void removeList(QUuid& uuid);
     void copyList(const QUuid& src);

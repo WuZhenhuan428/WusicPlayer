@@ -6,6 +6,8 @@
 MainWindow::MainWindow(Player* player, QWidget *parent)
     : m_player(player), QMainWindow(parent)
 {
+    m_playlistManager = new PlaylistManager(this);
+    
     this->setMinimumSize(800, 600);
     this->initUI();
     this->initConnection();
@@ -21,8 +23,10 @@ void MainWindow::initConnection()
     connect(btnStop, &QPushButton::clicked, m_player, &Player::stop);
 
     // Menu
-    /// Select a file & get filepath
     connect(actOpenFile, &QAction::triggered, this, &MainWindow::onOpenFile);
+    connect(actLoadPlaylist, &QAction::triggered, this, &MainWindow::onLoadPlaylist);
+    connect(actSaveCurrPlaylist, &QAction::triggered, this, &MainWindow::onSaveCurrPlaylist);
+
     connect(actExit, &QAction::triggered, this, &QWidget::close);
     connect(actAbout, &QAction::triggered, this, [=](){
         QMessageBox* msg = new QMessageBox(this);
@@ -36,6 +40,7 @@ void MainWindow::initConnection()
 
     // read file
     connect(this, &MainWindow::filepathChanged, m_player, &Player::read);
+    connect(this, &MainWindow::loadPlaylist, m_playlistManager, &PlaylistManager::loadPlaylist);
 
     connect(m_player, &Player::stateChanged, this, &MainWindow::onPlayerStateChanged);
     
@@ -57,7 +62,10 @@ void MainWindow::initConnection()
     });
 
     // main window: playlist & song table
-    // connect(playlistTree, &QTreeWidget::currentItemChanged, this, );
+    connect(m_playlistManager, &PlaylistManager::requestPlay, m_player, &Player::read);
+    connect(songTableView, &QTableView::doubleClicked, this, [this](const QModelIndex &index){
+        m_playlistManager->play(index.row());
+    });
 }
 
 void MainWindow::initUI()
@@ -68,7 +76,11 @@ void MainWindow::initUI()
     menuFile = new QMenu("&File");
     actOpenFile = new QAction("&Open");
     actExit = new QAction("&Exit");
+    actLoadPlaylist = new QAction("&Load playlist");
+    actSaveCurrPlaylist = new QAction("&Save current playlist");
     menuFile->addAction(actOpenFile);
+    menuFile->addAction(actLoadPlaylist);
+    menuFile->addAction(actSaveCurrPlaylist);
     menuFile->addSeparator();
     menuFile->addAction(actExit);
     mainMenuBar->addMenu(menuFile);
@@ -131,6 +143,9 @@ void MainWindow::initUI()
     QTreeWidgetItem* favorites = new QTreeWidgetItem(playlistTree, QStringList() << "MyFavorite");
     QTreeWidgetItem* recently = new QTreeWidgetItem(playlistTree, QStringList() << "Recently");
     songTableView = new QTableView();
+    songTableView->setModel(m_playlistManager->getViewModel());
+    songTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    songTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     mainSplitter->addWidget(playlistTree);
     mainSplitter->addWidget(songTableView);
@@ -141,8 +156,7 @@ void MainWindow::initUI()
     setCentralWidget(mainSplitter);
 }
 
-void MainWindow::onOpenFile()
-{
+void MainWindow::onOpenFile() {
     QString filepath = QFileDialog::getOpenFileName(
         this,
         tr("Open Audio File"),
@@ -154,7 +168,22 @@ void MainWindow::onOpenFile()
         emit filepathChanged(filepath);
     }
     else {
-        qDebug() << "[INFO] filepath is empty.";
+        qDebug() << "[INFO] filepath is empty!";
+    }
+}
+
+void MainWindow::onLoadPlaylist() {
+    QString playlist_path = QFileDialog::getOpenFileName(
+        this,
+        tr("Open Playlist File"),
+        QString(),
+        tr("*.wcpl")
+    );
+
+    if (!playlist_path.isEmpty()) {
+        emit loadPlaylist(playlist_path);
+    } else {
+        qDebug() << "[INFO] playlist filepath is empty!";
     }
 }
 
@@ -175,5 +204,20 @@ void MainWindow::updatePosition(qint64 position_ms) {
     {
         sliderPostion->setValue(position_ms/1000);
         timeProgress->setCurrentTime(position_ms/1000);
+    }
+}
+
+void MainWindow::onSaveCurrPlaylist() {
+    QString filename = QFileDialog::getSaveFileName(
+        this,
+        tr("Save playlist file"),
+        QString(),
+        tr("*.wcpl")
+    );
+    if (!filename.isEmpty()) {
+        qDebug() << "[INFO] Save current playlist as " << filename;
+        m_playlistManager->saveCurrentPlaylist(filename);
+    } else {
+        qDebug() << "[INFO] Cancel saving current playlist";
     }
 }

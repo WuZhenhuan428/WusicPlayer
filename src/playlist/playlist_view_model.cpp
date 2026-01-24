@@ -1,4 +1,6 @@
 #include "playlist_view_model.h"
+#include <QFileInfo>
+#include "../../include/audio.h"
 
 PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo)
     : m_repo(repo)
@@ -11,11 +13,16 @@ PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo)
 PlaylistViewModel::~PlaylistViewModel() {}
 
 void PlaylistViewModel::rebuild() {
+    beginResetModel(); // 通知 View 模型即将重置
     clear();
-    if (!m_repo) return;
+    if (!m_repo) {
+        endResetModel();
+        return;
+    }
 
     auto pl = m_repo->findPlaylistById(m_playlistId);
     if (!pl) {
+        endResetModel();
         return;
     }
 
@@ -23,11 +30,22 @@ void PlaylistViewModel::rebuild() {
 
     for (const auto& t : ts) {
         m_playbackQueue.append(t.uuid);
+        
+        // 此处进行同步元数据解析 (注意：大列表会导致 UI 卡顿)
+        TrackMetaData meta = Audio::parse(t.filepath.toStdString());
+        // Audio::parse 可能返回空 isValid=false，如果需要显示文件名作为备选，需处理
+        if (!meta.isValid || meta.title.isEmpty()) {
+            QFileInfo fi(t.filepath);
+            meta.title = fi.fileName(); // Fallback to filename
+        }
+        m_metaCache.insert(t.uuid, meta);
     }
+    
+    endResetModel(); // 通知 View 模型重置完成，进行刷新
 
     // sort(m_playtbackQueue, m_sort_type, m_sub_sort_type);
 
-    qDebug() << "[INFO] stub: rebuild playback list";
+    qDebug() << "[INFO] rebuild playback list with metadata. Size: " << m_playbackQueue.size();
 
     emit changedPlaybackQueue();
 }
@@ -54,13 +72,13 @@ int PlaylistViewModel::rowCount() const {
     return m_playbackQueue.size();
 }
 
-// QAbstractTableModel Interface
-int PlaylistViewModel::rowCount(const QModelIndex &parent = QModelIndex()) const {
+// +QAbstractTableModel Interface
+int PlaylistViewModel::rowCount(const QModelIndex &parent) const {
     return m_playbackQueue.size();
 }
 
-int PlaylistViewModel::columnCount(const QModelIndex &parent = QModelIndex()) const {
-    qDebug() << "[DEBUG] Let columnCount = 7";
+int PlaylistViewModel::columnCount(const QModelIndex &parent) const {
+    // qDebug() << "[DEBUG] Let columnCount = 6";
     return 6;
 }
 
@@ -69,16 +87,17 @@ QVariant PlaylistViewModel::data(const QModelIndex &index, int role) const {
         return QVariant();
     }
 
-    if (role = Qt::DisplayRole) {
-        const TrackMetaData& d = m_metaCache.find(m_playbackQueue.at(index.column())).value();
+    if (role == Qt::DisplayRole) {
+        // Use row() to get track ID
+        const TrackMetaData& d = m_metaCache.find(m_playbackQueue.at(index.row())).value();
         switch (index.column()) {
-        case 0: return d.disc_number;
-        case 1: return d.track_number;
-        case 2: return d.title;
-        case 3: return d.artist;
-        case 4: return d.duration_ms;
-        case 5: return d.album;
-        default: break;
+            case 0: return d.disc_number;
+            case 1: return d.track_number;
+            case 2: return d.title;
+            case 3: return d.artist;
+            case 4: return d.duration_s;
+            case 5: return d.album;
+            default: break;
         }
     }
     return QVariant();
@@ -95,14 +114,14 @@ QVariant PlaylistViewModel::headerData(int section, Qt::Orientation orientation,
         case 1: return "track_number";
         case 2: return "title";
         case 3: return "artist";
-        case 4: return "duration_ms";
+        case 4: return "duration_s";
         case 5: return "album";
         }
         qDebug() << "[WARNING] uncompleted: m_horizontalHead";
     }
     return QAbstractTableModel::headerData(section, orientation, role);
 }
-
+// -QAbstractTableModel Interface
 
 trackId PlaylistViewModel::trackAt(int index) const {
     return m_playbackQueue.at(index);

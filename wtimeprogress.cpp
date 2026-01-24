@@ -5,13 +5,13 @@ WTimeProgress::WTimeProgress(QWidget *parent)
 {
     hour_flag = 0;
     layout = new QHBoxLayout(this);
-    layout->setContentsMargins(5, 0, 5, 0); // ltrd
+    layout->setContentsMargins(5, 0, 5, 0); // direction: ltrd
     layout->setSpacing(5);
 
     // format: mm:ss/hh:ss
-    lbCurrTime = new QLabel("00:00", this);
+    lbCurrTime = new QLabel("00:00:00", this);
     lbSeparator = new QLabel("/", this);
-    lbTotalTime= new QLabel("00:00", this);
+    lbTotalTime= new QLabel("00:00:00", this);
 
     // Initialization
     setCurrentTime(0);
@@ -38,10 +38,10 @@ void WTimeProgress::setCurrentTime(const qint64& time_s) {
     lbCurrTime->setText(formatTime(time_s));
 }
 
-// time_s -> "mm:ss"
+// time_s -> "hh:mm:ss"
 QString WTimeProgress::formatTime(const qint64& time_s) {
     int hour = time_s/3600;
-    int min = time_s%3600;
+    int min = (time_s % 3600) / 60;
     int sec = time_s%60;
     return QString("%1:%2:%3")
         .arg(hour, 2, 10, QChar('0'))

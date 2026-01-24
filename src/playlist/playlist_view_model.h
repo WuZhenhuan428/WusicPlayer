@@ -65,7 +65,7 @@ public:
     void requestMetaData(const trackId& track_id);
 
 signals:
-    void changedPlaybackQueue();
+    void changedPlaybackQueue() {};
     void updatedTrackMetadata(const trackId& track_id);
     void changedData(int row);  // UI行刷新
     

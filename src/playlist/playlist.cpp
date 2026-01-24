@@ -6,11 +6,11 @@
 Playlist::Playlist(const QString& name) {
     m_name = name;
     m_uuid = QUuid::createUuid();
-    qDebug() << "[INFO] Create QUUID is: " << m_uuid.toString();
+    qDebug() << "[INFO] Create playlist quuid: " << m_uuid.toString();
 }
 
 Playlist::~Playlist() {
-    qDebug() << "[INFO] Remove QUUID is: " << m_uuid.toString();
+    qDebug() << "[INFO] Remove playlist uuid: " << m_uuid.toString();
 }
 
 /**

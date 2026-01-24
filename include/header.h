@@ -15,20 +15,25 @@ enum class PlayMode
 
 struct TrackMetaData
 {
-    QUuid uuid;
     QString filepath;
+
+    QString artist;
     QString album;
     QString album_artist;
-    QString artist;
+    QString lyrics;
     QString composer;
     QString date;
-    int disc_number;
+    int disc_number = 0;    // 2/3 -> disck_number / disc_total
+    int disc_total = 0;
+    QString comment;
+    QString genre;
+    int year = 0;
     QString encoder;
     QString title;
     int track_number;
-    // lyrics
-    unsigned int duration_ms;
-    unsigned start_at;
-    unsigned int bitrate;
-    // comment extend to cover / front / back...
+    int duration_s;
+    int start_at;
+    int bitrate;
+    // cover
+    bool isValid = false;
 };

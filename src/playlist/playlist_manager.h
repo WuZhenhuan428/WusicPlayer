@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QObject>
+#include <QString>
+#include <QUuid>
 
 #include "playlist_context.h"
 #include "playlist_repo.h"
@@ -19,20 +21,24 @@ public:
     ~PlaylistManager();
 
 public:
+    PlaylistViewModel* getViewModel();
+    const QUuid& getCurrentPlaylist() const;
 
 public slots:
     // receive signals from UI
     void createPlaylist();
     void removePlaylist();
     void copyPlaylist();
-    void loadPlaylist();
+    void loadPlaylist(const QString& playlist_path);
     void renamePlaylist();
-    void savePlaylist();
+    void saveCurrentPlaylist(const QString& save_path);
 
     void addTrack(const QString& filepath);
 
+    void play(int index);
 
 signals:
+    void requestPlay(const QString& filepath);
 
 private:
 
