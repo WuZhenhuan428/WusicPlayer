@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include <QHeaderView>
 
 #define SLIDER_VOLUME_MIN_WIDTH 80
 #define SLIDER_VOLUME_MAX_WIDTH 80
@@ -11,6 +12,8 @@ MainWindow::MainWindow(Player* player, QWidget *parent)
     this->setMinimumSize(800, 600);
     this->initUI();
     this->initConnection();
+    // refresh playlist view
+    refreshPlaylistTree();
 }
 
 MainWindow::~MainWindow() {}
@@ -24,7 +27,11 @@ void MainWindow::initConnection()
 
     // Menu
     connect(actOpenFile, &QAction::triggered, this, &MainWindow::onOpenFile);
+    connect(actAddFile, &QAction::triggered, this, &MainWindow::onAddFile);
+    connect(actAddFolder, &QAction::triggered, this, &MainWindow::onAddFolder);
+    connect(actNewPlaylist, &QAction::triggered, this, &MainWindow::onNewPlaylist);
     connect(actLoadPlaylist, &QAction::triggered, this, &MainWindow::onLoadPlaylist);
+    connect(actCopyPlaylist, &QAction::triggered, this, &MainWindow::onCopyPlaylist);
     connect(actSaveCurrPlaylist, &QAction::triggered, this, &MainWindow::onSaveCurrPlaylist);
 
     connect(actExit, &QAction::triggered, this, &QWidget::close);
@@ -39,8 +46,8 @@ void MainWindow::initConnection()
     });
 
     // read file
-    connect(this, &MainWindow::filepathChanged, m_player, &Player::read);
-    connect(this, &MainWindow::loadPlaylist, m_playlistManager, &PlaylistManager::loadPlaylist);
+    connect(this, &MainWindow::sgnFilepathChanged, m_player, &Player::read);
+    connect(this, &MainWindow::sgnLoadPlaylist, m_playlistManager, &PlaylistManager::loadPlaylist);
 
     connect(m_player, &Player::stateChanged, this, &MainWindow::onPlayerStateChanged);
     
@@ -66,6 +73,15 @@ void MainWindow::initConnection()
     connect(songTableView, &QTableView::doubleClicked, this, [this](const QModelIndex &index){
         m_playlistManager->play(index.row());
     });
+    connect(m_playlistManager, &PlaylistManager::playlistChanged, this, &MainWindow::updatePlaylist);
+    connect(playlistTree, &QTreeWidget::itemDoubleClicked, this,
+        [this](QTreeWidgetItem* item, int column) {
+            WPlayListWidgetItem* temp = dynamic_cast<WPlayListWidgetItem*>(item);
+            if(temp) {
+                m_playlistManager->switchToPlaylist(temp->id());
+            }
+        }
+    );
 }
 
 void MainWindow::initUI()
@@ -75,12 +91,22 @@ void MainWindow::initUI()
 
     menuFile = new QMenu("&File");
     actOpenFile = new QAction("&Open");
-    actExit = new QAction("&Exit");
+    actAddFile = new QAction("Add file");
+    actAddFolder = new QAction("Add folder");
+    actNewPlaylist = new QAction("New playlist");
     actLoadPlaylist = new QAction("&Load playlist");
+    actCopyPlaylist = new QAction("Copy playlist");
     actSaveCurrPlaylist = new QAction("&Save current playlist");
+    actExit = new QAction("&Exit");
     menuFile->addAction(actOpenFile);
+    menuFile->addSeparator();
+    menuFile->addAction(actAddFile);
+    menuFile->addAction(actAddFolder);
+    menuFile->addSeparator();
+    menuFile->addAction(actNewPlaylist);
     menuFile->addAction(actLoadPlaylist);
     menuFile->addAction(actSaveCurrPlaylist);
+    menuFile->addAction(actCopyPlaylist);
     menuFile->addSeparator();
     menuFile->addAction(actExit);
     mainMenuBar->addMenu(menuFile);
@@ -126,26 +152,33 @@ void MainWindow::initUI()
     bottomToolBar->addWidget(sliderVolume);
     addToolBar(Qt::BottomToolBarArea, bottomToolBar);
 
-    // Main window
+// Main window
     /// cover & lyrics
     coverSplitter = new QSplitter(Qt::Vertical, this);
     coverImageLabel = new QLabel();
     coverImageLabel->setPixmap(QPixmap("/home/wuzhenhuan/pictures/tieba_huaji.png"));
     lrcListView = new QListView;
+    // @TODO: Lyrics display
     coverSplitter->addWidget(coverImageLabel);
     coverSplitter->addWidget(lrcListView);
     coverSplitter->setStretchFactor(0, 1);
     coverSplitter->setStretchFactor(1, 1);
-    /// list & table with splitter
+    /// playlist & table with splitter
     mainSplitter = new QSplitter(Qt::Horizontal, this);
     playlistTree = new QTreeWidget();
     playlistTree->setHeaderLabel("Playlist");
-    QTreeWidgetItem* favorites = new QTreeWidgetItem(playlistTree, QStringList() << "MyFavorite");
-    QTreeWidgetItem* recently = new QTreeWidgetItem(playlistTree, QStringList() << "Recently");
+
     songTableView = new QTableView();
+    songTableView->setSelectionMode(QAbstractItemView::ContiguousSelection);
+    songTableView->horizontalHeader()->setSectionsMovable(true);
+    songTableView->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    songTableView->verticalHeader()->hide();
+    songTableView->horizontalHeader()->setHighlightSections(false);
+    songTableView->setShowGrid(false);
+    // @TODO: 保持Column对应
+    songTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     songTableView->setModel(m_playlistManager->getViewModel());
     songTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    songTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     mainSplitter->addWidget(playlistTree);
     mainSplitter->addWidget(songTableView);
@@ -165,7 +198,7 @@ void MainWindow::onOpenFile() {
     );
 
     if (!filepath.isEmpty()) {
-        emit filepathChanged(filepath);
+        emit sgnFilepathChanged(filepath);
     }
     else {
         qDebug() << "[INFO] filepath is empty!";
@@ -181,10 +214,15 @@ void MainWindow::onLoadPlaylist() {
     );
 
     if (!playlist_path.isEmpty()) {
-        emit loadPlaylist(playlist_path);
+        emit sgnLoadPlaylist(playlist_path);
     } else {
         qDebug() << "[INFO] playlist filepath is empty!";
     }
+}
+
+void MainWindow::onCopyPlaylist() {
+    const auto& temp = m_playlistManager->getCurrentPlaylist();
+    m_playlistManager->copyPlaylist(temp);
 }
 
 void MainWindow::onPlayerStateChanged(Player::State state) {
@@ -207,6 +245,7 @@ void MainWindow::updatePosition(qint64 position_ms) {
     }
 }
 
+// @TODO: set default type name
 void MainWindow::onSaveCurrPlaylist() {
     QString filename = QFileDialog::getSaveFileName(
         this,
@@ -220,4 +259,48 @@ void MainWindow::onSaveCurrPlaylist() {
     } else {
         qDebug() << "[INFO] Cancel saving current playlist";
     }
+}
+
+void MainWindow::refreshPlaylistTree() {
+    
+}
+
+void MainWindow::updatePlaylist() {
+    const auto& lists = m_playlistManager->getPlaylists();
+    this->playlistTree->clear();
+    for (const auto& list : lists) {
+        new WPlayListWidgetItem(this->playlistTree, list->name(), list->id());
+    }
+}
+
+void MainWindow::onAddFile() {
+    QString filepath = QFileDialog::getOpenFileName(
+        this,
+        tr("Open Audio File"),
+        QString(),
+        tr("*.mp3 *.wav *.flac")
+    );
+    if (!filepath.isEmpty()) {
+        m_playlistManager->addTrack(filepath);
+    } else {
+        qDebug() << "[INFO] Cancel adding track to current playlist.";
+    }
+}
+
+void MainWindow::onAddFolder() {
+    QString directory = QFileDialog::getExistingDirectory(
+        this,
+        tr("Select Folder"),
+        "/home",
+        QFileDialog::ShowDirsOnly
+    );
+    if (!directory.isEmpty()) {
+        m_playlistManager->addFolder(directory);
+    } else {
+        qDebug() << "[INFO] Cancel adding folder to current playlist.";
+    }
+}
+
+void MainWindow::onNewPlaylist() {
+    m_playlistManager->createPlaylist();
 }

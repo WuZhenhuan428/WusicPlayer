@@ -7,8 +7,9 @@ PlaylistManager::PlaylistManager(QObject* parent)
             , m_view, &PlaylistViewModel::setPlaylist);
 
     // Initialize with a default playlist
-    QUuid defaultId = m_repo->createList();
-    m_context->setPlaylist(defaultId);
+    // QUuid defaultId = m_repo->createList();
+    // m_context->setPlaylist(defaultId);
+    connect(m_repo, &PlaylistRepo::playlistChanged, this, &PlaylistManager::retransmissionPlaylistChanged);
 }
 
 PlaylistManager::~PlaylistManager() {}
@@ -21,9 +22,9 @@ void PlaylistManager::removePlaylist() {
     qDebug() << "[WARNING] stub: remove playlist";
 }
 
-void PlaylistManager::copyPlaylist() {
-    // m_repo->copyList(const QUuid &src);
-    qDebug() << "[WARNING] stub: copy-and-past playlist";
+void PlaylistManager::copyPlaylist(const QUuid& playlist_id) {
+    m_repo->copyList(playlist_id);
+    qDebug() << "[INFO] copy-and-paste playlist";
 }
 
 void PlaylistManager::loadPlaylist(const QString& playlist_path) {
@@ -47,9 +48,20 @@ void PlaylistManager::saveCurrentPlaylist(const QString& save_path) {
 void PlaylistManager::addTrack(const QString& filepath) {
     auto curr_playlist_id = m_context->getPlaylistId();
     m_repo->addTrackToPlaylist(curr_playlist_id, filepath);
-    qDebug() << "[INFO] Add track " << filepath << " to playlist " << curr_playlist_id;
 }
 
+
+/**
+ * @brief: PlaylistManager::addTrack的包装
+ */
+void PlaylistManager::addFolder(const QString& directory) {
+    const auto& files = Audio::findAll(directory.toStdString());
+    for(const auto& file : files) {
+        if (Audio::isAudioFile(file)) {
+            addTrack(file.c_str());
+        }
+    }
+}
 
 PlaylistViewModel* PlaylistManager::getViewModel() {
     return this->m_view;
@@ -71,4 +83,26 @@ void PlaylistManager::play(int index) {
 
 const QUuid& PlaylistManager::getCurrentPlaylist() const{
     return this->m_context->getPlaylistId();
+}
+
+QVector<PlaylistInfo> PlaylistManager::getAllPlaylists() {
+    QVector<PlaylistInfo> infos;
+
+    auto playlists = m_repo->getLists();
+    for(const auto& pl : playlists) {
+        infos.append({pl->id(), pl->name()});
+    }
+    return infos;
+}
+
+void PlaylistManager::retransmissionPlaylistChanged() {
+    emit playlistChanged();
+}
+
+void PlaylistManager::switchToPlaylist(const QUuid& id) {
+    m_context->setPlaylist(id);
+}
+
+QVector<std::shared_ptr<Playlist>> PlaylistManager::getPlaylists() {
+        return m_repo->getLists();
 }

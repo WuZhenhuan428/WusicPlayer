@@ -30,6 +30,7 @@ public:
     std::shared_ptr<Playlist> findPlaylistById(const QUuid& uuid);
     void addTrackToPlaylist(const QUuid& playlistId, const QString& filepath);
     bool isEmpty();
+    const QVector<std::shared_ptr<Playlist>>& getLists();
 
 signals:
     void playlistChanged();

@@ -24,8 +24,8 @@ public:
     ~Playlist();
 
     // Playlist metadata
-    QUuid id() const { return m_uuid; }
-    QString getPlaylistName();
+    QUuid id() const;
+    QString name();
     void setPlaylistName(QString setname);
     void newUuid();
     void newUuid(const QUuid& uuid);
@@ -33,7 +33,6 @@ public:
     // Modify & Manage
     void clearList();
     Track addTrack(const QString& filepath);
-    void addFolder(const QString& directory);
     void removeTrack(const QUuid& uuid);
 
     Track* findTrackByID(const QUuid& uuid);

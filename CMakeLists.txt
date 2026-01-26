@@ -16,6 +16,7 @@ qt_add_executable(WusicPlayer
     mainwindow.h
     player.h player.cpp
     wtimeprogress.h wtimeprogress.cpp
+    WPlayListWidgetItem.h
 
     # include
     include/audio.h

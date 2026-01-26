@@ -126,18 +126,16 @@ bool PlaylistRepo::isEmpty() {
     return false;
 }
 
-/**
- * @todo: 已经切换shared_ptr，确保shared_ptr的使用正确
- */
-//note: 关于使用QVector<Playlist*>类型：需要手动控制指针生命周期以及手动释放内存，不建议使用
 std::shared_ptr<Playlist> PlaylistRepo::findPlaylistById(const QUuid& uuid) {
-    qDebug() << "[DEBUG] current uuid is: " << uuid.toString();
     for (const auto& it : m_list) {
         if (it->id() == uuid) {
-            qDebug() << "[DEBUG] iterator's uuid is: " << it->id().toString();
             return it;
         }
     }
     qDebug() << "[WARNING] Playlist does not exist, UUID=" << uuid.toString();
     return nullptr;
+}
+
+const QVector<std::shared_ptr<Playlist>>& PlaylistRepo::getLists() {
+        return m_list;
 }

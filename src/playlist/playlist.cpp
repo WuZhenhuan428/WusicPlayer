@@ -28,20 +28,8 @@ Track Playlist::addTrack(const QString& filepath) {
     Track t;
     t.filepath = filepath;
     m_tracks.push_back(t);
-    qDebug() << "[INFO] Add uuid: " << t.uuid << "filepath: " << t.filepath;
+    qDebug() << "[INFO] Add uuid:" << t.uuid << "filepath:" << t.filepath;
     return t;
-}
-
-/**
- * @brief: 递归查找指定目录，并添加音频文件
- */
-void Playlist::addFolder(const QString& directory) {
-    auto files = Audio::findAll(directory.toStdString());
-    for (const auto& file : files) {
-        if (Audio::isAudioFile(file)) {
-            addTrack(QString::fromStdString(file.string()));
-        }
-    }
 }
 
 /**
@@ -70,7 +58,11 @@ bool Playlist::isEmpty() {
     return m_tracks.empty();
 };
 
-QString Playlist::getPlaylistName() {
+QUuid Playlist::id() const {
+    return m_uuid;
+}
+
+QString Playlist::name() {
     return m_name;
 }
 
