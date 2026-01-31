@@ -11,8 +11,7 @@
 #include <taglib/tpropertymap.h>
 #include <taglib/tstring.h>
 
-#include "header.h"
-#include "../../src/playlist/playlist.h"
+#include "../../src/playlist/playlist_definitions.h"
 
 #include <QString>
 

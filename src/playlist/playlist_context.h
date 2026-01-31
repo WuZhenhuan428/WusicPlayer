@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "../../include/header.h"
 #include "playlist.h"
 
 #include <QObject>

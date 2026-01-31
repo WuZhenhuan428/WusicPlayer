@@ -37,14 +37,17 @@ public:
 public slots:
     // receive signals from UI
     void createPlaylist();
-    void removePlaylist();
+    void removePlaylist(const QUuid& to_remove_uuid);
     void copyPlaylist(const QUuid& playlist_id);
     void loadPlaylist(const QString& playlist_path);
-    void renamePlaylist();
+    void renamePlaylist(const QUuid& src_uuid, const QString dst_name);
     void saveCurrentPlaylist(const QString& save_path);
 
     void addTrack(const QString& filepath);
     void addFolder(const QString& directory);
+
+    QString nextTrack();
+    QString prevTrack();
 
     void retransmissionPlaylistChanged();
     void switchToPlaylist(const QUuid& id);

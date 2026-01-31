@@ -3,6 +3,8 @@
 #include <QTextStream>
 #include <QFileInfo>
 
+#include <chrono>
+
 PlaylistRepo::PlaylistRepo(QObject *parent)
     : QObject(parent)
 {}
@@ -74,7 +76,7 @@ void PlaylistRepo::saveList(const QUuid& uuid, const QString& toPath) {
     qDebug() << "[INFO] Saved playlist to:" << toPath;
 }
 
-void PlaylistRepo::removeList(QUuid& uuid) {
+void PlaylistRepo::removeList(const QUuid& uuid) {
     std::shared_ptr<Playlist> src = findPlaylistById(uuid);
     if (!src) {
         qDebug() << "[WARNING] Playlist " << uuid <<"not found";
@@ -115,6 +117,20 @@ void PlaylistRepo::addTrackToPlaylist(const QUuid& playlistId, const QString& fi
     qDebug() << "[INFO] Add track " << filepath << "to " << playlistId.toString();
 
     Track newTrack = src->addTrack(filepath);
+    emit playlistChanged();
+}
+
+void PlaylistRepo::addTracksToPlaylist(const QUuid& playlistId, const QStringList& filepaths) {
+    std::shared_ptr<Playlist> src = findPlaylistById(playlistId);
+    if (!src) {
+        qDebug() << "[WARNING] Playlist id " << playlistId.toString() << "not found";
+        return;
+    }
+    qDebug() << "[INFO] Add " << filepaths.size() << " tracks to " << playlistId.toString();
+
+    for (const auto& filepath : filepaths) {
+        src->addTrack(filepath);
+    }
     emit playlistChanged();
 }
 

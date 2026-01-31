@@ -6,9 +6,6 @@ PlaylistManager::PlaylistManager(QObject* parent)
     connect(m_context, &PlaylistContext::changedCurrentListId
             , m_view, &PlaylistViewModel::setPlaylist);
 
-    // Initialize with a default playlist
-    // QUuid defaultId = m_repo->createList();
-    // m_context->setPlaylist(defaultId);
     connect(m_repo, &PlaylistRepo::playlistChanged, this, &PlaylistManager::retransmissionPlaylistChanged);
 }
 
@@ -18,13 +15,23 @@ void PlaylistManager::createPlaylist() {
     m_repo->createList();
 }
 
-void PlaylistManager::removePlaylist() {
-    qDebug() << "[WARNING] stub: remove playlist";
+void PlaylistManager::removePlaylist(const QUuid& to_remove_uuid) {
+    const auto& pl = m_repo->findPlaylistById(to_remove_uuid);
+    if (!pl) return;
+
+    m_repo->removeList(to_remove_uuid);
+    if (m_context->getPlaylistId() == to_remove_uuid) {
+        auto remaining = m_repo->getLists();
+        if (!remaining.isEmpty()) {
+            m_context->setPlaylist(remaining.first()->id());
+        } else {
+            m_context->setPlaylist(QUuid());
+        }
+    }
 }
 
 void PlaylistManager::copyPlaylist(const QUuid& playlist_id) {
     m_repo->copyList(playlist_id);
-    qDebug() << "[INFO] copy-and-paste playlist";
 }
 
 void PlaylistManager::loadPlaylist(const QString& playlist_path) {
@@ -34,8 +41,16 @@ void PlaylistManager::loadPlaylist(const QString& playlist_path) {
     }
 }
 
-void PlaylistManager::renamePlaylist() {
-    qDebug() << "[WARNING] stub: rename playlist";
+void PlaylistManager::renamePlaylist(const QUuid& src_uuid, const QString dst_name) {
+    const auto& temp = m_repo->findPlaylistById(src_uuid);
+    if (temp) {
+        auto src_name = temp->name();
+        temp->setPlaylistName(dst_name);
+        emit m_repo->playlistChanged();
+        qDebug() << "[INFO] set playlist" << src_name << "to" <<temp->name();
+    } else {
+        qDebug() << "[WARNING] Playlist" << src_uuid << "does not exist";
+    }
 }
 
 void PlaylistManager::saveCurrentPlaylist(const QString& save_path) {
@@ -47,6 +62,14 @@ void PlaylistManager::saveCurrentPlaylist(const QString& save_path) {
 
 void PlaylistManager::addTrack(const QString& filepath) {
     auto curr_playlist_id = m_context->getPlaylistId();
+    if (curr_playlist_id.isNull()) {
+        m_repo->createList();
+        auto lists = m_repo->getLists();
+        if (!lists.isEmpty()) {
+            curr_playlist_id = lists.last()->id();
+            m_context->setPlaylist(curr_playlist_id);
+        }
+    }
     m_repo->addTrackToPlaylist(curr_playlist_id, filepath);
 }
 
@@ -55,13 +78,61 @@ void PlaylistManager::addTrack(const QString& filepath) {
  * @brief: PlaylistManager::addTrack的包装
  */
 void PlaylistManager::addFolder(const QString& directory) {
-    const auto& files = Audio::findAll(directory.toStdString());
-    for(const auto& file : files) {
-        if (Audio::isAudioFile(file)) {
-            addTrack(file.c_str());
+    // +++ wrap to a method
+    auto curr_playlist_id = m_context->getPlaylistId();
+    if (curr_playlist_id.isNull()) {
+        m_repo->createList();
+        auto lists = m_repo->getLists();
+        if (!lists.isEmpty()) {
+            curr_playlist_id = lists.last()->id();
+            m_context->setPlaylist(curr_playlist_id);
         }
     }
+    // ---
+
+    const auto& files = Audio::findAll(directory.toStdString());
+    auto list = m_repo->findPlaylistById(curr_playlist_id);
+    list->m_tracks.reserve(list->m_tracks.size() + static_cast<int>(files.size()));
+    
+    QStringList tracksToAdd;
+    tracksToAdd.reserve(static_cast<int>(files.size()));
+
+    for(const auto& file : files) {
+        if (Audio::isAudioFile(file)) {
+            tracksToAdd.append(QString::fromStdString(file));
+        }
+    }
+
+    if (!tracksToAdd.isEmpty()) {
+        m_repo->addTracksToPlaylist(curr_playlist_id, tracksToAdd);
+    }
+    list->m_tracks.shrink_to_fit();
 }
+
+QString PlaylistManager::nextTrack() {
+    auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
+    auto next_id = m_view->nextOf(m_context->getPlayTrackId());
+    if (!next_id.isNull()) {
+        m_context->setPlayTrack(next_id);
+        auto track = pl->findTrackByID(next_id);
+        return track->filepath;
+    } else {
+        return QString();
+    }
+}
+
+QString PlaylistManager::prevTrack() {
+    auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
+    auto prev_id = m_view->previousOf(m_context->getPlayTrackId());
+    if (!prev_id.isNull()) {
+        m_context->setPlayTrack(prev_id);
+        auto track = pl->findTrackByID(prev_id);
+        return track->filepath;
+    } else {
+        return QString();
+    }
+}
+
 
 PlaylistViewModel* PlaylistManager::getViewModel() {
     return this->m_view;

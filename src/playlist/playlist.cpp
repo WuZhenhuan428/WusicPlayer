@@ -27,7 +27,7 @@ void Playlist::clearList() {
 Track Playlist::addTrack(const QString& filepath) {
     Track t;
     t.filepath = filepath;
-    m_tracks.push_back(t);
+    m_tracks.emplace_back(t);
     qDebug() << "[INFO] Add uuid:" << t.uuid << "filepath:" << t.filepath;
     return t;
 }

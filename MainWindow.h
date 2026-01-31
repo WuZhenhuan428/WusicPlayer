@@ -6,6 +6,8 @@
 #include <QString>
 #include "player.h"
 
+#include <QResizeEvent>
+
 #include <QMenuBar>
 #include <QToolBar>
 #include <QMenu>
@@ -15,6 +17,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QMessageBox>
 
 // TODO: complete list widgets
@@ -38,6 +41,9 @@ public:
     MainWindow(Player* player, QWidget *parent = nullptr);
     ~MainWindow();
 
+protected:
+    void resizeEvent(QResizeEvent *event) override;
+
 private:
     Player* m_player;
     PlaylistManager* m_playlistManager;
@@ -51,11 +57,12 @@ private:
     void onNewPlaylist();
     void onLoadPlaylist();
     void onCopyPlaylist();
-    void onSaveCurrPlaylist();
+    void onRenamePlaylist();
+    void onRemovePlaylist();
+    void onSavePlaylist();
     void onPlayerStateChanged(Player::State state);
 
-    // other
-    void refreshPlaylistTree();
+    void onTreeContextMenuRequested(const QPoint &pos);
     
     // UI Widgets declaraion
     /// Menu widgets
@@ -70,7 +77,9 @@ private:
     QAction* actNewPlaylist;
     QAction* actLoadPlaylist;
     QAction* actCopyPlaylist;
-    QAction* actSaveCurrPlaylist;
+    QAction* actRenamePlaylist;
+    QAction* actRemovePlaylist;
+    QAction* actSavePlaylist;
     QAction* actExit;
     
     QMenu* menuHelp;
@@ -81,6 +90,8 @@ private:
     QPushButton* btnPlay;
     QPushButton* btnPause;
     QPushButton* btnStop;
+    QPushButton* btnNext;
+    QPushButton* btnPrev;
     QPushButton* btnMute;
 
     /// Progress Bar: Position/Duration
@@ -92,9 +103,10 @@ private:
     /// Playlist | song table | cover & rolling lyrics
     QSplitter* mainSplitter;
     QTreeWidget* playlistTree;
-    QTableView* songTableView;
+    QTreeView* songTreeView;
 
     QSplitter* coverSplitter;
+    QPixmap* origin_cover;
     QLabel* coverImageLabel;
     QListView* lrcListView; // Temporarily used for placeholder purposes
 

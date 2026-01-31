@@ -1,20 +1,31 @@
 #include "playlist_view_model.h"
 #include <QFileInfo>
+#include <QTime>
+#include <algorithm>
 #include "../../include/audio.h"
 
 PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo)
     : m_repo(repo)
 {
+    m_root = new Node();
     if (m_repo) {
         connect(m_repo, &PlaylistRepo::playlistChanged, this, &PlaylistViewModel::rebuild);
     }
 }
 
-PlaylistViewModel::~PlaylistViewModel() {}
+PlaylistViewModel::~PlaylistViewModel() {
+    delete m_root;
+}
 
 void PlaylistViewModel::rebuild() {
-    beginResetModel(); // 通知 View 模型即将重置
-    clear();
+    beginResetModel();
+    
+    // Clear old data
+    delete m_root;
+    m_root = new Node();
+    m_playbackQueue.clear();
+    m_metaCache.clear();
+
     if (!m_repo) {
         endResetModel();
         return;
@@ -27,104 +38,204 @@ void PlaylistViewModel::rebuild() {
     }
 
     QVector<Track> ts = pl->getTracks();
+    QHash<QString, Node*> groupMap;
 
     for (const auto& t : ts) {
-        m_playbackQueue.append(t.uuid);
-        
-        // 此处进行同步元数据解析 (注意：大列表会导致 UI 卡顿)
         TrackMetaData meta = Audio::parse(t.filepath.toStdString());
-        // Audio::parse 可能返回空 isValid=false，如果需要显示文件名作为备选，需处理
         if (!meta.isValid || meta.title.isEmpty()) {
             QFileInfo fi(t.filepath);
-            meta.title = fi.fileName(); // Fallback to filename
+            meta.title = fi.fileName();
         }
         m_metaCache.insert(t.uuid, meta);
+
+        // Determine Parent Node (Group or Root)
+        Node* parentNode = m_root;
+
+        if (m_enableGrouping) {
+            QString key = getGroupKey(meta, m_groupType);
+            if (!groupMap.contains(key)) {
+                Node* groupNode = new Node(m_root);
+                groupNode->groupName = key;
+                m_root->children.append(groupNode);
+                groupMap.insert(key, groupNode);
+            }
+            parentNode = groupMap.value(key);
+        }
+
+        // Create Track Node
+        Node* trackNode = new Node(parentNode);
+        trackNode->id = t.uuid; // Only leaf nodes have IDs
+        parentNode->children.append(trackNode);
+    }
+
+    /* ==== @TODO sort ==== */
+    
+
+    // Re-populate playback queue (Linear representation)
+    if (m_enableGrouping) {
+        for (Node* group : m_root->children) {
+            for (Node* track : group->children) {
+                m_playbackQueue.append(track->id);
+            }
+        }
+    } else {
+         for (Node* track : m_root->children) {
+            m_playbackQueue.append(track->id);
+         }
     }
     
-    endResetModel(); // 通知 View 模型重置完成，进行刷新
-
-    // sort(m_playtbackQueue, m_sort_type, m_sub_sort_type);
-
-    qDebug() << "[INFO] rebuild playback list with metadata. Size: " << m_playbackQueue.size();
-
+    endResetModel();
+    qDebug() << "[INFO] rebuild finished. Queue size:" << m_playbackQueue.size();
     emit changedPlaybackQueue();
 }
 
-/* ==== Context & Repo 绑定 ==== */
+QString PlaylistViewModel::getGroupKey(const TrackMetaData& data, SortType type) {
+    switch (type) {
+        case SortType::Artist: return data.artist.isEmpty() ? "Unknown Artist" : data.artist;
+        case SortType::Album: return data.album.isEmpty() ? "Unknown Album" : data.album;
+        case SortType::Duration: return "Duration"; 
+        default: return "Other";
+    }
+}
+
 void PlaylistViewModel::setPlaylist(const playlistId& playlist_id) {
     if (m_playlistId == playlist_id) { return; }
     m_playlistId = playlist_id;
     this->rebuild();
 }
 
-void PlaylistViewModel::setSortMode(SortType sort_type) {
-    if (m_sort_type == sort_type) { return; }
-    m_sort_type = sort_type;
+void PlaylistViewModel::setGrouping(SortType type, bool enable) {
+    if (m_groupType == type && m_enableGrouping == enable) return;
+    m_groupType = type;
+    m_enableGrouping = enable;
+    rebuild();
 }
 
 void PlaylistViewModel::clear() {
+    beginResetModel();
+    delete m_root;
+    m_root = new Node();
     m_playbackQueue.clear();
     m_metaCache.clear();
+    endResetModel();
 }
 
-/* ==== View视图数据访问 ====*/
-int PlaylistViewModel::rowCount() const {
-    return m_playbackQueue.size();
+/* ==== QAbstractItemModel Interface ==== */
+
+QModelIndex PlaylistViewModel::index(int row, int column, const QModelIndex &parent) const {
+    if (!hasIndex(row, column, parent)) return QModelIndex();
+
+    Node* parentNode;
+    if (!parent.isValid())
+        parentNode = m_root;
+    else
+        parentNode = static_cast<Node*>(parent.internalPointer());
+
+    if (row < 0 || row >= parentNode->children.size()) return QModelIndex();
+    
+    Node* childNode = parentNode->children.at(row);
+    return createIndex(row, column, childNode);
 }
 
-// +QAbstractTableModel Interface
+QModelIndex PlaylistViewModel::parent(const QModelIndex &child) const {
+    if (!child.isValid()) return QModelIndex();
+
+    Node* childNode = static_cast<Node*>(child.internalPointer());
+    Node* parentNode = childNode->parent;
+
+    if (parentNode == m_root || !parentNode) return QModelIndex();
+
+    return createIndex(parentNode->row(), 0, parentNode);
+}
+
 int PlaylistViewModel::rowCount(const QModelIndex &parent) const {
-    return m_playbackQueue.size();
+    Node* parentNode;
+    if (parent.column() > 0) return 0;
+
+    if (!parent.isValid())
+        parentNode = m_root;
+    else
+        parentNode = static_cast<Node*>(parent.internalPointer());
+
+    return parentNode->children.size();
 }
 
 int PlaylistViewModel::columnCount(const QModelIndex &parent) const {
-    // qDebug() << "[DEBUG] Let columnCount = 6";
-    return 6;
+    return 7;
 }
 
 QVariant PlaylistViewModel::data(const QModelIndex &index, int role) const {
-    if (!index.isValid() || index.row() >= m_playbackQueue.size()) {
-        return QVariant();
+    if (!index.isValid()) return QVariant();
+
+    Node* node = static_cast<Node*>(index.internalPointer());
+    bool isGroup = node->id.isNull(); 
+
+    if (role == Qt::TextAlignmentRole && isGroup) {
+        return int(Qt::AlignLeft | Qt::AlignVCenter);
     }
 
     if (role == Qt::DisplayRole) {
-        // Use row() to get track ID
-        const TrackMetaData& d = m_metaCache.find(m_playbackQueue.at(index.row())).value();
+        // Group Logic
+        if (isGroup) {
+            if (index.column() == 0) {
+                return node->groupName + QString(" (%1)").arg(node->children.size());
+            }
+            return QVariant();
+        }
+
+        // Track Logic
+        if (!m_metaCache.contains(node->id)) return QVariant();
+        const TrackMetaData& d = m_metaCache.value(node->id);
+        
         switch (index.column()) {
-            case 0: return d.disc_number;
-            case 1: return d.track_number;
-            case 2: return d.title;
-            case 3: return d.artist;
-            case 4: return d.duration_s;
-            case 5: return d.album;
-            default: break;
+            case 0: return "[ ]";
+            case 1: return d.disc_number;
+            case 2: return d.track_number;
+            case 3: return d.title;
+            case 4: return d.artist;
+            case 5: {
+                // Time formatting
+                int time_s = d.duration_s;
+                int hours = time_s / 3600;
+                int mins = (time_s % 3600) / 60;
+                int secs = time_s % 60;
+                if (hours > 0) return QString("%1:%2:%3").arg(hours, 2, 10, QChar('0')).arg(mins, 2, 10, QChar('0')).arg(secs, 2, 10, QChar('0'));
+                return QString("%1:%2").arg(mins, 2, 10, QChar('0')).arg(secs, 2, 10, QChar('0'));
+            }
+            case 6: return d.album;
         }
     }
     return QVariant();
 }
 
 QVariant PlaylistViewModel::headerData(int section, Qt::Orientation orientation, int role) const {
-    if (role != Qt::DisplayRole) {
-        return QAbstractTableModel::headerData(section, orientation, role);
-    }
-
-    if (role == Qt::DisplayRole && orientation == Qt::Orientation::Horizontal) {
+    if (role != Qt::DisplayRole) return QVariant();
+    if (orientation == Qt::Horizontal) {
         switch (section) {
-        case 0: return "disc_number";
-        case 1: return "track_number";
-        case 2: return "title";
-        case 3: return "artist";
-        case 4: return "duration_s";
-        case 5: return "album";
+            case 0: return "state";
+            case 1: return "Disc";
+            case 2: return "#";
+            case 3: return "Title";
+            case 4: return "Artist";
+            case 5: return "Duration";
+            case 6: return "Album";
         }
-        qDebug() << "[WARNING] uncompleted: m_horizontalHead";
     }
-    return QAbstractTableModel::headerData(section, orientation, role);
+    return QVariant();
 }
-// -QAbstractTableModel Interface
+
+/* ==== Helpers ==== */
 
 trackId PlaylistViewModel::trackAt(int index) const {
-    return m_playbackQueue.at(index);
+    if (index >= 0 && index < m_playbackQueue.size())
+        return m_playbackQueue.at(index);
+    return QUuid();
+}
+
+trackId PlaylistViewModel::trackAt(const QModelIndex& index) const {
+    if (!index.isValid()) return QUuid();
+    Node* node = static_cast<Node*>(index.internalPointer());
+    return node->id; 
 }
 
 const QVector<trackId>& PlaylistViewModel::playbackQueue() const {
@@ -132,55 +243,29 @@ const QVector<trackId>& PlaylistViewModel::playbackQueue() const {
 }
 
 bool PlaylistViewModel::hasMetaData(const trackId& track_id) const {
-    // find in m_metaCache
-    auto t = m_metaCache.find(track_id);    //QUuid作为key无需考虑重复项
-    if (m_metaCache.contains(track_id)) {
-        return true;
-    }
-    return false;
+    return m_metaCache.contains(track_id);
 }
 
 TrackMetaData PlaylistViewModel::metaData(const trackId& track_id) const {
-    // need bound check?
-    return m_metaCache.find(track_id).value();
+    return m_metaCache.value(track_id);
 }
 
-
-/* ==== 播放顺序辅助（用于Player） ==== */
 trackId PlaylistViewModel::nextOf(const trackId& track_id) const {
-    for (auto it = m_playbackQueue.begin(); it != m_playbackQueue.end(); ++it) {
-        if (*it == track_id) {
-            if (it + 1 != m_playbackQueue.end()) {
-                return *(it + 1);
-            }
-            else {
-                // return what? circulation / null?
-                return QUuid();
-            }
-        }
+    int idx = m_playbackQueue.indexOf(track_id);
+    if (idx != -1 && idx < m_playbackQueue.size() - 1) {
+        return m_playbackQueue.at(idx + 1);
     }
     return QUuid();
 }
 
 trackId PlaylistViewModel::previousOf(const trackId& track_id) const {
-    for (auto it = m_playbackQueue.begin(); it != m_playbackQueue.end(); ++it) {
-        if (*it == track_id) {
-            if (it != m_playbackQueue.begin()) {
-                return *(it - 1);
-            }
-            else {
-                return QUuid();
-            }
-        }
+    int idx = m_playbackQueue.indexOf(track_id);
+    if (idx > 0) {
+        return m_playbackQueue.at(idx - 1);
     }
     return QUuid();
 }
 
-
-/* ==== 元数据请求 ==== */
 void PlaylistViewModel::requestMetaData(const trackId& track_id) {
-    if (m_metaCache.contains(track_id)) {
-        return;
-    }
-    // emit requestedMetaData();
+    // Sync parsing used currently
 }

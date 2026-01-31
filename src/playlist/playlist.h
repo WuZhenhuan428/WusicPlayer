@@ -42,9 +42,9 @@ public:
     // status
     bool isEmpty();
     
+    QVector<Track> m_tracks;    // @TODO: switch to QMap<QUuid, filepath>
 private:
     QString m_name;
-    QVector<Track> m_tracks;
     QUuid m_uuid;
 };
 

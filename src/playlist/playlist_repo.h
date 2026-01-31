@@ -9,7 +9,6 @@
 #include <memory>
 
 #include "playlist.h"
-#include "../../include/header.h"
 #include "../../include/audio.h"
 
 class PlaylistRepo : public QObject
@@ -25,10 +24,11 @@ public:
     QUuid createList();
     QUuid loadList(const QString& filepath);
     void saveList(const QUuid& uuid, const QString& toPath);
-    void removeList(QUuid& uuid);
+    void removeList(const QUuid& uuid);
     void copyList(const QUuid& src);
     std::shared_ptr<Playlist> findPlaylistById(const QUuid& uuid);
     void addTrackToPlaylist(const QUuid& playlistId, const QString& filepath);
+    void addTracksToPlaylist(const QUuid& playlistId, const QStringList& filepaths);
     bool isEmpty();
     const QVector<std::shared_ptr<Playlist>>& getLists();
 
