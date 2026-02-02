@@ -30,6 +30,7 @@ public:
 
 public:
     PlaylistViewModel* getViewModel();
+    const QString& getCurrentTrack();
     const QUuid& getCurrentPlaylist() const;
     QVector<PlaylistInfo> getAllPlaylists();
     QVector<std::shared_ptr<Playlist>> getPlaylists();

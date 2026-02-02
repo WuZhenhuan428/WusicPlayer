@@ -6,14 +6,22 @@
 #include <string>
 #include <sstream>
 
-#include <taglib/fileref.h>
 #include <taglib/tag.h>
+#include <taglib/id3v2tag.h>
+#include <taglib/id3v2header.h>
+#include <taglib/id3v2frame.h>
+#include <taglib/attachedpictureframe.h>
+#include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
 #include <taglib/tstring.h>
+#include <taglib/mpegfile.h>
+#include <taglib/flacfile.h>
 
 #include "../../src/playlist/playlist_definitions.h"
 
 #include <QString>
+#include <QPixmap>
+#include <QFileInfo>
 
 namespace fs = std::filesystem;
 
@@ -87,6 +95,68 @@ public:
         return {0, 0};
     }
 
+    static QPixmap parse_cover_to_qpixmap(const std::string& filepath) {
+        fs::path path(filepath);
+        std::string ext = path.extension().string();
+        // to lower
+        std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return std::tolower(c); });
+
+        if (ext == ".mp3") {
+            TagLib::MPEG::File file(filepath.c_str());
+            if (file.isValid() && file.hasID3v2Tag()) {
+                TagLib::ID3v2::Tag *tag = file.ID3v2Tag();
+                // 尝试获取 APIC (ID3v2.3/2.4) 或 PIC (ID3v2.2) 帧
+                TagLib::ID3v2::FrameList l = tag->frameList("APIC");
+                if (l.isEmpty()) {
+                    l = tag->frameList("PIC");
+                }
+
+                if(!l.isEmpty()) {
+                    TagLib::ID3v2::AttachedPictureFrame *selectedFrame = nullptr;
+
+                    // 1. 优先寻找类型为 FrontCover (0x03) 的图片
+                    for(auto* frame : l) {
+                        auto* picFrame = static_cast<TagLib::ID3v2::AttachedPictureFrame*>(frame);
+                        if (picFrame->type() == TagLib::ID3v2::AttachedPictureFrame::FrontCover) {
+                            selectedFrame = picFrame;
+                            break;
+                        }
+                    }
+
+                    // 2. 如果没找到 FrontCover，则默认使用第一张图片
+                    if (!selectedFrame) {
+                        selectedFrame = static_cast<TagLib::ID3v2::AttachedPictureFrame*>(l.front());
+                    }
+
+                    if (selectedFrame) {
+                        QPixmap pixmap;
+                        // 注意：这里需要确保数据有效性，loadFromData会自动探测格式
+                        pixmap.loadFromData(
+                            reinterpret_cast<const uchar*>(selectedFrame->picture().data()),
+                            selectedFrame->picture().size()
+                        );
+                        return pixmap;
+                    }
+                }
+            }
+        } 
+        else if (ext == ".flac") {
+             TagLib::FLAC::File file(filepath.c_str());
+             const TagLib::List<TagLib::FLAC::Picture*>& pictures = file.pictureList();
+             if (!pictures.isEmpty()) {
+                 TagLib::FLAC::Picture* pic = pictures.front();
+                 QPixmap pixmap;
+                 pixmap.loadFromData(
+                     reinterpret_cast<const uchar*>(pic->data().data()),
+                     pic->data().size()
+                 );
+                 return pixmap;
+             }
+        }
+
+        return QPixmap();
+    }
+
     static TrackMetaData parse(const std::string& filepath) {
         TrackMetaData meta;
 
@@ -95,6 +165,9 @@ public:
             meta.isValid = false;
             return meta;
         }
+
+        QFileInfo ff(QString::fromStdString(filepath));
+        meta.filename = ff.fileName();
 
         TagLib::Tag* tag = f.tag();
         // basic properties

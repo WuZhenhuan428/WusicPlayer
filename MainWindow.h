@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <QDebug>
 #include <QString>
-#include "player.h"
+#include "src/player/player.h"
 
 #include <QResizeEvent>
 

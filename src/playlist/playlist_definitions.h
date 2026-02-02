@@ -1,60 +1,56 @@
 #pragma once
 
 #include <QString>
+#include <QUuid>
 
 enum class SortType
 {
-    PlaceHolder = 0,
-    Album,
-    AlbumArtist,
-    Artist,
-    Bitrate,
-    Bpm,
-    Comment,
-    Composer,
-    Directory,
-    DiscNumber,
-    Filename,
-    Filesize,
-    Genre,
-    Labels,
-    Duration,     // seconds
-    SampleRate,
-    Source,
-    Title,
-    TitleWithTrackNum,
-    TrackNumber,
-    Year
+    not_sorted = 0,
+    album,
+    album_artist,
+    artist,
+    bitrate,
+    composer,
+    directory,
+    disc_number,
+    filename,
+    genre,
+    // labels,
+    title,
+    // title_with_disc_track,
+    track_number,
+    year
 };
 
 struct SortRule
 {
-    SortType column;
+    SortType type;
     Qt::SortOrder order = Qt::AscendingOrder;
 };
 
 struct TrackMetaData
 {
-    QString filepath;
-
-    QString artist;
+    // cover analysis separately
     QString album;
     QString album_artist;
-    QString lyrics;
+    QString artist;
+    int     bitrate;
+    QString comment;
     QString composer;
     QString date;
-    int disc_number = 0;    // 2/3 -> disck_number / disc_total
-    int disc_total = 0;
-    QString comment;
-    QString genre;
-    int year = 0;
+    int     disc_number = 0;    // 2/3 -> disck_number / disc_total
+    int     disc_total = 0;
+    int     duration_s;
     QString encoder;
+    QString filepath;
+    QString filename;
+    QString genre;
+    QString lyrics;
+    int     start_at;
     QString title;
-    int track_number;
-    int duration_s;
-    int start_at;
-    int bitrate;
-    // cover
+    int     track_number;
+    int     year = 0;
+
     bool isValid = false;
 };
 

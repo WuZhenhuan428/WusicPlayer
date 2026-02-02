@@ -48,7 +48,7 @@ QUuid PlaylistRepo::loadList(const QString& filepath) {
     
     m_list.push_back(new_playlist);
     emit playlistChanged();
-    qDebug() << "[INFO] Loaded playlist from:" << filepath;
+    qDebug() << "[INFO] Loading playlist from:" << filepath;
     return new_playlist->id();
 }
 
@@ -143,6 +143,8 @@ bool PlaylistRepo::isEmpty() {
 }
 
 std::shared_ptr<Playlist> PlaylistRepo::findPlaylistById(const QUuid& uuid) {
+    if (uuid.isNull()) return nullptr;
+
     for (const auto& it : m_list) {
         if (it->id() == uuid) {
             return it;

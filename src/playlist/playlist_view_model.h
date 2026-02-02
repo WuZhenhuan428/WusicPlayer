@@ -8,30 +8,14 @@
 #include <QModelIndex>
 #include <QStringList>
 
-
+#include "playlist.h"
 #include "playlist_repo.h"
 #include "playlist_definitions.h"
+#include "playlist_layout.h"
 
 
 using trackId = QUuid;
 using playlistId = QUuid;
-
-struct Node {
-    QUuid id; // Track UUID. If null, it's a group node.
-    QString groupName;
-    Node* parent = nullptr;
-    QVector<Node*> children;
-
-    int row() const {
-        if (parent) {
-            return parent->children.indexOf(const_cast<Node*>(this));
-        }
-        return 0;
-    }
-
-    explicit Node(Node* p = nullptr) : parent(p) {}
-    ~Node() { qDeleteAll(children); }
-};
 
 class PlaylistViewModel : public QAbstractItemModel
 {
@@ -48,7 +32,19 @@ public:
 /* ==== Context & Repo 绑定 ==== */
 public:
     void setPlaylist(const playlistId& playlist_id);
-    void setGrouping(SortType type, bool enable);
+
+    /**
+     * @brief Parse the DSL used to set the sorting rules
+     * @details format: `%key1% %key2% | %key3% %key4% ...`
+     * @todo ALL
+     */
+    void setSortExpression(const QString& expression);
+
+    /**
+     * @attention default group rule = title or filename if title does not exist
+     */
+    void setSingleGrouping(SortRule rule);
+    void setActiveTrack(const trackId& track_id);
     void clear();
 
 /* ==== View视图数据访问 ====*/
@@ -60,13 +56,19 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    /**
+     * @brief Inherited from QAbstractItemModel, When header is clicked, change the sort
+     *        state and rebuild table view automatically
+     * @todo map column to SortType
+     */
+    // void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
     // Helper to get logic data
     trackId trackAt(int index) const; // Still useful for linear queue access
     trackId trackAt(const QModelIndex& index) const;
     const QVector<trackId>& playbackQueue() const;
-    bool hasMetaData(const trackId& track_id) const;
-    TrackMetaData metaData(const trackId& track_id) const;
+
+    const Playlist& resolvePlaylist();
 
 /* ==== 播放顺序辅助（用于Player） ==== */
 public:
@@ -85,14 +87,12 @@ signals:
 private:
     PlaylistRepo* m_repo = nullptr;
     playlistId m_playlistId;
+    trackId m_activeTrackId;
     Node* m_root = nullptr;
 
-    QHash<trackId, TrackMetaData> m_metaCache;
     QVector<trackId> m_playbackQueue; // Linear queue for playback logic (separate from Tree structure)
-    QStringList m_horizontalHead;
 
-    SortType m_groupType = SortType::Artist;
-    bool m_enableGrouping = false;
+    PlaylistLayoutBuilder m_layoutBuilder;
 
     QString getGroupKey(const TrackMetaData& data, SortType type);
 };

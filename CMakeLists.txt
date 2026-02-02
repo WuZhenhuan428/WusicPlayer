@@ -13,25 +13,31 @@ qt_add_executable(WusicPlayer
     WIN32 MACOSX_BUNDLE
     main.cpp
     MainWindow.h MainWindow.cpp
-    player.h player.cpp
+    
     wtimeprogress.h wtimeprogress.cpp
     WPlayListWidgetItem.h
 
     # include
     include/audio.h
 
+    # src/player
+    src/player/player.h
+    src/player/player.cpp
+
     # src/playlist
-    src/playlist/playlist.cpp
-    src/playlist/playlist.h
-    src/playlist/playlist_context.cpp
-    src/playlist/playlist_context.h
-    src/playlist/playlist_manager.cpp
-    src/playlist/playlist_manager.h
-    src/playlist/playlist_repo.cpp
-    src/playlist/playlist_repo.h
-    src/playlist/playlist_view_model.cpp
-    src/playlist/playlist_view_model.h
     src/playlist/playlist_definitions.h
+    src/playlist/playlist.h
+    src/playlist/playlist.cpp
+    src/playlist/playlist_context.h
+    src/playlist/playlist_context.cpp
+    src/playlist/playlist_manager.h
+    src/playlist/playlist_manager.cpp
+    src/playlist/playlist_repo.h
+    src/playlist/playlist_repo.cpp
+    src/playlist/playlist_view_model.h
+    src/playlist/playlist_view_model.cpp
+    src/playlist/playlist_layout.cpp
+    src/playlist/playlist_layout.h
 )
 
 target_include_directories(WusicPlayer

@@ -2,14 +2,22 @@
 #include <QHeaderView>
 
 #include "src/playlist/playlist_definitions.h"
+#include "include/audio.h"
 
 #define SLIDER_VOLUME_MIN_WIDTH 80
 #define SLIDER_VOLUME_MAX_WIDTH 80
+#define DEFAULT_COVER_IMAGE_PATH "/home/wuzhenhuan/pictures/zhihu-meme.jpg"
 
 MainWindow::MainWindow(Player* player, QWidget *parent)
     : m_player(player), QMainWindow(parent)
 {
     m_playlistManager = new PlaylistManager(this);
+
+    // [Fix] Initialize view with default sort rules if needed, 
+    // or trigger a rebuild if playlist already exists
+    SortRule defaultRule;
+    defaultRule.type = SortType::album; // Or whatever default
+    m_playlistManager->getViewModel()->setSingleGrouping(defaultRule);
     
     this->setMinimumSize(800, 600);
     this->initUI();
@@ -83,7 +91,25 @@ void MainWindow::initConnection()
     });
 
     // main window: playlist & song table
-    connect(m_playlistManager, &PlaylistManager::requestPlay, m_player, &Player::read);
+    connect(m_playlistManager, &PlaylistManager::requestPlay, this, [this](QString filepath){
+        m_player->read(filepath);
+        QPixmap pix = Audio::parse_cover_to_qpixmap(filepath.toStdString());
+        if (!pix.isNull()) {
+            *origin_cover = pix;
+        } else {
+            origin_cover->load(DEFAULT_COVER_IMAGE_PATH);
+        }
+
+        int dst_side_lenth = this->geometry().width() / 5;
+        QPixmap scaled = origin_cover->scaled(
+            dst_side_lenth,
+            dst_side_lenth,
+            Qt::KeepAspectRatio,
+            Qt::SmoothTransformation
+        );
+        coverImageLabel->setFixedSize(dst_side_lenth, dst_side_lenth);
+        coverImageLabel->setPixmap(scaled);
+    });
 
     playlistTree->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(playlistTree, &QTreeWidget::customContextMenuRequested, this, &MainWindow::onTreeContextMenuRequested);
@@ -204,8 +230,9 @@ void MainWindow::initUI()
     coverSplitter = new QSplitter(Qt::Vertical, this);
 
     coverImageLabel = new QLabel();
+    coverImageLabel->setAlignment(Qt::AlignCenter);
     origin_cover = new QPixmap;
-    origin_cover->load("/home/wuzhenhuan/pictures/zhihu-meme.jpg");
+    origin_cover->load(DEFAULT_COVER_IMAGE_PATH);
     coverImageLabel->setPixmap(*origin_cover);
     resize(800, 600);
 
@@ -225,6 +252,7 @@ void MainWindow::initUI()
 
     songTreeView = new QTreeView();
     songTreeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    songTreeView->setSortingEnabled(true);
     songTreeView->header()->setSectionsMovable(true);
 
     songTreeView->header()->setFirstSectionMovable(false);
@@ -273,7 +301,9 @@ void MainWindow::onLoadPlaylist() {
         emit sgnLoadPlaylist(playlist_path);
 
         // STUB: sort trigger
-        m_playlistManager->getViewModel()->setGrouping(SortType::Album, true);
+        SortRule rule;
+        rule.type = SortType::album;
+        m_playlistManager->getViewModel()->setSingleGrouping(rule);
         songTreeView->expandAll();
 
     } else {
@@ -340,13 +370,23 @@ void MainWindow::updatePosition(qint64 position_ms) {
 
 // @TODO: set default type name
 void MainWindow::onSavePlaylist() {
-    QString filename = QFileDialog::getSaveFileName(
-        this,
-        tr("Save playlist file"),
-        QString(),
-        tr("*.wcpl")
-    );
-    if (!filename.isEmpty()) {
+    QFileDialog dialog(this);
+    dialog.setWindowTitle("Save playlist file");
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    QStringList filters;
+    filters.append("All files (*)");
+    filters.append("WusicPlayer playlist (*.wcpl)");
+    dialog.setNameFilters(filters);
+
+    if (dialog.exec()) {
+        QString filename = dialog.selectedFiles().first();
+        QString selected_filter = dialog.selectedNameFilter();
+
+        if (!filename.contains(".")) {
+            if (selected_filter.contains("*.wcpl")) {
+                filename += ".wcpl";
+            } // else if ...
+        }
         qDebug() << "[INFO] Save current playlist as " << filename;
         m_playlistManager->saveCurrentPlaylist(filename);
     } else {
@@ -467,18 +507,14 @@ void MainWindow::onNewPlaylist() {
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
-    if (!origin_cover->isNull()) {
-        int dst_width = width() / 3;
-        int dst_height = height() / 3;
-
-        QPixmap scaled = origin_cover->scaled(
-            dst_width,
-            dst_height,
-            Qt::KeepAspectRatio,
-            Qt::SmoothTransformation
-        );
-        coverImageLabel->setFixedSize(scaled.size());
-        coverImageLabel->setPixmap(scaled);
-    }
+    int dst_side_lenth = this->geometry().width() / 5;
+    QPixmap scaled = origin_cover->scaled(
+        dst_side_lenth,
+        dst_side_lenth,
+        Qt::KeepAspectRatio,
+        Qt::SmoothTransformation
+    );
+    coverImageLabel->setFixedSize(dst_side_lenth, dst_side_lenth);
+    coverImageLabel->setPixmap(scaled);
     QMainWindow::resizeEvent(event);
 }

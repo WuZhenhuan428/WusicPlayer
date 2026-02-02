@@ -5,6 +5,8 @@ PlaylistManager::PlaylistManager(QObject* parent)
 {
     connect(m_context, &PlaylistContext::changedCurrentListId
             , m_view, &PlaylistViewModel::setPlaylist);
+    connect(m_context, &PlaylistContext::changedCurrentTrackId,
+            m_view, &PlaylistViewModel::setActiveTrack);
 
     connect(m_repo, &PlaylistRepo::playlistChanged, this, &PlaylistManager::retransmissionPlaylistChanged);
 }
@@ -150,6 +152,12 @@ void PlaylistManager::play(int index) {
             emit requestPlay(t->filepath);
         }
     }
+}
+
+const QString& PlaylistManager::getCurrentTrack() {
+    QUuid track_id = m_context->getPlayTrackId();
+    auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
+    return pl->findTrackByID(track_id)->filepath;
 }
 
 const QUuid& PlaylistManager::getCurrentPlaylist() const{
