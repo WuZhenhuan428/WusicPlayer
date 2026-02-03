@@ -13,7 +13,6 @@
 #include "playlist_definitions.h"
 #include "playlist_layout.h"
 
-
 using trackId = QUuid;
 using playlistId = QUuid;
 
@@ -22,21 +21,17 @@ class PlaylistViewModel : public QAbstractItemModel
     Q_OBJECT
 
 public:
-
-public:
     explicit PlaylistViewModel(PlaylistRepo* repo);
     ~PlaylistViewModel();
 
     void rebuild();
 
 /* ==== Context & Repo 绑定 ==== */
-public:
     void setPlaylist(const playlistId& playlist_id);
 
     /**
      * @brief Parse the DSL used to set the sorting rules
      * @details format: `%key1% %key2% | %key3% %key4% ...`
-     * @todo ALL
      */
     void setSortExpression(const QString& expression);
 
@@ -48,7 +43,6 @@ public:
     void clear();
 
 /* ==== View视图数据访问 ====*/
-public:
     // QAbstractItemModel Interface
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
     QModelIndex parent(const QModelIndex &child) const override;
@@ -56,12 +50,13 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+
     /**
      * @brief Inherited from QAbstractItemModel, When header is clicked, change the sort
      *        state and rebuild table view automatically
      * @todo map column to SortType
      */
-    // void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+    void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
     // Helper to get logic data
     trackId trackAt(int index) const; // Still useful for linear queue access
@@ -70,19 +65,27 @@ public:
 
     const Playlist& resolvePlaylist();
 
+/* ==== Dynamic Column Management ==== */
+    void insertColumn(int index, const TableColumn& column);
+    void removeColumn(int index);
+    void setColumns(const QVector<TableColumn>& columns);
+    const QVector<TableColumn>& getColumns() const;
+
 /* ==== 播放顺序辅助（用于Player） ==== */
-public:
     trackId nextOf(const trackId& track_id) const;
     trackId previousOf(const trackId& track_id) const;
 
 /* ==== 元数据请求 ==== */
-public:
     void requestMetaData(const trackId& track_id);
+
+private:
+   QVector<TableColumn> m_columns;
+   void initDefaultColumns();
 
 signals:
     void changedPlaybackQueue();
     void updatedTrackMetadata(const trackId& track_id);
-    void changedData(int row); 
+    void changedData(int row);
     
 private:
     PlaylistRepo* m_repo = nullptr;

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QDebug>
 #include <QtMultimedia/QtMultimedia>
+#include <QMediaPlayer>
 #include <QUrl>
 #include <QMediaDevices>
 #include <QMediaMetaData>
@@ -15,20 +16,20 @@ class Player;
 enum class State;
 
 
-// Menber Declaration
+// Member Declaration
 class Player : public QObject
 {
     Q_OBJECT
 
 public:
     // local class
-    /// Finite-state machine
+    /// play state FSM
     enum class State
     {
-        IDLE = 0
-        , PLAYING
-        , PAUSED
-        , STOPPED
+        IDLE = 0,
+        PLAYING,
+        PAUSED,
+        STOPPED
     };
     Q_ENUM(State);
 
@@ -51,15 +52,16 @@ public slots:
 
 private:
     QAudioOutput* AudioOutput;
-    State m_state;
     double m_minDb;
     void initConnections();
     void setDevice();
-    void setState(State nextState);
     void openFile(const QString& filepath);
     double mapSliderToVolume(qint64 value, double minDb = -60.0);
+    Player::State mapPlaybackState(QMediaPlayer::PlaybackState state);
 
 private slots:
+    void onPlaybackStateChanged(QMediaPlayer::PlaybackState state);
+
 signals:
     // Drive UI display behaviors through signal from backend
     void stateChanged(Player::State state);

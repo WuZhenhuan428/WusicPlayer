@@ -209,6 +209,23 @@ public:
         return meta;
     }
 
+    static TrackMetaData format(TrackMetaData meta) {
+        TrackMetaData temp = meta;
+        if (temp.album.isEmpty()) {
+            temp.album = "Unknown Album";
+        }
+        if (temp.title.isEmpty()) {
+            temp.title = temp.filename;
+        }
+        if (temp.artist.isEmpty()) {
+            temp.artist = "Unknown Artist";
+        }
+        if (temp.genre.isEmpty()) {
+            temp.genre = "Unknown Genre";
+        }
+        return temp;
+    }
+
 private:
     static void scanDir(const fs::path& dir, std::vector<fs::path>& results) {
         try {

@@ -8,10 +8,23 @@
 PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo)
     : m_repo(repo)
 {
+    initDefaultColumns();
     m_root = new Node();
     if (m_repo) {
         connect(m_repo, &PlaylistRepo::playlistChanged, this, &PlaylistViewModel::rebuild);
     }
+}
+
+void PlaylistViewModel::initDefaultColumns() {
+    m_columns = {
+        {"", SortType::not_sorted},
+        {"Disc", SortType::disc_number},
+        {"#", SortType::track_number},
+        {"Title", SortType::title},
+        {"Artist", SortType::artist},
+        {"Duration", SortType::duration},
+        {"Album", SortType::album}
+    };
 }
 
 PlaylistViewModel::~PlaylistViewModel() {
@@ -98,32 +111,7 @@ void PlaylistViewModel::setSortExpression(const QString& expression) {
     QVector<QString> sort_list = extractKeys(sort_expression);
 
     auto check_match = [](const QString& str) -> SortType {
-        static const QHash<QString, SortType> mapping {
-            // 标准字段
-            {"title",       SortType::title},
-            {"artist",      SortType::artist},
-            {"album",       SortType::album},
-            {"album artist",SortType::album_artist},
-            {"album_artist",SortType::album_artist}, // 兼容下划线
-            {"genre",       SortType::genre},
-            {"composer",    SortType::composer},
-            {"year",        SortType::year},
-            {"date",        SortType::year},         // 兼容别名
-            {"track",       SortType::track_number},
-            {"track_number",SortType::track_number},
-            {"disc",        SortType::disc_number},
-            {"disc_number", SortType::disc_number},
-            
-            // 文件属性
-            {"filename",    SortType::filename},
-            {"path",        SortType::directory},
-            {"filepath",    SortType::directory},
-            {"directory",   SortType::directory},
-            {"folder",      SortType::directory},
-            {"bitrate",     SortType::bitrate},
-        };
-
-        return mapping.value(str.toLower(), SortType::not_sorted);
+        return mapStrToSorttype.value(str.toLower(), SortType::not_sorted);
     };
 
     auto string_to_sort_type = [check_match](const QVector<QString>& list) -> QVector<SortType> {
@@ -158,14 +146,18 @@ void PlaylistViewModel::setSortExpression(const QString& expression) {
         sort_rule.append(rule);
     }
     
-
     m_layoutBuilder.setGroupRule(group_rule);
     m_layoutBuilder.setSortRule(sort_rule);
+
+    this->rebuild();
 }
+
 
 void PlaylistViewModel::setSingleGrouping(SortRule rule) {
     m_layoutBuilder.updateSort(rule, false);
+    this->rebuild();
 }
+
 
 void PlaylistViewModel::setActiveTrack(const trackId& track_id) {
     // Helper lambda to find index
@@ -250,7 +242,7 @@ int PlaylistViewModel::rowCount(const QModelIndex &parent) const {
 }
 
 int PlaylistViewModel::columnCount(const QModelIndex &parent) const {
-    return 7;
+    return m_columns.size();
 }
 
 QVariant PlaylistViewModel::data(const QModelIndex &index, int role) const {
@@ -274,29 +266,33 @@ QVariant PlaylistViewModel::data(const QModelIndex &index, int role) const {
 
         // Track Logic
         const TrackMetaData& d = node->meta;
+        if (index.column() < 0 || index.column() >= m_columns.size()) return QVariant();
         
-        switch (index.column()) {
-            case 0: return (node->id == m_activeTrackId) ? ">" : "";
-            case 1: return d.disc_number;
-            case 2: return d.track_number;
-            case 3: return d.title;
-            case 4: return d.artist;
-            case 5: {
-                // Time formatting
-                int time_s = d.duration_s;
-                int hours = time_s / 3600;
-                int mins = (time_s % 3600) / 60;
-                int secs = time_s % 60;
-                if (hours > 0) {
-                    return QString("%1:%2:%3")
-                        .arg(hours, 2, 10, QChar('0'))
-                        .arg(mins, 2, 10, QChar('0'))
-                        .arg(secs, 2, 10, QChar('0'));
-                }
-                return QString("%1:%2").arg(mins, 2, 10, QChar('0')).arg(secs, 2, 10, QChar('0'));
-            }
-            case 6: return d.album;
+        const TableColumn& col = m_columns[index.column()];
+
+        if (col.sortType == SortType::not_sorted) {
+             return (node->id == m_activeTrackId) ? ">" : "";
         }
+        
+        // Special formatting
+        if (col.sortType == SortType::duration) {
+             int time_s = d.duration_s;
+             int hours = time_s / 3600;
+             int mins = (time_s % 3600) / 60;
+             int secs = time_s % 60;
+             if (hours > 0) {
+                 return QString("%1:%2:%3")
+                     .arg(hours, 2, 10, QChar('0'))
+                     .arg(mins, 2, 10, QChar('0'))
+                     .arg(secs, 2, 10, QChar('0'));
+             }
+             return QString("%1:%2").arg(mins, 2, 10, QChar('0')).arg(secs, 2, 10, QChar('0'));
+        }
+
+        // Default meta data retrieval
+        QVariant val = PlaylistLayoutBuilder::getMetaDataValue(d, col.sortType);
+        if (val.isValid()) return val;
+        return QVariant();
     }
     return QVariant();
 }
@@ -304,23 +300,26 @@ QVariant PlaylistViewModel::data(const QModelIndex &index, int role) const {
 QVariant PlaylistViewModel::headerData(int section, Qt::Orientation orientation, int role) const {
     if (role != Qt::DisplayRole) return QVariant();
     if (orientation == Qt::Horizontal) {
-        switch (section) {
-            case 0: return "state";
-            case 1: return "Disc";
-            case 2: return "#";
-            case 3: return "Title";
-            case 4: return "Artist";
-            case 5: return "Duration";
-            case 6: return "Album";
+        if (section >= 0 && section < m_columns.size()) {
+            return m_columns[section].headerName;
         }
     }
     return QVariant();
 }
 
-// void PlaylistViewModel::sort(int column, Qt::SortOrder order = Qt::AscendingOrder) {
-//     // > How to get column info?
-//     // m_layoutBuilder.updateSort();
-// }
+void PlaylistViewModel::sort(int column, Qt::SortOrder order) {
+    if (column < 0 || column >= m_columns.size()) return;
+    
+    SortType type = m_columns[column].sortType;
+    if (type == SortType::not_sorted) return;
+
+    SortRule rule;
+    rule.type = type;
+    rule.order = order;
+    
+    m_layoutBuilder.setSortRule({rule});
+    rebuild();
+}
 
 /* ==== Helpers ==== */
 
@@ -355,6 +354,32 @@ trackId PlaylistViewModel::previousOf(const trackId& track_id) const {
         return m_playbackQueue.at(idx - 1);
     }
     return QUuid();
+}
+
+/* ==== Dynamic Column Management ==== */
+
+void PlaylistViewModel::insertColumn(int index, const TableColumn& column) {
+    if (index < 0 || index > m_columns.size()) return;
+    beginInsertColumns(QModelIndex(), index, index);
+    m_columns.insert(index, column); 
+    endInsertColumns();
+}
+
+void PlaylistViewModel::removeColumn(int index) {
+    if (index < 0 || index >= m_columns.size()) return;
+    beginRemoveColumns(QModelIndex(), index, index);
+    m_columns.removeAt(index);
+    endRemoveColumns();
+}
+
+void PlaylistViewModel::setColumns(const QVector<TableColumn>& columns) {
+    beginResetModel();
+    m_columns = columns;
+    endResetModel();
+}
+
+const QVector<TableColumn>& PlaylistViewModel::getColumns() const {
+    return m_columns;
 }
 
 void PlaylistViewModel::requestMetaData(const trackId& track_id) {

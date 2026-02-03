@@ -1,5 +1,4 @@
-#ifndef WTIMEPROGRESS_H
-#define WTIMEPROGRESS_H
+#pragma once
 
 #include <QWidget>
 
@@ -29,5 +28,3 @@ private:
 
     int hour_flag;
 };
-
-#endif // WTIMEPROGRESS_H

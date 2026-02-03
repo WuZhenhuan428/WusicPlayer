@@ -18,7 +18,7 @@ createComparator(const QVector<SortRule>& rules) {
                 int ib = valB.toInt();
                 cmp = (ia < ib) ? -1 : (ia > ib ? 1 : 0);
             } else {
-                cmp = QString::localeAwareCompare(valA.toString(), valB.toString());
+                cmp = QString::compare(valA.toString(), valB.toString(), Qt::CaseInsensitive);
             }
 
             if (cmp != 0) {
@@ -43,6 +43,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
         if (!node->meta.isValid) {
             node->meta.title = QFileInfo(t.filepath).fileName();
         }
+        node->meta = Audio::format(node->meta);
         trackNodes.append(node);
     }
 
@@ -66,17 +67,28 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
         QMap<QString, QVector<Node*>> buckets;
         for (Node* node : nodes) {
             QString key = getMetaDataValue(node->meta, current_sort_rule.type).toString();
+            // @note: Audio::parse()将对内容进行格式化, if表达式将废弃
             if (key.isEmpty())
                 key = "unknown";
             buckets[key].append(node);
         }
+        
+        // Custom key sorting to ignore case
+        QStringList keys = buckets.keys();
+        std::sort(keys.begin(), keys.end(), [](const QString& s1, const QString& s2){
+            // @note: 此处为简易判断
+            // @todo: 完善判断逻辑
+            if (s1.contains("Unknown") && !(s2.contains("Unknown"))) return true;
+            if (!(s1.contains("Unknown")) && s2.contains("Unknown")) return false;
+            return s1.compare(s2, Qt::CaseInsensitive) < 0;
+        });
 
-        for (auto it = buckets.begin(); it != buckets.end(); ++it) {
+        for (const auto& key : keys) {
             Node* groupNode = new Node(parent);
-            groupNode->groupName = it.key();
+            groupNode->groupName = key;
             parent->children.append(groupNode);
 
-            processGroup(groupNode, it.value(), levelIndex + 1);
+            processGroup(groupNode, buckets[key], levelIndex + 1);
         }
     };
     processGroup(result.root, trackNodes, 0);
@@ -98,25 +110,31 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
 }
 
 void PlaylistLayoutBuilder::updateSort(SortRule rule, bool overrideExisting) {
-    SortRule single_group_rule = rule;
-    QVector<SortRule> new_sort_rules;
-
-    for (auto r : m_groupRules) {
-        if (r.type != rule.type) {
-            new_sort_rules.append(rule);
-        }
-    }
-    for (auto r : m_sortRules) {
-        if (r.type != rule.type) {
-            new_sort_rules.append(rule);
-        }
+    if (overrideExisting) {
+        m_groupRules.clear();
+        m_sortRules.clear();
     }
 
-    m_groupRules.clear();
-    m_groupRules.append(single_group_rule);
+    m_groupRules.clear(); // Currently enforcing single grouping for this method based on usage context
+    m_groupRules.append(rule);
 
     m_sortRules.clear();
-    m_sortRules = new_sort_rules;
+    
+    // Default smart sorting: if grouping by Album, sort tracks by Disc -> Track#
+    if (rule.type == SortType::album) {
+         m_sortRules.append({SortType::disc_number, Qt::AscendingOrder});
+         m_sortRules.append({SortType::track_number, Qt::AscendingOrder});
+    } 
+    // If grouping by Artist, sort by Year -> Album -> Track#
+    else if (rule.type == SortType::artist) {
+         m_sortRules.append({SortType::year, Qt::DescendingOrder});
+         m_sortRules.append({SortType::album, Qt::AscendingOrder});
+         m_sortRules.append({SortType::track_number, Qt::AscendingOrder});
+    }
+    // Default fallback: Title
+    else {
+         m_sortRules.append({SortType::title, Qt::AscendingOrder});
+    }
 }
 
 void PlaylistLayoutBuilder::setGroupRule(const QVector<SortRule>& group_rule) {
@@ -147,7 +165,6 @@ QVariant PlaylistLayoutBuilder::getMetaDataValue(const TrackMetaData& meta, Sort
         {SortType::album       , &TrackMetaData::album},
         {SortType::album_artist, &TrackMetaData::album_artist},
         {SortType::artist      , &TrackMetaData::artist},
-        {SortType::bitrate     , &TrackMetaData::album_artist},
         {SortType::composer    , &TrackMetaData::composer},
         {SortType::directory   , &TrackMetaData::filepath},
         {SortType::filename    , &TrackMetaData::filename},
@@ -156,7 +173,9 @@ QVariant PlaylistLayoutBuilder::getMetaDataValue(const TrackMetaData& meta, Sort
     };
 
     static const QHash<SortType, int TrackMetaData::*> intMap {
+        {SortType::bitrate     , &TrackMetaData::bitrate},
         {SortType::disc_number , &TrackMetaData::disc_number},
+        {SortType::duration    , &TrackMetaData::duration_s},
         {SortType::track_number, &TrackMetaData::track_number},
         {SortType::year        , &TrackMetaData::year}
     };

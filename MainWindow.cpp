@@ -2,10 +2,9 @@
 #include <QHeaderView>
 
 #include "src/playlist/playlist_definitions.h"
+#include "src/playlist/playlist_widgets.h"
 #include "include/audio.h"
 
-#define SLIDER_VOLUME_MIN_WIDTH 80
-#define SLIDER_VOLUME_MAX_WIDTH 80
 #define DEFAULT_COVER_IMAGE_PATH "/home/wuzhenhuan/pictures/zhihu-meme.jpg"
 
 MainWindow::MainWindow(Player* player, QWidget *parent)
@@ -19,7 +18,7 @@ MainWindow::MainWindow(Player* player, QWidget *parent)
     defaultRule.type = SortType::album; // Or whatever default
     m_playlistManager->getViewModel()->setSingleGrouping(defaultRule);
     
-    this->setMinimumSize(800, 600);
+    this->setMinimumSize(1280, 720);
     this->initUI();
     this->initConnection();
 }
@@ -28,21 +27,31 @@ MainWindow::~MainWindow() {}
 
 void MainWindow::initConnection()
 {
-    // PushButton: play | pause | stop
-    connect(btnPlay, &QPushButton::clicked, m_player, &Player::play);
-    connect(btnPause, &QPushButton::clicked, m_player, &Player::pause);
-    connect(btnStop, &QPushButton::clicked, m_player, &Player::stop);
-    connect(btnNext, &QPushButton::clicked, this, [this](){
+    // WControlBar::controlBar: play | pause | stop | next | prev
+    connect(controlBar, &WControlBar::sgnBtnPlayClicked, m_player, &Player::play);
+    connect(controlBar, &WControlBar::sgnBtnPauseClicked, m_player, &Player::pause);
+    connect(controlBar, &WControlBar::sgnBtnStopClicked, m_player, &Player::stop);
+    connect(controlBar, &WControlBar::sgnBtnNextClicked, this, [this](){
         QString next_track = m_playlistManager->nextTrack();
         if (!next_track.isEmpty()) {
             emit sgnFilepathChanged(next_track);
         }
     });
-    connect(btnPrev, &QPushButton::clicked, this, [this](){
+    connect(controlBar, &WControlBar::sgnBtnPrevClicked, this, [this](){
         QString prev_track = m_playlistManager->prevTrack();
         if (!prev_track.isEmpty()) {
             emit sgnFilepathChanged(prev_track);
         }
+    });
+
+    connect(controlBar, &WControlBar::sgnSliderPositionReleased, this, [this](int percent) {
+        m_player->setPosition(percent * 1000);
+    });
+    connect(controlBar, &WControlBar::sgnSliderVolumeReleased, m_player, &Player::setVolume);
+    connect(controlBar, &WControlBar::sgnSliderVolumeMoved, m_player, &Player::setVolume);
+    connect(controlBar, &WControlBar::sgnBtnMuteClicked, m_player, [this](){
+        m_player->flipMute();
+        // then switch icon
     });
 
     // Menu
@@ -66,50 +75,58 @@ void MainWindow::initConnection()
         msg->show();
         msg->setAttribute(Qt::WA_DeleteOnClose);
     });
+    connect(actSetSortRule, &QAction::triggered, this, [this](){
+        WSortTypeSetDialog dialog;
+        if (dialog.exec() == QDialog::Accepted) {
+            QString input = dialog.getText();
+            m_playlistManager->getViewModel()->setSortExpression(input);
+        }
+    });
+    connect(actInsertColumn, &QAction::triggered, this, [this](){
+        auto dialog = new WInsertColumnDialog;
+        int result = dialog->exec();
+        if (result == QDialog::Accepted) {
+            TableColumn column = dialog->getRule();
+            int index = m_playlistManager->getViewModel()->getColumns().size();
 
+            m_playlistManager->getViewModel()->insertColumn(index, column);
+        }
+    });
+    connect(actRemoveColumn, &QAction::triggered, this, [this](){
+        bool ok;
+        QString dst_str = QInputDialog::getText(
+            this,
+            tr("Remove column"),
+            tr("Input the column index except 0"),
+            QLineEdit::Normal,
+            "1",
+            &ok
+        );
+        if (ok) {
+            int dst_num = dst_str.toInt(&ok);
+            if (ok) {
+                m_playlistManager->getViewModel()->removeColumn(dst_num);
+            }
+        }
+    });
     // read file
-    connect(this, &MainWindow::sgnFilepathChanged, m_player, &Player::read);
+    connect(this, &MainWindow::sgnFilepathChanged, this, &MainWindow::playTrack);
     connect(this, &MainWindow::sgnLoadPlaylist, m_playlistManager, &PlaylistManager::loadPlaylist);
 
-    connect(m_player, &Player::stateChanged, this, &MainWindow::onPlayerStateChanged);
-    
-    connect(m_player, &Player::positionChanged, this, &MainWindow::updatePosition);
-    connect(m_player, &Player::durationChanged, this, &MainWindow::updateDuration);
-
-    connect(sliderPostion, &QSlider::sliderReleased, this, [this]() {
-        m_player->setPosition(sliderPostion->value() * 1000);
+    connect(m_player->MediaPlayer, &QMediaPlayer::playbackStateChanged, controlBar, &WControlBar::onPlayerStateChanged);
+    connect(m_player->MediaPlayer, &QMediaPlayer::mediaStatusChanged, [=](QMediaPlayer::MediaStatus status){
+        if (status == QMediaPlayer::MediaStatus::EndOfMedia) {
+            QString next_track = m_playlistManager->nextTrack();
+            if (!next_track.isEmpty()) {
+                emit sgnFilepathChanged(next_track);
+            }
+        }
     });
-    connect(sliderPostion, &QSlider::sliderMoved, this, [this](int value) {
-        timeProgress->setCurrentTime(value);
-    });
-    connect(btnMute, &QPushButton::clicked, m_player, [this](){
-        m_player->flipMute();
-        // then switch icon
-    });
-    connect(sliderVolume, &QSlider::sliderMoved, this, [this](int value) {
-        m_player->setVolume(value);
-    });
+    connect(m_player, &Player::positionChanged, controlBar, &WControlBar::updatePosition);
+    connect(m_player, &Player::durationChanged, controlBar, &WControlBar::updateDuration);
 
     // main window: playlist & song table
-    connect(m_playlistManager, &PlaylistManager::requestPlay, this, [this](QString filepath){
-        m_player->read(filepath);
-        QPixmap pix = Audio::parse_cover_to_qpixmap(filepath.toStdString());
-        if (!pix.isNull()) {
-            *origin_cover = pix;
-        } else {
-            origin_cover->load(DEFAULT_COVER_IMAGE_PATH);
-        }
-
-        int dst_side_lenth = this->geometry().width() / 5;
-        QPixmap scaled = origin_cover->scaled(
-            dst_side_lenth,
-            dst_side_lenth,
-            Qt::KeepAspectRatio,
-            Qt::SmoothTransformation
-        );
-        coverImageLabel->setFixedSize(dst_side_lenth, dst_side_lenth);
-        coverImageLabel->setPixmap(scaled);
-    });
+    connect(m_playlistManager, &PlaylistManager::requestPlay, this, &MainWindow::playTrack);
 
     playlistTree->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(playlistTree, &QTreeWidget::customContextMenuRequested, this, &MainWindow::onTreeContextMenuRequested);
@@ -140,6 +157,21 @@ void MainWindow::initConnection()
                 songTreeView->setExpanded(idx, true);
             }
         }
+    });
+    connect(songTreeViewHeader, &QHeaderView::customContextMenuRequested, this, [this](const QPoint& pos){
+        int logical_index = songTreeViewHeader->logicalIndexAt(pos);
+        QMenu menu(this);
+        QAction* actInsert = menu.addAction("Insert Column Here");
+        QAction* actRemove = menu.addAction("Remove This Column");
+        connect(actInsert, &QAction::triggered, [this, logical_index](){
+            QMessageBox::information(this, "Insert Column", 
+                QString("You want to insert a column at index: %1").arg(logical_index));
+        });
+        connect(actRemove, &QAction::triggered, [this, logical_index](){
+             QMessageBox::information(this, "Remove Column", 
+                QString("You want to remove the column at index: %1").arg(logical_index));
+        });
+        menu.exec(songTreeViewHeader->mapToGlobal(pos));
     });
 }
 
@@ -174,6 +206,15 @@ void MainWindow::initUI()
     menuFile->addAction(actExit);
     mainMenuBar->addMenu(menuFile);
 
+    menuView = new QMenu("&View");
+    actSetSortRule = new QAction("Set sort rule (&R)");
+    actInsertColumn = new QAction("Insert a column (&I)");
+    actRemoveColumn = new QAction("Remove a column (&R)");
+    menuView->addAction(actSetSortRule);
+    menuView->addAction(actInsertColumn);
+    menuView->addAction(actRemoveColumn);
+    mainMenuBar->addMenu(menuView);
+
     menuHelp = new QMenu("&Help");
     actManual = new QAction("&Manual");
     actAbout = new QAction("&About");
@@ -189,40 +230,8 @@ void MainWindow::initUI()
     bottomToolBar = new QToolBar;
     bottomToolBar->setMovable(false);
     bottomToolBar->setFloatable(false);
-
-    btnPlay = new QPushButton(">");
-    btnPause = new QPushButton("||");
-    btnStop = new QPushButton(">|");
-    btnPrev = new QPushButton("<<");
-    btnNext = new QPushButton(">>");
-    btnMute = new QPushButton("Mute");
-    btnPlay->setFixedSize(25, 25);
-    btnPause->setFixedSize(25, 25);
-    btnStop->setFixedSize(25, 25);
-    btnPrev->setFixedSize(25, 25);
-    btnNext->setFixedSize(25, 25);
-    btnMute->setFixedSize(25, 25);
-
-    /// Position Bar: position/Duration
-    sliderPostion = new QSlider(Qt::Horizontal);
-    sliderPostion->setRange(0, 100);
-    /// bar's time progress
-    timeProgress = new WTimeProgress;
-    sliderVolume = new QSlider(Qt::Horizontal);
-    sliderVolume->setRange(0, 100);
-    sliderVolume->setValue(100);
-    sliderVolume->setMinimumWidth(SLIDER_VOLUME_MIN_WIDTH);
-    sliderVolume->setMaximumWidth(SLIDER_VOLUME_MAX_WIDTH);
-
-    bottomToolBar->addWidget(btnPlay);
-    bottomToolBar->addWidget(btnPause);
-    bottomToolBar->addWidget(btnStop);
-    bottomToolBar->addWidget(btnPrev);
-    bottomToolBar->addWidget(btnNext);
-    bottomToolBar->addWidget(sliderPostion);
-    bottomToolBar->addWidget(timeProgress);
-    bottomToolBar->addWidget(btnMute);
-    bottomToolBar->addWidget(sliderVolume);
+    controlBar = new WControlBar;
+    bottomToolBar->addWidget(controlBar);
     addToolBar(Qt::BottomToolBarArea, bottomToolBar);
 
 // Main window
@@ -253,14 +262,15 @@ void MainWindow::initUI()
     songTreeView = new QTreeView();
     songTreeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     songTreeView->setSortingEnabled(true);
-    songTreeView->header()->setSectionsMovable(true);
-
-    songTreeView->header()->setFirstSectionMovable(false);
-    songTreeView->header()->setMinimumSectionSize(30);
-    songTreeView->header()->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     songTreeView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     songTreeView->setModel(m_playlistManager->getViewModel());
     songTreeView->setAlternatingRowColors(true);
+    songTreeViewHeader = songTreeView->header();
+    songTreeViewHeader->setSectionsMovable(true);
+    songTreeViewHeader->setFirstSectionMovable(false);
+    songTreeViewHeader->setMinimumSectionSize(30);
+    songTreeViewHeader->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    songTreeViewHeader->setContextMenuPolicy(Qt::CustomContextMenu);
 
     mainSplitter->addWidget(playlistTree);
     mainSplitter->addWidget(songTreeView);
@@ -349,24 +359,6 @@ void MainWindow::onRemovePlaylist() {
     }
 }
 
-void MainWindow::onPlayerStateChanged(Player::State state) {
-    btnPlay->setEnabled( state != Player::State::PLAYING );
-    btnPause->setEnabled( state != Player::State::PAUSED );
-}
-
-void MainWindow::updateDuration(qint64 duration_ms) {
-    qint64 duration_s = duration_ms / 1000;
-    sliderPostion->setRange(0, duration_s);
-    timeProgress->setTotalTime(duration_s);
-}
-
-void MainWindow::updatePosition(qint64 position_ms) {
-    if (!sliderPostion->isSliderDown())
-    {
-        sliderPostion->setValue(position_ms/1000);
-        timeProgress->setCurrentTime(position_ms/1000);
-    }
-}
 
 // @TODO: set default type name
 void MainWindow::onSavePlaylist() {
@@ -507,6 +499,27 @@ void MainWindow::onNewPlaylist() {
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
+    updateCoverScale();
+    QMainWindow::resizeEvent(event);
+}
+
+void MainWindow::playTrack(const QString& filepath) {
+    m_player->read(filepath);
+    loadCover(filepath);
+}
+
+void MainWindow::loadCover(const QString& filepath) {
+    QPixmap pix = Audio::parse_cover_to_qpixmap(filepath.toStdString());
+    if (!pix.isNull()) {
+        *origin_cover = pix;
+    } else {
+        origin_cover->load(DEFAULT_COVER_IMAGE_PATH);
+    }
+    updateCoverScale();
+}
+
+void MainWindow::updateCoverScale() {
+    if (!origin_cover || origin_cover->isNull()) return;
     int dst_side_lenth = this->geometry().width() / 5;
     QPixmap scaled = origin_cover->scaled(
         dst_side_lenth,
@@ -516,5 +529,4 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
     );
     coverImageLabel->setFixedSize(dst_side_lenth, dst_side_lenth);
     coverImageLabel->setPixmap(scaled);
-    QMainWindow::resizeEvent(event);
 }

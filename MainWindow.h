@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <QDebug>
 #include <QString>
-#include "src/player/player.h"
+#include <QDialog>
 
 #include <QResizeEvent>
 
@@ -29,9 +29,10 @@
 #include <QListView>
 #include <QPixmap>
 
+#include "src/player/player.h"
 #include "src/playlist/playlist_manager.h"
-#include "wtimeprogress.h"
-#include "WPlayListWidgetItem.h"
+#include "src/playlist/playlist_widgets.h"
+#include "src/WControlBar/WControlBar.h"
 
 class MainWindow : public QMainWindow
 {
@@ -60,7 +61,9 @@ private:
     void onRenamePlaylist();
     void onRemovePlaylist();
     void onSavePlaylist();
-    void onPlayerStateChanged(Player::State state);
+    void playTrack(const QString& filepath);
+    void updateCoverScale();
+    void loadCover(const QString& filepath);
 
     void onTreeContextMenuRequested(const QPoint &pos);
     
@@ -68,9 +71,10 @@ private:
     /// Menu widgets
     QMenuBar* mainMenuBar;
     QToolBar* bottomToolBar;
-    // QToolBar* leftToolbar;
+    WControlBar* controlBar;
+
+    /// menu File
     QMenu* menuFile;
-    
     QAction* actOpenFile;
     QAction* actAddFile;
     QAction* actAddFolder;
@@ -82,28 +86,23 @@ private:
     QAction* actSavePlaylist;
     QAction* actExit;
     
+    // menu View
+    QMenu* menuView;
+    QAction* actSetSortRule;
+    QAction* actInsertColumn;
+    QAction* actRemoveColumn;
+    
+    // menu Help
     QMenu* menuHelp;
     QAction* actManual;
     QAction* actAbout;
-
-    /// Control widgets
-    QPushButton* btnPlay;
-    QPushButton* btnPause;
-    QPushButton* btnStop;
-    QPushButton* btnNext;
-    QPushButton* btnPrev;
-    QPushButton* btnMute;
-
-    /// Progress Bar: Position/Duration
-    QSlider* sliderPostion;
-    WTimeProgress* timeProgress;
-    QSlider* sliderVolume;
-
+    
     // main window:
     /// Playlist | song table | cover & rolling lyrics
     QSplitter* mainSplitter;
     QTreeWidget* playlistTree;
     QTreeView* songTreeView;
+    QHeaderView* songTreeViewHeader;
 
     QSplitter* coverSplitter;
     QPixmap* origin_cover;
@@ -112,8 +111,6 @@ private:
 
 
 private slots:
-    void updateDuration(qint64 duration_ms);
-    void updatePosition(qint64 position_ms);
     void updatePlaylist();
     
 signals:

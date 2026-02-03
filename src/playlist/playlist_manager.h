@@ -43,7 +43,7 @@ public slots:
     void loadPlaylist(const QString& playlist_path);
     void renamePlaylist(const QUuid& src_uuid, const QString dst_name);
     void saveCurrentPlaylist(const QString& save_path);
-
+    
     void addTrack(const QString& filepath);
     void addFolder(const QString& directory);
 

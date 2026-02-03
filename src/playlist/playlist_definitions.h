@@ -2,6 +2,7 @@
 
 #include <QString>
 #include <QUuid>
+#include <QHash>
 
 enum class SortType
 {
@@ -13,11 +14,10 @@ enum class SortType
     composer,
     directory,
     disc_number,
+    duration,
     filename,
     genre,
-    // labels,
     title,
-    // title_with_disc_track,
     track_number,
     year
 };
@@ -52,6 +52,36 @@ struct TrackMetaData
     int     year = 0;
 
     bool isValid = false;
+};
+
+struct TableColumn {
+    QString headerName;
+    SortType sortType; 
+    // 0 = Not Sorted (e.g. status icon) or Custom
+};
+
+static const QHash<QString, SortType> mapStrToSorttype {
+    // 标准字段
+    {"title",       SortType::title},
+    {"artist",      SortType::artist},
+    {"album",       SortType::album},
+    {"album artist",SortType::album_artist},
+    {"album_artist",SortType::album_artist}, // 兼容下划线
+    {"genre",       SortType::genre},
+    {"composer",    SortType::composer},
+    {"year",        SortType::year},
+    {"date",        SortType::year},         // 兼容别名
+    {"track",       SortType::track_number},
+    {"track_number",SortType::track_number},
+    {"disc",        SortType::disc_number},
+    {"disc_number", SortType::disc_number},
+    // 文件属性
+    {"filename",    SortType::filename},
+    {"path",        SortType::directory},
+    {"filepath",    SortType::directory},
+    {"directory",   SortType::directory},
+    {"folder",      SortType::directory},
+    {"bitrate",     SortType::bitrate},
 };
 
 enum class PlayMode

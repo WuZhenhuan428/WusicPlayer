@@ -13,9 +13,6 @@ qt_add_executable(WusicPlayer
     WIN32 MACOSX_BUNDLE
     main.cpp
     MainWindow.h MainWindow.cpp
-    
-    wtimeprogress.h wtimeprogress.cpp
-    WPlayListWidgetItem.h
 
     # include
     include/audio.h
@@ -38,6 +35,14 @@ qt_add_executable(WusicPlayer
     src/playlist/playlist_view_model.cpp
     src/playlist/playlist_layout.cpp
     src/playlist/playlist_layout.h
+    src/playlist/playlist_widgets.cpp
+    src/playlist/playlist_widgets.h
+
+    # custom widgets
+    src/WControlBar/WControlBar.cpp
+    src/WControlBar/WControlBar.h
+    src/WControlBar/wtimeprogress.cpp
+    src/WControlBar/wtimeprogress.h
 )
 
 target_include_directories(WusicPlayer

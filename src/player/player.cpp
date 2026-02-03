@@ -1,10 +1,9 @@
 #include "player.h"
 
 Player::Player(QObject *parent)
-    : QObject{parent}
-    , MediaPlayer(new QMediaPlayer)
-    , AudioOutput(new QAudioOutput)
-    , m_state(Player::State::IDLE)
+    : QObject{parent},
+    MediaPlayer(new QMediaPlayer),
+    AudioOutput(new QAudioOutput)
 {
     setDevice();
     initConnections();
@@ -15,68 +14,54 @@ Player::~Player() {}
 void Player::initConnections() {
     connect(MediaPlayer, &QMediaPlayer::positionChanged, this, &Player::positionChanged);
     connect(MediaPlayer, &QMediaPlayer::durationChanged, this, &Player::durationChanged);
+    // connect(MediaPlayer, &QMediaPlayer::mediaStatusChanged, [=](QMediaPlayer::MediaStatus status){
+    //     if (status == QMediaPlayer::MediaStatus::EndOfMedia) {
+    //         // 
+    //     }
+    // });
+    connect(MediaPlayer, &QMediaPlayer::playbackStateChanged, this, &Player::onPlaybackStateChanged);
 }
 
 void Player::read(const QString& filepath) {
-    openFile(filepath);     // set source
-    switch (m_state)
-    {
-    case State::IDLE:
-    case State::PAUSED:
-    case State::STOPPED:
-    case State::PLAYING:
-        setState(State::STOPPED);
-        setState(State::PLAYING);
-        break;
-    }
+    openFile(filepath);
+    MediaPlayer->play();
 }
 
 void Player::play() {
-    switch (m_state)
-    {
-    case State::IDLE:
-    case State::PAUSED:
-    case State::STOPPED:
-        setState(State::PLAYING); break;
-    case State::PLAYING: break; // ignore
-    }
-    qDebug() << "[INFO] Current state: " << m_state;
+    MediaPlayer->play();
 }
 
 void Player::pause() {
-    if (m_state == State::PLAYING) {
-        setState(State::PAUSED);
-    }
-    qDebug() << "[INFO] Current state: " << m_state;
+    MediaPlayer->pause();
 }
 
 void Player::stop() {
-    if (m_state != State::IDLE) {
-        setState(State::STOPPED);
-    }
-    qDebug() << "[INFO] Current state: " << m_state;
+    MediaPlayer->stop();
 }
 
 void Player::openFile(const QString& filepath) {
     MediaPlayer->setSource(QUrl::fromLocalFile(filepath));
-    qDebug() << "[INFO] Open file path: " << filepath;
 }
 
-void Player::setState(State newState)
-{
-    if (m_state == newState) {
-        return;
-    }
-    m_state = newState;
-    emit stateChanged(m_state);
+Player::State Player::state() const {
+    return const_cast<Player*>(this)->mapPlaybackState(MediaPlayer->playbackState());
+}
 
-    switch (m_state)
-    {
-    case State::IDLE: break;
-    case State::PAUSED: MediaPlayer->pause(); break;
-    case State::STOPPED: MediaPlayer->stop(); break;
-    case State::PLAYING: MediaPlayer->play(); break;
+Player::State Player::mapPlaybackState(QMediaPlayer::PlaybackState state) {
+    switch (state) {
+        case QMediaPlayer::PlaybackState::PlayingState:
+            return Player::State::PLAYING;
+        case QMediaPlayer::PlaybackState::PausedState:
+            return Player::State::PAUSED;
+        case QMediaPlayer::PlaybackState::StoppedState:
+            return Player::State::STOPPED;
+        default:
+            return Player::State::IDLE;
     }
+}
+
+void Player::onPlaybackStateChanged(QMediaPlayer::PlaybackState state) {
+    emit stateChanged(mapPlaybackState(state));
 }
 
 void Player::setDevice() {
@@ -95,16 +80,15 @@ void Player::flipMute() {
     bool muteState = this->AudioOutput->isMuted();
     this->AudioOutput->setMuted(!muteState);
     if (1 == muteState) {
-        qDebug() << "[INFO] Mute:" << "off";
+        qDebug() << "[INFO] Mute: off";
     } else {
-        qDebug() << "[INFO] Mute:" << "on";
+        qDebug() << "[INFO] Mute: on";
     }
 }
 
 void Player::setVolume(qint64 volume) {
     double audioGain = mapSliderToVolume(volume, -50.0);
     this->AudioOutput->setVolume(audioGain);
-    // qDebug() << "[INFO] Volume gain / percent = " << audioGain << ", " << volume;
 }
 
 /**
