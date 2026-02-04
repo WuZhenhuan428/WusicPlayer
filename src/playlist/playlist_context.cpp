@@ -3,7 +3,7 @@
 PlaylistContext::PlaylistContext(QObject* parent)
     : QObject(parent)
 {
-    this->m_mode = PlayMode::straight;
+    this->m_mode = PlayMode::in_order;
 }
 
 PlaylistContext::~PlaylistContext() {}

@@ -72,6 +72,9 @@ public:
     const QVector<TableColumn>& getColumns() const;
 
 /* ==== 播放顺序辅助（用于Player） ==== */
+    QVector<trackId> generateGroupShuffleQueue();
+    QVector<trackId> generateSingleShuffleQueue();
+    void setPlayMode(PlayMode to_mode);
     trackId nextOf(const trackId& track_id) const;
     trackId previousOf(const trackId& track_id) const;
 
@@ -94,8 +97,10 @@ private:
     Node* m_root = nullptr;
 
     QVector<trackId> m_playbackQueue; // Linear queue for playback logic (separate from Tree structure)
+    QVector<trackId> m_singleShuffleQueue;
+    QVector<trackId> m_groupShuffleQueue;
+
+    PlayMode m_playMode;
 
     PlaylistLayoutBuilder m_layoutBuilder;
-
-    QString getGroupKey(const TrackMetaData& data, SortType type);
 };

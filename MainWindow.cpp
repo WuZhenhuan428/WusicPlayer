@@ -54,6 +54,12 @@ void MainWindow::initConnection()
         // then switch icon
     });
 
+    connect(controlBar, &WControlBar::sgnInOrder, this, [this]() {m_playlistManager->getViewModel()->setPlayMode(PlayMode::in_order);});
+    connect(controlBar, &WControlBar::sgnLoop, this, [this]() {m_playlistManager->getViewModel()->setPlayMode(PlayMode::loop);});
+    connect(controlBar, &WControlBar::sgnShuffle, this, [this]() {m_playlistManager->getViewModel()->setPlayMode(PlayMode::shuffle);});
+    connect(controlBar, &WControlBar::sgnOutOfOrderTrack, this, [this]() {m_playlistManager->getViewModel()->setPlayMode(PlayMode::out_of_order_track);});
+    connect(controlBar, &WControlBar::sgnOutOfOrderGroup, this, [this]() {m_playlistManager->getViewModel()->setPlayMode(PlayMode::out_of_order_group);});
+
     // Menu
     connect(actOpenFile, &QAction::triggered, this, &MainWindow::onOpenFile);
     connect(actAddFile, &QAction::triggered, this, &MainWindow::onAddFile);
@@ -177,6 +183,9 @@ void MainWindow::initConnection()
 
 void MainWindow::initUI()
 {
+// Global config
+    this->setContextMenuPolicy(Qt::NoContextMenu);
+ 
 // MenuBar
     mainMenuBar = new QMenuBar;
 
@@ -266,6 +275,7 @@ void MainWindow::initUI()
     songTreeView->setModel(m_playlistManager->getViewModel());
     songTreeView->setAlternatingRowColors(true);
     songTreeViewHeader = songTreeView->header();
+    songTreeViewHeader->setSectionResizeMode(0, QHeaderView::Fixed);
     songTreeViewHeader->setSectionsMovable(true);
     songTreeViewHeader->setFirstSectionMovable(false);
     songTreeViewHeader->setMinimumSectionSize(30);

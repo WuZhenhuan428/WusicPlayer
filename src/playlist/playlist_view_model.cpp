@@ -3,6 +3,7 @@
 #include <QTime>
 #include <QRegularExpression>
 #include <algorithm>
+#include <random>
 #include "../../include/audio.h"
 
 PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo)
@@ -65,6 +66,8 @@ void PlaylistViewModel::rebuild() {
 
     m_root = layout.root;
     m_playbackQueue = layout.playbackQueue;
+    m_singleShuffleQueue = generateSingleShuffleQueue();
+    m_groupShuffleQueue = generateGroupShuffleQueue();
     
     endResetModel();
     qDebug() << "[INFO] rebuild finished. Queue size:" << m_playbackQueue.size();
@@ -339,19 +342,129 @@ const QVector<trackId>& PlaylistViewModel::playbackQueue() const {
     return m_playbackQueue;
 }
 
+QVector<trackId> PlaylistViewModel::generateGroupShuffleQueue() {
+    if (!m_root || m_root->children.isEmpty()) {
+        return {};
+    }
+    QVector<trackId> result;
+    result.reserve(m_playbackQueue.size());
+
+    // Just copy, do not use reference
+    QVector<Node*> groups = m_root->children;
+
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(groups.begin(), groups.end(), g);
+    for (Node* group : groups) {
+        for (Node* track_node : group->children) {
+            if (!track_node->id.isNull()) {
+                result.append(track_node->id);
+            }
+        }
+    }
+    qDebug() << "[INFO] (re)build m_groupShuffleQueue";
+    return result;
+}
+
+QVector<trackId> PlaylistViewModel::generateSingleShuffleQueue() {
+    QVector<trackId> result;
+    result.reserve(m_playbackQueue.size());
+    result = m_playbackQueue;
+
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(m_singleShuffleQueue.begin(), m_singleShuffleQueue.end(), g);
+    qDebug() << "[INFO] (re)build m_singleShuffleQueue";
+    return result;
+}
+
+void PlaylistViewModel::setPlayMode(PlayMode to_mode) {
+    if (m_playMode == to_mode) {
+        return;
+    } else {
+        m_playMode = to_mode;
+    }
+}
+
 
 trackId PlaylistViewModel::nextOf(const trackId& track_id) const {
-    int idx = m_playbackQueue.indexOf(track_id);
-    if (idx != -1 && idx < m_playbackQueue.size() - 1) {
-        return m_playbackQueue.at(idx + 1);
+    int index;
+    auto generate_random_index = [](size_t max_index = 0) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<size_t> dist(0, max_index);
+        return dist(gen);
+    };
+
+    if (m_playMode == PlayMode::in_order) {
+        index = m_playbackQueue.indexOf(track_id);
+        if (index != -1 && index < m_playbackQueue.size() - 1) {
+            return m_playbackQueue.at(index+1);
+        } // else -> end of playlist
+    } else if (m_playMode == PlayMode::loop) {
+        index = m_playbackQueue.indexOf(track_id);
+        if (index != -1)  {
+            if (index < m_playbackQueue.size() - 1) {
+                return m_playbackQueue.at(index+1);
+            }
+            else if (index = m_playbackQueue.size() - 1) {
+                return m_playbackQueue.at(0);
+            }
+        }
+    } else if (m_playMode == PlayMode::shuffle ) {
+        index = generate_random_index(m_singleShuffleQueue.size()-1);
+        return m_singleShuffleQueue.at(index);
+    } else if (m_playMode == PlayMode::out_of_order_track) {
+        index = m_singleShuffleQueue.indexOf(track_id);
+        if (index != -1 && index <= m_singleShuffleQueue.size()-1) {
+            return m_singleShuffleQueue.at(index+1);
+        }
+    } else if (m_playMode == PlayMode::out_of_order_group) {
+        index = m_groupShuffleQueue.indexOf(track_id);
+        if (index != -1 && index <= m_groupShuffleQueue.size()-1) {
+            return m_groupShuffleQueue.at(index+1);
+        }
     }
     return QUuid();
 }
 
 trackId PlaylistViewModel::previousOf(const trackId& track_id) const {
-    int idx = m_playbackQueue.indexOf(track_id);
-    if (idx > 0) {
-        return m_playbackQueue.at(idx - 1);
+    int index;
+    auto generate_random_index = [](size_t max_index = 0) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<size_t> dist(0, max_index);
+        return dist(gen);
+    };
+
+    if (m_playMode == PlayMode::in_order) {
+        index = m_playbackQueue.indexOf(track_id);
+        if (index > 0) {    // -1 and 0
+            return m_playbackQueue.at(index-1);
+        } // else -> start of playlist
+    } else if (m_playMode == PlayMode::loop) {
+        index = m_playbackQueue.indexOf(track_id);
+        if (index != -1)  {
+            if (index > 0) {
+                return m_playbackQueue.at(index+1);
+            }
+            else if (index == 0) {
+                return m_playbackQueue.at(m_playbackQueue.size()-1);
+            }
+        }
+    } else if (m_playMode == PlayMode::shuffle ) {
+        index = generate_random_index(m_singleShuffleQueue.size()-1);
+        return m_singleShuffleQueue.at(index);
+    } else if (m_playMode == PlayMode::out_of_order_track) {
+        index = m_singleShuffleQueue.indexOf(track_id);
+        if (index > 0) {
+            return m_singleShuffleQueue.at(index-1);
+        }
+    } else if (m_playMode == PlayMode::out_of_order_group) {
+        index = m_groupShuffleQueue.indexOf(track_id);
+        if (index > 0) {
+            return m_groupShuffleQueue.at(index-1);
+        }
     }
     return QUuid();
 }

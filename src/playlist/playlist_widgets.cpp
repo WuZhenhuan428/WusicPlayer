@@ -54,11 +54,10 @@ WInsertColumnDialog::WInsertColumnDialog() {
     // choose type
     lbType = new QLabel("Type:");
     cbType = new QComboBox();
-    QVector<QString> types = { QString(), // <- null
+    QVector<QString> types = {
         "title", "artist", "album", "album artist",
         "genre", "composer", "year", "date", "track",
-        "track_number", "disc", "disc_number", "bitrate",
-        "filename", "directory"
+        "disc","bitrate", "filename", "directory"
     };
     cbType->addItems(types);
     hbType = new QHBoxLayout();

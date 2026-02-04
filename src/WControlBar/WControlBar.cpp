@@ -9,13 +9,27 @@ WControlBar::WControlBar(QWidget* parent) : QWidget(parent) {
     btnStop = new QPushButton(">|");
     btnPrev = new QPushButton("<<");
     btnNext = new QPushButton(">>");
-    btnMute = new QPushButton("M");
+    btnMode = new QPushButton("M");
+    btnMute = new QPushButton("V");
     btnPlay->setFixedSize(25, 25);
     btnPause->setFixedSize(25, 25);
     btnStop->setFixedSize(25, 25);
     btnPrev->setFixedSize(25, 25);
     btnNext->setFixedSize(25, 25);
+    btnMode->setFixedSize(25, 25);
     btnMute->setFixedSize(25, 25);
+
+    actInOrder = new QAction("In order");
+    actLoop = new QAction("Loop");
+    actShuffle = new QAction("Shuffle");
+    actOutOfOrderTrack = new QAction("Out of order by track");
+    actOutOfOrderGroup = new QAction("Out of order by troup");
+    menuMode = new QMenu();
+    menuMode->addAction(actInOrder);
+    menuMode->addAction(actLoop);
+    menuMode->addAction(actShuffle);
+    menuMode->addAction(actOutOfOrderTrack);
+    menuMode->addAction(actOutOfOrderGroup);
 
     /// Position Bar: position/Duration
     sliderPostion = new QSlider(Qt::Horizontal);
@@ -36,6 +50,7 @@ WControlBar::WControlBar(QWidget* parent) : QWidget(parent) {
     hbMain->addWidget(btnNext);
     hbMain->addWidget(sliderPostion);
     hbMain->addWidget(timeProgress);
+    hbMain->addWidget(btnMode);
     hbMain->addWidget(btnMute);
     hbMain->addWidget(sliderVolume);
 
@@ -47,6 +62,15 @@ WControlBar::WControlBar(QWidget* parent) : QWidget(parent) {
     connect(btnNext, &QPushButton::clicked, this, [this](){emit sgnBtnNextClicked();});
     connect(btnPrev, &QPushButton::clicked, this, [this](){emit sgnBtnPrevClicked();});
     connect(btnMute, &QPushButton::clicked, this, [this](){emit sgnBtnMuteClicked();});
+    connect(btnMode, &QPushButton::clicked, this, [this](){
+        QPoint pos = btnMode->mapToGlobal(QPoint(0, btnMode->height()));
+        menuMode->exec(pos);
+    });
+    connect(actInOrder, &QAction::triggered, this, [this](){emit sgnInOrder();});
+    connect(actLoop, &QAction::triggered, this, [this](){emit sgnLoop();});
+    connect(actShuffle, &QAction::triggered, this, [this](){emit sgnShuffle();});
+    connect(actOutOfOrderTrack, &QAction::triggered, this, [this](){emit sgnOutOfOrderTrack();});
+    connect(actOutOfOrderGroup, &QAction::triggered, this, [this](){emit sgnOutOfOrderGroup();});
 
     connect(sliderPostion, &QSlider::sliderReleased, this, [this](){emit sgnSliderPositionReleased(sliderPostion->value());});
     connect(sliderVolume, &QSlider::sliderReleased, this, [this](){emit sgnSliderVolumeReleased(sliderVolume->value());});

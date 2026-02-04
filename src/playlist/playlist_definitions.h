@@ -86,10 +86,9 @@ static const QHash<QString, SortType> mapStrToSorttype {
 
 enum class PlayMode
 {
-    straight = 0,
-    circulation,
-    shuffle_track,
-    shuffle_album,
+    in_order = 0,
+    loop,
+    shuffle,
     out_of_order_track,
-    out_of_order_album
+    out_of_order_group
 };
