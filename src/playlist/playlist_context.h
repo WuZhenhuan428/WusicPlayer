@@ -14,7 +14,7 @@
 
 class PlaylistContext : public QObject
 {
-    Q_OBJECT;
+    Q_OBJECT
 public:
     explicit PlaylistContext(QObject* parent = nullptr);
     ~PlaylistContext();

@@ -39,11 +39,23 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
     for (const auto& t : tracks) {
         Node* node = new Node();
         node->id = t.uuid;
-        node->meta = Audio::parse(t.filepath.toStdString());
-        if (!node->meta.isValid) {
-            node->meta.title = QFileInfo(t.filepath).fileName();
+        if (t.meta.isValid) {
+            node->meta = t.meta;
+            if (node->meta.filepath.isEmpty()) {
+                node->meta.filepath = t.filepath;
+            }
+            if (node->meta.filename.isEmpty()) {
+                node->meta.filename = QFileInfo(t.filepath).fileName();
+            }
+        } else {
+            node->meta = Audio::parse(t.filepath.toStdString());
+            node->meta.filepath = t.filepath;
+            if (!node->meta.isValid) {
+                node->meta.title = QFileInfo(t.filepath).fileName();
+            }
+            node->meta = Audio::format(node->meta);
+            result.updatedMeta.append({t.uuid, node->meta});
         }
-        node->meta = Audio::format(node->meta);
         trackNodes.append(node);
     }
 

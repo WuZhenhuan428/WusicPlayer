@@ -20,9 +20,9 @@ class PlaylistManager : public QObject
 {
     Q_OBJECT
 
-    PlaylistContext* m_context = new PlaylistContext;
-    PlaylistRepo* m_repo = new PlaylistRepo;
-    PlaylistViewModel* m_view = new PlaylistViewModel(m_repo);
+    PlaylistContext* m_context = nullptr;
+    PlaylistRepo* m_repo = nullptr;
+    PlaylistViewModel* m_view = nullptr;
 
 public:
     explicit PlaylistManager(QObject *parent = nullptr);
@@ -30,7 +30,7 @@ public:
 
 public:
     PlaylistViewModel* getViewModel();
-    const QString& getCurrentTrack();
+    QString getCurrentTrack();
     const QUuid& getCurrentPlaylist() const;
     QVector<PlaylistInfo> getAllPlaylists();
     QVector<std::shared_ptr<Playlist>> getPlaylists();
@@ -43,6 +43,7 @@ public slots:
     void loadPlaylist(const QString& playlist_path);
     void renamePlaylist(const QUuid& src_uuid, const QString dst_name);
     void saveCurrentPlaylist(const QString& save_path);
+    void loadCacheAfterShown();
     
     void addTrack(const QString& filepath);
     void addFolder(const QString& directory);
@@ -58,6 +59,10 @@ public slots:
 signals:
     void requestPlay(const QString& filepath);
     void playlistChanged();
+    void cacheLoadStarted();
+    void cacheLoadFinished(int playlistCount);
+    void playlistLoadStarted(const QUuid& playlistId, int totalCount);
+    void playlistLoadFinished(const QUuid& playlistId);
 
 private:
 

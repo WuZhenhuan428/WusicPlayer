@@ -2,17 +2,29 @@
 #include <QFileInfo>
 #include <QTime>
 #include <QRegularExpression>
+#include <QPointer>
+#include <QThread>
 #include <algorithm>
 #include <random>
 #include "../../include/audio.h"
 
-PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo)
-    : m_repo(repo)
+PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo, QObject* parent)
+    : QAbstractItemModel(parent)
+    , m_repo(repo)
 {
     initDefaultColumns();
     m_root = new Node();
+    m_batchRebuildTimer = new QTimer(this);
+    m_batchRebuildTimer->setSingleShot(true);
+    m_batchRebuildTimer->setInterval(60);
+    connect(m_batchRebuildTimer, &QTimer::timeout, this, &PlaylistViewModel::rebuildAsync);
     if (m_repo) {
-        connect(m_repo, &PlaylistRepo::playlistChanged, this, &PlaylistViewModel::rebuild);
+        connect(m_repo, &PlaylistRepo::playlistChanged, this, &PlaylistViewModel::rebuildAsync);
+        connect(m_repo, &PlaylistRepo::playlistBatchLoaded, this, [this](const QUuid& playlistId, int, int) {
+            if (playlistId == m_playlistId) {
+                scheduleBatchRebuild();
+            }
+        });
     }
 }
 
@@ -30,6 +42,15 @@ void PlaylistViewModel::initDefaultColumns() {
 
 PlaylistViewModel::~PlaylistViewModel() {
     delete m_root;
+}
+
+void PlaylistViewModel::scheduleBatchRebuild() {
+    if (!m_batchRebuildTimer) {
+        return;
+    }
+    if (!m_batchRebuildTimer->isActive()) {
+        m_batchRebuildTimer->start();
+    }
 }
 
 const Playlist& PlaylistViewModel::resolvePlaylist() {
@@ -61,8 +82,15 @@ void PlaylistViewModel::rebuild() {
     }
 
     const Playlist& pl = *playlistPtr;
-        
+
     LayoutResult layout = m_layoutBuilder.build(pl);
+
+    if (!layout.updatedMeta.isEmpty()) {
+        for (const auto& entry : layout.updatedMeta) {
+            playlistPtr->updateTrackMeta(entry.id, entry.meta);
+        }
+        m_repo->saveListToCache(playlistPtr);
+    }
 
     m_root = layout.root;
     m_playbackQueue = layout.playbackQueue;
@@ -74,10 +102,80 @@ void PlaylistViewModel::rebuild() {
     emit changedPlaybackQueue();
 }
 
+void PlaylistViewModel::rebuildAsync() {
+    const int token = ++m_rebuildToken;
+
+    if (!m_repo) {
+        beginResetModel();
+        delete m_root;
+        m_root = new Node();
+        m_playbackQueue.clear();
+        endResetModel();
+        return;
+    }
+
+    auto playlistPtr = m_repo->findPlaylistById(m_playlistId);
+    if (!playlistPtr) {
+        beginResetModel();
+        delete m_root;
+        m_root = new Node();
+        m_playbackQueue.clear();
+        endResetModel();
+        return;
+    }
+
+    const Playlist playlistCopy = *playlistPtr;
+    PlaylistLayoutBuilder builderCopy = m_layoutBuilder;
+
+    QPointer<PlaylistViewModel> self(this);
+    QThread* worker = QThread::create([self, token, playlistCopy, builderCopy]() mutable {
+        if (!self) {
+            return;
+        }
+
+        LayoutResult layout = builderCopy.build(playlistCopy);
+        if (!self) {
+            delete layout.root;
+            return;
+        }
+
+        QMetaObject::invokeMethod(self, [self, token, layout = std::move(layout)]() mutable {
+            if (!self) {
+                delete layout.root;
+                return;
+            }
+            if (token != self->m_rebuildToken) {
+                delete layout.root;
+                return;
+            }
+
+            self->beginResetModel();
+            delete self->m_root;
+            self->m_root = layout.root;
+            self->m_playbackQueue = layout.playbackQueue;
+            self->m_singleShuffleQueue = self->generateSingleShuffleQueue();
+            self->m_groupShuffleQueue = self->generateGroupShuffleQueue();
+            self->endResetModel();
+
+            auto playlistPtr = self->m_repo ? self->m_repo->findPlaylistById(self->m_playlistId) : nullptr;
+            if (playlistPtr && !layout.updatedMeta.isEmpty()) {
+                for (const auto& entry : layout.updatedMeta) {
+                    playlistPtr->updateTrackMeta(entry.id, entry.meta);
+                }
+                self->m_repo->saveListToCache(playlistPtr);
+            }
+            emit self->changedPlaybackQueue();
+        }, Qt::QueuedConnection);
+    });
+
+    QObject::connect(worker, &QThread::finished, worker, &QObject::deleteLater);
+    worker->start();
+}
+
 void PlaylistViewModel::setPlaylist(const playlistId& playlist_id) {
     if (m_playlistId == playlist_id) { return; }
     m_playlistId = playlist_id;
-    this->rebuild();
+    this->rebuildAsync();
 }
 
 void PlaylistViewModel::setSortExpression(const QString& expression) {
@@ -152,13 +250,13 @@ void PlaylistViewModel::setSortExpression(const QString& expression) {
     m_layoutBuilder.setGroupRule(group_rule);
     m_layoutBuilder.setSortRule(sort_rule);
 
-    this->rebuild();
+    this->rebuildAsync();
 }
 
 
 void PlaylistViewModel::setSingleGrouping(SortRule rule) {
     m_layoutBuilder.updateSort(rule, false);
-    this->rebuild();
+    this->rebuildAsync();
 }
 
 
@@ -257,6 +355,9 @@ QVariant PlaylistViewModel::data(const QModelIndex &index, int role) const {
     if (role == Qt::TextAlignmentRole && isGroup) {
         return int(Qt::AlignLeft | Qt::AlignVCenter);
     }
+    if (role == Qt::TextAlignmentRole && index.column() == 0) {
+        return int(Qt::AlignLeft | Qt::AlignVCenter);
+    }
 
     if (role == Qt::DisplayRole) {
         // Group Logic
@@ -321,7 +422,7 @@ void PlaylistViewModel::sort(int column, Qt::SortOrder order) {
     rule.order = order;
     
     m_layoutBuilder.setSortRule({rule});
-    rebuild();
+    rebuildAsync();
 }
 
 /* ==== Helpers ==== */

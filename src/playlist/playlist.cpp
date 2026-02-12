@@ -1,5 +1,7 @@
 #include "playlist.h"
 
+#include <QFileInfo>
+
 /**
  * @brief: 创建播放列表时生成UUID
  */
@@ -27,9 +29,40 @@ void Playlist::clearList() {
 Track Playlist::addTrack(const QString& filepath) {
     Track t;
     t.filepath = filepath;
+    t.meta.filepath = filepath;
+    t.meta.filename = QFileInfo(filepath).fileName();
+    t.meta.isValid = false;
     m_tracks.emplace_back(t);
     qDebug() << "[INFO] Add uuid:" << t.uuid << "filepath:" << t.filepath;
     return t;
+}
+
+Track Playlist::addTrackWithId(const QUuid& uuid, const QString& filepath) {
+    Track t;
+    t.uuid = uuid;
+    t.filepath = filepath;
+    t.meta.filepath = filepath;
+    t.meta.filename = QFileInfo(filepath).fileName();
+    t.meta.isValid = false;
+    m_tracks.emplace_back(t);
+    qDebug() << "[INFO] Add uuid:" << t.uuid << "filepath:" << t.filepath;
+    return t;
+}
+
+bool Playlist::updateTrackMeta(const QUuid& uuid, const TrackMetaData& meta) {
+    for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
+        if (it->uuid == uuid) {
+            it->meta = meta;
+            if (it->meta.filepath.isEmpty()) {
+                it->meta.filepath = it->filepath;
+            }
+            if (it->meta.filename.isEmpty()) {
+                it->meta.filename = QFileInfo(it->filepath).fileName();
+            }
+            return true;
+        }
+    }
+    return false;
 }
 
 /**

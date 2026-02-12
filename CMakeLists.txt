@@ -43,6 +43,10 @@ qt_add_executable(WusicPlayer
     src/WControlBar/WControlBar.h
     src/WControlBar/wtimeprogress.cpp
     src/WControlBar/wtimeprogress.h
+
+    # config manager
+    src/ConfigManager/ConfigManager.cpp
+    src/ConfigManager/ConfigManager.h
 )
 
 target_include_directories(WusicPlayer
@@ -52,13 +56,18 @@ target_include_directories(WusicPlayer
         ${TAGLIB_INCLUDE_DIRS}
 )
 
+add_subdirectory(thirdparty/lrc-parser)
+
 target_link_libraries(WusicPlayer
     PRIVATE
         Qt6::Core
         Qt6::Widgets
         Qt6::Multimedia
         ${TAGLIB_LIBRARIES}
+        lrc_parser
 )
+
+
 
 include(GNUInstallDirs)
 

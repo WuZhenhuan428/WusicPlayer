@@ -14,6 +14,7 @@ struct Track
 {
     QUuid uuid;
     QString filepath;
+    TrackMetaData meta;
     Track() : uuid(QUuid::createUuid()) {}
 };
 
@@ -33,6 +34,8 @@ public:
     // Modify & Manage
     void clearList();
     Track addTrack(const QString& filepath);
+    Track addTrackWithId(const QUuid& uuid, const QString& filepath);
+    bool updateTrackMeta(const QUuid& uuid, const TrackMetaData& meta);
     void removeTrack(const QUuid& uuid);
 
     Track* findTrackByID(const QUuid& uuid);
@@ -42,8 +45,8 @@ public:
     // status
     bool isEmpty();
     
-    QVector<Track> m_tracks;    // @TODO: switch to QMap<QUuid, filepath>
 private:
+    QVector<Track> m_tracks;    // @TODO: switch to QMap<QUuid, filepath>
     QString m_name;
     QUuid m_uuid;
 };

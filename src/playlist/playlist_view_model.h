@@ -7,6 +7,7 @@
 #include <QVariant>
 #include <QModelIndex>
 #include <QStringList>
+#include <QTimer>
 
 #include "playlist.h"
 #include "playlist_repo.h"
@@ -21,10 +22,11 @@ class PlaylistViewModel : public QAbstractItemModel
     Q_OBJECT
 
 public:
-    explicit PlaylistViewModel(PlaylistRepo* repo);
+    explicit PlaylistViewModel(PlaylistRepo* repo, QObject* parent = nullptr);
     ~PlaylistViewModel();
 
     void rebuild();
+    void rebuildAsync();
 
 /* ==== Context & Repo 绑定 ==== */
     void setPlaylist(const playlistId& playlist_id);
@@ -85,6 +87,8 @@ private:
    QVector<TableColumn> m_columns;
    void initDefaultColumns();
 
+    void scheduleBatchRebuild();
+
 signals:
     void changedPlaybackQueue();
     void updatedTrackMetadata(const trackId& track_id);
@@ -95,6 +99,10 @@ private:
     playlistId m_playlistId;
     trackId m_activeTrackId;
     Node* m_root = nullptr;
+
+    int m_rebuildToken = 0;
+
+    QTimer* m_batchRebuildTimer = nullptr;
 
     QVector<trackId> m_playbackQueue; // Linear queue for playback logic (separate from Tree structure)
     QVector<trackId> m_singleShuffleQueue;

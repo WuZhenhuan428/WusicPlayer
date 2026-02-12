@@ -47,6 +47,7 @@ struct LayoutResult
 {
     Node* root;
     QVector<QUuid> playbackQueue;
+    QVector<trackEntry> updatedMeta;
 };
 
 

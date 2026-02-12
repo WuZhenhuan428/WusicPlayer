@@ -7,6 +7,7 @@
 #include <QDialog>
 
 #include <QResizeEvent>
+#include <QShowEvent>
 
 #include <QMenuBar>
 #include <QToolBar>
@@ -44,10 +45,12 @@ public:
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
+    void showEvent(QShowEvent *event) override;
 
 private:
     Player* m_player;
     PlaylistManager* m_playlistManager;
+    bool m_cacheLoadScheduled = false;
     void initUI();
     void initConnection();
     
@@ -103,6 +106,8 @@ private:
     QTreeWidget* playlistTree;
     QTreeView* songTreeView;
     QHeaderView* songTreeViewHeader;
+    QLabel* songTreeLoadingLabel;
+    int m_loadingCount = 0;
 
     QSplitter* coverSplitter;
     QPixmap* origin_cover;

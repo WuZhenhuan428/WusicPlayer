@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 
 #include <QApplication>
+#include "src/ConfigManager/ConfigManager.h"
 
 int main(int argc, char *argv[])
 {

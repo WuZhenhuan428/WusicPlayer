@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include <QHeaderView>
+#include <QTimer>
 
 #include "src/playlist/playlist_definitions.h"
 #include "src/playlist/playlist_widgets.h"
@@ -24,6 +25,15 @@ MainWindow::MainWindow(Player* player, QWidget *parent)
 }
 
 MainWindow::~MainWindow() {}
+
+void MainWindow::showEvent(QShowEvent *event) {
+    QMainWindow::showEvent(event);
+    if (m_cacheLoadScheduled) {
+        return;
+    }
+    m_cacheLoadScheduled = true;
+    QTimer::singleShot(0, m_playlistManager, &PlaylistManager::loadCacheAfterShown);
+}
 
 void MainWindow::initConnection()
 {
@@ -89,30 +99,24 @@ void MainWindow::initConnection()
         }
     });
     connect(actInsertColumn, &QAction::triggered, this, [this](){
-        auto dialog = new WInsertColumnDialog;
-        int result = dialog->exec();
+        WInsertColumnDialog dialog;
+        int maxIndex = m_playlistManager->getViewModel()->getColumns().size();
+        dialog.setMaxIndex(maxIndex);
+        dialog.setIndex(1);
+        int result = dialog.exec();
         if (result == QDialog::Accepted) {
-            TableColumn column = dialog->getRule();
-            int index = m_playlistManager->getViewModel()->getColumns().size();
-
+            TableColumn column = dialog.getRule();
+            int index = dialog.index();
             m_playlistManager->getViewModel()->insertColumn(index, column);
         }
     });
     connect(actRemoveColumn, &QAction::triggered, this, [this](){
-        bool ok;
-        QString dst_str = QInputDialog::getText(
-            this,
-            tr("Remove column"),
-            tr("Input the column index except 0"),
-            QLineEdit::Normal,
-            "1",
-            &ok
-        );
-        if (ok) {
-            int dst_num = dst_str.toInt(&ok);
-            if (ok) {
-                m_playlistManager->getViewModel()->removeColumn(dst_num);
-            }
+        WColumnIndexDialog dialog(tr("Remove column"), tr("Input the column index except 0"), this);
+        int maxIndex = m_playlistManager->getViewModel()->getColumns().size() - 1;
+        dialog.setMaxIndex(maxIndex);
+        dialog.setIndex(1);
+        if (dialog.exec() == QDialog::Accepted) {
+            m_playlistManager->getViewModel()->removeColumn(dialog.index());
         }
     });
     // read file
@@ -145,6 +149,31 @@ void MainWindow::initConnection()
         }
     });
     connect(m_playlistManager, &PlaylistManager::playlistChanged, this, &MainWindow::updatePlaylist);
+    auto showLoading = [this]() {
+        if (++m_loadingCount == 1 && songTreeLoadingLabel) {
+            songTreeLoadingLabel->show();
+            songTreeLoadingLabel->raise();
+        }
+    };
+    auto hideLoading = [this]() {
+        if (m_loadingCount > 0) {
+            --m_loadingCount;
+        }
+        if (m_loadingCount == 0 && songTreeLoadingLabel) {
+            songTreeLoadingLabel->hide();
+        }
+    };
+
+    connect(m_playlistManager, &PlaylistManager::cacheLoadStarted, this, showLoading);
+    connect(m_playlistManager, &PlaylistManager::cacheLoadFinished, this, [hideLoading](int) {
+        hideLoading();
+    });
+    connect(m_playlistManager, &PlaylistManager::playlistLoadStarted, this, [showLoading](const QUuid&, int) {
+        showLoading();
+    });
+    connect(m_playlistManager, &PlaylistManager::playlistLoadFinished, this, [hideLoading](const QUuid&) {
+        hideLoading();
+    });
     connect(playlistTree, &QTreeWidget::itemDoubleClicked, this,
         [this](QTreeWidgetItem* item, int column) {
             WPlayListWidgetItem* temp = dynamic_cast<WPlayListWidgetItem*>(item);
@@ -170,12 +199,23 @@ void MainWindow::initConnection()
         QAction* actInsert = menu.addAction("Insert Column Here");
         QAction* actRemove = menu.addAction("Remove This Column");
         connect(actInsert, &QAction::triggered, [this, logical_index](){
-            QMessageBox::information(this, "Insert Column", 
-                QString("You want to insert a column at index: %1").arg(logical_index));
+            WInsertColumnDialog dialog;
+            int maxIndex = m_playlistManager->getViewModel()->getColumns().size();
+            dialog.setMaxIndex(maxIndex);
+            dialog.setIndex(logical_index);
+            if (dialog.exec() == QDialog::Accepted) {
+                TableColumn column = dialog.getRule();
+                m_playlistManager->getViewModel()->insertColumn(dialog.index(), column);
+            }
         });
         connect(actRemove, &QAction::triggered, [this, logical_index](){
-             QMessageBox::information(this, "Remove Column", 
-                QString("You want to remove the column at index: %1").arg(logical_index));
+            WColumnIndexDialog dialog(tr("Remove column"), tr("Input the column index except 0"), this);
+            int maxIndex = m_playlistManager->getViewModel()->getColumns().size() - 1;
+            dialog.setMaxIndex(maxIndex);
+            dialog.setIndex(logical_index);
+            if (dialog.exec() == QDialog::Accepted) {
+                m_playlistManager->getViewModel()->removeColumn(dialog.index());
+            }
         });
         menu.exec(songTreeViewHeader->mapToGlobal(pos));
     });
@@ -275,12 +315,20 @@ void MainWindow::initUI()
     songTreeView->setModel(m_playlistManager->getViewModel());
     songTreeView->setAlternatingRowColors(true);
     songTreeViewHeader = songTreeView->header();
-    songTreeViewHeader->setSectionResizeMode(0, QHeaderView::Fixed);
+    songTreeViewHeader->setSectionResizeMode(0, QHeaderView::Interactive);
     songTreeViewHeader->setSectionsMovable(true);
-    songTreeViewHeader->setFirstSectionMovable(false);
+    songTreeViewHeader->setFirstSectionMovable(true);
     songTreeViewHeader->setMinimumSectionSize(30);
     songTreeViewHeader->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     songTreeViewHeader->setContextMenuPolicy(Qt::CustomContextMenu);
+    songTreeView->setHeaderHidden(false);
+    songTreeViewHeader->setVisible(true);
+
+    songTreeLoadingLabel = new QLabel(songTreeView->viewport());
+    songTreeLoadingLabel->setText("Loading...");
+    songTreeLoadingLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
+    songTreeLoadingLabel->move(6, 4);
+    songTreeLoadingLabel->hide();
 
     mainSplitter->addWidget(playlistTree);
     mainSplitter->addWidget(songTreeView);
@@ -530,7 +578,7 @@ void MainWindow::loadCover(const QString& filepath) {
 
 void MainWindow::updateCoverScale() {
     if (!origin_cover || origin_cover->isNull()) return;
-    int dst_side_lenth = this->geometry().width() / 5;
+    int dst_side_lenth = this->geometry().width() / 4;
     QPixmap scaled = origin_cover->scaled(
         dst_side_lenth,
         dst_side_lenth,

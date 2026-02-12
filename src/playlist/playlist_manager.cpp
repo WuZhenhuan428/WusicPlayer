@@ -1,14 +1,33 @@
 #include "playlist_manager.h"
 
+#include <QTimer>
+
 PlaylistManager::PlaylistManager(QObject* parent)
     : QObject(parent)
 {
+    m_context = new PlaylistContext(this);
+    m_repo = new PlaylistRepo(this);
+    m_view = new PlaylistViewModel(m_repo, this);
+
     connect(m_context, &PlaylistContext::changedCurrentListId
             , m_view, &PlaylistViewModel::setPlaylist);
     connect(m_context, &PlaylistContext::changedCurrentTrackId,
             m_view, &PlaylistViewModel::setActiveTrack);
 
     connect(m_repo, &PlaylistRepo::playlistChanged, this, &PlaylistManager::retransmissionPlaylistChanged);
+    connect(m_repo, &PlaylistRepo::cacheLoadStarted, this, &PlaylistManager::cacheLoadStarted);
+    connect(m_repo, &PlaylistRepo::playlistLoadStarted, this, &PlaylistManager::playlistLoadStarted);
+    connect(m_repo, &PlaylistRepo::playlistLoadFinished, this, &PlaylistManager::playlistLoadFinished);
+    connect(m_repo, &PlaylistRepo::cacheLoadFinished, this, [this](int count) {
+        emit cacheLoadFinished(count);
+        if (m_context->getPlaylistId().isNull()) {
+            auto lists = m_repo->getLists();
+            if (!lists.isEmpty()) {
+                m_context->setPlaylist(lists.first()->id());
+            }
+        }
+    });
+
 }
 
 PlaylistManager::~PlaylistManager() {}
@@ -37,22 +56,14 @@ void PlaylistManager::copyPlaylist(const QUuid& playlist_id) {
 }
 
 void PlaylistManager::loadPlaylist(const QString& playlist_path) {
-    QUuid new_id = m_repo->loadList(playlist_path);
+    QUuid new_id = m_repo->loadListBatched(playlist_path, 500);
     if (!new_id.isNull()) {
         m_context->setPlaylist(new_id);
     }
 }
 
 void PlaylistManager::renamePlaylist(const QUuid& src_uuid, const QString dst_name) {
-    const auto& temp = m_repo->findPlaylistById(src_uuid);
-    if (temp) {
-        auto src_name = temp->name();
-        temp->setPlaylistName(dst_name);
-        emit m_repo->playlistChanged();
-        qDebug() << "[INFO] set playlist" << src_name << "to" <<temp->name();
-    } else {
-        qDebug() << "[WARNING] Playlist" << src_uuid << "does not exist";
-    }
+    m_repo->renameList(src_uuid, dst_name);
 }
 
 void PlaylistManager::saveCurrentPlaylist(const QString& save_path) {
@@ -61,16 +72,16 @@ void PlaylistManager::saveCurrentPlaylist(const QString& save_path) {
     qDebug() << "[INFO] save playlist " << uuid.toString() << " at " << save_path;
 }
 
+void PlaylistManager::loadCacheAfterShown() {
+    m_repo->loadCacheAsync();
+}
+
 
 void PlaylistManager::addTrack(const QString& filepath) {
     auto curr_playlist_id = m_context->getPlaylistId();
     if (curr_playlist_id.isNull()) {
-        m_repo->createList();
-        auto lists = m_repo->getLists();
-        if (!lists.isEmpty()) {
-            curr_playlist_id = lists.last()->id();
-            m_context->setPlaylist(curr_playlist_id);
-        }
+        curr_playlist_id = m_repo->createList();
+        m_context->setPlaylist(curr_playlist_id);
     }
     m_repo->addTrackToPlaylist(curr_playlist_id, filepath);
 }
@@ -83,19 +94,12 @@ void PlaylistManager::addFolder(const QString& directory) {
     // +++ wrap to a method
     auto curr_playlist_id = m_context->getPlaylistId();
     if (curr_playlist_id.isNull()) {
-        m_repo->createList();
-        auto lists = m_repo->getLists();
-        if (!lists.isEmpty()) {
-            curr_playlist_id = lists.last()->id();
-            m_context->setPlaylist(curr_playlist_id);
-        }
+        curr_playlist_id = m_repo->createList();
+        m_context->setPlaylist(curr_playlist_id);
     }
     // ---
 
     const auto& files = Audio::findAll(directory.toStdString());
-    auto list = m_repo->findPlaylistById(curr_playlist_id);
-    list->m_tracks.reserve(list->m_tracks.size() + static_cast<int>(files.size()));
-    
     QStringList tracksToAdd;
     tracksToAdd.reserve(static_cast<int>(files.size()));
 
@@ -108,16 +112,21 @@ void PlaylistManager::addFolder(const QString& directory) {
     if (!tracksToAdd.isEmpty()) {
         m_repo->addTracksToPlaylist(curr_playlist_id, tracksToAdd);
     }
-    list->m_tracks.shrink_to_fit();
 }
 
 QString PlaylistManager::nextTrack() {
     auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
+    if (!pl) {
+        return QString();
+    }
     auto next_id = m_view->nextOf(m_context->getPlayTrackId());
     if (!next_id.isNull()) {
         m_context->setPlayTrack(next_id);
         auto track = pl->findTrackByID(next_id);
-        return track->filepath;
+        if (track) {
+            return track->filepath;
+        }
+        return QString();
     } else {
         return QString();
     }
@@ -125,11 +134,17 @@ QString PlaylistManager::nextTrack() {
 
 QString PlaylistManager::prevTrack() {
     auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
+    if (!pl) {
+        return QString();
+    }
     auto prev_id = m_view->previousOf(m_context->getPlayTrackId());
     if (!prev_id.isNull()) {
         m_context->setPlayTrack(prev_id);
         auto track = pl->findTrackByID(prev_id);
-        return track->filepath;
+        if (track) {
+            return track->filepath;
+        }
+        return QString();
     } else {
         return QString();
     }
@@ -146,18 +161,26 @@ void PlaylistManager::play(int index) {
 
     auto listId = m_context->getPlaylistId();
     auto playlist = m_repo->findPlaylistById(listId);
-    if (playlist) {
-        Track* t = playlist->findTrackByID(id);
-        if (t) {
-            emit requestPlay(t->filepath);
-        }
+    if (!playlist) {
+        return;
+    }
+    Track* t = playlist->findTrackByID(id);
+    if (t) {
+        emit requestPlay(t->filepath);
     }
 }
 
-const QString& PlaylistManager::getCurrentTrack() {
+QString PlaylistManager::getCurrentTrack() {
     QUuid track_id = m_context->getPlayTrackId();
     auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
-    return pl->findTrackByID(track_id)->filepath;
+    if (!pl) {
+        return QString();
+    }
+    Track* track = pl->findTrackByID(track_id);
+    if (!track) {
+        return QString();
+    }
+    return track->filepath;
 }
 
 const QUuid& PlaylistManager::getCurrentPlaylist() const{

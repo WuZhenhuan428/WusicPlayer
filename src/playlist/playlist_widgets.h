@@ -68,7 +68,15 @@ public:
     explicit WInsertColumnDialog();
     ~WInsertColumnDialog();
     TableColumn getRule();
+    void setIndex(int index);
+    void setMaxIndex(int index);
+    int index() const;
 private:
+    QLabel* lbIndex;
+    QLineEdit* txtIndex;
+    QHBoxLayout* hbIndex;
+    int m_maxIndex = 0;
+
     QLabel* lbTitle;
     QLineEdit* txtTitle;
     QHBoxLayout* hbTitle;
@@ -76,6 +84,28 @@ private:
     QLabel* lbType;
     QComboBox* cbType;
     QHBoxLayout* hbType;
+
+    QPushButton* btnOK;
+    QPushButton* btnCancel;
+    QHBoxLayout* hbBtn;
+
+    QVBoxLayout* vbMain;
+};
+
+class WColumnIndexDialog : public QDialog
+{
+public:
+    explicit WColumnIndexDialog(const QString& title, const QString& prompt, QWidget* parent = nullptr);
+    ~WColumnIndexDialog();
+    void setIndex(int index);
+    void setMaxIndex(int index);
+    int index() const;
+
+private:
+    QLabel* lbPrompt;
+    QLineEdit* txtIndex;
+    QHBoxLayout* hbIndex;
+    int m_maxIndex = 0;
 
     QPushButton* btnOK;
     QPushButton* btnCancel;
