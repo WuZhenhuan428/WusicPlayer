@@ -19,7 +19,7 @@ MainWindow::MainWindow(Player* player, QWidget *parent)
     defaultRule.type = SortType::album; // Or whatever default
     m_playlistManager->getViewModel()->setSingleGrouping(defaultRule);
     
-    this->setMinimumSize(1280, 720);
+    this->setMinimumSize(800, 600);
     this->initUI();
     this->initConnection();
 }
@@ -44,13 +44,13 @@ void MainWindow::initConnection()
     connect(controlBar, &WControlBar::sgnBtnNextClicked, this, [this](){
         QString next_track = m_playlistManager->nextTrack();
         if (!next_track.isEmpty()) {
-            emit sgnFilepathChanged(next_track);
+            playTrack(next_track);
         }
     });
     connect(controlBar, &WControlBar::sgnBtnPrevClicked, this, [this](){
         QString prev_track = m_playlistManager->prevTrack();
         if (!prev_track.isEmpty()) {
-            emit sgnFilepathChanged(prev_track);
+            playTrack(prev_track);
         }
     });
 
@@ -120,7 +120,6 @@ void MainWindow::initConnection()
         }
     });
     // read file
-    connect(this, &MainWindow::sgnFilepathChanged, this, &MainWindow::playTrack);
     connect(this, &MainWindow::sgnLoadPlaylist, m_playlistManager, &PlaylistManager::loadPlaylist);
 
     connect(m_player->MediaPlayer, &QMediaPlayer::playbackStateChanged, controlBar, &WControlBar::onPlayerStateChanged);
@@ -128,7 +127,7 @@ void MainWindow::initConnection()
         if (status == QMediaPlayer::MediaStatus::EndOfMedia) {
             QString next_track = m_playlistManager->nextTrack();
             if (!next_track.isEmpty()) {
-                emit sgnFilepathChanged(next_track);
+                playTrack(next_track);
             }
         }
     });
@@ -219,6 +218,9 @@ void MainWindow::initConnection()
         });
         menu.exec(songTreeViewHeader->mapToGlobal(pos));
     });
+    
+    // lrc panel
+    connect(m_player, &Player::positionChanged, lyricsPanel, &WLyricsPanel::getCurrentRow);
 }
 
 void MainWindow::initUI()
@@ -294,10 +296,9 @@ void MainWindow::initUI()
     coverImageLabel->setPixmap(*origin_cover);
     resize(800, 600);
 
-    lrcListView = new QListView;
-    // @TODO: Lyrics display
+    lyricsPanel = new WLyricsPanel;
     coverSplitter->addWidget(coverImageLabel);
-    coverSplitter->addWidget(lrcListView);
+    coverSplitter->addWidget(lyricsPanel);
     coverSplitter->setChildrenCollapsible(false);
     coverSplitter->setStretchFactor(0, 1);
     coverSplitter->setStretchFactor(1, 1);
@@ -350,7 +351,7 @@ void MainWindow::onOpenFile() {
     );
 
     if (!filepath.isEmpty()) {
-        emit sgnFilepathChanged(filepath);
+        playTrack(filepath);
     }
     else {
         qDebug() << "[INFO] filepath is empty!";
@@ -418,7 +419,7 @@ void MainWindow::onRemovePlaylist() {
 }
 
 
-// @TODO: set default type name
+/// @todo: set default type name
 void MainWindow::onSavePlaylist() {
     QFileDialog dialog(this);
     dialog.setWindowTitle("Save playlist file");
@@ -562,8 +563,20 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
 }
 
 void MainWindow::playTrack(const QString& filepath) {
+    if (filepath.isEmpty()) {
+        return;
+    }
     m_player->read(filepath);
     loadCover(filepath);
+    TrackMetaData meta = m_playlistManager->getCurrentMetadata();
+
+    if (meta.isValid && meta.filepath == filepath && !meta.lyrics.isEmpty()) {
+        lyricsPanel->setRawLyrics(meta.lyrics);
+        qDebug() << "[LRC] Loaded from metadata.";
+    } else {
+        lyricsPanel->setLocalLrc(filepath);
+        qDebug() << "[LRC] Loaded from .lrc file.";
+    }
 }
 
 void MainWindow::loadCover(const QString& filepath) {

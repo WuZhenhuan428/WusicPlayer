@@ -14,11 +14,6 @@ Player::~Player() {}
 void Player::initConnections() {
     connect(MediaPlayer, &QMediaPlayer::positionChanged, this, &Player::positionChanged);
     connect(MediaPlayer, &QMediaPlayer::durationChanged, this, &Player::durationChanged);
-    // connect(MediaPlayer, &QMediaPlayer::mediaStatusChanged, [=](QMediaPlayer::MediaStatus status){
-    //     if (status == QMediaPlayer::MediaStatus::EndOfMedia) {
-    //         // 
-    //     }
-    // });
     connect(MediaPlayer, &QMediaPlayer::playbackStateChanged, this, &Player::onPlaybackStateChanged);
 }
 

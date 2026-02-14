@@ -34,6 +34,7 @@
 #include "src/playlist/playlist_manager.h"
 #include "src/playlist/playlist_widgets.h"
 #include "src/WControlBar/WControlBar.h"
+#include "src/WLyricsPanel/WLyricsPanel.h"
 
 class MainWindow : public QMainWindow
 {
@@ -112,14 +113,12 @@ private:
     QSplitter* coverSplitter;
     QPixmap* origin_cover;
     QLabel* coverImageLabel;
-    QListView* lrcListView; // Temporarily used for placeholder purposes
-
+    WLyricsPanel* lyricsPanel;
 
 private slots:
     void updatePlaylist();
     
 signals:
-    void sgnFilepathChanged(QString filepath);
     void sgnLoadPlaylist(QString filepath);
     void sgnCurrentPlaylistChanged(QUuid playlist_id);
 };

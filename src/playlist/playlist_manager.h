@@ -34,6 +34,7 @@ public:
     const QUuid& getCurrentPlaylist() const;
     QVector<PlaylistInfo> getAllPlaylists();
     QVector<std::shared_ptr<Playlist>> getPlaylists();
+    TrackMetaData getCurrentMetadata();
 
 public slots:
     // receive signals from UI

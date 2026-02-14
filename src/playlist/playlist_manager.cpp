@@ -208,3 +208,18 @@ void PlaylistManager::switchToPlaylist(const QUuid& id) {
 QVector<std::shared_ptr<Playlist>> PlaylistManager::getPlaylists() {
         return m_repo->getLists();
 }
+
+TrackMetaData PlaylistManager::getCurrentMetadata() {
+    QUuid track_id = m_context->getPlayTrackId();
+    auto playlist = m_repo->findPlaylistById(m_context->getPlaylistId());
+
+    if (playlist) {
+        Track* track = playlist->findTrackByID(track_id);
+        if (track) {
+            return track->meta;
+        }
+    }
+    TrackMetaData empty_meta;
+    empty_meta.isValid = false;
+    return empty_meta;
+}

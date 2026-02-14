@@ -47,6 +47,12 @@ qt_add_executable(WusicPlayer
     # config manager
     src/ConfigManager/ConfigManager.cpp
     src/ConfigManager/ConfigManager.h
+
+    # lyrics panel
+    src/WLyricsPanel/WLyricsPanel.cpp
+    src/WLyricsPanel/WLyricsPanel.h
+    src/WLyricsPanel/WLyricsModel.cpp
+    src/WLyricsPanel/WLyricsModel.h
 )
 
 target_include_directories(WusicPlayer
