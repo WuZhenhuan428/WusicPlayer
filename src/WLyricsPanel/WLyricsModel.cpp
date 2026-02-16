@@ -12,15 +12,31 @@ WLyricsModel::WLyricsModel(QObject* parent)
 
 WLyricsModel::~WLyricsModel() {}
 
-void WLyricsModel::setRawLyrics(const QString& raw_data) {
+void WLyricsModel::setDefaultInfo(const QString& filename, const QString& artist) {
     beginResetModel();
     m_parser.clear();
-    if (!raw_data.isEmpty()) {
-        if (m_parser.parseString(raw_data.toStdString())) {
-            qDebug() << "[LRC] Loaded from cache metadata";
-        }
+    QString foo;
+    foo.append("[00:00.000] Title: ");
+    foo.append(filename);
+    foo.append("\n[00:00.001] Artist: ");
+    foo.append(artist);
+    foo.append("\n");
+    auto bar = foo.toUtf8();
+    m_parser.parseString(bar.toStdString());
+    endResetModel();
+}
+
+bool WLyricsModel::setRawLyrics(const QString& raw_data) {
+    beginResetModel();
+    m_parser.clear();
+    if (raw_data.isEmpty()) {
+        return false;
+    }
+    if (m_parser.parseString(raw_data.toStdString())) {
+        qDebug() << "[LRC] Loaded from cache metadata";
     }
     endResetModel();
+    return true;
 }
 
 bool WLyricsModel::setLocalLrc(const QString& filepath) {

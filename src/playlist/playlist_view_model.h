@@ -77,6 +77,7 @@ public:
     QVector<trackId> generateGroupShuffleQueue();
     QVector<trackId> generateSingleShuffleQueue();
     void setPlayMode(PlayMode to_mode);
+    const PlayMode getPlayMode() const;
     trackId nextOf(const trackId& track_id) const;
     trackId previousOf(const trackId& track_id) const;
 

@@ -18,17 +18,26 @@ void WLyricsPanel::getCurrentRow(qint64 position_ms) {
         QModelIndex idx = m_lrcModel->index(row, 0);
         if (idx.isValid()) {
             this->scrollTo(idx, QAbstractItemView::PositionAtCenter);
-            // delegate
         }
     }
 }
 
-void WLyricsPanel::setRawLyrics(const QString& raw_data) {
-    m_lrcModel->setRawLyrics(raw_data);
+bool WLyricsPanel::setRawLyrics(const QString& raw_data) {
+    if (m_lrcModel->setRawLyrics(raw_data)) {
+        return true;
+    }
+    return false;
 }
 
-void WLyricsPanel::setLocalLrc(const QString& filepath) {
-    m_lrcModel->setLocalLrc(filepath);
+bool WLyricsPanel::setLocalLrc(const QString& filepath) {
+    if (m_lrcModel->setLocalLrc(filepath)) {
+        return true;
+    }
+    return false;
+}
+
+void WLyricsPanel::setDefaultInfo(const QString& filename, const QString& artist) {
+    m_lrcModel->setDefaultInfo(filename, artist);
 }
 
 void WLyricsPanel::wheelEvent(QWheelEvent* event) {

@@ -21,7 +21,6 @@
 #include <QInputDialog>
 #include <QMessageBox>
 
-// TODO: complete list widgets
 #include <QSplitter>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
@@ -29,6 +28,9 @@
 #include <QLabel>
 #include <QListView>
 #include <QPixmap>
+
+#include <QCloseEvent>
+#include "src/ConfigManager/ConfigManager.h"
 
 #include "src/player/player.h"
 #include "src/playlist/playlist_manager.h"
@@ -47,6 +49,7 @@ public:
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void showEvent(QShowEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private:
     Player* m_player;
@@ -55,6 +58,10 @@ private:
     void initUI();
     void initConnection();
     
+    // Configmanager
+    void applyConfig();
+    void saveConfig();
+
     // UI Action
     void onOpenFile();
     void onAddFile();

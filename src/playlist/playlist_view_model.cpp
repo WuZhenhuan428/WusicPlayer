@@ -487,6 +487,9 @@ void PlaylistViewModel::setPlayMode(PlayMode to_mode) {
     }
 }
 
+const PlayMode PlaylistViewModel::getPlayMode() const {
+    return this->m_playMode;
+}
 
 trackId PlaylistViewModel::nextOf(const trackId& track_id) const {
     int index;
@@ -547,7 +550,7 @@ trackId PlaylistViewModel::previousOf(const trackId& track_id) const {
         index = m_playbackQueue.indexOf(track_id);
         if (index != -1)  {
             if (index > 0) {
-                return m_playbackQueue.at(index+1);
+                return m_playbackQueue.at(index-1);
             }
             else if (index == 0) {
                 return m_playbackQueue.at(m_playbackQueue.size()-1);

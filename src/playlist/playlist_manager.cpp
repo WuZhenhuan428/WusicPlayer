@@ -183,6 +183,10 @@ QString PlaylistManager::getCurrentTrack() {
     return track->filepath;
 }
 
+const QUuid& PlaylistManager::getCurreentTrackId() const {
+    return this->m_context->getPlayTrackId();
+}
+
 const QUuid& PlaylistManager::getCurrentPlaylist() const{
     return this->m_context->getPlaylistId();
 }
@@ -222,4 +226,8 @@ TrackMetaData PlaylistManager::getCurrentMetadata() {
     TrackMetaData empty_meta;
     empty_meta.isValid = false;
     return empty_meta;
+}
+
+PlayMode PlaylistManager::getCurrentPlayMode() {
+    return m_view->getPlayMode();
 }

@@ -22,6 +22,7 @@ MainWindow::MainWindow(Player* player, QWidget *parent)
     this->setMinimumSize(800, 600);
     this->initUI();
     this->initConnection();
+    this->applyConfig();
 }
 
 MainWindow::~MainWindow() {}
@@ -571,11 +572,15 @@ void MainWindow::playTrack(const QString& filepath) {
     TrackMetaData meta = m_playlistManager->getCurrentMetadata();
 
     if (meta.isValid && meta.filepath == filepath && !meta.lyrics.isEmpty()) {
-        lyricsPanel->setRawLyrics(meta.lyrics);
-        qDebug() << "[LRC] Loaded from metadata.";
-    } else {
-        lyricsPanel->setLocalLrc(filepath);
+        if (lyricsPanel->setRawLyrics(meta.lyrics)) {
+            qDebug() << "[LRC] Loaded from metadata.";
+        }
+    } else if (lyricsPanel->setLocalLrc(filepath)) {
         qDebug() << "[LRC] Loaded from .lrc file.";
+    } else {
+        TrackMetaData meta = m_playlistManager->getCurrentMetadata();
+        lyricsPanel->setDefaultInfo(meta.title, meta.artist);
+        qDebug() << "[LRC] Use default info";
     }
 }
 
@@ -600,4 +605,180 @@ void MainWindow::updateCoverScale() {
     );
     coverImageLabel->setFixedSize(dst_side_lenth, dst_side_lenth);
     coverImageLabel->setPixmap(scaled);
+}
+
+
+void MainWindow::applyConfig() {
+    const AppConfig& cfg = ConfigManager::getInstance().getAppConfig();
+
+    // load geometry & state
+    if (!cfg.window.geometry.isEmpty()) {
+        this->restoreGeometry(cfg.window.geometry);
+    }
+    if (!cfg.window.state.isEmpty()) {
+        this->restoreState(cfg.window.state);
+    }
+
+    // window: flip
+    m_player->setVolume(cfg.window.volume);
+    if (m_player->MediaPlayer && m_player->MediaPlayer->audioOutput()) {
+        const bool now_muted = m_player->MediaPlayer->audioOutput()->isMuted();
+        if (cfg.window.isMuted != now_muted) {
+            m_player->flipMute();
+        }
+    }
+    // window: volume
+    const auto sliders = controlBar->findChildren<QSlider*>();
+    for (QSlider* s : sliders) {
+        if (s && s->orientation() == Qt::Horizontal && s->maximum() == 100  && s->maximumWidth() == 100) {
+            s->setValue(cfg.window.volume);
+            break;
+        }
+    }
+
+    // last_playlist & last_track (must wait cache + model rebuild)
+    auto restorePlaybackState = [this, &cfg]() {
+        const QUuid last_playlist_id = cfg.playback.last_playlist_id;
+        const QUuid last_track_id = cfg.playback.last_track_id;
+        const int last_position_ms = cfg.playback.position_ms;
+
+        if (last_playlist_id.isNull()) {
+            return;
+        }
+
+        auto findQueueIndexByTrackId = [this](const QUuid& track_id) -> int {
+            if (track_id.isNull()) {
+                return -1;
+            }
+            const auto& queue = m_playlistManager->getViewModel()->playbackQueue();
+            return queue.indexOf(track_id);
+        };
+
+        auto seekWhenMediaReady = [this](int target_ms) {
+            if (target_ms <= 0) {
+                return;
+            }
+            auto retry_count = std::make_shared<int>(0);
+            auto try_seek = std::make_shared<std::function<void()>>();
+
+            *try_seek = [this, target_ms, retry_count, try_seek]() {
+                QMediaPlayer* media_player = m_player->MediaPlayer;
+                if (!media_player) {
+                    return;
+                }
+
+                const auto status = media_player->mediaStatus();
+                const bool can_seek = (
+                    status == QMediaPlayer::LoadedMedia ||
+                    status == QMediaPlayer::BufferedMedia ||
+                    status == QMediaPlayer::BufferingMedia)
+                    && (media_player->duration() > 0
+                );
+                if (can_seek) {
+                    m_player->setPosition(target_ms);
+                    m_player->pause();
+                    return;
+                }
+                if (++(*retry_count) > 30) {    // ~1.5s timeout
+                    return;
+                }
+                QTimer::singleShot(50, this, *try_seek);
+            };
+            QTimer::singleShot(0, this, *try_seek);
+        };
+
+        auto restoreAfterModelReset = [this, last_track_id, last_position_ms, findQueueIndexByTrackId, seekWhenMediaReady] () {
+            if (last_track_id.isNull()) {
+                return;
+            }
+            const int queue_index = findQueueIndexByTrackId(last_track_id);
+            if (queue_index < 0) {
+                return;
+            }
+            m_playlistManager->play(queue_index);
+            seekWhenMediaReady(last_position_ms);
+        };
+
+        auto restorAfterCacheLoaded = [this, last_playlist_id, restoreAfterModelReset](int) {
+            m_playlistManager->switchToPlaylist(last_playlist_id);
+            connect(m_playlistManager->getViewModel(), &QAbstractItemModel::modelReset, this,
+                    restoreAfterModelReset, Qt::SingleShotConnection);
+        };
+
+        connect(m_playlistManager, &PlaylistManager::cacheLoadFinished, this,
+                restorAfterCacheLoaded, Qt::SingleShotConnection);
+    };
+    restorePlaybackState();
+    
+    // view: columns
+    if (!cfg.view.columns.isEmpty()) {
+        QVector<TableColumn> columns;
+        columns.reserve(cfg.view.columns.size());
+        for (const auto& c : cfg.view.columns) {
+            columns.append(c);
+        }
+        m_playlistManager->getViewModel()->setColumns(columns);
+    }
+    // view: song_tree_header_state
+    auto restoreHeaderState = [this, &cfg]() {
+        songTreeViewHeader->restoreState(cfg.view.song_tree_header_state);
+    };
+    connect(m_playlistManager->getViewModel(), &QAbstractItemModel::modelReset, this,
+            restoreHeaderState, Qt::SingleShotConnection);
+
+    // playback: mode
+    m_playlistManager->getViewModel()->setPlayMode(cfg.playback.play_mode);
+}
+
+void MainWindow::saveConfig() {
+    ConfigManager& cm = ConfigManager::getInstance();
+
+    cm.setWindowGeometry(this->saveGeometry());
+    cm.setWindowState(this->saveState());
+
+    int volume = 100;
+    const auto sliders = controlBar->findChildren<QSlider*>();
+    for (QSlider* s : sliders) {
+        if (s && s->orientation() == Qt::Horizontal && s->maximum() == 100 && s->maximumWidth() == 100) {
+            volume = s->value();
+            break;
+        }
+    }
+    cm.setVolume(volume);
+    cm.setPlayMode(this->m_playlistManager->getCurrentPlayMode());
+    bool muted = false;
+    if (m_player->MediaPlayer && m_player->MediaPlayer->audioOutput()) {
+        muted = m_player->MediaPlayer->audioOutput()->isMuted();
+    }
+    cm.setMute(muted);
+
+    do {
+        const QUuid last_playlist_id = m_playlistManager->getCurrentPlaylist();
+        const QUuid last_track_id = m_playlistManager->getCurreentTrackId();
+        if (last_playlist_id.isNull() || last_track_id.isNull()) {
+            break;
+        }
+        cm.setLastPlayInfo(
+            last_playlist_id,
+            last_track_id,
+            m_player->MediaPlayer->hasAudio() ? static_cast<int>(m_player->MediaPlayer->position()) : 0
+        );
+        
+    } while (0);
+    
+    QList<TableColumn> cols;
+    const QVector<TableColumn>& vmCols = m_playlistManager->getViewModel()->getColumns();
+    for (const auto& c : vmCols) {
+        cols.append(c);
+    }
+    cm.setTableColumns(cols);
+
+    QByteArray header = songTreeViewHeader->saveState();
+    cm.setSongTreeViewHeader(header);
+    cm.save();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+    saveConfig();
+    QMainWindow::closeEvent(event);
 }

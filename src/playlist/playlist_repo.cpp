@@ -8,7 +8,7 @@
 #include <QPointer>
 #include <QThread>
 #include <QPointer>
-
+#include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonValue>
@@ -61,17 +61,49 @@ static void applyJsonToMeta(const QJsonObject& obj, TrackMetaData& meta) {
     meta.year = obj.value("year").toInt(meta.year);
 }
 
+static QString resolvePlaylistsCacheDir() {
+    QString base = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    if (base.isEmpty()) {
+        return QString();
+    }
+
+    QDir baseDir(base);
+    baseDir.mkpath(".");
+    
+    const QString playlists_dir = baseDir.filePath("playlists");
+    QDir(playlists_dir).mkpath(".");
+
+    return playlists_dir;
+}
+
+static void migratePlaylistCache(const QString& fromDirPath, const QString& toDirPath) {
+    if (fromDirPath.isEmpty() || fromDirPath == toDirPath) return;
+
+    QDir fromDir(fromDirPath);
+    if (!fromDir.exists()) return;
+
+    QDir toDir(toDirPath);
+    toDir.mkpath(".");
+
+    if (QFileInfo(fromDir.absolutePath()) == QFileInfo(toDir.absolutePath())) return;
+
+    const QStringList files = fromDir.entryList(QStringList() << "*.wcpl", QDir::Files);
+    for (const QString& file : files) {
+        const QString src = fromDir.filePath(file);
+        const QString dst = toDir.filePath(file);
+        if (QFile::exists(dst)) continue;
+        if (!QFile::rename(src, dst)) {
+            QFile::copy(src, dst);
+        }
+    }
+}
+
 PlaylistRepo::PlaylistRepo(QObject *parent)
     : QObject(parent)
 {
-    m_cacheDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    if (!m_cacheDir.isEmpty()) {
-        QDir baseDir(m_cacheDir);
-        baseDir.mkpath(".");
-        m_cacheDir = baseDir.filePath("playlists");
-        QDir playlistDir(m_cacheDir);
-        playlistDir.mkpath(".");
-    }
+    m_cacheDir = resolvePlaylistsCacheDir();
+    
+    
 }
 
 PlaylistRepo::~PlaylistRepo() {}

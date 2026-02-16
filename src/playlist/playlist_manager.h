@@ -19,7 +19,7 @@ struct PlaylistInfo
 class PlaylistManager : public QObject
 {
     Q_OBJECT
-
+public:
     PlaylistContext* m_context = nullptr;
     PlaylistRepo* m_repo = nullptr;
     PlaylistViewModel* m_view = nullptr;
@@ -31,10 +31,12 @@ public:
 public:
     PlaylistViewModel* getViewModel();
     QString getCurrentTrack();
+    const QUuid& getCurreentTrackId() const;
     const QUuid& getCurrentPlaylist() const;
     QVector<PlaylistInfo> getAllPlaylists();
     QVector<std::shared_ptr<Playlist>> getPlaylists();
     TrackMetaData getCurrentMetadata();
+    PlayMode getCurrentPlayMode();
 
 public slots:
     // receive signals from UI
