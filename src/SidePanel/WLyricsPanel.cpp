@@ -1,8 +1,10 @@
 #include "WLyricsPanel.h"
+#include "../playlist/playlist_definitions.h"
 
 WLyricsPanel::WLyricsPanel() {
     m_lrcModel = new WLyricsModel;
     this->setModel(m_lrcModel);
+    this->setWordWrap(true);
     this->setSelectionMode(QAbstractItemView::NoSelection);
     this->setEditTriggers(QAbstractItemView::NoEditTriggers);
     this->setFocusPolicy(Qt::NoFocus);
@@ -36,8 +38,8 @@ bool WLyricsPanel::setLocalLrc(const QString& filepath) {
     return false;
 }
 
-void WLyricsPanel::setDefaultInfo(const QString& filename, const QString& artist) {
-    m_lrcModel->setDefaultInfo(filename, artist);
+void WLyricsPanel::setDefaultInfo(const TrackMetaData& meta) {
+    m_lrcModel->setDefaultInfo(meta);
 }
 
 void WLyricsPanel::wheelEvent(QWheelEvent* event) {

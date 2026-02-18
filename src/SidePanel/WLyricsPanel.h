@@ -13,7 +13,7 @@ public:
     void getCurrentRow(qint64 position_ms);
     bool setRawLyrics(const QString& raw_data);
     bool setLocalLrc(const QString& filepath);
-    void setDefaultInfo(const QString& filename, const QString& artist);
+    void setDefaultInfo(const TrackMetaData& meta);
 private:
     WLyricsModel* m_lrcModel;
     void wheelEvent(QWheelEvent* event);

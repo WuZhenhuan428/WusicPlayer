@@ -27,7 +27,7 @@
 #include <QTableView>
 #include <QLabel>
 #include <QListView>
-#include <QPixmap>
+#include <QHBoxLayout>
 
 #include <QCloseEvent>
 #include "src/ConfigManager/ConfigManager.h"
@@ -35,8 +35,9 @@
 #include "src/player/player.h"
 #include "src/playlist/playlist_manager.h"
 #include "src/playlist/playlist_widgets.h"
+#include "src/playlist/playlist_search_panel.h"
 #include "src/WControlBar/WControlBar.h"
-#include "src/WLyricsPanel/WLyricsPanel.h"
+#include "src/SidePanel/SidePanel.h"
 
 class MainWindow : public QMainWindow
 {
@@ -72,9 +73,8 @@ private:
     void onRenamePlaylist();
     void onRemovePlaylist();
     void onSavePlaylist();
+    void onOpenSearchPanel();
     void playTrack(const QString& filepath);
-    void updateCoverScale();
-    void loadCover(const QString& filepath);
 
     void onTreeContextMenuRequested(const QPoint &pos);
     
@@ -102,25 +102,29 @@ private:
     QAction* actSetSortRule;
     QAction* actInsertColumn;
     QAction* actRemoveColumn;
+    QAction* actSearchPanel;
     
     // menu Help
     QMenu* menuHelp;
     QAction* actManual;
     QAction* actAbout;
     
-    // main window:
+    // +++main window
     /// Playlist | song table | cover & rolling lyrics
-    QSplitter* mainSplitter;
+    QSplitter* centerLeftSplitter;
     QTreeWidget* playlistTree;
     QTreeView* songTreeView;
     QHeaderView* songTreeViewHeader;
     QLabel* songTreeLoadingLabel;
     int m_loadingCount = 0;
+    SidePanel* m_sidePanel;
+    QWidget* centerWidget;
+    QHBoxLayout* mainLayout;
+    // ---main window
 
-    QSplitter* coverSplitter;
-    QPixmap* origin_cover;
-    QLabel* coverImageLabel;
-    WLyricsPanel* lyricsPanel;
+    PlaylistSearchPanel* searchPanel = nullptr;
+    QByteArray m_searchPanelHeaderStateCache;
+    QByteArray m_searchPanelGeoCache;
 
 private slots:
     void updatePlaylist();

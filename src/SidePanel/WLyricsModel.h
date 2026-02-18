@@ -7,6 +7,7 @@
 #include <QPainter>
 
 #include "lrc_parser.h"
+#include "../playlist/playlist_definitions.h"
 
 class WLyricsModel : public QAbstractListModel
 {
@@ -21,7 +22,7 @@ public:
     explicit WLyricsModel(QObject* parent = nullptr);
     ~WLyricsModel();
 
-    void setDefaultInfo(const QString& filename, const QString& artist);
+    void setDefaultInfo(const TrackMetaData& meta);
     bool setLocalLrc(const QString& filepath);
     bool setRawLyrics(const QString& raw_data);
     int getCurrentRow(qint64 pos_ms);

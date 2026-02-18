@@ -96,26 +96,34 @@ void ConfigManager::load() {
     m_appConfig.version = root.value("version").toInt(kConfigVersion);
 
     const QJsonObject window_obj = root.value("window").toObject();
-    m_appConfig.window.geometry = QByteArray::fromBase64(window_obj.value("geometry").toString().toUtf8());
-    m_appConfig.window.state = QByteArray::fromBase64(window_obj.value("state").toString().toUtf8());
-    m_appConfig.window.volume = window_obj.value("volume").toInt(100);
-    m_appConfig.window.isMuted = window_obj.value("is_muted").toBool(false);
+    setWindowGeometry(
+        QByteArray::fromBase64(window_obj.value("geometry").toString().toUtf8())
+    );
+    setWindowState(
+        QByteArray::fromBase64(window_obj.value("state").toString().toUtf8())
+    );
+    setVolume(window_obj.value("volume").toInt(100));
+    setMute(window_obj.value("is_muted").toBool(false));
 
     const QJsonObject playback_obj = root.value("playback").toObject();
     const QUuid playlist_id(playback_obj.value("last_playlist_id").toString());
     const QUuid track_id(playback_obj.value("last_track_id").toString());
-    m_appConfig.playback.last_playlist_id = playlist_id.isNull() ? QUuid() : playlist_id;
-    m_appConfig.playback.last_track_id = track_id.isNull() ? QUuid() : track_id;
-    m_appConfig.playback.position_ms = playback_obj.value("position_ms").toInt(0);
+    setLastPlayInfo(
+        (playlist_id.isNull() ? QUuid() : playlist_id),
+        (track_id.isNull() ? QUuid() : track_id),
+        (playback_obj.value("position_ms").toInt(0))
+    );
 
     int mode_val = playback_obj.value("play_mode").toInt(static_cast<int>(PlayMode::in_order));
     if (mode_val < static_cast<int>(PlayMode::in_order) || mode_val > static_cast<int>(PlayMode::out_of_order_group)) {
         mode_val = static_cast<int>(PlayMode::in_order);
     }
-    m_appConfig.playback.play_mode = static_cast<PlayMode>(mode_val);
+    setPlayMode(static_cast<PlayMode>(mode_val));
 
     const QJsonObject view_obj = root.value("view").toObject();
-    m_appConfig.view.song_tree_header_state = QByteArray::fromBase64(view_obj.value("song_tree_header_state").toString().toUtf8());
+    setSongTreeViewHeader(
+        QByteArray::fromBase64(view_obj.value("state").toString().toUtf8())
+    );
     const QJsonArray column_arr = view_obj.value("columns").toArray();
     if (!column_arr.isEmpty()) {
         m_appConfig.view.columns.clear();
@@ -125,6 +133,14 @@ void ConfigManager::load() {
             }
         }
     }
+
+    const QJsonObject search_panel_obj = root.value("search_panel").toObject();
+    setSearchPanelGeometry(
+        QByteArray::fromBase64(search_panel_obj.value("geometry").toString().toUtf8())
+    );
+    setSearchPanelHeader(
+        QByteArray::fromBase64(search_panel_obj.value("state").toString().toUtf8())
+    );
 }
 
 void ConfigManager::save() {
@@ -156,8 +172,13 @@ void ConfigManager::save() {
     }
     QJsonObject view_obj;
     view_obj["columns"] = column_arr;
-    view_obj["song_tree_header_state"] = QString::fromUtf8(m_appConfig.view.song_tree_header_state.toBase64());
+    view_obj["state"] = QString::fromUtf8(m_appConfig.view.state.toBase64());
     root["view"] = view_obj;
+
+    QJsonObject search_panel_obj;
+    search_panel_obj["geometry"] = QString::fromUtf8(m_appConfig.search_panel.geometry.toBase64());
+    search_panel_obj["state"] = QString::fromUtf8(m_appConfig.search_panel.state.toBase64());
+    root["search_panel"] = search_panel_obj;
 
     QSaveFile file(getConfigFilepath());
     if (!file.open(QIODevice::WriteOnly)) {
@@ -169,4 +190,66 @@ void ConfigManager::save() {
     if (!file.commit()) {
         qWarning() << "[CONFIG] commit failed:" << file.fileName() << file.errorString();
     }
+}
+
+const AppConfig& ConfigManager::getAppConfig() const {
+    return m_appConfig;
+}
+
+const AppConfig::WindowState& ConfigManager::getWindowState() const {
+    return m_appConfig.window;
+}
+
+const AppConfig::PlaybackState& ConfigManager::getPlaybackState() const {
+    return m_appConfig.playback;
+}
+
+const AppConfig::ViewSettings& ConfigManager::getViewState() const {
+    return m_appConfig.view;
+}
+
+const AppConfig::SearchPanel& ConfigManager::getSearchPanelState() const {
+    return m_appConfig.search_panel;
+}
+
+void ConfigManager::setWindowGeometry(const QByteArray& geo) {
+    m_appConfig.window.geometry = geo;
+}
+
+void ConfigManager::setWindowState(const QByteArray& state) {
+    m_appConfig.window.state = state;
+}
+
+void ConfigManager::setVolume(int volume) {
+    m_appConfig.window.volume = volume;
+}
+
+void ConfigManager::setMute(bool is_mute) {
+    m_appConfig.window.isMuted= is_mute;
+}
+
+void ConfigManager::setLastPlayInfo(const QUuid& playlist_id, const QUuid& track_id, int position_ms) {
+    m_appConfig.playback.last_playlist_id = playlist_id;
+    m_appConfig.playback.last_track_id = track_id;
+    m_appConfig.playback.position_ms = position_ms;
+}
+
+void ConfigManager::setPlayMode(PlayMode mode) {
+    m_appConfig.playback.play_mode = mode;
+}
+
+void ConfigManager::setTableColumns(const QList<TableColumn>& columns) {
+    m_appConfig.view.columns = columns;
+}
+
+void ConfigManager::setSongTreeViewHeader(QByteArray header) {
+    m_appConfig.view.state = header;
+}
+
+void ConfigManager::setSearchPanelGeometry(QByteArray geo) {
+    m_appConfig.search_panel.geometry = geo;
+}
+
+void ConfigManager::setSearchPanelHeader(QByteArray header) {
+    m_appConfig.search_panel.state = header;
 }

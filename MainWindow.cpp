@@ -221,7 +221,10 @@ void MainWindow::initConnection()
     });
     
     // lrc panel
-    connect(m_player, &Player::positionChanged, lyricsPanel, &WLyricsPanel::getCurrentRow);
+    connect(m_player, &Player::positionChanged, m_sidePanel->getLyricsPanel(), &WLyricsPanel::getCurrentRow);
+
+    // search panel
+    connect(actSearchPanel, &QAction::triggered, this, &MainWindow::onOpenSearchPanel);
 }
 
 void MainWindow::initUI()
@@ -262,9 +265,11 @@ void MainWindow::initUI()
     actSetSortRule = new QAction("Set sort rule (&R)");
     actInsertColumn = new QAction("Insert a column (&I)");
     actRemoveColumn = new QAction("Remove a column (&R)");
+    actSearchPanel = new QAction("Open search panel (&S)");
     menuView->addAction(actSetSortRule);
     menuView->addAction(actInsertColumn);
     menuView->addAction(actRemoveColumn);
+    menuView->addAction(actSearchPanel);
     mainMenuBar->addMenu(menuView);
 
     menuHelp = new QMenu("&Help");
@@ -287,29 +292,11 @@ void MainWindow::initUI()
     addToolBar(Qt::BottomToolBarArea, bottomToolBar);
 
 // Main window
-    /// cover & lyrics
-    coverSplitter = new QSplitter(Qt::Vertical, this);
-
-    coverImageLabel = new QLabel();
-    coverImageLabel->setAlignment(Qt::AlignCenter);
-    origin_cover = new QPixmap;
-    origin_cover->load(DEFAULT_COVER_IMAGE_PATH);
-    coverImageLabel->setPixmap(*origin_cover);
-    resize(800, 600);
-
-    lyricsPanel = new WLyricsPanel;
-    coverSplitter->addWidget(coverImageLabel);
-    coverSplitter->addWidget(lyricsPanel);
-    coverSplitter->setChildrenCollapsible(false);
-    coverSplitter->setStretchFactor(0, 1);
-    coverSplitter->setStretchFactor(1, 1);
     /// playlist & table with splitter
-    mainSplitter = new QSplitter(Qt::Horizontal, this);
     playlistTree = new QTreeWidget();
     playlistTree->setHeaderLabel("Playlist");
     playlistTree->setMinimumWidth(120);
     
-
     songTreeView = new QTreeView();
     songTreeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     songTreeView->setSortingEnabled(true);
@@ -325,22 +312,30 @@ void MainWindow::initUI()
     songTreeViewHeader->setContextMenuPolicy(Qt::CustomContextMenu);
     songTreeView->setHeaderHidden(false);
     songTreeViewHeader->setVisible(true);
-
+    
     songTreeLoadingLabel = new QLabel(songTreeView->viewport());
     songTreeLoadingLabel->setText("Loading...");
     songTreeLoadingLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
     songTreeLoadingLabel->move(6, 4);
     songTreeLoadingLabel->hide();
+    
+    m_sidePanel = new SidePanel(this);
 
-    mainSplitter->addWidget(playlistTree);
-    mainSplitter->addWidget(songTreeView);
-    mainSplitter->addWidget(coverSplitter);
-    mainSplitter->handle(1)->hide();
-    mainSplitter->setStretchFactor(0, 2);
-    mainSplitter->setStretchFactor(1, 6);
-    mainSplitter->setStretchFactor(2, 3);
-    mainSplitter->setChildrenCollapsible(false);
-    setCentralWidget(mainSplitter);
+    centerLeftSplitter = new QSplitter(Qt::Horizontal, this);
+    centerLeftSplitter->addWidget(playlistTree);
+    centerLeftSplitter->addWidget(songTreeView);
+    centerLeftSplitter->setStretchFactor(0, 1);
+    centerLeftSplitter->setStretchFactor(1, 3);
+    centerLeftSplitter->setChildrenCollapsible(false);
+    
+    centerWidget = new QWidget(this);
+    mainLayout = new QHBoxLayout(centerWidget);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
+    mainLayout->addWidget(centerLeftSplitter, 3);
+    mainLayout->addWidget(m_sidePanel, 1);
+
+    setCentralWidget(centerWidget);
 }
 
 void MainWindow::onOpenFile() {
@@ -444,6 +439,52 @@ void MainWindow::onSavePlaylist() {
     } else {
         qDebug() << "[INFO] Cancel saving current playlist";
     }
+}
+
+void MainWindow::onOpenSearchPanel() {
+    if (!searchPanel) {
+        searchPanel = new PlaylistSearchPanel;
+        searchPanel->setWindowFlag(Qt::Window, true);
+        searchPanel->setAttribute(Qt::WA_DeleteOnClose, true);
+        searchPanel->setSourceModel(m_playlistManager->getViewModel());
+
+        if (!m_searchPanelGeoCache.isEmpty()) {
+            searchPanel->restoreGeometry(m_searchPanelGeoCache);
+        }
+
+        searchPanel->applyHeaderStateDeferred(m_searchPanelHeaderStateCache);
+        connect(m_playlistManager->getViewModel(), &QAbstractItemModel::modelReset, searchPanel, [this](){
+            if (searchPanel) {
+                searchPanel->applyHeaderStateDeferred(m_searchPanelHeaderStateCache);
+            }
+        }, Qt::SingleShotConnection);
+
+        connect(searchPanel, &PlaylistSearchPanel::sgnRequestPlayTrack, this, [this](const QModelIndex &source_index) {
+            trackId id = m_playlistManager->getViewModel()->trackAt(source_index);
+            if (id.isNull()) {
+                return;
+            }
+            int queue_index = m_playlistManager->getViewModel()->playbackQueue().indexOf(id);
+            if (queue_index >= 0) {
+                m_playlistManager->play(queue_index);
+            }
+        });
+
+        connect(searchPanel, &PlaylistSearchPanel::sgnAboutToClose, this,
+            [this](const QByteArray &geometry, const QByteArray &header){
+                m_searchPanelGeoCache = geometry;
+                m_searchPanelHeaderStateCache = header;
+            }
+        );
+        
+        connect(searchPanel, &QObject::destroyed, this, [this](){
+            searchPanel = nullptr;
+        });
+    }
+    
+    searchPanel->show();
+    searchPanel->raise();
+    searchPanel->activateWindow();
 }
 
 void MainWindow::onTreeContextMenuRequested(const QPoint &pos) {
@@ -559,7 +600,6 @@ void MainWindow::onNewPlaylist() {
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
-    updateCoverScale();
     QMainWindow::resizeEvent(event);
 }
 
@@ -568,43 +608,16 @@ void MainWindow::playTrack(const QString& filepath) {
         return;
     }
     m_player->read(filepath);
-    loadCover(filepath);
+    m_sidePanel->loadCover(filepath);
+
+    QModelIndex index = m_playlistManager->getViewModel()->getCurrentTrackIndex();
+    if (index.isValid()) {
+        songTreeView->scrollTo(index.siblingAtColumn(1), QAbstractItemView::PositionAtCenter);
+    }
+
     TrackMetaData meta = m_playlistManager->getCurrentMetadata();
 
-    if (meta.isValid && meta.filepath == filepath && !meta.lyrics.isEmpty()) {
-        if (lyricsPanel->setRawLyrics(meta.lyrics)) {
-            qDebug() << "[LRC] Loaded from metadata.";
-        }
-    } else if (lyricsPanel->setLocalLrc(filepath)) {
-        qDebug() << "[LRC] Loaded from .lrc file.";
-    } else {
-        TrackMetaData meta = m_playlistManager->getCurrentMetadata();
-        lyricsPanel->setDefaultInfo(meta.title, meta.artist);
-        qDebug() << "[LRC] Use default info";
-    }
-}
-
-void MainWindow::loadCover(const QString& filepath) {
-    QPixmap pix = Audio::parse_cover_to_qpixmap(filepath.toStdString());
-    if (!pix.isNull()) {
-        *origin_cover = pix;
-    } else {
-        origin_cover->load(DEFAULT_COVER_IMAGE_PATH);
-    }
-    updateCoverScale();
-}
-
-void MainWindow::updateCoverScale() {
-    if (!origin_cover || origin_cover->isNull()) return;
-    int dst_side_lenth = this->geometry().width() / 4;
-    QPixmap scaled = origin_cover->scaled(
-        dst_side_lenth,
-        dst_side_lenth,
-        Qt::KeepAspectRatio,
-        Qt::SmoothTransformation
-    );
-    coverImageLabel->setFixedSize(dst_side_lenth, dst_side_lenth);
-    coverImageLabel->setPixmap(scaled);
+    m_sidePanel->loadLyrics(meta);
 }
 
 
@@ -721,13 +734,21 @@ void MainWindow::applyConfig() {
     }
     // view: song_tree_header_state
     auto restoreHeaderState = [this, &cfg]() {
-        songTreeViewHeader->restoreState(cfg.view.song_tree_header_state);
+        songTreeViewHeader->restoreState(cfg.view.state);
     };
     connect(m_playlistManager->getViewModel(), &QAbstractItemModel::modelReset, this,
             restoreHeaderState, Qt::SingleShotConnection);
 
     // playback: mode
     m_playlistManager->getViewModel()->setPlayMode(cfg.playback.play_mode);
+
+    // search panel
+    if (!cfg.search_panel.geometry.isEmpty()) {
+        m_searchPanelGeoCache = cfg.search_panel.geometry;
+    }
+    if (!cfg.search_panel.state.isEmpty()) {
+        m_searchPanelHeaderStateCache = cfg.search_panel.state;
+    }
 }
 
 void MainWindow::saveConfig() {
@@ -773,8 +794,18 @@ void MainWindow::saveConfig() {
     }
     cm.setTableColumns(cols);
 
-    QByteArray header = songTreeViewHeader->saveState();
-    cm.setSongTreeViewHeader(header);
+    QByteArray song_tree_view_header = songTreeViewHeader->saveState();
+    cm.setSongTreeViewHeader(song_tree_view_header);
+
+    if (searchPanel) {
+        m_searchPanelGeoCache = searchPanel->saveGeometry();
+        if (searchPanel->getView() && searchPanel->getView()->header()) {
+            m_searchPanelHeaderStateCache = searchPanel->getView()->header()->saveState();
+        }
+    }
+    cm.setSearchPanelHeader(m_searchPanelHeaderStateCache);
+    cm.setSearchPanelGeometry(m_searchPanelGeoCache);
+
     cm.save();
 }
 

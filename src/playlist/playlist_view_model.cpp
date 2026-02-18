@@ -69,6 +69,7 @@ void PlaylistViewModel::rebuild() {
         m_root = new Node();
         m_playbackQueue.clear();
         endResetModel();
+        m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(m_activeTrackId));
         return;
     }
     
@@ -78,6 +79,7 @@ void PlaylistViewModel::rebuild() {
         m_root = new Node();
         m_playbackQueue.clear();
         endResetModel();
+        m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(m_activeTrackId));
         return;
     }
 
@@ -98,6 +100,7 @@ void PlaylistViewModel::rebuild() {
     m_groupShuffleQueue = generateGroupShuffleQueue();
     
     endResetModel();
+    m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(m_activeTrackId));
     qDebug() << "[INFO] rebuild finished. Queue size:" << m_playbackQueue.size();
     emit changedPlaybackQueue();
 }
@@ -111,6 +114,7 @@ void PlaylistViewModel::rebuildAsync() {
         m_root = new Node();
         m_playbackQueue.clear();
         endResetModel();
+        m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(m_activeTrackId));
         return;
     }
 
@@ -121,6 +125,7 @@ void PlaylistViewModel::rebuildAsync() {
         m_root = new Node();
         m_playbackQueue.clear();
         endResetModel();
+        m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(m_activeTrackId));
         return;
     }
 
@@ -156,6 +161,7 @@ void PlaylistViewModel::rebuildAsync() {
             self->m_singleShuffleQueue = self->generateSingleShuffleQueue();
             self->m_groupShuffleQueue = self->generateGroupShuffleQueue();
             self->endResetModel();
+            self->m_activeTrackIndex = QPersistentModelIndex(self->findTrackIndex(self->m_activeTrackId));
 
             auto playlistPtr = self->m_repo ? self->m_repo->findPlaylistById(self->m_playlistId) : nullptr;
             if (playlistPtr && !layout.updatedMeta.isEmpty()) {
@@ -261,37 +267,21 @@ void PlaylistViewModel::setSingleGrouping(SortRule rule) {
 
 
 void PlaylistViewModel::setActiveTrack(const trackId& track_id) {
-    // Helper lambda to find index
-    auto findIndex = [this](const trackId& id) -> QModelIndex {
-        if (id.isNull()) return QModelIndex();
-        for(int i=0; i<m_root->children.size(); ++i) {
-            Node* group = m_root->children[i];
-            for(int j=0; j<group->children.size(); ++j) {
-                if (group->children[j]->id == id) {
-                    return createIndex(j, 0, group->children[j]);
-                }
-            }
-        }
-        return QModelIndex();
+    QModelIndex old_index = getCurrentTrackIndex();
+    m_activeTrackId = track_id;
+    m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(track_id));
+
+    QModelIndex new_index = getCurrentTrackIndex();
+
+    auto emitRowChanged = [this](const QModelIndex& index) {
+        if (!index.isValid()) return;
+        const QModelIndex left = index.siblingAtColumn(0);
+        const QModelIndex right = index.siblingAtColumn(std::max(0, columnCount()-1));
+        emit dataChanged(left, right, {Qt::DisplayRole});
     };
 
-    // 1. Refresh old track row
-    if (!m_activeTrackId.isNull()) {
-        QModelIndex oldIdx = findIndex(m_activeTrackId);
-        if (oldIdx.isValid()) {
-            emit dataChanged(oldIdx, oldIdx, {Qt::DisplayRole});
-        }
-    }
-
-    m_activeTrackId = track_id;
-
-    // 2. Refresh new track row
-    if (!m_activeTrackId.isNull()) {
-        QModelIndex newIdx = findIndex(m_activeTrackId);
-        if (newIdx.isValid()) {
-            emit dataChanged(newIdx, newIdx, {Qt::DisplayRole});
-        }
-    }
+    emitRowChanged(old_index);
+    emitRowChanged(new_index);
 }
 
 void PlaylistViewModel::clear() {
@@ -300,6 +290,7 @@ void PlaylistViewModel::clear() {
     m_root = new Node();
     m_playbackQueue.clear();
     endResetModel();
+    m_activeTrackIndex = QPersistentModelIndex();
 }
 
 /* ==== QAbstractItemModel Interface ==== */
@@ -375,22 +366,22 @@ QVariant PlaylistViewModel::data(const QModelIndex &index, int role) const {
         const TableColumn& col = m_columns[index.column()];
 
         if (col.sortType == SortType::not_sorted) {
-             return (node->id == m_activeTrackId) ? ">" : "";
+            return (node->id == m_activeTrackId) ? ">" : "";
         }
         
         // Special formatting
         if (col.sortType == SortType::duration) {
-             int time_s = d.duration_s;
-             int hours = time_s / 3600;
-             int mins = (time_s % 3600) / 60;
-             int secs = time_s % 60;
-             if (hours > 0) {
-                 return QString("%1:%2:%3")
-                     .arg(hours, 2, 10, QChar('0'))
-                     .arg(mins, 2, 10, QChar('0'))
-                     .arg(secs, 2, 10, QChar('0'));
-             }
-             return QString("%1:%2").arg(mins, 2, 10, QChar('0')).arg(secs, 2, 10, QChar('0'));
+            int time_s = d.duration_s;
+            int hours = time_s / 3600;
+            int mins = (time_s % 3600) / 60;
+            int secs = time_s % 60;
+            if (hours > 0) {
+                return QString("%1:%2:%3")
+                    .arg(hours, 2, 10, QChar('0'))
+                    .arg(mins, 2, 10, QChar('0'))
+                    .arg(secs, 2, 10, QChar('0'));
+            }
+            return QString("%1:%2").arg(mins, 2, 10, QChar('0')).arg(secs, 2, 10, QChar('0'));
         }
 
         // Default meta data retrieval
@@ -437,6 +428,31 @@ trackId PlaylistViewModel::trackAt(const QModelIndex& index) const {
     if (!index.isValid()) return QUuid();
     Node* node = static_cast<Node*>(index.internalPointer());
     return node->id; 
+}
+
+QModelIndex PlaylistViewModel::getCurrentTrackIndex() {
+    if (m_activeTrackIndex.isValid()) {
+        return m_activeTrackIndex;
+    }
+    return findTrackIndex(m_activeTrackId);
+}
+
+QModelIndex PlaylistViewModel::findTrackIndex(const trackId& track_id) const {
+    if (track_id.isNull() || !m_root) {
+        return QModelIndex();
+    }
+
+    for (int group_row = 0; group_row < m_root->children.size(); ++group_row) {
+        Node* group = m_root->children.at(group_row);
+        for (int track_row = 0; track_row < group->children.size(); ++track_row) {
+            Node* track_node = group->children.at(track_row);
+            if (track_node->id == track_id) {
+                QModelIndex parent_index = createIndex(group_row, 0, group);
+                return createIndex(track_row, 0, track_node);
+            }
+        }
+    }
+    return QModelIndex();
 }
 
 const QVector<trackId>& PlaylistViewModel::playbackQueue() const {

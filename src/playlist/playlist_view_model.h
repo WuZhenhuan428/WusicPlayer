@@ -6,6 +6,7 @@
 #include <QHash>
 #include <QVariant>
 #include <QModelIndex>
+#include <QPersistentModelIndex>
 #include <QStringList>
 #include <QTimer>
 
@@ -63,6 +64,7 @@ public:
     // Helper to get logic data
     trackId trackAt(int index) const; // Still useful for linear queue access
     trackId trackAt(const QModelIndex& index) const;
+    QModelIndex getCurrentTrackIndex();
     const QVector<trackId>& playbackQueue() const;
 
     const Playlist& resolvePlaylist();
@@ -85,8 +87,11 @@ public:
     void requestMetaData(const trackId& track_id);
 
 private:
-   QVector<TableColumn> m_columns;
-   void initDefaultColumns();
+    QVector<TableColumn> m_columns;
+    void initDefaultColumns();
+
+    QModelIndex findTrackIndex(const trackId& track_id) const;
+    QPersistentModelIndex m_activeTrackIndex;
 
     void scheduleBatchRebuild();
 

@@ -27,8 +27,14 @@ struct AppConfig {
     struct ViewSettings
     {
         QList<TableColumn> columns;
-        QByteArray song_tree_header_state;
+        QByteArray state;
     } view;
+
+    struct SearchPanel
+    {
+        QByteArray geometry;
+        QByteArray state;
+    } search_panel;
 
     int version = 1;
 };
@@ -47,31 +53,25 @@ public:
     void save();
     void setDefault();
 
-    const AppConfig& getAppConfig() const { return m_appConfig; }
-    const AppConfig::WindowState& getWindowState() const { return m_appConfig.window; };
-    const AppConfig::PlaybackState& getPlaybackState() const { return m_appConfig.playback; }
-    const AppConfig::ViewSettings& getViewState() const { return m_appConfig.view; }
+    const AppConfig& getAppConfig() const;
+    const AppConfig::WindowState& getWindowState() const;
+    const AppConfig::PlaybackState& getPlaybackState() const;
+    const AppConfig::ViewSettings& getViewState() const;
+    const AppConfig::SearchPanel& getSearchPanelState() const;
     
-    void setWindowGeometry(const QByteArray& geo) { m_appConfig.window.geometry = geo; }
-    void setWindowState(const QByteArray& state) { m_appConfig.window.state = state; }
-    void setVolume(int volume) { m_appConfig.window.volume = volume; }
-    void setMute(bool is_mute) { m_appConfig.window.isMuted= is_mute; }
+    void setWindowGeometry(const QByteArray& geo);
+    void setWindowState(const QByteArray& state);
+    void setVolume(int volume);
+    void setMute(bool is_mute);
     // setter: playback
-    void setLastPlayInfo(const QUuid& playlist_id, const QUuid& track_id, int position_ms) {
-        m_appConfig.playback.last_playlist_id = playlist_id;
-        m_appConfig.playback.last_track_id = track_id;
-        m_appConfig.playback.position_ms = position_ms;
-    }
-    void setPlayMode(PlayMode mode) {
-        m_appConfig.playback.play_mode = mode;
-    }
+    void setLastPlayInfo(const QUuid& playlist_id, const QUuid& track_id, int position_ms);
+    void setPlayMode(PlayMode mode);
     // setter: view
-    void setTableColumns(const QList<TableColumn>& columns) {
-        m_appConfig.view.columns = columns;
-    }
-    void setSongTreeViewHeader(QByteArray header) {
-        m_appConfig.view.song_tree_header_state = header;
-    }
+    void setTableColumns(const QList<TableColumn>& columns);
+    void setSongTreeViewHeader(QByteArray header);
+    // setter: search_panel
+    void setSearchPanelGeometry(QByteArray geo);
+    void setSearchPanelHeader(QByteArray header);
 private:
     ConfigManager();
     ~ConfigManager() = default;

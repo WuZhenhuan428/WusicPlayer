@@ -12,14 +12,14 @@ WLyricsModel::WLyricsModel(QObject* parent)
 
 WLyricsModel::~WLyricsModel() {}
 
-void WLyricsModel::setDefaultInfo(const QString& filename, const QString& artist) {
+void WLyricsModel::setDefaultInfo(const TrackMetaData& meta) {
     beginResetModel();
     m_parser.clear();
     QString foo;
     foo.append("[00:00.000] Title: ");
-    foo.append(filename);
+    foo.append(meta.filename);
     foo.append("\n[00:00.001] Artist: ");
-    foo.append(artist);
+    foo.append(meta.artist);
     foo.append("\n");
     auto bar = foo.toUtf8();
     m_parser.parseString(bar.toStdString());
@@ -32,8 +32,8 @@ bool WLyricsModel::setRawLyrics(const QString& raw_data) {
     if (raw_data.isEmpty()) {
         return false;
     }
-    if (m_parser.parseString(raw_data.toStdString())) {
-        qDebug() << "[LRC] Loaded from cache metadata";
+    if (!m_parser.parseString(raw_data.toStdString())) {
+        return false;
     }
     endResetModel();
     return true;

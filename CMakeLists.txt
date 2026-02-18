@@ -37,6 +37,10 @@ qt_add_executable(WusicPlayer
     src/playlist/playlist_layout.h
     src/playlist/playlist_widgets.cpp
     src/playlist/playlist_widgets.h
+    src/playlist/playlist_search_proxy_model.cpp
+    src/playlist/playlist_search_proxy_model.h
+    src/playlist/playlist_search_panel.cpp
+    src/playlist/playlist_search_panel.h
 
     # custom widgets
     src/WControlBar/WControlBar.cpp
@@ -48,11 +52,13 @@ qt_add_executable(WusicPlayer
     src/ConfigManager/ConfigManager.cpp
     src/ConfigManager/ConfigManager.h
 
-    # lyrics panel
-    src/WLyricsPanel/WLyricsPanel.cpp
-    src/WLyricsPanel/WLyricsPanel.h
-    src/WLyricsPanel/WLyricsModel.cpp
-    src/WLyricsPanel/WLyricsModel.h
+    # side panel: cover & lyrics panel
+    src/SidePanel/WLyricsPanel.cpp
+    src/SidePanel/WLyricsPanel.h
+    src/SidePanel/WLyricsModel.cpp
+    src/SidePanel/WLyricsModel.h
+    src/SidePanel/SidePanel.cpp
+    src/SidePanel/SidePanel.h
 )
 
 target_include_directories(WusicPlayer
