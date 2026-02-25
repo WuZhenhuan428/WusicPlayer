@@ -6,7 +6,7 @@
 #include <QThread>
 #include <algorithm>
 #include <random>
-#include "../../include/audio.h"
+#include "../../src/core/utils/AudioUtils.h"
 
 PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo, QObject* parent)
     : QAbstractItemModel(parent)
@@ -20,8 +20,8 @@ PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo, QObject* parent)
     connect(m_batchRebuildTimer, &QTimer::timeout, this, &PlaylistViewModel::rebuildAsync);
     if (m_repo) {
         connect(m_repo, &PlaylistRepo::playlistChanged, this, &PlaylistViewModel::rebuildAsync);
-        connect(m_repo, &PlaylistRepo::playlistBatchLoaded, this, [this](const QUuid& playlistId, int, int) {
-            if (playlistId == m_playlistId) {
+        connect(m_repo, &PlaylistRepo::playlistBatchLoaded, this, [this](const playlistId& playlist_id, int, int) {
+            if (playlist_id == m_pid) {
                 scheduleBatchRebuild();
             }
         });
@@ -56,7 +56,7 @@ void PlaylistViewModel::scheduleBatchRebuild() {
 const Playlist& PlaylistViewModel::resolvePlaylist() {
     // Warning: This might crash if playlist is not found!
     // Prefer using findPlaylistById directly with check.
-    return *(m_repo->findPlaylistById(m_playlistId));
+    return *(m_repo->findPlaylistById(m_pid));
 }
 
 void PlaylistViewModel::rebuild() {
@@ -74,8 +74,8 @@ void PlaylistViewModel::rebuild() {
     }
     
     // Fix: Check pointer validity to avoid Core Dump
-    auto playlistPtr = m_repo->findPlaylistById(m_playlistId);
-    if (!playlistPtr) {
+    auto playlist_ptr = m_repo->findPlaylistById(m_pid);
+    if (!playlist_ptr) {
         m_root = new Node();
         m_playbackQueue.clear();
         endResetModel();
@@ -83,15 +83,15 @@ void PlaylistViewModel::rebuild() {
         return;
     }
 
-    const Playlist& pl = *playlistPtr;
+    const Playlist& pl = *playlist_ptr;
 
     LayoutResult layout = m_layoutBuilder.build(pl);
 
     if (!layout.updatedMeta.isEmpty()) {
         for (const auto& entry : layout.updatedMeta) {
-            playlistPtr->updateTrackMeta(entry.id, entry.meta);
+            playlist_ptr->updateTrackMeta(entry.id, entry.meta);
         }
-        m_repo->saveListToCache(playlistPtr);
+        m_repo->saveListToCache(playlist_ptr);
     }
 
     m_root = layout.root;
@@ -118,7 +118,7 @@ void PlaylistViewModel::rebuildAsync() {
         return;
     }
 
-    auto playlistPtr = m_repo->findPlaylistById(m_playlistId);
+    auto playlistPtr = m_repo->findPlaylistById(m_pid);
     if (!playlistPtr) {
         beginResetModel();
         delete m_root;
@@ -163,7 +163,7 @@ void PlaylistViewModel::rebuildAsync() {
             self->endResetModel();
             self->m_activeTrackIndex = QPersistentModelIndex(self->findTrackIndex(self->m_activeTrackId));
 
-            auto playlistPtr = self->m_repo ? self->m_repo->findPlaylistById(self->m_playlistId) : nullptr;
+            auto playlistPtr = self->m_repo ? self->m_repo->findPlaylistById(self->m_pid) : nullptr;
             if (playlistPtr && !layout.updatedMeta.isEmpty()) {
                 for (const auto& entry : layout.updatedMeta) {
                     playlistPtr->updateTrackMeta(entry.id, entry.meta);
@@ -178,9 +178,9 @@ void PlaylistViewModel::rebuildAsync() {
     worker->start();
 }
 
-void PlaylistViewModel::setPlaylist(const playlistId& playlist_id) {
-    if (m_playlistId == playlist_id) { return; }
-    m_playlistId = playlist_id;
+void PlaylistViewModel::setPlaylist(const playlistId& pid) {
+    if (m_pid == pid) { return; }
+    m_pid = pid;
     this->rebuildAsync();
 }
 
@@ -266,10 +266,10 @@ void PlaylistViewModel::setSingleGrouping(SortRule rule) {
 }
 
 
-void PlaylistViewModel::setActiveTrack(const trackId& track_id) {
+void PlaylistViewModel::setActiveTrack(const trackId& tid) {
     QModelIndex old_index = getCurrentTrackIndex();
-    m_activeTrackId = track_id;
-    m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(track_id));
+    m_activeTrackId = tid;
+    m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(tid));
 
     QModelIndex new_index = getCurrentTrackIndex();
 
@@ -421,11 +421,11 @@ void PlaylistViewModel::sort(int column, Qt::SortOrder order) {
 trackId PlaylistViewModel::trackAt(int index) const {
     if (index >= 0 && index < m_playbackQueue.size())
         return m_playbackQueue.at(index);
-    return QUuid();
+    return trackId();
 }
 
 trackId PlaylistViewModel::trackAt(const QModelIndex& index) const {
-    if (!index.isValid()) return QUuid();
+    if (!index.isValid()) return trackId();
     Node* node = static_cast<Node*>(index.internalPointer());
     return node->id; 
 }
@@ -437,8 +437,8 @@ QModelIndex PlaylistViewModel::getCurrentTrackIndex() {
     return findTrackIndex(m_activeTrackId);
 }
 
-QModelIndex PlaylistViewModel::findTrackIndex(const trackId& track_id) const {
-    if (track_id.isNull() || !m_root) {
+QModelIndex PlaylistViewModel::findTrackIndex(const trackId& tid) const {
+    if (tid.isNull() || !m_root) {
         return QModelIndex();
     }
 
@@ -446,7 +446,7 @@ QModelIndex PlaylistViewModel::findTrackIndex(const trackId& track_id) const {
         Node* group = m_root->children.at(group_row);
         for (int track_row = 0; track_row < group->children.size(); ++track_row) {
             Node* track_node = group->children.at(track_row);
-            if (track_node->id == track_id) {
+            if (track_node->id == tid) {
                 QModelIndex parent_index = createIndex(group_row, 0, group);
                 return createIndex(track_row, 0, track_node);
             }
@@ -507,7 +507,7 @@ const PlayMode PlaylistViewModel::getPlayMode() const {
     return this->m_playMode;
 }
 
-trackId PlaylistViewModel::nextOf(const trackId& track_id) const {
+trackId PlaylistViewModel::nextOf(const trackId& tid) const {
     int index;
     auto generate_random_index = [](size_t max_index = 0) {
         std::random_device rd;
@@ -517,12 +517,12 @@ trackId PlaylistViewModel::nextOf(const trackId& track_id) const {
     };
 
     if (m_playMode == PlayMode::in_order) {
-        index = m_playbackQueue.indexOf(track_id);
+        index = m_playbackQueue.indexOf(tid);
         if (index != -1 && index < m_playbackQueue.size() - 1) {
             return m_playbackQueue.at(index+1);
         } // else -> end of playlist
     } else if (m_playMode == PlayMode::loop) {
-        index = m_playbackQueue.indexOf(track_id);
+        index = m_playbackQueue.indexOf(tid);
         if (index != -1)  {
             if (index < m_playbackQueue.size() - 1) {
                 return m_playbackQueue.at(index+1);
@@ -535,20 +535,20 @@ trackId PlaylistViewModel::nextOf(const trackId& track_id) const {
         index = generate_random_index(m_singleShuffleQueue.size()-1);
         return m_singleShuffleQueue.at(index);
     } else if (m_playMode == PlayMode::out_of_order_track) {
-        index = m_singleShuffleQueue.indexOf(track_id);
+        index = m_singleShuffleQueue.indexOf(tid);
         if (index != -1 && index <= m_singleShuffleQueue.size()-1) {
             return m_singleShuffleQueue.at(index+1);
         }
     } else if (m_playMode == PlayMode::out_of_order_group) {
-        index = m_groupShuffleQueue.indexOf(track_id);
+        index = m_groupShuffleQueue.indexOf(tid);
         if (index != -1 && index <= m_groupShuffleQueue.size()-1) {
             return m_groupShuffleQueue.at(index+1);
         }
     }
-    return QUuid();
+    return trackId();
 }
 
-trackId PlaylistViewModel::previousOf(const trackId& track_id) const {
+trackId PlaylistViewModel::previousOf(const trackId& tid) const {
     int index;
     auto generate_random_index = [](size_t max_index = 0) {
         std::random_device rd;
@@ -558,12 +558,12 @@ trackId PlaylistViewModel::previousOf(const trackId& track_id) const {
     };
 
     if (m_playMode == PlayMode::in_order) {
-        index = m_playbackQueue.indexOf(track_id);
+        index = m_playbackQueue.indexOf(tid);
         if (index > 0) {    // -1 and 0
             return m_playbackQueue.at(index-1);
         } // else -> start of playlist
     } else if (m_playMode == PlayMode::loop) {
-        index = m_playbackQueue.indexOf(track_id);
+        index = m_playbackQueue.indexOf(tid);
         if (index != -1)  {
             if (index > 0) {
                 return m_playbackQueue.at(index-1);
@@ -576,17 +576,17 @@ trackId PlaylistViewModel::previousOf(const trackId& track_id) const {
         index = generate_random_index(m_singleShuffleQueue.size()-1);
         return m_singleShuffleQueue.at(index);
     } else if (m_playMode == PlayMode::out_of_order_track) {
-        index = m_singleShuffleQueue.indexOf(track_id);
+        index = m_singleShuffleQueue.indexOf(tid);
         if (index > 0) {
             return m_singleShuffleQueue.at(index-1);
         }
     } else if (m_playMode == PlayMode::out_of_order_group) {
-        index = m_groupShuffleQueue.indexOf(track_id);
+        index = m_groupShuffleQueue.indexOf(tid);
         if (index > 0) {
             return m_groupShuffleQueue.at(index-1);
         }
     }
-    return QUuid();
+    return trackId();
 }
 
 /* ==== Dynamic Column Management ==== */
@@ -615,6 +615,6 @@ const QVector<TableColumn>& PlaylistViewModel::getColumns() const {
     return m_columns;
 }
 
-void PlaylistViewModel::requestMetaData(const trackId& track_id) {
+void PlaylistViewModel::requestMetaData(const trackId& tid) {
     // Sync parsing used currently
 }

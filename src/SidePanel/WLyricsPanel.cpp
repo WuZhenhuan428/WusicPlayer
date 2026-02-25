@@ -1,5 +1,5 @@
 #include "WLyricsPanel.h"
-#include "../playlist/playlist_definitions.h"
+#include "../../src/core/types.h"
 
 WLyricsPanel::WLyricsPanel() {
     m_lrcModel = new WLyricsModel;

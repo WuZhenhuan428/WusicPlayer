@@ -14,15 +14,14 @@ qt_add_executable(WusicPlayer
     main.cpp
     MainWindow.h MainWindow.cpp
 
-    # include
-    include/audio.h
+    # utils
+    src/core/utils/AudioUtils.h
 
     # src/player
     src/player/player.h
     src/player/player.cpp
 
     # src/playlist
-    src/playlist/playlist_definitions.h
     src/playlist/playlist.h
     src/playlist/playlist.cpp
     src/playlist/playlist_context.h
@@ -59,6 +58,18 @@ qt_add_executable(WusicPlayer
     src/SidePanel/WLyricsModel.h
     src/SidePanel/SidePanel.cpp
     src/SidePanel/SidePanel.h
+
+    # LibraryWidget: playlist tree & song tree
+    src/LibraryWidget/LibraryWidget.cpp
+    src/LibraryWidget/LibraryWidget.h
+
+    src/core/types.h
+
+    src/controller/PlaylistController.cpp
+    src/controller/PlaylistController.h
+    src/controller/PlaybackController.cpp
+    src/controller/PlaybackController.h
+
 )
 
 target_include_directories(WusicPlayer

@@ -1,5 +1,5 @@
 #include "SidePanel.h"
-#include "../../include/audio.h"
+#include "../../src/core/utils/AudioUtils.h"
 #include <QDebug>
 
 #define DEFAULT_COVER_PATH "/home/wuzhenhuan/pictures/zhihu-meme.jpg"
@@ -35,7 +35,7 @@ void SidePanel::setPlayer(Player* player) {
 }
 
 void SidePanel::loadCover(const QString& filepath) {
-    QPixmap pix = Audio::parse_cover_to_qpixmap(filepath.toStdString());
+    QPixmap pix = AudioUtils::parse_cover_to_qpixmap(filepath.toStdString());
     if (!pix.isNull()) {
         *m_originalCover = pix;
     } else {

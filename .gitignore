@@ -2,3 +2,6 @@ TODO/
 .qtcreator/
 .vscode/
 build/
+
+# clangd cache directory
+.cache/

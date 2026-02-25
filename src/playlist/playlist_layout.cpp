@@ -38,7 +38,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
     QVector<Track> tracks = playlist.getTracks();
     for (const auto& t : tracks) {
         Node* node = new Node();
-        node->id = t.uuid;
+        node->id = t.tid;
         if (t.meta.isValid) {
             node->meta = t.meta;
             if (node->meta.filepath.isEmpty()) {
@@ -48,13 +48,13 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
                 node->meta.filename = QFileInfo(t.filepath).fileName();
             }
         } else {
-            node->meta = Audio::parse(t.filepath.toStdString());
+            node->meta = AudioUtils::parse(t.filepath.toStdString());
             node->meta.filepath = t.filepath;
             if (!node->meta.isValid) {
                 node->meta.title = QFileInfo(t.filepath).fileName();
             }
-            node->meta = Audio::format(node->meta);
-            result.updatedMeta.append({t.uuid, node->meta});
+            node->meta = AudioUtils::format(node->meta);
+            result.updatedMeta.append({t.tid, node->meta});
         }
         trackNodes.append(node);
     }
@@ -79,7 +79,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
         QMap<QString, QVector<Node*>> buckets;
         for (Node* node : nodes) {
             QString key = getMetaDataValue(node->meta, current_sort_rule.type).toString();
-            // @note: Audio::parse()将对内容进行格式化, if表达式将废弃
+            // @note: AudioUtils::parse()将对内容进行格式化, if表达式将废弃
             if (key.isEmpty())
                 key = "unknown";
             buckets[key].append(node);

@@ -4,7 +4,7 @@
 #include <QList>
 #include <QString>
 #include <QUuid>
-#include "../playlist/playlist_definitions.h"
+#include "../../src/core/types.h"
 
 // map config to json
 struct AppConfig {
@@ -18,8 +18,8 @@ struct AppConfig {
 
     struct PlaybackState
     {
-        QUuid last_playlist_id;
-        QUuid last_track_id;
+        playlistId last_pid;
+        trackId last_tid;
         int position_ms = 0;
         PlayMode play_mode = PlayMode::in_order;
     } playback;
@@ -64,7 +64,7 @@ public:
     void setVolume(int volume);
     void setMute(bool is_mute);
     // setter: playback
-    void setLastPlayInfo(const QUuid& playlist_id, const QUuid& track_id, int position_ms);
+    void setLastPlayInfo(const playlistId& pid, const trackId& tid, int position_ms);
     void setPlayMode(PlayMode mode);
     // setter: view
     void setTableColumns(const QList<TableColumn>& columns);

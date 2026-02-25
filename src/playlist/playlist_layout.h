@@ -5,11 +5,11 @@
 #include <QVector>
 
 #include "playlist.h"
-#include "playlist_definitions.h"
-#include "../../include/audio.h"
+#include "../../src/core/types.h"
+#include "../../src/core/utils/AudioUtils.h"
 
 struct Node {
-    QUuid id; // Track UUID. If null, it's a group node.
+    trackId id; // Track UUID. If null, it's a group node.
     TrackMetaData meta;
     QString groupName;
     Node* parent = nullptr;
@@ -28,7 +28,7 @@ struct Node {
 
 struct trackEntry
 {
-    QUuid id;
+    trackId id;
     TrackMetaData meta;
 };
 
@@ -46,7 +46,7 @@ struct playlistLayout
 struct LayoutResult
 {
     Node* root;
-    QVector<QUuid> playbackQueue;
+    QVector<trackId> playbackQueue;
     QVector<trackEntry> updatedMeta;
 };
 

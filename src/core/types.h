@@ -1,8 +1,18 @@
 #pragma once
 
-#include <QString>
+#include <QByteArray>
 #include <QUuid>
 #include <QHash>
+#include <QString>
+
+struct LibraryWidgetStates
+{
+    QByteArray splitterState;
+    QByteArray songTreeViewHeaderState;
+};
+
+using trackId = QUuid;
+using playlistId = QUuid;
 
 enum class SortType
 {
@@ -56,7 +66,7 @@ struct TrackMetaData
 
 struct TableColumn {
     QString headerName;
-    SortType sortType; 
+    SortType sortType;
     // 0 = Not Sorted (e.g. status icon) or Custom
 };
 
@@ -92,3 +102,4 @@ enum class PlayMode
     out_of_order_track,
     out_of_order_group
 };
+

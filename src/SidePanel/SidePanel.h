@@ -10,7 +10,7 @@
 
 #include "../player/player.h"
 #include "WLyricsPanel.h"
-#include "../playlist/playlist_definitions.h"
+#include "../../src/core/types.h"
 
 class SidePanel : public QWidget
 {

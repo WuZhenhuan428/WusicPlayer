@@ -7,12 +7,12 @@
  */
 Playlist::Playlist(const QString& name) {
     m_name = name;
-    m_uuid = QUuid::createUuid();
-    qDebug() << "[INFO] Create playlist quuid: " << m_uuid.toString();
+    m_pid = playlistId::createUuid();
+    qDebug() << "[INFO] Create playlist uuid: " << m_pid.toString();
 }
 
 Playlist::~Playlist() {
-    qDebug() << "[INFO] Remove playlist uuid: " << m_uuid.toString();
+    qDebug() << "[INFO] Remove playlist uuid: " << m_pid.toString();
 }
 
 /**
@@ -33,25 +33,25 @@ Track Playlist::addTrack(const QString& filepath) {
     t.meta.filename = QFileInfo(filepath).fileName();
     t.meta.isValid = false;
     m_tracks.emplace_back(t);
-    qDebug() << "[INFO] Add uuid:" << t.uuid << "filepath:" << t.filepath;
+    qDebug() << "[INFO] Add uuid:" << t.tid << "filepath:" << t.filepath;
     return t;
 }
 
-Track Playlist::addTrackWithId(const QUuid& uuid, const QString& filepath) {
+Track Playlist::addTrackWithId(const trackId& tid, const QString& filepath) {
     Track t;
-    t.uuid = uuid;
+    t.tid = tid;
     t.filepath = filepath;
     t.meta.filepath = filepath;
     t.meta.filename = QFileInfo(filepath).fileName();
     t.meta.isValid = false;
     m_tracks.emplace_back(t);
-    qDebug() << "[INFO] Add uuid:" << t.uuid << "filepath:" << t.filepath;
+    qDebug() << "[INFO] Add uuid:" << t.tid << "filepath:" << t.filepath;
     return t;
 }
 
-bool Playlist::updateTrackMeta(const QUuid& uuid, const TrackMetaData& meta) {
+bool Playlist::updateTrackMeta(const trackId& tid, const TrackMetaData& meta) {
     for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
-        if (it->uuid == uuid) {
+        if (it->tid == tid) {
             it->meta = meta;
             if (it->meta.filepath.isEmpty()) {
                 it->meta.filepath = it->filepath;
@@ -69,11 +69,11 @@ bool Playlist::updateTrackMeta(const QUuid& uuid, const TrackMetaData& meta) {
  * @brief: 查找并删除音轨
  * @note: 如果删除当前音轨, 则暂停播放
  */
-void Playlist::removeTrack(const QUuid& uuid) {
+void Playlist::removeTrack(const trackId& tid) {
     for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
-        if (it->uuid == uuid) {
+        if (it->tid == tid) {
             QString path = it->filepath;
-            QUuid removedId = it->uuid;
+            trackId removedId = it->tid;
             m_tracks.erase(it);
 
             qDebug() << "[INFO] Remove UUID=" << removedId << ", filepath=" << path;
@@ -91,8 +91,8 @@ bool Playlist::isEmpty() {
     return m_tracks.empty();
 };
 
-QUuid Playlist::id() const {
-    return m_uuid;
+playlistId Playlist::id() const {
+    return m_pid;
 }
 
 QString Playlist::name() {
@@ -103,38 +103,26 @@ void Playlist::setPlaylistName(QString setname) {
     m_name = setname;
 }
 
-/**
- * @brief: 创建新的Uuid并覆盖原有Uuid，主要用于列表的复制
- */
 void Playlist::newUuid() {
-    m_uuid = QUuid::createUuid();
+    m_pid = playlistId::createUuid();
 }
 
-/**
- * @brief: 获取uuid，主要用于「当前列表」的切换，使用时应当配合对应的emit信号
- */
-void Playlist::newUuid(const QUuid& uuid) {
-    m_uuid = uuid;
+
+void Playlist::newUuid(const playlistId& pid) {
+    m_pid = pid;
 }
 
-/**
- * @brief: 通过uuid查找音轨位置并返回Track指针
- * @return：Track*
- */
-Track* Playlist::findTrackByID(const QUuid& uuid) {
+Track* Playlist::findTrackByID(const trackId& tid) {
     for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
-        if (it->uuid == uuid) {
+        if (it->tid == tid) {
             return &(*it);
-            qDebug() << "[INFO] find track " << it->uuid << " at playlist " << m_name;
+            qDebug() << "[INFO] find track " << it->tid << " at playlist " << m_name;
         }
     }
-    qDebug() << "[WARNING] track " << uuid << " does not exist!";
+    qDebug() << "[WARNING] track " << tid << " does not exist!";
     return nullptr;
 }
 
-/**
- * @brief：获取音轨全部id
- */
 const QVector<Track>& Playlist::getTracks() const{
     return m_tracks;
 }

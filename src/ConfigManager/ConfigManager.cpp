@@ -106,11 +106,11 @@ void ConfigManager::load() {
     setMute(window_obj.value("is_muted").toBool(false));
 
     const QJsonObject playback_obj = root.value("playback").toObject();
-    const QUuid playlist_id(playback_obj.value("last_playlist_id").toString());
-    const QUuid track_id(playback_obj.value("last_track_id").toString());
+    const playlistId pid(playback_obj.value("last_pid").toString());
+    const trackId tid(playback_obj.value("last_tid").toString());
     setLastPlayInfo(
-        (playlist_id.isNull() ? QUuid() : playlist_id),
-        (track_id.isNull() ? QUuid() : track_id),
+        (pid.isNull() ? playlistId() : pid),
+        (tid.isNull() ? trackId() : tid),
         (playback_obj.value("position_ms").toInt(0))
     );
 
@@ -160,8 +160,8 @@ void ConfigManager::save() {
     root["window"] = window_obj;
 
     QJsonObject playback_obj;
-    playback_obj["last_playlist_id"] = m_appConfig.playback.last_playlist_id.toString(QUuid::WithoutBraces);
-    playback_obj["last_track_id"] = m_appConfig.playback.last_track_id.toString(QUuid::WithoutBraces);
+    playback_obj["last_pid"] = m_appConfig.playback.last_pid.toString(QUuid::WithoutBraces);
+    playback_obj["last_tid"] = m_appConfig.playback.last_tid.toString(QUuid::WithoutBraces);
     playback_obj["position_ms"] = m_appConfig.playback.position_ms;
     playback_obj["play_mode"] = static_cast<int>(m_appConfig.playback.play_mode);
     root["playback"] = playback_obj;
@@ -228,9 +228,9 @@ void ConfigManager::setMute(bool is_mute) {
     m_appConfig.window.isMuted= is_mute;
 }
 
-void ConfigManager::setLastPlayInfo(const QUuid& playlist_id, const QUuid& track_id, int position_ms) {
-    m_appConfig.playback.last_playlist_id = playlist_id;
-    m_appConfig.playback.last_track_id = track_id;
+void ConfigManager::setLastPlayInfo(const playlistId& pid, const trackId& tid, int position_ms) {
+    m_appConfig.playback.last_pid = pid;
+    m_appConfig.playback.last_tid = tid;
     m_appConfig.playback.position_ms = position_ms;
 }
 

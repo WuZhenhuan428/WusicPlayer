@@ -4,18 +4,17 @@
 #include <QVector>
 #include <QDebug>
 #include <QUuid>
-#include <QUuid>
 
 #include <vector>
 
-#include "../../include/audio.h"
+#include "../../src/core/utils/AudioUtils.h"
 
 struct Track
 {
-    QUuid uuid;
+    trackId tid;
     QString filepath;
     TrackMetaData meta;
-    Track() : uuid(QUuid::createUuid()) {}
+    Track() : tid(trackId::createUuid()) {}
 };
 
 class Playlist
@@ -25,20 +24,20 @@ public:
     ~Playlist();
 
     // Playlist metadata
-    QUuid id() const;
+    playlistId id() const;
     QString name();
     void setPlaylistName(QString setname);
     void newUuid();
-    void newUuid(const QUuid& uuid);
+    void newUuid(const playlistId& pid);
     
     // Modify & Manage
     void clearList();
     Track addTrack(const QString& filepath);
-    Track addTrackWithId(const QUuid& uuid, const QString& filepath);
-    bool updateTrackMeta(const QUuid& uuid, const TrackMetaData& meta);
-    void removeTrack(const QUuid& uuid);
+    Track addTrackWithId(const trackId& tid, const QString& filepath);
+    bool updateTrackMeta(const trackId& tid, const TrackMetaData& meta);
+    void removeTrack(const trackId& tid);
 
-    Track* findTrackByID(const QUuid& uuid);
+    Track* findTrackByID(const trackId& tid);
     
     const QVector<Track>& getTracks() const;
 
@@ -46,8 +45,8 @@ public:
     bool isEmpty();
     
 private:
-    QVector<Track> m_tracks;    // @TODO: switch to QMap<QUuid, filepath>
+    QVector<Track> m_tracks;
     QString m_name;
-    QUuid m_uuid;
+    playlistId m_pid;
 };
 

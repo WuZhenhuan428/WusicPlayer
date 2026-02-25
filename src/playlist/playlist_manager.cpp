@@ -36,7 +36,7 @@ void PlaylistManager::createPlaylist() {
     m_repo->createList();
 }
 
-void PlaylistManager::removePlaylist(const QUuid& to_remove_uuid) {
+void PlaylistManager::removePlaylist(const playlistId& to_remove_uuid) {
     const auto& pl = m_repo->findPlaylistById(to_remove_uuid);
     if (!pl) return;
 
@@ -46,30 +46,32 @@ void PlaylistManager::removePlaylist(const QUuid& to_remove_uuid) {
         if (!remaining.isEmpty()) {
             m_context->setPlaylist(remaining.first()->id());
         } else {
-            m_context->setPlaylist(QUuid());
+            m_context->setPlaylist(playlistId());
         }
     }
 }
 
-void PlaylistManager::copyPlaylist(const QUuid& playlist_id) {
-    m_repo->copyList(playlist_id);
+void PlaylistManager::copyPlaylist(const playlistId& pid) {
+    m_repo->copyList(pid);
 }
 
 void PlaylistManager::loadPlaylist(const QString& playlist_path) {
-    QUuid new_id = m_repo->loadListBatched(playlist_path, 500);
+    playlistId new_id = m_repo->loadListBatched(playlist_path, 500);
     if (!new_id.isNull()) {
         m_context->setPlaylist(new_id);
     }
 }
 
-void PlaylistManager::renamePlaylist(const QUuid& src_uuid, const QString dst_name) {
-    m_repo->renameList(src_uuid, dst_name);
+void PlaylistManager::renamePlaylist(const playlistId& src_pid, const QString dst_name) {
+    m_repo->renameList(src_pid, dst_name);
 }
 
-void PlaylistManager::saveCurrentPlaylist(const QString& save_path) {
-    QUuid uuid = m_context->getPlaylistId();
-    m_repo->saveList(uuid, save_path);
-    qDebug() << "[INFO] save playlist " << uuid.toString() << " at " << save_path;
+void PlaylistManager::savePlaylist(const playlistId& pid, const QString& save_path) {
+    auto pl = m_repo->findPlaylistById(pid);
+    if (!pl->isEmpty()) {
+        m_repo->saveList(pid, save_path);
+        qDebug() << "[INFO] save playlist " << pid.toString() << " at " << save_path;
+    }
 }
 
 void PlaylistManager::loadCacheAfterShown() {
@@ -78,12 +80,12 @@ void PlaylistManager::loadCacheAfterShown() {
 
 
 void PlaylistManager::addTrack(const QString& filepath) {
-    auto curr_playlist_id = m_context->getPlaylistId();
-    if (curr_playlist_id.isNull()) {
-        curr_playlist_id = m_repo->createList();
-        m_context->setPlaylist(curr_playlist_id);
+    auto curr_pid = m_context->getPlaylistId();
+    if (curr_pid.isNull()) {
+        curr_pid = m_repo->createList();
+        m_context->setPlaylist(curr_pid);
     }
-    m_repo->addTrackToPlaylist(curr_playlist_id, filepath);
+    m_repo->addTrackToPlaylist(curr_pid, filepath);
 }
 
 
@@ -92,25 +94,25 @@ void PlaylistManager::addTrack(const QString& filepath) {
  */
 void PlaylistManager::addFolder(const QString& directory) {
     // +++ wrap to a method
-    auto curr_playlist_id = m_context->getPlaylistId();
-    if (curr_playlist_id.isNull()) {
-        curr_playlist_id = m_repo->createList();
-        m_context->setPlaylist(curr_playlist_id);
+    auto curr_pid = m_context->getPlaylistId();
+    if (curr_pid.isNull()) {
+        curr_pid = m_repo->createList();
+        m_context->setPlaylist(curr_pid);
     }
     // ---
 
-    const auto& files = Audio::findAll(directory.toStdString());
+    const auto& files = AudioUtils::findAll(directory.toStdString());
     QStringList tracksToAdd;
     tracksToAdd.reserve(static_cast<int>(files.size()));
 
     for(const auto& file : files) {
-        if (Audio::isAudioFile(file)) {
+        if (AudioUtils::isAudioFile(file)) {
             tracksToAdd.append(QString::fromStdString(file));
         }
     }
 
     if (!tracksToAdd.isEmpty()) {
-        m_repo->addTracksToPlaylist(curr_playlist_id, tracksToAdd);
+        m_repo->addTracksToPlaylist(curr_pid, tracksToAdd);
     }
 }
 
@@ -170,24 +172,30 @@ void PlaylistManager::play(int index) {
     }
 }
 
-QString PlaylistManager::getCurrentTrack() {
-    QUuid track_id = m_context->getPlayTrackId();
+QString PlaylistManager::getCurrentTrack() const {
+    trackId tid = m_context->getPlayTrackId();
     auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
     if (!pl) {
         return QString();
     }
-    Track* track = pl->findTrackByID(track_id);
+    Track* track = pl->findTrackByID(tid);
     if (!track) {
         return QString();
     }
     return track->filepath;
 }
 
-const QUuid& PlaylistManager::getCurreentTrackId() const {
+QString PlaylistManager::getCurrentPlaylistName() const {
+    playlistId pid = m_context->getPlaylistId();
+    auto pl = m_repo->findPlaylistById(pid);
+    return pl->name();
+}
+
+const trackId& PlaylistManager::getCurrentTrackId() const {
     return this->m_context->getPlayTrackId();
 }
 
-const QUuid& PlaylistManager::getCurrentPlaylist() const{
+const playlistId& PlaylistManager::getCurrentPlaylist() const{
     return this->m_context->getPlaylistId();
 }
 
@@ -205,8 +213,8 @@ void PlaylistManager::retransmissionPlaylistChanged() {
     emit playlistChanged();
 }
 
-void PlaylistManager::switchToPlaylist(const QUuid& id) {
-    m_context->setPlaylist(id);
+void PlaylistManager::switchToPlaylist(const playlistId& pid) {
+    m_context->setPlaylist(pid);
 }
 
 QVector<std::shared_ptr<Playlist>> PlaylistManager::getPlaylists() {
@@ -214,11 +222,11 @@ QVector<std::shared_ptr<Playlist>> PlaylistManager::getPlaylists() {
 }
 
 TrackMetaData PlaylistManager::getCurrentMetadata() {
-    QUuid track_id = m_context->getPlayTrackId();
+    trackId tid = m_context->getPlayTrackId();
     auto playlist = m_repo->findPlaylistById(m_context->getPlaylistId());
 
     if (playlist) {
-        Track* track = playlist->findTrackByID(track_id);
+        Track* track = playlist->findTrackByID(tid);
         if (track) {
             return track->meta;
         }
@@ -230,4 +238,12 @@ TrackMetaData PlaylistManager::getCurrentMetadata() {
 
 PlayMode PlaylistManager::getCurrentPlayMode() {
     return m_view->getPlayMode();
+}
+
+QString PlaylistManager::getPlaylistById(const playlistId& pid) const {
+    auto pl = m_repo->findPlaylistById(pid);
+    if (!pl->isEmpty()) {
+        return pl->name();
+    }
+    return QString();
 }

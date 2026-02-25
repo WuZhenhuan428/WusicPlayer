@@ -12,7 +12,7 @@
 
 #include "playlist.h"
 #include "playlist_repo.h"
-#include "playlist_definitions.h"
+#include "../../src/core/types.h"
 #include "playlist_layout.h"
 
 using trackId = QUuid;
@@ -30,7 +30,7 @@ public:
     void rebuildAsync();
 
 /* ==== Context & Repo 绑定 ==== */
-    void setPlaylist(const playlistId& playlist_id);
+    void setPlaylist(const playlistId& pid);
 
     /**
      * @brief Parse the DSL used to set the sorting rules
@@ -42,7 +42,7 @@ public:
      * @attention default group rule = title or filename if title does not exist
      */
     void setSingleGrouping(SortRule rule);
-    void setActiveTrack(const trackId& track_id);
+    void setActiveTrack(const trackId& tid);
     void clear();
 
 /* ==== View视图数据访问 ====*/
@@ -80,29 +80,29 @@ public:
     QVector<trackId> generateSingleShuffleQueue();
     void setPlayMode(PlayMode to_mode);
     const PlayMode getPlayMode() const;
-    trackId nextOf(const trackId& track_id) const;
-    trackId previousOf(const trackId& track_id) const;
+    trackId nextOf(const trackId& tid) const;
+    trackId previousOf(const trackId& tid) const;
 
 /* ==== 元数据请求 ==== */
-    void requestMetaData(const trackId& track_id);
+    void requestMetaData(const trackId& tid);
 
 private:
     QVector<TableColumn> m_columns;
     void initDefaultColumns();
 
-    QModelIndex findTrackIndex(const trackId& track_id) const;
+    QModelIndex findTrackIndex(const trackId& tid) const;
     QPersistentModelIndex m_activeTrackIndex;
 
     void scheduleBatchRebuild();
 
 signals:
     void changedPlaybackQueue();
-    void updatedTrackMetadata(const trackId& track_id);
+    void updatedTrackMetadata(const trackId& tid);
     void changedData(int row);
     
 private:
     PlaylistRepo* m_repo = nullptr;
-    playlistId m_playlistId;
+    playlistId m_pid;
     trackId m_activeTrackId;
     Node* m_root = nullptr;
 

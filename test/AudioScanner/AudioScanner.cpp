@@ -70,14 +70,14 @@ private:
 // 使用例
 int main() {
     std::string dir = "/mnt/win_d/MUSIC/MUSIC/MintJam/ONE";
-    auto files = Audio::findAll(dir);
+    auto files = AudioUtils::findAll(dir);
     
     std::cout << "找到 " << files.size() << " 个音频相关文件:\n" << std::endl;
     
     for (const auto& file : files) {
-        if (Audio::isAudioFile(file)) {
+        if (AudioUtils::isAudioFile(file)) {
             std::cout << "[AUDIO] ";
-        } else if (Audio::isPlaylist(file)) {
+        } else if (AudioUtils::isPlaylist(file)) {
             std::cout << "[PLAYLIST] ";
         }
         std::cout << file.string() 

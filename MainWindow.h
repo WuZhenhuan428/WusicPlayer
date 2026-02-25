@@ -1,5 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
 #include <QDebug>
@@ -39,6 +38,9 @@
 #include "src/WControlBar/WControlBar.h"
 #include "src/SidePanel/SidePanel.h"
 
+#include "src/LibraryWidget/LibraryWidget.h"
+#include "src/controller/PlaylistController.h"
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -55,6 +57,7 @@ protected:
 private:
     Player* m_player;
     PlaylistManager* m_playlistManager;
+    PlaylistController* m_playlistController;
     bool m_cacheLoadScheduled = false;
     void initUI();
     void initConnection();
@@ -65,14 +68,7 @@ private:
 
     // UI Action
     void onOpenFile();
-    void onAddFile();
-    void onAddFolder();
-    void onNewPlaylist();
-    void onLoadPlaylist();
-    void onCopyPlaylist();
-    void onRenamePlaylist();
-    void onRemovePlaylist();
-    void onSavePlaylist();
+    
     void onOpenSearchPanel();
     void playTrack(const QString& filepath);
 
@@ -111,13 +107,10 @@ private:
     
     // +++main window
     /// Playlist | song table | cover & rolling lyrics
-    QSplitter* centerLeftSplitter;
-    QTreeWidget* playlistTree;
-    QTreeView* songTreeView;
-    QHeaderView* songTreeViewHeader;
-    QLabel* songTreeLoadingLabel;
-    int m_loadingCount = 0;
+    
+    LibraryWidget* m_libraryPanel;
     SidePanel* m_sidePanel;
+    
     QWidget* centerWidget;
     QHBoxLayout* mainLayout;
     // ---main window
@@ -130,7 +123,6 @@ private slots:
     void updatePlaylist();
     
 signals:
-    void sgnLoadPlaylist(QString filepath);
-    void sgnCurrentPlaylistChanged(QUuid playlist_id);
+    void sgnLoadPlaylist();
+    void sgnCurrentPlaylistChanged(playlistId pid);
 };
-#endif // MAINWINDOW_H

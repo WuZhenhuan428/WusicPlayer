@@ -2,7 +2,7 @@
 #include <QListView>
 #include <QWheelEvent>
 #include "WLyricsModel.h"
-#include "../playlist/playlist_definitions.h"
+#include "../../src/core/types.h"
 
 class WLyricsPanel : public QListView
 {

@@ -21,20 +21,20 @@ public:
 
 public:
     void setPlayMode(PlayMode mode);
-    void setPlaylist(const QUuid& playlistId);
-    void setPlayTrack(const QUuid& trackUuid);
+    void setPlaylist(const playlistId& pid);
+    void setPlayTrack(const trackId& tid);
 
-    const QUuid& getPlaylistId();
-    const QUuid& getPlayTrackId();
+    const playlistId& getPlaylistId();
+    const trackId& getPlayTrackId();
     PlayMode getPlayMode();
 
 signals:
-    void changedCurrentListId(const QUuid& list_uuid);
-    void changedCurrentTrackId(const QUuid& track_uuid);
+    void changedCurrentListId(const playlistId& pid);
+    void changedCurrentTrackId(const trackId& tid);
     void changedCurrentPlayMode(const PlayMode& mode);
 
 private:
-    QUuid m_currentPlaylistId;
-    QUuid m_currentTrackId;
+    playlistId m_currentPlaylistId;
+    trackId m_currentTrackId;
     PlayMode m_mode;
 };

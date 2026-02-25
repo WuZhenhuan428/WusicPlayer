@@ -18,7 +18,7 @@
 #include <QVector>
 #include <utility>
 
-#include "playlist_definitions.h"
+#include "../../src/core/types.h"
 
 /* usage:
     WSortTypeSetter dialog(this);
@@ -53,13 +53,13 @@ private:
 class WPlayListWidgetItem : public QTreeWidgetItem
 {
 public:
-    WPlayListWidgetItem(QTreeWidget* parent, const QString& name, const QUuid& id)
-        : QTreeWidgetItem(parent, QStringList() << name), m_id(id)
+    WPlayListWidgetItem(QTreeWidget* parent, const QString& name, const playlistId& pid)
+        : QTreeWidgetItem(parent, QStringList() << name), m_pid(pid)
         {}
     
-    QUuid id() const { return m_id; }
+    playlistId id() const { return m_pid; }
 private:
-    QUuid m_id;
+    playlistId m_pid;
 };
 
 class WInsertColumnDialog : public QDialog

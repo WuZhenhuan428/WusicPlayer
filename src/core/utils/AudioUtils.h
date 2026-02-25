@@ -23,7 +23,7 @@
 #include <taglib/mp4file.h>
 #include <taglib/asffile.h>
 
-#include "../../src/playlist/playlist_definitions.h"
+#include "../../src/core/types.h"
 
 #include <QString>
 #include <QPixmap>
@@ -35,11 +35,25 @@
 
 namespace fs = std::filesystem;
 
-class Audio {
+class AudioUtils {
 public:
     // 扫描并返回所有音频文件和播放列表的路径
     static std::vector<fs::path> findAll(const std::string& rootDir) {
         std::vector<fs::path> results;
+        
+        auto scanDir = [](const fs::path& dir, std::vector<fs::path>& results) {
+        try {
+            for (const auto& entry : fs::recursive_directory_iterator(dir)) {
+                if (entry.is_regular_file()) {
+                    if (isAudioFile(entry.path()) || isPlaylist(entry.path())) {
+                        results.push_back(entry.path());
+                    }
+                }
+            }
+        } catch (...) {
+            // 忽略访问错误
+        }
+    };
         scanDir(fs::path(rootDir), results);
         return results;
     }
@@ -282,7 +296,7 @@ public:
             return extracted_pixmap;
         }
 
-        return Audio::find_cover_at_folder(QString::fromStdString(filepath));
+        return AudioUtils::find_cover_at_folder(QString::fromStdString(filepath));
     }
 
     static TrackMetaData parse(const std::string& filepath) {
@@ -327,7 +341,7 @@ public:
             meta.album_artist = QString::fromStdString(getString("ALBUM ARTIST"));
         }
         if (meta.album_artist.isEmpty()) {
-            // qDebug() << "[INFO] Audio::parse album_artist is empty!";
+            // qDebug() << "[INFO] AudioUtils::parse album_artist is empty!";
         }
 
         meta.lyrics = QString::fromStdString(getString("LYRICS"));
@@ -357,34 +371,19 @@ public:
         }
         return temp;
     }
-
-private:
-    static void scanDir(const fs::path& dir, std::vector<fs::path>& results) {
-        try {
-            for (const auto& entry : fs::recursive_directory_iterator(dir)) {
-                if (entry.is_regular_file()) {
-                    if (isAudioFile(entry.path()) || isPlaylist(entry.path())) {
-                        results.push_back(entry.path());
-                    }
-                }
-            }
-        } catch (...) {
-            // 忽略访问错误
-        }
-    }
 };
 
 // // 使用例
 // int main() {
 //     std::string dir = "/mnt/win_d/MUSIC/MUSIC/MintJam/ONE";
-//     auto files = Audio::findAll(dir);
+//     auto files = AudioUtils::findAll(dir);
     
 //     std::cout << "找到 " << files.size() << " 个音频相关文件:\n" << std::endl;
     
 //     for (const auto& file : files) {
-//         if (Audio::isAudioFile(file)) {
+//         if (AudioUtils::isAudioFile(file)) {
 //             std::cout << "[AUDIO] ";
-//         } else if (Audio::isPlaylist(file)) {
+//         } else if (AudioUtils::isPlaylist(file)) {
 //             std::cout << "[PLAYLIST] ";
 //         }
 //         std::cout << file.filename().string() 

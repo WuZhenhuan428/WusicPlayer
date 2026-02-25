@@ -7,7 +7,7 @@
 #include <QPainter>
 
 #include "lrc_parser.h"
-#include "../playlist/playlist_definitions.h"
+#include "../../src/core/types.h"
 
 class WLyricsModel : public QAbstractListModel
 {
