@@ -1,13 +1,17 @@
 #pragma once
-#include <QListView>
-#include <QWheelEvent>
 #include "WLyricsModel.h"
 #include "../../src/core/types.h"
 
+#include <QWidget>
+#include <QListView>
+#include <QWheelEvent>
+#include <QObject>
+
 class WLyricsPanel : public QListView
 {
+    Q_OBJECT
 public:
-    explicit WLyricsPanel();
+    explicit WLyricsPanel(QWidget* parent = nullptr);
     ~WLyricsPanel();
 
     void getCurrentRow(qint64 position_ms);

@@ -1,8 +1,10 @@
 #include "WLyricsPanel.h"
 #include "../../src/core/types.h"
 
-WLyricsPanel::WLyricsPanel() {
-    m_lrcModel = new WLyricsModel;
+WLyricsPanel::WLyricsPanel(QWidget* parent)
+    : QListView(parent)
+{
+    m_lrcModel = new WLyricsModel(this);
     this->setModel(m_lrcModel);
     this->setWordWrap(true);
     this->setSelectionMode(QAbstractItemView::NoSelection);

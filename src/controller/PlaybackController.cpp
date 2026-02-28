@@ -8,7 +8,7 @@ PlaybackController::PlaybackController(Player* player, QObject* parent)
         return;
     }
     // broadcast Player signals
-    connect(m_player->MediaPlayer, &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
+    connect(m_player->getMediaPlayer(), &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
         emit sgnMediaStateChanged(status);
     });
     connect(m_player, &Player::positionChanged, this, [this](qint64 pos_ms) {
@@ -17,7 +17,7 @@ PlaybackController::PlaybackController(Player* player, QObject* parent)
     connect(m_player, &Player::durationChanged, this, [this](qint64 dur_ms) {
         emit sgnDurationChanged(dur_ms);
     });
-    connect(m_player->MediaPlayer, &QMediaPlayer::playbackStateChanged, this, [this](QMediaPlayer::PlaybackState new_state) {
+    connect(m_player->getMediaPlayer(), &QMediaPlayer::playbackStateChanged, this, [this](QMediaPlayer::PlaybackState new_state) {
         emit sgnPlaybackStateChanged(new_state);
     });
 }
@@ -55,7 +55,7 @@ void PlaybackController::setPosition(qint64 pos_ms) {
 }
 
 qint64 PlaybackController::position() {
-    return m_player->MediaPlayer->position();
+    return m_player->getMediaPlayer()->position();
 }
 
 void PlaybackController::setVolume(int percent) {
@@ -68,8 +68,8 @@ void PlaybackController::read(QString filepath) {
 
 void PlaybackController::setMute(bool mute_on) {
     bool now_muted;
-    if (m_player->MediaPlayer && m_player->MediaPlayer->audioOutput()) {
-        now_muted = m_player->MediaPlayer->audioOutput()->isMuted();
+    if (m_player->getMediaPlayer() && m_player->getMediaPlayer()->audioOutput()) {
+        now_muted = m_player->getMediaPlayer()->audioOutput()->isMuted();
     }
     if (mute_on != now_muted) {
         flipMute();
@@ -77,12 +77,12 @@ void PlaybackController::setMute(bool mute_on) {
 }
 
 bool PlaybackController::getMute() {
-    if (m_player->MediaPlayer && m_player->MediaPlayer->audioOutput()) {
-        return m_player->MediaPlayer->audioOutput()->isMuted();
+    if (m_player->getMediaPlayer() && m_player->getMediaPlayer()->audioOutput()) {
+        return m_player->getMediaPlayer()->audioOutput()->isMuted();
     }
     return false;
 }
 
 const QMediaPlayer* PlaybackController::getMediaPlayer() const {
-    return m_player->MediaPlayer;
+    return m_player->getMediaPlayer();
 }

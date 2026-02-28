@@ -33,7 +33,7 @@ protected:
 private:
     QLabel* m_coverLabel;
     WLyricsPanel* m_lyricsPanel;
-    QPixmap* m_originalCover;
+    QPixmap m_originalCover;
     QSplitter* m_panelSplitter;
 
     ElidedLabel* m_nameLabel;

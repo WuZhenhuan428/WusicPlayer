@@ -3,14 +3,16 @@
 #define SLIDER_VOLUME_MIN_WIDTH 100
 #define SLIDER_VOLUME_MAX_WIDTH 100
 
-WControlBar::WControlBar(QWidget* parent) : QWidget(parent) {
-    btnPlay = new QPushButton(">");
-    btnPause = new QPushButton("||");
-    btnStop = new QPushButton(">|");
-    btnPrev = new QPushButton("<<");
-    btnNext = new QPushButton(">>");
-    btnMode = new QPushButton("M");
-    btnMute = new QPushButton("V");
+WControlBar::WControlBar(QWidget* parent)
+    : QWidget(parent)
+{
+    btnPlay = new QPushButton(">", this);
+    btnPause = new QPushButton("||", this);
+    btnStop = new QPushButton(">|", this);
+    btnPrev = new QPushButton("<<", this);
+    btnNext = new QPushButton(">>", this);
+    btnMode = new QPushButton("M", this);
+    btnMute = new QPushButton("V", this);
     btnPlay->setFixedSize(25, 25);
     btnPause->setFixedSize(25, 25);
     btnStop->setFixedSize(25, 25);
@@ -19,19 +21,19 @@ WControlBar::WControlBar(QWidget* parent) : QWidget(parent) {
     btnMode->setFixedSize(25, 25);
     btnMute->setFixedSize(25, 25);
 
-    actInOrder = new QAction("In order");
-    actLoop = new QAction("Loop");
-    actShuffle = new QAction("Shuffle");
-    actOutOfOrderTrack = new QAction("Out of order by track");
-    actOutOfOrderGroup = new QAction("Out of order by troup");
-    menuMode = new QMenu();
+    menuMode = new QMenu(this);
+    actInOrder = new QAction("In order", menuMode);
+    actLoop = new QAction("Loop", menuMode);
+    actShuffle = new QAction("Shuffle", menuMode);
+    actOutOfOrderTrack = new QAction("Out of order by track", menuMode);
+    actOutOfOrderGroup = new QAction("Out of order by troup", menuMode);
 
     /// Position Bar: position/Duration
-    sliderPostion = new QSlider(Qt::Horizontal);
+    sliderPostion = new QSlider(Qt::Horizontal, this);
     sliderPostion->setRange(0, 100);
     /// bar's time progress
-    timeProgress = new WTimeProgress;
-    sliderVolume = new QSlider(Qt::Horizontal);
+    timeProgress = new WTimeProgress(this);
+    sliderVolume = new QSlider(Qt::Horizontal, this);
     sliderVolume->setRange(0, 100);
     sliderVolume->setValue(100);
     sliderVolume->setMinimumWidth(SLIDER_VOLUME_MIN_WIDTH);

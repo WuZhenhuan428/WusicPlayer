@@ -9,22 +9,20 @@ SidePanel::SidePanel(QWidget *parent)
 {
     m_panelSplitter = new QSplitter(Qt::Vertical, this);
     
-    m_coverLabel = new QLabel;
+    m_coverLabel = new QLabel(this);
     m_coverLabel->setAlignment(Qt::AlignCenter);
-    m_originalCover = new QPixmap;
-    m_originalCover->load(DEFAULT_COVER_PATH);
-    m_coverLabel->setPixmap(*m_originalCover);
+    m_originalCover.load(DEFAULT_COVER_PATH);
+    m_coverLabel->setPixmap(m_originalCover);
 
-    m_nameLabel = new ElidedLabel;
+    m_nameLabel = new ElidedLabel(this);
     m_nameLabel->setText("WusicPlayer");    // format: "title - artist"
     m_nameLabel->setAlignment(Qt::AlignHCenter);
 
-    m_albumLabel = new ElidedLabel;
+    m_albumLabel = new ElidedLabel(this);
     m_albumLabel->setText("Version 0.01");
     m_albumLabel->setAlignment(Qt::AlignHCenter);
 
-
-    m_lyricsPanel = new WLyricsPanel;
+    m_lyricsPanel = new WLyricsPanel(this);
     m_panelSplitter->addWidget(m_coverLabel);
     m_panelSplitter->addWidget(m_nameLabel);
     m_panelSplitter->addWidget(m_albumLabel);
@@ -35,7 +33,7 @@ SidePanel::SidePanel(QWidget *parent)
     m_panelSplitter->setStretchFactor(2, 0);
     m_panelSplitter->setStretchFactor(3, 1);
 
-    m_mainLayout = new QVBoxLayout;
+    m_mainLayout = new QVBoxLayout(this);
     m_mainLayout->addWidget(m_panelSplitter);
 
     m_panelSplitter->setStyleSheet("QSplitter::handle { background: transparent; }");
@@ -43,7 +41,7 @@ SidePanel::SidePanel(QWidget *parent)
     this->setLayout(m_mainLayout);
 }
 
-SidePanel::~SidePanel() {}
+SidePanel::~SidePanel() { }
 
 void SidePanel::setPlayer(Player* player) {
     
@@ -52,9 +50,9 @@ void SidePanel::setPlayer(Player* player) {
 void SidePanel::loadCover(const QString& filepath) {
     QPixmap pix = AudioUtils::parse_cover_to_qpixmap(filepath.toStdString());
     if (!pix.isNull()) {
-        *m_originalCover = pix;
+        m_originalCover = pix;
     } else {
-        m_originalCover->load(DEFAULT_COVER_PATH);
+        m_originalCover.load(DEFAULT_COVER_PATH);
     }
     updateCoverScale();
 }
@@ -74,17 +72,18 @@ void SidePanel::loadMetaData(const TrackMetaData& meta) {
 }
 
 void SidePanel::updateCoverScale() {
-    if (!m_originalCover || m_originalCover->isNull()) {
+    if (!m_originalCover || m_originalCover.isNull()) {
         return;
     }
-    int base_width = parentWidget()->geometry().width() / 4.5;
-    QPixmap scaled = m_originalCover->scaled(
+    int base_width = this->parentWidget()->width() / 4.5;
+    QPixmap scaled = m_originalCover.scaled(
         base_width,
         base_width,
         Qt::KeepAspectRatio,
         Qt::SmoothTransformation
     );
-    m_coverLabel->setFixedSize(base_width, base_width);
+    m_coverLabel->setMinimumSize(0, 0);
+    m_coverLabel->setMaximumSize(base_width, base_width);
     m_coverLabel->setPixmap(scaled);
 }
 
@@ -109,7 +108,9 @@ bool SidePanel::loadLyrics(const TrackMetaData& meta) {
 }
 
 void SidePanel::resizeEvent(QResizeEvent *event) {
-    this->updateCoverScale();
+    QTimer::singleShot(1, [this](){
+        updateCoverScale();
+    });
     for (int i = 0; i < m_panelSplitter->count(); ++i) {
         QSplitterHandle* handle = m_panelSplitter->handle(i);
         if (handle) {

@@ -8,12 +8,13 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
     QCoreApplication::setApplicationName("WusicPlayer");
-    ConfigManager::getInstance();
     Player player;
-    PlaybackController playbackController(&player, nullptr);
+    PlaybackController playbackController(&player);
+    ConfigManager::getInstance();
+
     MainWindow w(&playbackController);
-    
     w.show();
     return a.exec();
 }

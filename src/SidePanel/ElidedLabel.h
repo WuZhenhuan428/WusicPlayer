@@ -11,11 +11,13 @@ class ElidedLabel : public QLabel
     Q_OBJECT
     Q_PROPERTY(QString fullText READ fullText WRITE setFullText)
 public:
-    explicit ElidedLabel(QWidget* parent = nullptr) : QLabel(parent) {}
+    explicit ElidedLabel(QWidget* parent = nullptr) : QLabel(parent) {
+        this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    }
     explicit ElidedLabel(const QString& text, QWidget* parent = nullptr)
         : QLabel(parent) {
-        this->setText(text);
         this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        this->setFullText(text);
     }
 
     QString fullText() const { return m_fullText; }
@@ -37,7 +39,7 @@ protected:
 private:
     void updateElidedText() {
         QFontMetrics metrics(font());
-        int avaliable_width = width() - contentsMargins().left() - contentsMargins().right();
+        const int avaliable_width = qMax(0, this->contentsRect().width());
         QString elided_text = metrics.elidedText(m_fullText, Qt::ElideRight, avaliable_width);
         if (elided_text != text()) {
             QLabel::setText(elided_text);

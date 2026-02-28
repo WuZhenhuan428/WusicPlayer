@@ -204,17 +204,17 @@ void MainWindow::initUI()
 // MenuBar
     mainMenuBar = new QMenuBar;
 
-    menuFile = new QMenu("&File");
-    actOpenFile = new QAction("&Open");
-    actAddFile = new QAction("Add file");
-    actAddFolder = new QAction("Add folder");
-    actNewPlaylist = new QAction("New playlist");
-    actLoadPlaylist = new QAction("&Load playlist");
-    actCopyPlaylist = new QAction("Copy playlist");
-    actRenamePlaylist = new QAction("&Rename playlist");
-    actSavePlaylist = new QAction("&Save current playlist");
-    actRemovePlaylist = new QAction("Remove current palylist");
-    actExit = new QAction("&Exit");
+    menuFile = new QMenu("&File", mainMenuBar);
+    actOpenFile = new QAction("&Open", menuFile);
+    actAddFile = new QAction("Add file", menuFile);
+    actAddFolder = new QAction("Add folder", menuFile);
+    actNewPlaylist = new QAction("New playlist", menuFile);
+    actLoadPlaylist = new QAction("&Load playlist", menuFile);
+    actCopyPlaylist = new QAction("Copy playlist", menuFile);
+    actRenamePlaylist = new QAction("&Rename playlist", menuFile);
+    actSavePlaylist = new QAction("&Save current playlist", menuFile);
+    actRemovePlaylist = new QAction("Remove current palylist", menuFile);
+    actExit = new QAction("&Exit", menuFile);
     menuFile->addAction(actOpenFile);
     menuFile->addSeparator();
     menuFile->addAction(actAddFile);
@@ -230,20 +230,20 @@ void MainWindow::initUI()
     menuFile->addAction(actExit);
     mainMenuBar->addMenu(menuFile);
 
-    menuView = new QMenu("&View");
-    actSetSortRule = new QAction("Set sort rule (&R)");
-    actInsertColumn = new QAction("Insert a column (&I)");
-    actRemoveColumn = new QAction("Remove a column (&R)");
-    actSearchPanel = new QAction("Open search panel (&S)");
+    menuView = new QMenu("&View", mainMenuBar);
+    actSetSortRule = new QAction("Set sort rule (&R)", menuView);
+    actInsertColumn = new QAction("Insert a column (&I)", menuView);
+    actRemoveColumn = new QAction("Remove a column (&R)", menuView);
+    actSearchPanel = new QAction("Open search panel (&S)", menuView);
     menuView->addAction(actSetSortRule);
     menuView->addAction(actInsertColumn);
     menuView->addAction(actRemoveColumn);
     menuView->addAction(actSearchPanel);
     mainMenuBar->addMenu(menuView);
 
-    menuHelp = new QMenu("&Help");
-    actManual = new QAction("&Manual");
-    actAbout = new QAction("&About");
+    menuHelp = new QMenu("&Help", mainMenuBar);
+    actManual = new QAction("&Manual", menuHelp);
+    actAbout = new QAction("&About", menuHelp);
     menuHelp->addAction(actManual);
     menuHelp->addSeparator();
     menuHelp->addAction(actAbout);
@@ -253,25 +253,25 @@ void MainWindow::initUI()
 
 // Bottom toolbar, btn & progress bar
     /// PushButton instant -> BottomToolBarArea
-    bottomToolBar = new QToolBar;
+    bottomToolBar = new QToolBar(this);
     bottomToolBar->setMovable(false);
     bottomToolBar->setFloatable(false);
-    controlBar = new WControlBar;
+    controlBar = new WControlBar(bottomToolBar);
     bottomToolBar->addWidget(controlBar);
     addToolBar(Qt::BottomToolBarArea, bottomToolBar);
 
 // Main window
     /// playlist & table with splitter
     
-    m_libraryPanel = new LibraryWidget(m_playlistController->viewModel(), this);
-    m_sidePanel = new SidePanel(this);
     centerWidget = new QWidget(this);
+    m_libraryPanel = new LibraryWidget(m_playlistController->viewModel(), centerWidget);
+    m_sidePanel = new SidePanel(centerWidget);
     mainLayout = new QHBoxLayout(centerWidget);
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
     mainLayout->addWidget(m_libraryPanel, 3);
     mainLayout->addWidget(m_sidePanel, 1);
-
+    mainLayout->setContentsMargins(0, 0, 0, 0);
     setCentralWidget(centerWidget);
 }
 
@@ -370,6 +370,34 @@ void MainWindow::playTrack(const QString& filepath) {
 }
 
 
+void MainWindow::restoreLastTrackWhenModelReady(int retry, qint64 last_pos) {
+    if (retry > 20) return;
+
+    QMediaPlayer* media_player = const_cast<QMediaPlayer*>(m_playbackController->getMediaPlayer());
+    if (!media_player) {
+        return;
+    }
+
+    const auto status = media_player->mediaStatus();
+    const bool can_seek = (
+        status == QMediaPlayer::LoadedMedia ||
+        status == QMediaPlayer::BufferedMedia ||
+        status == QMediaPlayer::BufferingMedia)
+        && (media_player->duration() > 0
+    );
+    if (can_seek) {
+        m_playbackController->setPosition(last_pos);
+        m_playbackController->pause();
+        return;
+    }
+    if (++retry > 30) {    // ~1.5s timeout
+        return;
+    }
+    QTimer::singleShot(50, this, [this, retry, last_pos]() {
+        restoreLastTrackWhenModelReady(retry + 1, last_pos);
+    });
+}
+
 void MainWindow::applyConfig() {
     const AppConfig& cfg = ConfigManager::getInstance().getAppConfig();
 
@@ -416,32 +444,10 @@ void MainWindow::applyConfig() {
                 return;
             }
             auto retry_count = std::make_shared<int>(0);
-            auto try_seek = std::make_shared<std::function<void()>>();
 
-            *try_seek = [this, target_ms, retry_count, try_seek]() {
-                QMediaPlayer* media_player = const_cast<QMediaPlayer*>(m_playbackController->getMediaPlayer());
-                if (!media_player) {
-                    return;
-                }
-
-                const auto status = media_player->mediaStatus();
-                const bool can_seek = (
-                    status == QMediaPlayer::LoadedMedia ||
-                    status == QMediaPlayer::BufferedMedia ||
-                    status == QMediaPlayer::BufferingMedia)
-                    && (media_player->duration() > 0
-                );
-                if (can_seek) {
-                    m_playbackController->setPosition(target_ms);
-                    m_playbackController->pause();
-                    return;
-                }
-                if (++(*retry_count) > 30) {    // ~1.5s timeout
-                    return;
-                }
-                QTimer::singleShot(50, this, *try_seek);
-            };
-            QTimer::singleShot(0, this, *try_seek);
+            QTimer::singleShot(0, this, [this, retry_count, target_ms]() {
+                restoreLastTrackWhenModelReady(*retry_count, target_ms);
+            });
         };
 
         auto restoreAfterModelReset = [this, last_tid, last_position_ms, findQueueIndexByTrackId, seekWhenMediaReady] () {

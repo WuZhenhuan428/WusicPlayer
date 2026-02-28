@@ -81,3 +81,11 @@ void PlaylistSearchPanel::closeEvent(QCloseEvent* event) {
     emit sgnAboutToClose(geo, header);
     QWidget::closeEvent(event);
 }
+
+void PlaylistSearchPanel::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Escape) {
+        this->close();
+    } else {
+        QWidget::keyPressEvent(event);
+    }
+}

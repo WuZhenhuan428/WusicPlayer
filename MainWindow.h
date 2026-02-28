@@ -61,6 +61,8 @@ private:
     PlaybackController* m_playbackController;
 
     bool m_cacheLoadScheduled = false;
+    void restoreLastTrackWhenModelReady(int retry, qint64 last_pos);
+
     void initUI();
     void initConnection();
     

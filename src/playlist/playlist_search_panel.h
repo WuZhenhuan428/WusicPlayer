@@ -5,7 +5,9 @@
 #include <QTreeView>
 #include <QVBoxLayout>
 #include <QAbstractItemModel>
+
 #include <QCloseEvent>
+#include <QKeyEvent>
 
 #include "playlist_search_proxy_model.h"
 
@@ -26,6 +28,7 @@ signals:
 
 protected:
     void closeEvent(QCloseEvent* event) override;
+    void keyPressEvent(QKeyEvent* event) override;
 
 private:
     QLineEdit* leKeyword;

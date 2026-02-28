@@ -1,42 +1,56 @@
 #include "player.h"
 
+#include <QUrl>
+
 Player::Player(QObject *parent)
     : QObject{parent},
-    MediaPlayer(new QMediaPlayer),
-    AudioOutput(new QAudioOutput)
+    m_mediaPlayer(new QMediaPlayer(this)),
+    m_audioOutput(new QAudioOutput(this)),
+    m_mediaDevices(new QMediaDevices(this))
 {
     setDevice();
-    connect(MediaPlayer, &QMediaPlayer::positionChanged, this, &Player::positionChanged);
-    connect(MediaPlayer, &QMediaPlayer::durationChanged, this, &Player::durationChanged);
-    connect(MediaPlayer, &QMediaPlayer::playbackStateChanged, this, &Player::onPlaybackStateChanged);
+    connect(m_mediaPlayer, &QMediaPlayer::positionChanged, this, &Player::positionChanged);
+    connect(m_mediaPlayer, &QMediaPlayer::durationChanged, this, &Player::durationChanged);
+    connect(m_mediaPlayer, &QMediaPlayer::playbackStateChanged, this, &Player::onPlaybackStateChanged);
+
+    connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, 
+            this, &Player::onAudioOutputchanged);
 }
 
-Player::~Player() {}
+Player::~Player() {
+    if (m_mediaPlayer) {
+        m_mediaPlayer->stop();
+    }
+}
 
 
 void Player::read(const QString& filepath) {
     openFile(filepath);
-    MediaPlayer->play();
+    m_mediaPlayer->play();
 }
 
 void Player::play() {
-    MediaPlayer->play();
+    m_mediaPlayer->play();
 }
 
 void Player::pause() {
-    MediaPlayer->pause();
+    m_mediaPlayer->pause();
 }
 
 void Player::stop() {
-    MediaPlayer->stop();
+    m_mediaPlayer->stop();
 }
 
 void Player::openFile(const QString& filepath) {
-    MediaPlayer->setSource(QUrl::fromLocalFile(filepath));
+    m_mediaPlayer->setSource(QUrl::fromLocalFile(filepath));
+}
+
+QMediaPlayer* Player::getMediaPlayer() const {
+    return this->m_mediaPlayer;
 }
 
 Player::State Player::state() const {
-    return const_cast<Player*>(this)->mapPlaybackState(MediaPlayer->playbackState());
+    return const_cast<Player*>(this)->mapPlaybackState(m_mediaPlayer->playbackState());
 }
 
 Player::State Player::mapPlaybackState(QMediaPlayer::PlaybackState state) {
@@ -57,20 +71,68 @@ void Player::onPlaybackStateChanged(QMediaPlayer::PlaybackState state) {
 }
 
 void Player::setDevice() {
-    QAudioDevice CurrDevice = QMediaDevices::defaultAudioOutput();
-    qDebug() << "[INFO] Output device:" << CurrDevice.description();
-    this->AudioOutput->setDevice(CurrDevice);
-    this->MediaPlayer->setAudioOutput(AudioOutput);
+    QAudioDevice curr_device = QMediaDevices::defaultAudioOutput();
+    qDebug() << "[INFO] Output device:" << curr_device.description();
+    this->m_audioOutput->setDevice(curr_device);
+    this->m_mediaPlayer->setAudioOutput(m_audioOutput);
+}
+
+void Player::setOutputDevice(const QAudioDevice& device) {
+    if (device.isNull()) return;
+    m_audioOutput->setDevice(device);
+    m_prefferedOutputId = device.id();
+    qDebug() << "[INFO] Switch to device:" << device.description();
+}
+
+QAudioDevice Player::currentOutputDevice() const {
+    return m_audioOutput ? m_audioOutput->device() : QAudioDevice();
+}
+
+QList<QAudioDevice> Player::devices() const {
+    return QMediaDevices::audioOutputs();
+}
+
+void Player::onAudioOutputchanged() {
+    const auto outputs = QMediaDevices::audioOutputs();
+    if (outputs.isEmpty()) {
+        qWarning() << "[WARNING] No audio output device available.";
+        return;
+    }
+
+    // is current device still available
+    const QByteArray curr_id = m_audioOutput->device().id();
+    bool curr_still_exists = false;
+    for (const auto& device : outputs) {
+        if (device.id() == curr_id) {
+            curr_still_exists = true;
+            break;
+        }
+    }
+
+    if (curr_still_exists) return;
+
+    // if current device failed
+    for (const auto& device : outputs) {
+        if (!m_prefferedOutputId.isEmpty() && device.id() == m_prefferedOutputId) {
+            m_audioOutput->setDevice(device);
+            qDebug() << "[INFO] Restored preffered output device: " << device.description();
+            return;
+        }
+    }
+
+    const QAudioDevice fallback = QMediaDevices::defaultAudioOutput();
+    m_audioOutput->setDevice(fallback);
+    qDebug() << "[AUDIO] Fallback to default output:" << fallback.description();
 }
 
 
 void Player::setPosition(qint64 position) {
-    MediaPlayer->setPosition(position);
+    m_mediaPlayer->setPosition(position);
 }
 
 void Player::flipMute() {
-    bool muteState = this->AudioOutput->isMuted();
-    this->AudioOutput->setMuted(!muteState);
+    bool muteState = this->m_audioOutput->isMuted();
+    this->m_audioOutput->setMuted(!muteState);
     if (1 == muteState) {
         qDebug() << "[INFO] Mute: off";
     } else {
@@ -80,7 +142,7 @@ void Player::flipMute() {
 
 void Player::setVolume(qint64 volume) {
     double audioGain = mapSliderToVolume(volume, -50.0);
-    this->AudioOutput->setVolume(audioGain);
+    this->m_audioOutput->setVolume(audioGain);
 }
 
 /**

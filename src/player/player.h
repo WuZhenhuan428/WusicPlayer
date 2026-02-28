@@ -3,12 +3,12 @@
 
 #include <QObject>
 #include <QDebug>
-#include <QtMultimedia/QtMultimedia>
+#include <QtMultimedia>
 #include <QMediaPlayer>
-#include <QUrl>
 #include <QMediaDevices>
-#include <QMediaMetaData>
-#include <QTimer>
+#include <QAudioDevice>
+#include <QByteArray>
+
 #include <qmath.h>
 
 // Class Declaration
@@ -20,28 +20,24 @@ enum class State;
 class Player : public QObject
 {
     Q_OBJECT
-
 public:
-    // local class
-    /// play state FSM
-    enum class State
+    enum class State    // play state FSM
     {
         IDLE = 0,
         PLAYING,
         PAUSED,
         STOPPED
     };
-    Q_ENUM(State);
 
-    /// constructor & destructor
     explicit Player(QObject *parent = nullptr);
     ~Player();
 
-    /// local member class
-    QMediaPlayer* MediaPlayer;
+public:
+    QMediaPlayer* getMediaPlayer() const;
     State state() const;
+    QAudioDevice currentOutputDevice() const;
+    QList<QAudioDevice> devices() const;
 
-public slots:
     void read(const QString& filepath);
     void play();
     void pause();
@@ -50,23 +46,27 @@ public slots:
     void flipMute();
     void setVolume(qint64 volume);
 
+    void setOutputDevice(const QAudioDevice& device);   // reserved interface
+
+signals:
+    void stateChanged(Player::State state);
+    void positionChanged(qint64 ms);
+    void durationChanged(qint64 ms);
+
 private:
-    QAudioOutput* AudioOutput;
+    QAudioOutput* m_audioOutput;
+    QMediaDevices* m_mediaDevices;
+    QByteArray m_prefferedOutputId;
+    QMediaPlayer* m_mediaPlayer;
+    
     double m_minDb;
     void setDevice();
     void openFile(const QString& filepath);
     double mapSliderToVolume(qint64 value, double minDb = -60.0);
     Player::State mapPlaybackState(QMediaPlayer::PlaybackState state);
 
-private slots:
     void onPlaybackStateChanged(QMediaPlayer::PlaybackState state);
-
-signals:
-    // Drive UI display behaviors through signal from backend
-    void stateChanged(Player::State state);
-    /// time info, slide bar
-    void positionChanged(qint64 ms);
-    void durationChanged(qint64 ms);
+    void onAudioOutputchanged();
 };
 
 #endif // PLAYER_H
