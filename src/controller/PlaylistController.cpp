@@ -145,8 +145,8 @@ auto PlaylistController::viewModel() const -> decltype(std::declval<PlaylistMana
     return m_manager->getViewModel();
 }
 
-QString PlaylistController::nextTrack() const { return m_manager->nextTrack(); }
-QString PlaylistController::prevTrack() const { return m_manager->prevTrack(); }
+QString PlaylistController::nextTrack(PlayMode mode) const { return m_manager->nextTrack(mode); }
+QString PlaylistController::prevTrack(PlayMode mode) const { return m_manager->prevTrack(mode); }
 void PlaylistController::play(int queueIndex) { m_manager->play(queueIndex); }
 void PlaylistController::switchToPlaylist(const playlistId& id) { m_manager->switchToPlaylist(id); }
 
@@ -156,6 +156,5 @@ const QVector<std::shared_ptr<Playlist>> PlaylistController::playlists() const {
 playlistId PlaylistController::currentPlaylist() const { return m_manager->getCurrentPlaylist(); }
 trackId PlaylistController::currentTrackId() const { return m_manager->getCurrentTrackId(); }
 TrackMetaData PlaylistController::currentMetadata() const { return m_manager->getCurrentMetadata(); }
-PlayMode PlaylistController::currentPlayMode() const { return m_manager->getCurrentPlayMode(); }
 
 void PlaylistController::loadCacheAfterShown() { m_manager->loadCacheAfterShown(); }

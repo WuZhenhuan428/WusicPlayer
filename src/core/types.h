@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QObject>
 #include <QByteArray>
 #include <QUuid>
 #include <QHash>
@@ -103,3 +104,8 @@ enum class PlayMode
     out_of_order_group
 };
 
+struct PlaybackQueueSnapshot
+{
+    QVector<trackId> queue;
+    qint64 version = 0;
+};

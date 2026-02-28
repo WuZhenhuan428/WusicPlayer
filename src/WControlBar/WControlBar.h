@@ -2,6 +2,8 @@
 
 #include <QWidget>
 
+#include "../../src/core/types.h"
+
 #include "wtimeprogress.h"
 #include <QPushButton>
 #include <QSlider>
@@ -10,6 +12,7 @@
 #include <QMenu>
 #include <QHBoxLayout>
 #include <QMediaPlayer>
+#include <QActionGroup>
 
 class WControlBar : public QWidget
 {
@@ -17,6 +20,7 @@ class WControlBar : public QWidget
 public:
     explicit WControlBar(QWidget* parent = nullptr);
     ~WControlBar();
+    void setPlayMode(PlayMode mode);
 
 public slots:
     void onPlayerStateChanged(QMediaPlayer::PlaybackState newState);
@@ -53,6 +57,7 @@ private:
     QAction* actShuffle;    // 随机播放 - 不停止
     QAction* actOutOfOrderTrack; // 乱序播放 - 有最后一首
     QAction* actOutOfOrderGroup;// 组间乱序 / 组内顺序
+    QActionGroup* actGroup;     // exclusive group -> show available icon
 
     /// Progress Bar: Position/Duration
     QSlider* sliderPostion;

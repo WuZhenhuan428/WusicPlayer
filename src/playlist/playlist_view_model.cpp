@@ -4,7 +4,7 @@
 #include <QRegularExpression>
 #include <QPointer>
 #include <QThread>
-#include <algorithm>
+// #include <algorithm>
 #include <random>
 #include "../../src/core/utils/AudioUtils.h"
 
@@ -418,6 +418,22 @@ void PlaylistViewModel::sort(int column, Qt::SortOrder order) {
 
 /* ==== Helpers ==== */
 
+PlaybackQueueSnapshot PlaylistViewModel::playbackQueueSnapshot() const {
+    static int version = 0;
+    return {m_playbackQueue, version++};
+}
+
+PlaybackQueueSnapshot PlaylistViewModel::singleShuffleQueueSnapshot() const {
+    static int version = 0;
+    return {m_singleShuffleQueue, version++};
+}
+
+PlaybackQueueSnapshot PlaylistViewModel::groupShuffleQueueSnapshot() const {
+    static int version = 0;
+    return {m_groupShuffleQueue, version++};
+}
+
+
 trackId PlaylistViewModel::trackAt(int index) const {
     if (index >= 0 && index < m_playbackQueue.size())
         return m_playbackQueue.at(index);
@@ -484,110 +500,22 @@ QVector<trackId> PlaylistViewModel::generateGroupShuffleQueue() {
 }
 
 QVector<trackId> PlaylistViewModel::generateSingleShuffleQueue() {
+    if (!m_root || m_root->children.isEmpty()) {
+        return {};
+    }
     QVector<trackId> result;
     result.reserve(m_playbackQueue.size());
     result = m_playbackQueue;
 
     std::random_device rd;
     std::mt19937 g(rd());
-    std::shuffle(m_singleShuffleQueue.begin(), m_singleShuffleQueue.end(), g);
+    std::shuffle(result.begin(), result.end(), g);
+    m_singleShuffleQueue.clear();
+    m_singleShuffleQueue = result;
     qDebug() << "[INFO] (re)build m_singleShuffleQueue";
     return result;
 }
 
-void PlaylistViewModel::setPlayMode(PlayMode to_mode) {
-    if (m_playMode == to_mode) {
-        return;
-    } else {
-        m_playMode = to_mode;
-    }
-}
-
-const PlayMode PlaylistViewModel::getPlayMode() const {
-    return this->m_playMode;
-}
-
-trackId PlaylistViewModel::nextOf(const trackId& tid) const {
-    int index;
-    auto generate_random_index = [](size_t max_index = 0) {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<size_t> dist(0, max_index);
-        return dist(gen);
-    };
-
-    if (m_playMode == PlayMode::in_order) {
-        index = m_playbackQueue.indexOf(tid);
-        if (index != -1 && index < m_playbackQueue.size() - 1) {
-            return m_playbackQueue.at(index+1);
-        } // else -> end of playlist
-    } else if (m_playMode == PlayMode::loop) {
-        index = m_playbackQueue.indexOf(tid);
-        if (index != -1)  {
-            if (index < m_playbackQueue.size() - 1) {
-                return m_playbackQueue.at(index+1);
-            }
-            else if (index = m_playbackQueue.size() - 1) {
-                return m_playbackQueue.at(0);
-            }
-        }
-    } else if (m_playMode == PlayMode::shuffle ) {
-        index = generate_random_index(m_singleShuffleQueue.size()-1);
-        return m_singleShuffleQueue.at(index);
-    } else if (m_playMode == PlayMode::out_of_order_track) {
-        index = m_singleShuffleQueue.indexOf(tid);
-        if (index != -1 && index <= m_singleShuffleQueue.size()-1) {
-            return m_singleShuffleQueue.at(index+1);
-        }
-    } else if (m_playMode == PlayMode::out_of_order_group) {
-        index = m_groupShuffleQueue.indexOf(tid);
-        if (index != -1 && index <= m_groupShuffleQueue.size()-1) {
-            return m_groupShuffleQueue.at(index+1);
-        }
-    }
-    return trackId();
-}
-
-trackId PlaylistViewModel::previousOf(const trackId& tid) const {
-    int index;
-    auto generate_random_index = [](size_t max_index = 0) {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<size_t> dist(0, max_index);
-        return dist(gen);
-    };
-
-    if (m_playMode == PlayMode::in_order) {
-        index = m_playbackQueue.indexOf(tid);
-        if (index > 0) {    // -1 and 0
-            return m_playbackQueue.at(index-1);
-        } // else -> start of playlist
-    } else if (m_playMode == PlayMode::loop) {
-        index = m_playbackQueue.indexOf(tid);
-        if (index != -1)  {
-            if (index > 0) {
-                return m_playbackQueue.at(index-1);
-            }
-            else if (index == 0) {
-                return m_playbackQueue.at(m_playbackQueue.size()-1);
-            }
-        }
-    } else if (m_playMode == PlayMode::shuffle ) {
-        index = generate_random_index(m_singleShuffleQueue.size()-1);
-        return m_singleShuffleQueue.at(index);
-    } else if (m_playMode == PlayMode::out_of_order_track) {
-        index = m_singleShuffleQueue.indexOf(tid);
-        if (index > 0) {
-            return m_singleShuffleQueue.at(index-1);
-        }
-    } else if (m_playMode == PlayMode::out_of_order_group) {
-        index = m_groupShuffleQueue.indexOf(tid);
-        if (index > 0) {
-            return m_groupShuffleQueue.at(index-1);
-        }
-    }
-    return trackId();
-}
 
 /* ==== Dynamic Column Management ==== */
 

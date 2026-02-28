@@ -12,17 +12,11 @@ WLyricsModel::WLyricsModel(QObject* parent)
 
 WLyricsModel::~WLyricsModel() {}
 
-void WLyricsModel::setDefaultInfo(const TrackMetaData& meta) {
+void WLyricsModel::setDefaultInfo() {
     beginResetModel();
     m_parser.clear();
-    QString foo;
-    foo.append("[00:00.000] Title: ");
-    foo.append(meta.filename);
-    foo.append("\n[00:00.001] Artist: ");
-    foo.append(meta.artist);
-    foo.append("\n");
-    auto bar = foo.toUtf8();
-    m_parser.parseString(bar.toStdString());
+    QString foo("[00:00.00] Wusic Player");
+    m_parser.parseString(foo.toUtf8().toStdString());
     endResetModel();
 }
 

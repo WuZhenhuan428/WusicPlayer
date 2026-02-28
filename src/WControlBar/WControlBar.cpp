@@ -25,11 +25,6 @@ WControlBar::WControlBar(QWidget* parent) : QWidget(parent) {
     actOutOfOrderTrack = new QAction("Out of order by track");
     actOutOfOrderGroup = new QAction("Out of order by troup");
     menuMode = new QMenu();
-    menuMode->addAction(actInOrder);
-    menuMode->addAction(actLoop);
-    menuMode->addAction(actShuffle);
-    menuMode->addAction(actOutOfOrderTrack);
-    menuMode->addAction(actOutOfOrderGroup);
 
     /// Position Bar: position/Duration
     sliderPostion = new QSlider(Qt::Horizontal);
@@ -54,7 +49,28 @@ WControlBar::WControlBar(QWidget* parent) : QWidget(parent) {
     hbMain->addWidget(btnMute);
     hbMain->addWidget(sliderVolume);
 
+    for (QAction* action : {actInOrder, actLoop, actShuffle, actOutOfOrderTrack, actOutOfOrderGroup}) {
+        action->setCheckable(true);
+        menuMode->addAction(action);
+
+        connect(action, &QAction::toggled, this, [this](bool checked) {
+            QAction* act = qobject_cast<QAction*>(sender());
+            if (act) {
+                act->setIconText(checked ? "✅" : "");
+            }
+        });
+    }
+    
     this->setLayout(hbMain);
+
+
+    actGroup = new QActionGroup(this);
+    actGroup->setExclusive(true);
+    actGroup->addAction(actInOrder);
+    actGroup->addAction(actLoop);
+    actGroup->addAction(actShuffle);
+    actGroup->addAction(actOutOfOrderTrack);
+    actGroup->addAction(actOutOfOrderGroup);
 
     connect(btnPlay, &QPushButton::clicked, this, [this](){emit sgnBtnPlayClicked();});
     connect(btnPause, &QPushButton::clicked, this, [this](){emit sgnBtnPauseClicked();});
@@ -66,6 +82,7 @@ WControlBar::WControlBar(QWidget* parent) : QWidget(parent) {
         QPoint pos = btnMode->mapToGlobal(QPoint(0, btnMode->height()));
         menuMode->exec(pos);
     });
+
     connect(actInOrder, &QAction::triggered, this, [this](){emit sgnInOrder();});
     connect(actLoop, &QAction::triggered, this, [this](){emit sgnLoop();});
     connect(actShuffle, &QAction::triggered, this, [this](){emit sgnShuffle();});
@@ -98,5 +115,23 @@ void WControlBar::updatePosition(qint64 position_ms) {
     {
         sliderPostion->setValue(position_ms/1000);
         timeProgress->setCurrentTime(position_ms/1000);
+    }
+}
+
+void WControlBar::setPlayMode(PlayMode mode) {
+    for (QAction* action : {actInOrder, actLoop, actShuffle, actOutOfOrderTrack, actOutOfOrderGroup}) {
+        action->setCheckable(true);
+        action->setIconText("");
+    }
+    if (mode == PlayMode::in_order) {
+        actInOrder->setIconText("✅");
+    } else if (mode == PlayMode::loop) {
+        actLoop->setIconText("✅");
+    } else if (mode == PlayMode::shuffle)  {
+        actShuffle->setIconText("✅");
+    } else if (mode == PlayMode::out_of_order_group) {
+        actOutOfOrderGroup->setIconText("✅");
+    } else if (mode == PlayMode::out_of_order_track) {
+        actOutOfOrderTrack->setIconText("✅");
     }
 }

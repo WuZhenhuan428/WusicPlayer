@@ -1,5 +1,10 @@
 #pragma once
 
+#include "../player/player.h"
+#include "WLyricsPanel.h"
+#include "../../src/core/types.h"
+#include "ElidedLabel.h"
+
 #include <QWidget>
 #include <QString>
 #include <QResizeEvent>
@@ -8,9 +13,6 @@
 #include <QSplitter>
 #include <QVBoxLayout>
 
-#include "../player/player.h"
-#include "WLyricsPanel.h"
-#include "../../src/core/types.h"
 
 class SidePanel : public QWidget
 {
@@ -21,6 +23,7 @@ public:
 
     void setPlayer(Player* player);
     void loadCover(const QString& filepath);
+    void loadMetaData(const TrackMetaData& meta);
     WLyricsPanel* getLyricsPanel() const;
     bool loadLyrics(const TrackMetaData& meta);
 
@@ -32,6 +35,10 @@ private:
     WLyricsPanel* m_lyricsPanel;
     QPixmap* m_originalCover;
     QSplitter* m_panelSplitter;
+
+    ElidedLabel* m_nameLabel;
+    ElidedLabel* m_albumLabel;
+
     QVBoxLayout* m_mainLayout;
     void updateCoverScale();
 };

@@ -1,5 +1,5 @@
-#include "SidePanel.h"
 #include "../../src/core/utils/AudioUtils.h"
+#include "SidePanel.h"
 #include <QDebug>
 
 #define DEFAULT_COVER_PATH "/home/wuzhenhuan/pictures/zhihu-meme.jpg"
@@ -14,16 +14,31 @@ SidePanel::SidePanel(QWidget *parent)
     m_originalCover = new QPixmap;
     m_originalCover->load(DEFAULT_COVER_PATH);
     m_coverLabel->setPixmap(*m_originalCover);
-    
+
+    m_nameLabel = new ElidedLabel;
+    m_nameLabel->setText("WusicPlayer");    // format: "title - artist"
+    m_nameLabel->setAlignment(Qt::AlignHCenter);
+
+    m_albumLabel = new ElidedLabel;
+    m_albumLabel->setText("Version 0.01");
+    m_albumLabel->setAlignment(Qt::AlignHCenter);
+
+
     m_lyricsPanel = new WLyricsPanel;
     m_panelSplitter->addWidget(m_coverLabel);
+    m_panelSplitter->addWidget(m_nameLabel);
+    m_panelSplitter->addWidget(m_albumLabel);
     m_panelSplitter->addWidget(m_lyricsPanel);
     m_panelSplitter->setChildrenCollapsible(false);
     m_panelSplitter->setStretchFactor(0, 1);
-    m_panelSplitter->setStretchFactor(1, 1);
+    m_panelSplitter->setStretchFactor(1, 0);
+    m_panelSplitter->setStretchFactor(2, 0);
+    m_panelSplitter->setStretchFactor(3, 1);
 
     m_mainLayout = new QVBoxLayout;
     m_mainLayout->addWidget(m_panelSplitter);
+
+    m_panelSplitter->setStyleSheet("QSplitter::handle { background: transparent; }");
 
     this->setLayout(m_mainLayout);
 }
@@ -44,11 +59,25 @@ void SidePanel::loadCover(const QString& filepath) {
     updateCoverScale();
 }
 
+void SidePanel::loadMetaData(const TrackMetaData& meta) {
+    if (!meta.isValid) {
+        return;
+    }
+
+    if (meta.artist == "Unknown Artist") {
+        m_nameLabel->setFullText(meta.title);
+    } else {
+        QString name = meta.title + " - " + meta.artist;
+        m_nameLabel->setFullText(name);
+    }
+    m_albumLabel->setFullText(meta.album);
+}
+
 void SidePanel::updateCoverScale() {
     if (!m_originalCover || m_originalCover->isNull()) {
         return;
     }
-    int base_width = parentWidget()->geometry().width() / 4;;
+    int base_width = parentWidget()->geometry().width() / 4.5;
     QPixmap scaled = m_originalCover->scaled(
         base_width,
         base_width,
@@ -64,13 +93,14 @@ WLyricsPanel* SidePanel::getLyricsPanel() const {
 }
 
 bool SidePanel::loadLyrics(const TrackMetaData& meta) {
-    if (meta.isValid && !meta.lyrics.isEmpty()) {
-        if (m_lyricsPanel->setRawLyrics(meta.lyrics)) {
+    if (meta.isValid) {
+        if (!meta.lyrics.isEmpty()) {
+            m_lyricsPanel->setRawLyrics(meta.lyrics);
             qDebug() << "[LRC] Loaded from metadata.";
         } else if (m_lyricsPanel->setLocalLrc(meta.filepath)) {
             qDebug() << "[LRC] Loaded from local .lrc file.";
         } else {
-            m_lyricsPanel->setDefaultInfo(meta);
+            m_lyricsPanel->setDefaultInfo();
             qDebug() << "[LRC] Use default info";
         }
         return true;
@@ -80,5 +110,11 @@ bool SidePanel::loadLyrics(const TrackMetaData& meta) {
 
 void SidePanel::resizeEvent(QResizeEvent *event) {
     this->updateCoverScale();
+    for (int i = 0; i < m_panelSplitter->count(); ++i) {
+        QSplitterHandle* handle = m_panelSplitter->handle(i);
+        if (handle) {
+            handle->setEnabled(false);
+        }
+    }
     QWidget::resizeEvent(event);
 }

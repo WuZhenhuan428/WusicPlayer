@@ -6,16 +6,13 @@ Player::Player(QObject *parent)
     AudioOutput(new QAudioOutput)
 {
     setDevice();
-    initConnections();
-}
-
-Player::~Player() {}
-
-void Player::initConnections() {
     connect(MediaPlayer, &QMediaPlayer::positionChanged, this, &Player::positionChanged);
     connect(MediaPlayer, &QMediaPlayer::durationChanged, this, &Player::durationChanged);
     connect(MediaPlayer, &QMediaPlayer::playbackStateChanged, this, &Player::onPlaybackStateChanged);
 }
+
+Player::~Player() {}
+
 
 void Player::read(const QString& filepath) {
     openFile(filepath);

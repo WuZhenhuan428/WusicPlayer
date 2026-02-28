@@ -6,10 +6,9 @@
 #include "src/playlist/playlist_widgets.h"
 #include "src/core/utils/AudioUtils.h"
 
-MainWindow::MainWindow(Player* player, QWidget *parent)
-    : m_player(player), QMainWindow(parent)
-{
-
+MainWindow::MainWindow(PlaybackController* playback_controller, QWidget *parent)
+    : m_playbackController(playback_controller), QMainWindow(parent)
+{    
     m_playlistManager = new PlaylistManager(this);
     m_playlistController = new PlaylistController(m_playlistManager, this, this);
 
@@ -18,7 +17,6 @@ MainWindow::MainWindow(Player* player, QWidget *parent)
     SortRule defaultRule;
     defaultRule.type = SortType::album; // Or whatever default
     m_playlistController->viewModel()->setSingleGrouping(defaultRule);
-    
     this->setMinimumSize(960, 540);
     this->initUI();
     this->initConnection();
@@ -38,39 +36,52 @@ void MainWindow::showEvent(QShowEvent *event) {
 
 void MainWindow::initConnection()
 {
-    // WControlBar::controlBar: play | pause | stop | next | prev
-    connect(controlBar, &WControlBar::sgnBtnPlayClicked, m_player, &Player::play);
-    connect(controlBar, &WControlBar::sgnBtnPauseClicked, m_player, &Player::pause);
-    connect(controlBar, &WControlBar::sgnBtnStopClicked, m_player, &Player::stop);
+    connect(controlBar, &WControlBar::sgnBtnPlayClicked, m_playbackController, &PlaybackController::play);
+    connect(controlBar, &WControlBar::sgnBtnPauseClicked, m_playbackController, &PlaybackController::pause);
+    connect(controlBar, &WControlBar::sgnBtnStopClicked, m_playbackController, &PlaybackController::stop);
+    
+    connect(controlBar, &WControlBar::sgnBtnMuteClicked, m_playbackController, &PlaybackController::flipMute);
+    
+    connect(controlBar, &WControlBar::sgnInOrder, this, [this]() {
+        m_playbackController->setPlayMode(PlayMode::in_order);
+    });
+    connect(controlBar, &WControlBar::sgnLoop, this, [this]() {
+        m_playbackController->setPlayMode(PlayMode::loop);
+    });
+    connect(controlBar, &WControlBar::sgnShuffle, this, [this]() {
+        m_playbackController->setPlayMode(PlayMode::shuffle);
+    });
+    connect(controlBar, &WControlBar::sgnOutOfOrderTrack, this, [this]() {
+        m_playbackController->setPlayMode(PlayMode::out_of_order_track);
+    });
+    connect(controlBar, &WControlBar::sgnOutOfOrderGroup, this, [this]() {
+        m_playbackController->setPlayMode(PlayMode::out_of_order_group);
+    });
+    connect(controlBar, &WControlBar::sgnSliderPositionReleased, this, [this](int percent){
+        m_playbackController->setPosition(percent * 1000);
+    });
+    connect(controlBar, &WControlBar::sgnSliderVolumeReleased, m_playbackController, &PlaybackController::setVolume);
+    connect(controlBar, &WControlBar::sgnSliderVolumeMoved, m_playbackController, &PlaybackController::setVolume);
+    
+        connect(controlBar, &WControlBar::sgnBtnNextClicked, this, [this](){
+            QString next_track = m_playlistController->nextTrack(m_playbackController->playMode());
+            if (!next_track.isEmpty()) {
+                playTrack(next_track);
+            }
+        });
+        connect(controlBar, &WControlBar::sgnBtnPrevClicked, this, [this](){
+            QString prev_track = m_playlistController->prevTrack(m_playbackController->playMode());
+            if (!prev_track.isEmpty()) {
+                playTrack(prev_track);
+            }
+        });
 
-    connect(controlBar, &WControlBar::sgnBtnNextClicked, this, [this](){
-        QString next_track = m_playlistController->nextTrack();
-        if (!next_track.isEmpty()) {
-            playTrack(next_track);
-        }
+    connect(m_playbackController, &PlaybackController::sgnPositionChanged, controlBar, &WControlBar::updatePosition);
+    connect(m_playbackController, &PlaybackController::sgnPlaybackStateChanged, controlBar, &WControlBar::onPlayerStateChanged);
+    connect(m_playbackController, &PlaybackController::sgnDurationChanged, controlBar, &WControlBar::updateDuration);
+    connect(m_playbackController, &PlaybackController::sgnPlayModeChanged, this, [this](PlayMode mode){
+        controlBar->setPlayMode(mode);
     });
-    connect(controlBar, &WControlBar::sgnBtnPrevClicked, this, [this](){
-        QString prev_track = m_playlistController->prevTrack();
-        if (!prev_track.isEmpty()) {
-            playTrack(prev_track);
-        }
-    });
-
-    connect(controlBar, &WControlBar::sgnSliderPositionReleased, this, [this](int percent) {
-        m_player->setPosition(percent * 1000);
-    });
-    connect(controlBar, &WControlBar::sgnSliderVolumeReleased, m_player, &Player::setVolume);
-    connect(controlBar, &WControlBar::sgnSliderVolumeMoved, m_player, &Player::setVolume);
-    connect(controlBar, &WControlBar::sgnBtnMuteClicked, m_player, [this](){
-        m_player->flipMute();
-        // then switch icon
-    });
-
-    connect(controlBar, &WControlBar::sgnInOrder, this, [this]() {m_playlistController->viewModel()->setPlayMode(PlayMode::in_order);});
-    connect(controlBar, &WControlBar::sgnLoop, this, [this]() {m_playlistController->viewModel()->setPlayMode(PlayMode::loop);});
-    connect(controlBar, &WControlBar::sgnShuffle, this, [this]() {m_playlistController->viewModel()->setPlayMode(PlayMode::shuffle);});
-    connect(controlBar, &WControlBar::sgnOutOfOrderTrack, this, [this]() {m_playlistController->viewModel()->setPlayMode(PlayMode::out_of_order_track);});
-    connect(controlBar, &WControlBar::sgnOutOfOrderGroup, this, [this]() {m_playlistController->viewModel()->setPlayMode(PlayMode::out_of_order_group);});
 
     // Menu
     connect(actOpenFile, &QAction::triggered, this, &MainWindow::onOpenFile);
@@ -137,17 +148,14 @@ void MainWindow::initConnection()
     // read file
     connect(this, &MainWindow::sgnLoadPlaylist, m_playlistController, &PlaylistController::loadPlaylist);
 
-    connect(m_player->MediaPlayer, &QMediaPlayer::playbackStateChanged, controlBar, &WControlBar::onPlayerStateChanged);
-    connect(m_player->MediaPlayer, &QMediaPlayer::mediaStatusChanged, [=](QMediaPlayer::MediaStatus status){
+    connect(m_playbackController, &PlaybackController::sgnMediaStateChanged, [=](QMediaPlayer::MediaStatus status){
         if (status == QMediaPlayer::MediaStatus::EndOfMedia) {
-            QString next_track = m_playlistController->nextTrack();
+            QString next_track = m_playlistController->nextTrack(m_playbackController->playMode());
             if (!next_track.isEmpty()) {
                 playTrack(next_track);
             }
         }
     });
-    connect(m_player, &Player::positionChanged, controlBar, &WControlBar::updatePosition);
-    connect(m_player, &Player::durationChanged, controlBar, &WControlBar::updateDuration);
 
     // main window: playlist & song table
     connect(m_playlistController, &PlaylistController::requestPlay, this, &MainWindow::playTrack);
@@ -167,7 +175,7 @@ void MainWindow::initConnection()
     });
     
     // lrc panel
-    connect(m_player, &Player::positionChanged, m_sidePanel->getLyricsPanel(), &WLyricsPanel::getCurrentRow);
+    connect(m_playbackController, &PlaybackController::sgnPositionChanged, m_sidePanel->getLyricsPanel(), &WLyricsPanel::getCurrentRow);
 
     // search panel
     connect(actSearchPanel, &QAction::triggered, this, &MainWindow::onOpenSearchPanel);
@@ -348,7 +356,7 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
 void MainWindow::playTrack(const QString& filepath) {
     if (filepath.isEmpty()) return;
 
-    m_player->read(filepath);
+    m_playbackController->read(filepath);
     m_sidePanel->loadCover(filepath);
 
     QModelIndex index = m_playlistController->viewModel()->getCurrentTrackIndex();
@@ -358,6 +366,7 @@ void MainWindow::playTrack(const QString& filepath) {
 
     TrackMetaData meta = m_playlistController->currentMetadata();
     m_sidePanel->loadLyrics(meta);
+    m_sidePanel->loadMetaData(meta);
 }
 
 
@@ -373,13 +382,8 @@ void MainWindow::applyConfig() {
     }
 
     // window: flip
-    m_player->setVolume(cfg.window.volume);
-    if (m_player->MediaPlayer && m_player->MediaPlayer->audioOutput()) {
-        const bool now_muted = m_player->MediaPlayer->audioOutput()->isMuted();
-        if (cfg.window.isMuted != now_muted) {
-            m_player->flipMute();
-        }
-    }
+    m_playbackController->setVolume(cfg.window.volume);
+    m_playbackController->setMute(cfg.window.isMuted);
     // window: volume
     const auto sliders = controlBar->findChildren<QSlider*>();
     for (QSlider* s : sliders) {
@@ -415,7 +419,7 @@ void MainWindow::applyConfig() {
             auto try_seek = std::make_shared<std::function<void()>>();
 
             *try_seek = [this, target_ms, retry_count, try_seek]() {
-                QMediaPlayer* media_player = m_player->MediaPlayer;
+                QMediaPlayer* media_player = const_cast<QMediaPlayer*>(m_playbackController->getMediaPlayer());
                 if (!media_player) {
                     return;
                 }
@@ -428,8 +432,8 @@ void MainWindow::applyConfig() {
                     && (media_player->duration() > 0
                 );
                 if (can_seek) {
-                    m_player->setPosition(target_ms);
-                    m_player->pause();
+                    m_playbackController->setPosition(target_ms);
+                    m_playbackController->pause();
                     return;
                 }
                 if (++(*retry_count) > 30) {    // ~1.5s timeout
@@ -480,7 +484,7 @@ void MainWindow::applyConfig() {
             restoreHeaderState, Qt::SingleShotConnection);
 
     // playback: mode
-    m_playlistController->viewModel()->setPlayMode(cfg.playback.play_mode);
+    m_playbackController->setPlayMode(cfg.playback.play_mode);
 
     // search panel
     if (!cfg.search_panel.geometry.isEmpty()) {
@@ -506,11 +510,9 @@ void MainWindow::saveConfig() {
         }
     }
     cm.setVolume(volume);
-    cm.setPlayMode(this->m_playlistController->currentPlayMode());
+    cm.setPlayMode(m_playbackController->playMode());
     bool muted = false;
-    if (m_player->MediaPlayer && m_player->MediaPlayer->audioOutput()) {
-        muted = m_player->MediaPlayer->audioOutput()->isMuted();
-    }
+    muted = m_playbackController->getMute();
     cm.setMute(muted);
 
     do {
@@ -522,7 +524,7 @@ void MainWindow::saveConfig() {
         cm.setLastPlayInfo(
             last_pid,
             last_tid,
-            m_player->MediaPlayer->hasAudio() ? static_cast<int>(m_player->MediaPlayer->position()) : 0
+            m_playbackController->getMediaPlayer()->hasAudio() ? static_cast<int>(m_playbackController->position()) : 0
         );
         
     } while (0);

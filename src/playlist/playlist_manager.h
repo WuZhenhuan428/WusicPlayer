@@ -37,7 +37,6 @@ public:
     QVector<PlaylistInfo> getAllPlaylists();
     QVector<std::shared_ptr<Playlist>> getPlaylists();
     TrackMetaData getCurrentMetadata();
-    PlayMode getCurrentPlayMode();
     QString getPlaylistById(const playlistId& pid) const;
 
 public slots:
@@ -53,8 +52,8 @@ public slots:
     void addTrack(const QString& filepath);
     void addFolder(const QString& directory);
 
-    QString nextTrack();
-    QString prevTrack();
+    QString nextTrack(PlayMode mode);
+    QString prevTrack(PlayMode mode);
 
     void retransmissionPlaylistChanged();
     void switchToPlaylist(const playlistId& pid);

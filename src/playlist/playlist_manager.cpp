@@ -116,40 +116,65 @@ void PlaylistManager::addFolder(const QString& directory) {
     }
 }
 
-QString PlaylistManager::nextTrack() {
+QString PlaylistManager::nextTrack(PlayMode mode) {
     auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
     if (!pl) {
         return QString();
     }
-    auto next_id = m_view->nextOf(m_context->getPlayTrackId());
+    trackId next_id = trackId();
+    trackId curr_id = m_context->getPlayTrackId();
+    PlaybackQueueSnapshot queue;
+    if (mode == PlayMode::in_order){
+        next_id = PlaylistNavigator::nextOfInOrder(m_view->playbackQueueSnapshot().queue, curr_id);
+    } else if (mode == PlayMode::loop) {
+        next_id = PlaylistNavigator::nextOfLoop(m_view->playbackQueueSnapshot().queue, curr_id);
+    } else if (mode == PlayMode::shuffle) {
+        next_id = PlaylistNavigator::nextOfShuffle(m_view->playbackQueueSnapshot().queue, curr_id);
+    } else if (mode == PlayMode::out_of_order_track) {
+        next_id = PlaylistNavigator::nextOfOutOfOrderTrack(m_view->singleShuffleQueueSnapshot().queue, curr_id);
+    } else if (mode == PlayMode::out_of_order_group) {
+        next_id = PlaylistNavigator::nextOfOutOfOrderGroup(m_view->groupShuffleQueueSnapshot().queue, curr_id);
+    }
+
     if (!next_id.isNull()) {
         m_context->setPlayTrack(next_id);
         auto track = pl->findTrackByID(next_id);
         if (track) {
             return track->filepath;
         }
-        return QString();
-    } else {
-        return QString();
     }
+    return QString();
 }
 
-QString PlaylistManager::prevTrack() {
+QString PlaylistManager::prevTrack(PlayMode mode) {
     auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
     if (!pl) {
         return QString();
     }
-    auto prev_id = m_view->previousOf(m_context->getPlayTrackId());
+
+    trackId prev_id = trackId();
+    trackId curr_id = m_context->getPlayTrackId();
+    PlaybackQueueSnapshot queue;
+    if (mode == PlayMode::in_order){
+        prev_id = PlaylistNavigator::previousOfInOrder(m_view->playbackQueueSnapshot().queue, curr_id);
+    } else if (mode == PlayMode::loop) {
+        prev_id = PlaylistNavigator::previousOfLoop(m_view->playbackQueueSnapshot().queue, curr_id);
+    } else if (mode == PlayMode::shuffle) {
+        prev_id = PlaylistNavigator::previousOfShuffle(m_view->playbackQueueSnapshot().queue, curr_id);
+    } else if (mode == PlayMode::out_of_order_track) {
+        prev_id = PlaylistNavigator::previousOfOutOfOrderTrack(m_view->singleShuffleQueueSnapshot().queue, curr_id);
+    } else if (mode == PlayMode::out_of_order_group) {
+        prev_id = PlaylistNavigator::previousOfOutOfOrderGroup(m_view->groupShuffleQueueSnapshot().queue, curr_id);
+    }
+
     if (!prev_id.isNull()) {
         m_context->setPlayTrack(prev_id);
         auto track = pl->findTrackByID(prev_id);
         if (track) {
             return track->filepath;
         }
-        return QString();
-    } else {
-        return QString();
     }
+    return QString();
 }
 
 
@@ -236,9 +261,6 @@ TrackMetaData PlaylistManager::getCurrentMetadata() {
     return empty_meta;
 }
 
-PlayMode PlaylistManager::getCurrentPlayMode() {
-    return m_view->getPlayMode();
-}
 
 QString PlaylistManager::getPlaylistById(const playlistId& pid) const {
     auto pl = m_repo->findPlaylistById(pid);

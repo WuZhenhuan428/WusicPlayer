@@ -53,7 +53,6 @@ public slots:
 private:
     QAudioOutput* AudioOutput;
     double m_minDb;
-    void initConnections();
     void setDevice();
     void openFile(const QString& filepath);
     double mapSliderToVolume(qint64 value, double minDb = -60.0);

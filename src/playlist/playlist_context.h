@@ -8,6 +8,7 @@
 #pragma once
 
 #include "playlist.h"
+#include "../../src/core/types.h"
 
 #include <QObject>
 #include <QUuid>
@@ -37,4 +38,20 @@ private:
     playlistId m_currentPlaylistId;
     trackId m_currentTrackId;
     PlayMode m_mode;
+};
+
+namespace PlaylistNavigator
+{
+    trackId nextOfInOrder(const QVector<trackId>& queue, trackId current);
+    trackId nextOfLoop(const QVector<trackId>& queue, trackId current);
+    trackId nextOfOutOfOrderTrack(const QVector<trackId>& queue, trackId current);
+    trackId nextOfShuffle(const QVector<trackId>& queue, trackId current);
+    trackId nextOfOutOfOrderGroup(const QVector<trackId>& queue, trackId current);
+
+    trackId previousOfInOrder(const QVector<trackId>& queue, trackId current);
+    trackId previousOfLoop(const QVector<trackId>& queue, trackId current);
+    trackId previousOfOutOfOrderTrack(const QVector<trackId>& queue, trackId current);
+    trackId previousOfShuffle(const QVector<trackId>& queue, trackId current);
+    trackId previousOfOutOfOrderGroup(const QVector<trackId>& queue, trackId current);
+    size_t generate_random_index(size_t max_index);
 };

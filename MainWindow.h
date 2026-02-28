@@ -31,7 +31,6 @@
 #include <QCloseEvent>
 #include "src/ConfigManager/ConfigManager.h"
 
-#include "src/player/player.h"
 #include "src/playlist/playlist_manager.h"
 #include "src/playlist/playlist_widgets.h"
 #include "src/playlist/playlist_search_panel.h"
@@ -41,12 +40,14 @@
 #include "src/LibraryWidget/LibraryWidget.h"
 #include "src/controller/PlaylistController.h"
 
+#include "src/controller/PlaybackController.h"
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow(Player* player, QWidget *parent = nullptr);
+    MainWindow(PlaybackController* playback_controller, QWidget *parent = nullptr);
     ~MainWindow();
 
 protected:
@@ -55,9 +56,10 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private:
-    Player* m_player;
     PlaylistManager* m_playlistManager;
     PlaylistController* m_playlistController;
+    PlaybackController* m_playbackController;
+
     bool m_cacheLoadScheduled = false;
     void initUI();
     void initConnection();
@@ -71,8 +73,6 @@ private:
     
     void onOpenSearchPanel();
     void playTrack(const QString& filepath);
-
-    void onTreeContextMenuRequested(const QPoint &pos);
     
     // UI Widgets declaraion
     /// Menu widgets

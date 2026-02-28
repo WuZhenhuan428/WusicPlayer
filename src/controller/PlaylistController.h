@@ -26,8 +26,8 @@ public:
     void copyPlaylist(playlistId id = playlistId());
 
     auto viewModel() const -> decltype(std::declval<PlaylistManager*>()->getViewModel());
-    QString nextTrack() const;
-    QString prevTrack() const;
+    QString nextTrack(PlayMode mode) const;
+    QString prevTrack(PlayMode mode) const;
     void play(int queueIndex);
     void switchToPlaylist(const playlistId& id);
 

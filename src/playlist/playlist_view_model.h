@@ -15,9 +15,6 @@
 #include "../../src/core/types.h"
 #include "playlist_layout.h"
 
-using trackId = QUuid;
-using playlistId = QUuid;
-
 class PlaylistViewModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -62,6 +59,9 @@ public:
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
     // Helper to get logic data
+    PlaybackQueueSnapshot playbackQueueSnapshot() const; // return value but not ptr because use rebuildAsync()
+    PlaybackQueueSnapshot singleShuffleQueueSnapshot() const;
+    PlaybackQueueSnapshot groupShuffleQueueSnapshot() const;
     trackId trackAt(int index) const; // Still useful for linear queue access
     trackId trackAt(const QModelIndex& index) const;
     QModelIndex getCurrentTrackIndex();
@@ -78,10 +78,6 @@ public:
 /* ==== 播放顺序辅助（用于Player） ==== */
     QVector<trackId> generateGroupShuffleQueue();
     QVector<trackId> generateSingleShuffleQueue();
-    void setPlayMode(PlayMode to_mode);
-    const PlayMode getPlayMode() const;
-    trackId nextOf(const trackId& tid) const;
-    trackId previousOf(const trackId& tid) const;
 
 /* ==== 元数据请求 ==== */
     void requestMetaData(const trackId& tid);

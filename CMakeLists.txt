@@ -58,6 +58,7 @@ qt_add_executable(WusicPlayer
     src/SidePanel/WLyricsModel.h
     src/SidePanel/SidePanel.cpp
     src/SidePanel/SidePanel.h
+    src/SidePanel/ElidedLabel.h
 
     # LibraryWidget: playlist tree & song tree
     src/LibraryWidget/LibraryWidget.cpp
