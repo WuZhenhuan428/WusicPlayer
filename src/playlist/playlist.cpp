@@ -33,7 +33,7 @@ Track Playlist::addTrack(const QString& filepath) {
     t.meta.filename = QFileInfo(filepath).fileName();
     t.meta.isValid = false;
     m_tracks.emplace_back(t);
-    qDebug() << "[INFO] Add uuid:" << t.tid << "filepath:" << t.filepath;
+    // qDebug() << "[INFO] Add uuid:" << t.tid << "filepath:" << t.filepath;
     return t;
 }
 
@@ -45,7 +45,7 @@ Track Playlist::addTrackWithId(const trackId& tid, const QString& filepath) {
     t.meta.filename = QFileInfo(filepath).fileName();
     t.meta.isValid = false;
     m_tracks.emplace_back(t);
-    qDebug() << "[INFO] Add uuid:" << t.tid << "filepath:" << t.filepath;
+    // qDebug() << "[INFO] Add uuid:" << t.tid << "filepath:" << t.filepath;
     return t;
 }
 

@@ -13,6 +13,7 @@ WControlBar::WControlBar(QWidget* parent)
     btnNext = new QPushButton(">>", this);
     btnMode = new QPushButton("M", this);
     btnMute = new QPushButton("V", this);
+    btnDevices = new QPushButton("D", this);
     btnPlay->setFixedSize(25, 25);
     btnPause->setFixedSize(25, 25);
     btnStop->setFixedSize(25, 25);
@@ -20,6 +21,7 @@ WControlBar::WControlBar(QWidget* parent)
     btnNext->setFixedSize(25, 25);
     btnMode->setFixedSize(25, 25);
     btnMute->setFixedSize(25, 25);
+    btnDevices->setFixedSize(25, 25);
 
     menuMode = new QMenu(this);
     actInOrder = new QAction("In order", menuMode);
@@ -27,6 +29,8 @@ WControlBar::WControlBar(QWidget* parent)
     actShuffle = new QAction("Shuffle", menuMode);
     actOutOfOrderTrack = new QAction("Out of order by track", menuMode);
     actOutOfOrderGroup = new QAction("Out of order by troup", menuMode);
+
+    menuDevices = new QMenu(this);
 
     /// Position Bar: position/Duration
     sliderPostion = new QSlider(Qt::Horizontal, this);
@@ -47,6 +51,7 @@ WControlBar::WControlBar(QWidget* parent)
     hbMain->addWidget(btnNext);
     hbMain->addWidget(sliderPostion);
     hbMain->addWidget(timeProgress);
+    hbMain->addWidget(btnDevices);
     hbMain->addWidget(btnMode);
     hbMain->addWidget(btnMute);
     hbMain->addWidget(sliderVolume);
@@ -58,7 +63,7 @@ WControlBar::WControlBar(QWidget* parent)
         connect(action, &QAction::toggled, this, [this](bool checked) {
             QAction* act = qobject_cast<QAction*>(sender());
             if (act) {
-                act->setIconText(checked ? "✅" : "");
+                act->setChecked(true);
             }
         });
     }
@@ -97,6 +102,10 @@ WControlBar::WControlBar(QWidget* parent)
     connect(sliderPostion, &QSlider::sliderMoved, this, [this](int value){
         timeProgress->setCurrentTime(value);
     });
+    connect(btnDevices, &QPushButton::clicked, this, [this](){
+        QPoint pos = btnDevices->mapToGlobal(QPoint(0, btnDevices->height()));
+        menuDevices->exec(pos);
+    });
 }
 
 WControlBar::~WControlBar() {}
@@ -126,14 +135,33 @@ void WControlBar::setPlayMode(PlayMode mode) {
         action->setIconText("");
     }
     if (mode == PlayMode::in_order) {
-        actInOrder->setIconText("✅");
+        actInOrder->setChecked(true);
     } else if (mode == PlayMode::loop) {
-        actLoop->setIconText("✅");
+        actLoop->setChecked(true);
     } else if (mode == PlayMode::shuffle)  {
-        actShuffle->setIconText("✅");
+        actShuffle->setChecked(true);
     } else if (mode == PlayMode::out_of_order_group) {
-        actOutOfOrderGroup->setIconText("✅");
+        actOutOfOrderGroup->setChecked(true);
     } else if (mode == PlayMode::out_of_order_track) {
-        actOutOfOrderTrack->setIconText("✅");
+        actOutOfOrderTrack->setChecked(true);
+    }
+}
+
+void WControlBar::setDevice(const QList<QAudioDevice>& devices, const QByteArray& current_id) {
+    m_devices = devices;
+
+    menuDevices->clear();
+    auto* group = new QActionGroup(menuDevices);
+    group->setExclusive(true);
+    for (const auto& dev : m_devices) {
+        QAction* act = menuDevices->addAction(dev.description());
+        act->setCheckable(true);
+        act->setChecked(dev.id() == current_id);
+        act->setData(dev.id());
+        group->addAction(act);
+
+        connect(act, &QAction::triggered, this, [this, act]() {
+            emit sgnSelectDeviceId(act->data().toByteArray());
+        });
     }
 }

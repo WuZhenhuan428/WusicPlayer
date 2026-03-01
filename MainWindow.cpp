@@ -63,18 +63,21 @@ void MainWindow::initConnection()
     connect(controlBar, &WControlBar::sgnSliderVolumeReleased, m_playbackController, &PlaybackController::setVolume);
     connect(controlBar, &WControlBar::sgnSliderVolumeMoved, m_playbackController, &PlaybackController::setVolume);
     
-        connect(controlBar, &WControlBar::sgnBtnNextClicked, this, [this](){
-            QString next_track = m_playlistController->nextTrack(m_playbackController->playMode());
-            if (!next_track.isEmpty()) {
-                playTrack(next_track);
-            }
-        });
-        connect(controlBar, &WControlBar::sgnBtnPrevClicked, this, [this](){
-            QString prev_track = m_playlistController->prevTrack(m_playbackController->playMode());
-            if (!prev_track.isEmpty()) {
-                playTrack(prev_track);
-            }
-        });
+    connect(controlBar, &WControlBar::sgnBtnNextClicked, this, [this](){
+        QString next_track = m_playlistController->nextTrack(m_playbackController->playMode());
+        if (!next_track.isEmpty()) {
+            playTrack(next_track);
+        }
+    });
+    connect(controlBar, &WControlBar::sgnBtnPrevClicked, this, [this](){
+        QString prev_track = m_playlistController->prevTrack(m_playbackController->playMode());
+        if (!prev_track.isEmpty()) {
+            playTrack(prev_track);
+        }
+    });
+    connect(m_playbackController, &PlaybackController::sgnDevicesChanged, controlBar, &WControlBar::setDevice);
+    connect(controlBar, &WControlBar::sgnSelectDeviceId, m_playbackController, &PlaybackController::setDeviceById);
+    controlBar->setDevice(m_playbackController->availableDevices(), m_playbackController->currentDeviceId());
 
     connect(m_playbackController, &PlaybackController::sgnPositionChanged, controlBar, &WControlBar::updatePosition);
     connect(m_playbackController, &PlaybackController::sgnPlaybackStateChanged, controlBar, &WControlBar::onPlayerStateChanged);
@@ -254,6 +257,7 @@ void MainWindow::initUI()
 // Bottom toolbar, btn & progress bar
     /// PushButton instant -> BottomToolBarArea
     bottomToolBar = new QToolBar(this);
+    bottomToolBar->setObjectName("BottomToolBar");
     bottomToolBar->setMovable(false);
     bottomToolBar->setFloatable(false);
     controlBar = new WControlBar(bottomToolBar);

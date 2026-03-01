@@ -13,6 +13,8 @@
 #include <QHBoxLayout>
 #include <QMediaPlayer>
 #include <QActionGroup>
+#include <QAudioDevice>
+#include <QList>
 
 class WControlBar : public QWidget
 {
@@ -21,6 +23,7 @@ public:
     explicit WControlBar(QWidget* parent = nullptr);
     ~WControlBar();
     void setPlayMode(PlayMode mode);
+    void setDevice(const QList<QAudioDevice>& devices, const QByteArray& current_id);
 
 public slots:
     void onPlayerStateChanged(QMediaPlayer::PlaybackState newState);
@@ -42,6 +45,7 @@ signals:
     void sgnShuffle();
     void sgnOutOfOrderTrack();
     void sgnOutOfOrderGroup();
+    void sgnSelectDeviceId(QByteArray id);
 
 private:
     QPushButton* btnPlay;
@@ -51,6 +55,7 @@ private:
     QPushButton* btnPrev;
     QPushButton* btnMute;
     QPushButton* btnMode;
+    QPushButton* btnDevices;
     QMenu* menuMode;
     QAction* actInOrder;    // 顺序播放
     QAction* actLoop;       // 循环播放
@@ -65,6 +70,9 @@ private:
     QSlider* sliderVolume;
 
     QHBoxLayout* hbMain;
+
+    QMenu* menuDevices;
+    QList<QAudioDevice> m_devices;
 
 private slots:
 };

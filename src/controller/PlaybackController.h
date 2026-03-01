@@ -6,6 +6,9 @@
 #include <QObject>
 #include <QMediaPlayer>
 #include <QString>
+#include <QByteArray>
+#include <QList>
+#include <QAudioDevice>
 
 class PlaybackController : public QObject
 {
@@ -27,6 +30,10 @@ public:
     bool getMute();
     void read(QString filepath);
     const QMediaPlayer* getMediaPlayer() const;
+    void setDevice(QAudioDevice dev);
+    void setDeviceById(QByteArray id);
+    QList<QAudioDevice> availableDevices();
+    QByteArray currentDeviceId(); 
 
 signals:
     void sgnMediaStateChanged(QMediaPlayer::MediaStatus state);
@@ -34,6 +41,7 @@ signals:
     void sgnDurationChanged(qint64 dur_ms);
     void sgnPlaybackStateChanged(QMediaPlayer::PlaybackState new_state);
     void sgnPlayModeChanged(PlayMode mode);
+    void sgnDevicesChanged(QList<QAudioDevice> devs, QByteArray id);
 
 private:
     Player* m_player;

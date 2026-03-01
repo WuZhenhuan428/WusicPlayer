@@ -47,11 +47,13 @@ public:
     void setVolume(qint64 volume);
 
     void setOutputDevice(const QAudioDevice& device);   // reserved interface
+    void setOutputDeviceById(const QByteArray& id);
 
 signals:
     void stateChanged(Player::State state);
     void positionChanged(qint64 ms);
     void durationChanged(qint64 ms);
+    void deviceChanged(QAudioDevice device);
 
 private:
     QAudioOutput* m_audioOutput;

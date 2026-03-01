@@ -13,8 +13,7 @@ Player::Player(QObject *parent)
     connect(m_mediaPlayer, &QMediaPlayer::durationChanged, this, &Player::durationChanged);
     connect(m_mediaPlayer, &QMediaPlayer::playbackStateChanged, this, &Player::onPlaybackStateChanged);
 
-    connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, 
-            this, &Player::onAudioOutputchanged);
+    connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, this, &Player::onAudioOutputchanged);
 }
 
 Player::~Player() {
@@ -84,6 +83,17 @@ void Player::setOutputDevice(const QAudioDevice& device) {
     qDebug() << "[INFO] Switch to device:" << device.description();
 }
 
+void Player::setOutputDeviceById(const QByteArray& id) {
+    auto devs = this->devices();
+    for (auto dev : devs) {
+        if (dev.id() == id) {
+            this->setOutputDevice(dev);
+            return;
+        }
+    }
+    qDebug() << "[INFO] invalid device id:" << id;
+}
+
 QAudioDevice Player::currentOutputDevice() const {
     return m_audioOutput ? m_audioOutput->device() : QAudioDevice();
 }
@@ -109,12 +119,16 @@ void Player::onAudioOutputchanged() {
         }
     }
 
-    if (curr_still_exists) return;
+    if (curr_still_exists) {
+        emit deviceChanged(m_audioOutput->device());
+        return;
+    }
 
     // if current device failed
     for (const auto& device : outputs) {
         if (!m_prefferedOutputId.isEmpty() && device.id() == m_prefferedOutputId) {
             m_audioOutput->setDevice(device);
+            emit deviceChanged(device);
             qDebug() << "[INFO] Restored preffered output device: " << device.description();
             return;
         }
@@ -122,6 +136,7 @@ void Player::onAudioOutputchanged() {
 
     const QAudioDevice fallback = QMediaDevices::defaultAudioOutput();
     m_audioOutput->setDevice(fallback);
+    emit deviceChanged(fallback);
     qDebug() << "[AUDIO] Fallback to default output:" << fallback.description();
 }
 

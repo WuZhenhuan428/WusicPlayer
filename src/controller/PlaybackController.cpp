@@ -20,6 +20,9 @@ PlaybackController::PlaybackController(Player* player, QObject* parent)
     connect(m_player->getMediaPlayer(), &QMediaPlayer::playbackStateChanged, this, [this](QMediaPlayer::PlaybackState new_state) {
         emit sgnPlaybackStateChanged(new_state);
     });
+    connect(m_player, &Player::deviceChanged, this, [this](QAudioDevice device) {
+        emit sgnDevicesChanged(this->availableDevices(), device.id());
+    });
 }
 
 PlaybackController::~PlaybackController() {}
@@ -85,4 +88,22 @@ bool PlaybackController::getMute() {
 
 const QMediaPlayer* PlaybackController::getMediaPlayer() const {
     return m_player->getMediaPlayer();
+}
+
+void PlaybackController::setDevice(QAudioDevice dev) {
+    m_player->setOutputDevice(dev);
+    emit sgnDevicesChanged(this->availableDevices(), dev.id());
+}
+
+void PlaybackController::setDeviceById(QByteArray id) {
+    m_player->setOutputDeviceById(id);
+    emit sgnDevicesChanged(this->availableDevices(), id);
+}
+
+QList<QAudioDevice> PlaybackController::availableDevices() {
+    return m_player->devices();
+}
+
+QByteArray PlaybackController::currentDeviceId() {
+    return m_player->currentOutputDevice().id();
 }
