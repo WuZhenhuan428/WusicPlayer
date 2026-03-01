@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../player/player.h"
+#include "model/player/player.h"
 #include "WLyricsPanel.h"
-#include "../../src/core/types.h"
+#include "core/types.h"
 #include "ElidedLabel.h"
 
 #include <QWidget>

@@ -1,4 +1,5 @@
 #include "playlist_view_model.h"
+#include "core/utils/AudioUtils.h"
 #include <QFileInfo>
 #include <QTime>
 #include <QRegularExpression>
@@ -6,7 +7,6 @@
 #include <QThread>
 // #include <algorithm>
 #include <random>
-#include "../../src/core/utils/AudioUtils.h"
 
 PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo, QObject* parent)
     : QAbstractItemModel(parent)

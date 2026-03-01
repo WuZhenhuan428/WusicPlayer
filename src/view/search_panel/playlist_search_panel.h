@@ -9,7 +9,7 @@
 #include <QCloseEvent>
 #include <QKeyEvent>
 
-#include "playlist_search_proxy_model.h"
+#include "model/playlist/playlist_search_proxy_model.h"
 
 class PlaylistSearchPanel : public QWidget
 {

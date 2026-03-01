@@ -4,7 +4,7 @@
 #include <QList>
 #include <QString>
 #include <QUuid>
-#include "../../src/core/types.h"
+#include "core/types.h"
 
 // map config to json
 struct AppConfig {

@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "../../src/core/utils/AudioUtils.h"
+#include "core/utils/AudioUtils.h"
 
 struct Track
 {

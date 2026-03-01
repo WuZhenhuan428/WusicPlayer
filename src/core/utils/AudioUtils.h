@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/types.h"
+
 #include <iostream>
 #include <filesystem>
 #include <vector>
@@ -22,8 +24,6 @@
 #include <taglib/opusfile.h>
 #include <taglib/mp4file.h>
 #include <taglib/asffile.h>
-
-#include "../../src/core/types.h"
 
 #include <QString>
 #include <QPixmap>

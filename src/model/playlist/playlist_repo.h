@@ -9,7 +9,7 @@
 #include <memory>
 
 #include "playlist.h"
-#include "../../src/core/utils/AudioUtils.h"
+#include "core/utils/AudioUtils.h"
 
 class PlaylistRepo : public QObject
 {

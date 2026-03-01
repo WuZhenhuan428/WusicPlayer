@@ -1,5 +1,4 @@
 #include "WLyricsPanel.h"
-#include "../../src/core/types.h"
 
 WLyricsPanel::WLyricsPanel(QWidget* parent)
     : QListView(parent)

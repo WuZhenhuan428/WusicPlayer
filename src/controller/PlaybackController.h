@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../src/core/types.h"
-#include "../../src/player/player.h"
+#include "core/types.h"
+#include "model/player/player.h"
 
 #include <QObject>
 #include <QMediaPlayer>

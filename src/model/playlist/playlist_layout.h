@@ -5,8 +5,8 @@
 #include <QVector>
 
 #include "playlist.h"
-#include "../../src/core/types.h"
-#include "../../src/core/utils/AudioUtils.h"
+#include "core/types.h"
+#include "core/utils/AudioUtils.h"
 
 struct Node {
     trackId id; // Track UUID. If null, it's a group node.

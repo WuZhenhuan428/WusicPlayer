@@ -4,9 +4,9 @@
 #include <QByteArray>
 #include <type_traits>
 #include <QWidget>
-#include "../../src/LibraryWidget/LibraryWidget.h"
-#include "../../src/playlist/playlist_manager.h"
-#include "../../src/core/types.h"
+#include "view/LibraryWidget/LibraryWidget.h"
+#include "model/playlist/playlist_manager.h"
+#include "core/types.h"
 
 class PlaylistController : public QObject
 {

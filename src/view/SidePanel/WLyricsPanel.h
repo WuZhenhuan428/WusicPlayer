@@ -1,6 +1,6 @@
 #pragma once
 #include "WLyricsModel.h"
-#include "../../src/core/types.h"
+#include "core/types.h"
 
 #include <QWidget>
 #include <QListView>

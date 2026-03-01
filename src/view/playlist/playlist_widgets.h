@@ -18,7 +18,7 @@
 #include <QVector>
 #include <utility>
 
-#include "../../src/core/types.h"
+#include "core/types.h"
 
 /* usage:
     WSortTypeSetter dialog(this);

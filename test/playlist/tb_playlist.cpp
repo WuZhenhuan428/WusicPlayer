@@ -1,4 +1,4 @@
-#include "playlist.h"
+#include "model/playlist/playlist.h"
 
 int main() {
 

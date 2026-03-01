@@ -1,96 +1,25 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.21)
 project(WusicPlayer LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
-find_package(Qt6 REQUIRED COMPONENTS Multimedia)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+option(WUSIC_BUILD_TESTS "Build unit tests" ON)
+
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Multimedia)
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(TAGLIB REQUIRED taglib)
+pkg_check_modules(TAGLIB REQUIRED IMPORTED_TARGET taglib)
 
 qt_standard_project_setup()
 
-qt_add_executable(WusicPlayer
-    WIN32 MACOSX_BUNDLE
-    main.cpp
-    MainWindow.h MainWindow.cpp
-
-    # utils
-    src/core/utils/AudioUtils.h
-
-    # src/player
-    src/player/player.h
-    src/player/player.cpp
-
-    # src/playlist
-    src/playlist/playlist.h
-    src/playlist/playlist.cpp
-    src/playlist/playlist_context.h
-    src/playlist/playlist_context.cpp
-    src/playlist/playlist_manager.h
-    src/playlist/playlist_manager.cpp
-    src/playlist/playlist_repo.h
-    src/playlist/playlist_repo.cpp
-    src/playlist/playlist_view_model.h
-    src/playlist/playlist_view_model.cpp
-    src/playlist/playlist_layout.cpp
-    src/playlist/playlist_layout.h
-    src/playlist/playlist_widgets.cpp
-    src/playlist/playlist_widgets.h
-    src/playlist/playlist_search_proxy_model.cpp
-    src/playlist/playlist_search_proxy_model.h
-    src/playlist/playlist_search_panel.cpp
-    src/playlist/playlist_search_panel.h
-
-    # custom widgets
-    src/WControlBar/WControlBar.cpp
-    src/WControlBar/WControlBar.h
-    src/WControlBar/wtimeprogress.cpp
-    src/WControlBar/wtimeprogress.h
-
-    # config manager
-    src/ConfigManager/ConfigManager.cpp
-    src/ConfigManager/ConfigManager.h
-
-    # side panel: cover & lyrics panel
-    src/SidePanel/WLyricsPanel.cpp
-    src/SidePanel/WLyricsPanel.h
-    src/SidePanel/WLyricsModel.cpp
-    src/SidePanel/WLyricsModel.h
-    src/SidePanel/SidePanel.cpp
-    src/SidePanel/SidePanel.h
-    src/SidePanel/ElidedLabel.h
-
-    # LibraryWidget: playlist tree & song tree
-    src/LibraryWidget/LibraryWidget.cpp
-    src/LibraryWidget/LibraryWidget.h
-
-    src/core/types.h
-
-    src/controller/PlaylistController.cpp
-    src/controller/PlaylistController.h
-    src/controller/PlaybackController.cpp
-    src/controller/PlaybackController.h
-
-)
-
-target_include_directories(WusicPlayer
-    PRIVATE
-        src/playlist
-        include
-        ${TAGLIB_INCLUDE_DIRS}
-)
-
 add_subdirectory(thirdparty/lrc-parser)
+add_subdirectory(src)
 
-target_link_libraries(WusicPlayer
-    PRIVATE
-        Qt6::Core
-        Qt6::Widgets
-        Qt6::Multimedia
-        ${TAGLIB_LIBRARIES}
-        lrc_parser
-)
-
+if (WUSIC_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif()
 
 
 include(GNUInstallDirs)

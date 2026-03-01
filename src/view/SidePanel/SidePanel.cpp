@@ -1,4 +1,4 @@
-#include "../../src/core/utils/AudioUtils.h"
+#include "core/utils/AudioUtils.h"
 #include "SidePanel.h"
 #include <QDebug>
 

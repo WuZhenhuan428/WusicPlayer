@@ -29,18 +29,18 @@
 #include <QHBoxLayout>
 
 #include <QCloseEvent>
-#include "src/ConfigManager/ConfigManager.h"
+#include "core/ConfigManager/ConfigManager.h"
 
-#include "src/playlist/playlist_manager.h"
-#include "src/playlist/playlist_widgets.h"
-#include "src/playlist/playlist_search_panel.h"
-#include "src/WControlBar/WControlBar.h"
-#include "src/SidePanel/SidePanel.h"
+#include "model/playlist/playlist_manager.h"
+#include "view/playlist/playlist_widgets.h"
+#include "view/search_panel/playlist_search_panel.h"
+#include "view/WControlBar/WControlBar.h"
+#include "view/SidePanel/SidePanel.h"
 
-#include "src/LibraryWidget/LibraryWidget.h"
-#include "src/controller/PlaylistController.h"
+#include "view/LibraryWidget/LibraryWidget.h"
+#include "controller/PlaylistController.h"
 
-#include "src/controller/PlaybackController.h"
+#include "controller/PlaybackController.h"
 
 class MainWindow : public QMainWindow
 {

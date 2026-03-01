@@ -7,7 +7,7 @@
 #include <QPainter>
 
 #include "lrc_parser.h"
-#include "../../src/core/types.h"
+#include "core/types.h"
 
 class WLyricsModel : public QAbstractListModel
 {

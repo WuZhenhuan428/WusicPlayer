@@ -2,9 +2,9 @@
 #include <QHeaderView>
 #include <QTimer>
 
-#include "src/core/types.h"
-#include "src/playlist/playlist_widgets.h"
-#include "src/core/utils/AudioUtils.h"
+#include "core/types.h"
+#include "view/playlist/playlist_widgets.h"
+#include "core/utils/AudioUtils.h"
 
 MainWindow::MainWindow(PlaybackController* playback_controller, QWidget *parent)
     : m_playbackController(playback_controller), QMainWindow(parent)

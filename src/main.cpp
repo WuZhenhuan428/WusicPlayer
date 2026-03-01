@@ -1,8 +1,8 @@
-#include "MainWindow.h"
+#include "view/MainWindow.h"
 
 #include <QApplication>
-#include "src/ConfigManager/ConfigManager.h"
-#include "src/controller/PlaybackController.h"
+#include "core/ConfigManager/ConfigManager.h"
+#include "controller/PlaybackController.h"
 #include <QDebug>
 
 int main(int argc, char *argv[])

@@ -12,7 +12,7 @@
 #include <QByteArray>
 #include <QPair>
 
-#include "../../src/core/types.h"
+#include "core/types.h"
 
 class LibraryWidget : public QWidget
 {

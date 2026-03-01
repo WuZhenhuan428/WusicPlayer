@@ -12,7 +12,7 @@
 
 #include "playlist.h"
 #include "playlist_repo.h"
-#include "../../src/core/types.h"
+#include "core/types.h"
 #include "playlist_layout.h"
 
 class PlaylistViewModel : public QAbstractItemModel

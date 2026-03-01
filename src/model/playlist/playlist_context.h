@@ -8,7 +8,7 @@
 #pragma once
 
 #include "playlist.h"
-#include "../../src/core/types.h"
+#include "core/types.h"
 
 #include <QObject>
 #include <QUuid>

@@ -1,6 +1,6 @@
 #include "LibraryWidget.h"
-#include "../../src/playlist/playlist_view_model.h"
-#include "../../src/playlist/playlist_widgets.h"
+#include "model/playlist/playlist_view_model.h"
+#include "view/playlist/playlist_widgets.h"
 #include <QMenu>
 
 LibraryWidget::LibraryWidget(QAbstractItemModel* song_model, QWidget *parent)
