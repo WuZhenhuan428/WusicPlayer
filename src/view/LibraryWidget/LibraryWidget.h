@@ -31,8 +31,8 @@ public:
     QHeaderView* songTreeHeader() const;
 
 signals:
-    void sgnImportFiles();
-    void sgnImportDir();
+    void sgnImportFiles(const playlistId& pid = playlistId());
+    void sgnImportDir(const playlistId& pid = playlistId());
 
     void sgnPlayTrackByModelIndex(const QModelIndex &index);
     void sgnRenamePlaylist(playlistId id);

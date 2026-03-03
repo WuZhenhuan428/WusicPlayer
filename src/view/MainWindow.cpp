@@ -88,8 +88,8 @@ void MainWindow::initConnection()
 
     // Menu
     connect(actOpenFile, &QAction::triggered, this, &MainWindow::onOpenFile);
-    connect(actAddFile, &QAction::triggered, m_playlistController, &PlaylistController::importFiles);
-    connect(actAddFolder, &QAction::triggered, m_playlistController, &PlaylistController::importDir);
+    connect(actAddFile, &QAction::triggered, this, [this](){ m_playlistController->importFiles(); });
+    connect(actAddFolder, &QAction::triggered, this, [this](){ m_playlistController->importDir(); });
     connect(actNewPlaylist, &QAction::triggered, m_playlistController, &PlaylistController::createNewPlaylist);
     connect(actLoadPlaylist, &QAction::triggered, m_playlistController, &PlaylistController::loadPlaylist);
     connect(actCopyPlaylist, &QAction::triggered, this, [this](){

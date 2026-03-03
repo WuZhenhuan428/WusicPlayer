@@ -79,27 +79,17 @@ void PlaylistManager::loadCacheAfterShown() {
 }
 
 
-void PlaylistManager::addTrack(const QString& filepath) {
-    auto curr_pid = m_context->getPlaylistId();
-    if (curr_pid.isNull()) {
-        curr_pid = m_repo->createList();
-        m_context->setPlaylist(curr_pid);
-    }
-    m_repo->addTrackToPlaylist(curr_pid, filepath);
+void PlaylistManager::addTrack(const playlistId& pid, const QString& filepath) {
+    m_repo->addTrackToPlaylist(pid, filepath);
 }
 
-
-/**
- * @brief: PlaylistManager::addTrack的包装
- */
-void PlaylistManager::addFolder(const QString& directory) {
-    // +++ wrap to a method
-    auto curr_pid = m_context->getPlaylistId();
-    if (curr_pid.isNull()) {
+// a wrap of this->addTrack
+void PlaylistManager::addFolder(const playlistId& pid, const QString& directory) {
+    playlistId curr_pid = pid;
+    if (pid.isNull()) {
         curr_pid = m_repo->createList();
         m_context->setPlaylist(curr_pid);
     }
-    // ---
 
     const auto& files = AudioUtils::findAll(directory.toStdString());
     QStringList tracksToAdd;

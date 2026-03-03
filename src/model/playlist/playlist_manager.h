@@ -49,8 +49,8 @@ public slots:
     void savePlaylist(const playlistId& pid, const QString& save_path);
     void loadCacheAfterShown();
     
-    void addTrack(const QString& filepath);
-    void addFolder(const QString& directory);
+    void addTrack(const playlistId& pid, const QString& filepath);
+    void addFolder(const playlistId& pid, const QString& directory);
 
     QString nextTrack(PlayMode mode);
     QString prevTrack(PlayMode mode);

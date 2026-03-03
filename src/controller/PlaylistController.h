@@ -15,15 +15,15 @@ public:
     explicit PlaylistController(PlaylistManager* manager, QWidget* dialog_parent = nullptr, QObject* parent = nullptr);
     ~PlaylistController();
 
-    void importFiles();
-    void importDir();
+    void importFiles(const playlistId& pid = playlistId());
+    void importDir(const playlistId& pid = playlistId());
 
     void createNewPlaylist();
     void loadPlaylist();
-    void renamePlaylist(playlistId id = playlistId());
-    void removePlaylist(playlistId id = playlistId());
-    void savePlaylist(playlistId id = playlistId());
-    void copyPlaylist(playlistId id = playlistId());
+    void renamePlaylist(const playlistId& id = playlistId());
+    void removePlaylist(const playlistId& id = playlistId());
+    void savePlaylist(const playlistId& id = playlistId());
+    void copyPlaylist(const playlistId& id = playlistId());
 
     auto viewModel() const -> decltype(std::declval<PlaylistManager*>()->getViewModel());
     QString nextTrack(PlayMode mode) const;

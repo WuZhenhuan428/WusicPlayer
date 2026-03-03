@@ -18,24 +18,40 @@ PlaylistController::PlaylistController(PlaylistManager* manager, QWidget* dialog
 
 PlaylistController::~PlaylistController() {}
 
-void PlaylistController::importFiles() {
+namespace
+{
+playlistId checkId(const PlaylistManager* manager, const playlistId& pid) {
+    playlistId curr_pid;
+    auto curr_playlist = manager->m_repo->findPlaylistById(pid);
+    if (nullptr != curr_playlist) {
+        curr_pid = pid;
+    } else {
+        curr_pid = manager->m_context->getPlaylistId();  // default use playing playlist
+    }
+    return curr_pid;
+}
+};
+
+void PlaylistController::importFiles(const playlistId& pid) {
     if (!m_manager) return;
+    playlistId target_id = checkId(m_manager, pid);
 
     QStringList files = QFileDialog::getOpenFileNames(
         m_dialogParent,
-        "Open Audio Files",
+        tr("Open Audio Files"),
         QString(),
         tr("Audio Files (*.mp3 *.wav *.flac *.ogg *.m4a);;All Files (*)")
     );
     if (!files.isEmpty()) {
         for (const auto& file : files) {
-            m_manager->addTrack(file);
+            m_manager->addTrack(target_id, file);
         }
     }
 }
 
-void PlaylistController::importDir() {
+void PlaylistController::importDir(const playlistId& pid) {
     if (!m_manager) return;
+    playlistId target_id = checkId(m_manager, pid);
 
     QString dir = QFileDialog::getExistingDirectory(
         m_dialogParent,
@@ -44,7 +60,7 @@ void PlaylistController::importDir() {
         QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
     );
     if (!dir.isEmpty()) {
-        m_manager->addFolder(dir);
+        m_manager->addFolder(target_id, dir);
     }
 }
 
@@ -71,7 +87,7 @@ void PlaylistController::loadPlaylist() {
     }
 }
 
-void PlaylistController::renamePlaylist(playlistId id) {
+void PlaylistController::renamePlaylist(const playlistId& id) {
     if (!m_manager) return;
 
     playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylist() : id;
@@ -92,7 +108,7 @@ void PlaylistController::renamePlaylist(playlistId id) {
     }
 }
 
-void PlaylistController::removePlaylist(playlistId id) {
+void PlaylistController::removePlaylist(const playlistId& id) {
     if (!m_manager) return;
 
     playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylist() : id;
@@ -110,7 +126,7 @@ void PlaylistController::removePlaylist(playlistId id) {
     }
 }
 
-void PlaylistController::savePlaylist(playlistId id) {
+void PlaylistController::savePlaylist(const playlistId& id) {
     if (!m_manager) return;
 
     const playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylist() : id;
@@ -132,7 +148,7 @@ void PlaylistController::savePlaylist(playlistId id) {
     qDebug() << "[PLAYLIST] playlist save to" << filename;
 }
 
-void PlaylistController::copyPlaylist(playlistId id) {
+void PlaylistController::copyPlaylist(const playlistId& id) {
     if (!m_manager) return;
 
     const playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylist() : id;

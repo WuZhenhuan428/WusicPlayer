@@ -82,8 +82,8 @@ void LibraryWidget::callTreeContextMenu(const QPoint &pos) {
     QAction* actCopy = menu.addAction("Copy");
     QAction* actRemove = menu.addAction("Remove");
 
-    connect(actAddTrack, &QAction::triggered, this, [this](){ emit sgnImportFiles(); });   // to controller
-    connect(actAddFolder, &QAction::triggered, this, [this](){ emit sgnImportDir(); });
+    connect(actAddTrack, &QAction::triggered, this, [this, pid](){ emit sgnImportFiles(pid); });
+    connect(actAddFolder, &QAction::triggered, this, [this, pid](){ emit sgnImportDir(pid); });
     connect(actSave, &QAction::triggered, this, [this, pid](){ emit sgnSavePlaylist(pid); });
 
     connect(actRename, &QAction::triggered, this, [this, pid](){ emit sgnRenamePlaylist(pid); });
