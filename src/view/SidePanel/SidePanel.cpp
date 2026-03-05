@@ -2,7 +2,7 @@
 #include "SidePanel.h"
 #include <QDebug>
 
-#define DEFAULT_COVER_PATH "/home/wuzhenhuan/pictures/zhihu-meme.jpg"
+#define DEFAULT_COVER_PATH ":/images/test_cover_chirno.png"
 
 SidePanel::SidePanel(QWidget *parent)
     : QWidget(parent)

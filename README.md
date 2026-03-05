@@ -76,7 +76,7 @@ src/
 - **controller**: orchestration and decoupling layer  
 - **model**: player, playlist, and domain logic  
 - **core**: shared types, config, and utilities
-- **static**: static resources
+- **static**: qt static resources
 
 ---
 
@@ -198,6 +198,6 @@ See the `LICENSE` file for details.
 ## Acknowledgements
 
 - Qt
-- TagLib
-- UX inspiration from Foobar2000 / foobox (no official affiliation)
-- lrc-parser
+- [TagLib](https://github.com/taglib/taglib)
+- UX inspiration from [Foobar2000](https://www.foobar2000.org) / [foobox](https://github.com/dream7180/foobox-en) (no official affiliation)
+- [lrc-parser](https://github.com/WuZhenhuan428/lrc-parser)

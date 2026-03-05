@@ -5,10 +5,13 @@ add_subdirectory(core)
 add_subdirectory(model)
 add_subdirectory(view)
 add_subdirectory(controller)
+add_subdirectory(static)
 
 qt_add_executable(WusicPlayer
     main.cpp
 )
+
+wusic_add_static_resources(WusicPlayer)
 
 target_link_libraries(WusicPlayer
     PRIVATE
