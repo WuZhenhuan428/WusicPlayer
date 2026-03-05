@@ -5,7 +5,7 @@
 
 namespace fs = std::filesystem;
 
-class Audio {
+class AudioUtils {
 public:
     // 扫描并返回所有音频文件和播放列表的路径
     static std::vector<fs::path> findAll(const std::string& rootDir) {
