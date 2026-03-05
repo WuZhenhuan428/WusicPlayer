@@ -90,7 +90,7 @@ src/
 - TagLib
 - pkg-config
 
-VS Code + CMake Tools
+### VS Code + CMake Tools
 
 This project is mainly developed and built with **VS Code + CMake Tools**.
 
