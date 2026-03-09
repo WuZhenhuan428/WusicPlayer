@@ -3,11 +3,13 @@
 #include <QMainWindow>
 #include <QDebug>
 #include <QString>
-#include <QDialog>
+#include <QByteArray>
 
 #include <QResizeEvent>
 #include <QShowEvent>
+#include <QCloseEvent>
 
+#include <QDialog>
 #include <QMenuBar>
 #include <QToolBar>
 #include <QMenu>
@@ -19,7 +21,6 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QMessageBox>
-
 #include <QSplitter>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
@@ -28,7 +29,6 @@
 #include <QListView>
 #include <QHBoxLayout>
 
-#include <QCloseEvent>
 #include "core/ConfigManager/ConfigManager.h"
 
 #include "model/playlist/playlist_manager.h"
@@ -41,6 +41,14 @@
 #include "controller/PlaylistController.h"
 
 #include "controller/PlaybackController.h"
+#include "view/DesktopLyricsWidget/DesktopLyricsWidget.h"
+
+#include "core/ConfigManager/IConfigSection.hpp"
+#include "core/ConfigManager/WindowConfigSection.hpp"
+#include "core/ConfigManager/PlaybackConfigSection.hpp"
+#include "core/ConfigManager/SearchPanelSection.hpp"
+#include "core/ConfigManager/LibraryViewSection.hpp"
+#include "core/ConfigManager/DesktopLyricsSection.hpp"
 
 class MainWindow : public QMainWindow
 {
@@ -56,20 +64,29 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private:
+    PlaybackController* m_playbackController;
     PlaylistManager* m_playlistManager;
     PlaylistController* m_playlistController;
-    PlaybackController* m_playbackController;
 
     bool m_cacheLoadScheduled = false;
     void restoreLastTrackWhenModelReady(int retry, qint64 last_pos);
 
+    playlistId m_pendingRestorePlaylistId;
+    trackId m_pendingRestoreTrackIdId;
+    int m_pendingRestorePositionMs = 0;
+
     void initUI();
     void initConnection();
     
-    // Configmanager
+    // Config Manager
     void applyConfig();
     void saveConfig();
-
+    WindowConfigSection* m_windowConfigSection;
+    PlaybackConfigSection* m_playbackConfigSection;
+    SearchPanelSection* m_searchPanelSection;
+    LibraryViewSection* m_libraryViewSection;
+    DesktopLyricsSection* m_desktopLyricsSection;
+    
     // UI Action
     void onOpenFile();
     
@@ -101,6 +118,7 @@ private:
     QAction* actInsertColumn;
     QAction* actRemoveColumn;
     QAction* actSearchPanel;
+    QAction* actShowDesktopLyrics;
     
     // menu Help
     QMenu* menuHelp;
@@ -120,6 +138,8 @@ private:
     PlaylistSearchPanel* searchPanel = nullptr;
     QByteArray m_searchPanelHeaderStateCache;
     QByteArray m_searchPanelGeoCache;
+
+    DesktopLyricsWidget* m_desktoplyricsWidget;
 
 private slots:
     void updatePlaylist();

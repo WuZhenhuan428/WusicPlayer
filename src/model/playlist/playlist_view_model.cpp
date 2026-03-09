@@ -546,3 +546,19 @@ const QVector<TableColumn>& PlaylistViewModel::getColumns() const {
 void PlaylistViewModel::requestMetaData(const trackId& tid) {
     // Sync parsing used currently
 }
+
+void PlaylistViewModel::setGroupRules(const QVector<SortRule>& rules) {
+    m_layoutBuilder.setGroupRule(rules);
+}
+
+void PlaylistViewModel::setSortRules(const QVector<SortRule>& rules) {
+    m_layoutBuilder.setSortRule(rules);
+}
+
+const QVector<SortRule> PlaylistViewModel::groupRules() const {
+    return m_layoutBuilder.groupRules();
+}
+
+const QVector<SortRule> PlaylistViewModel::SortRules() const {
+    return m_layoutBuilder.sortRules();
+}

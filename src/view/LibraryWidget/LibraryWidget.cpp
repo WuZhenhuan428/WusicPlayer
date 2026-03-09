@@ -142,17 +142,30 @@ void LibraryWidget::setPlaylists(const QVector<QPair<playlistId, QString>>& play
     }
 }
 
-LibraryWidgetStates LibraryWidget::getStates() const {
-    LibraryWidgetStates states;
-    states.splitterState = m_mainSplitter->saveState();
-    states.songTreeViewHeaderState = m_songTreeViewHeader->saveState();
-    return states;
+QByteArray LibraryWidget::songTreeHeaderState() const {
+    return this->m_songTreeViewHeader->saveState();
 }
 
-void LibraryWidget::setStates(LibraryWidgetStates states) {
-    m_songTreeViewHeader->restoreState(states.songTreeViewHeaderState);
-    m_mainSplitter->restoreState(states.splitterState);
+void LibraryWidget::setSongTreeHeaderState(QByteArray state) {
+    this->m_songTreeViewHeader->restoreState(state);
 }
+
+QByteArray LibraryWidget::splitterState() const {
+    return this->m_mainSplitter->saveState();
+}
+
+void LibraryWidget::setSplitterState(QByteArray state) {
+    this->m_mainSplitter->restoreState(state);
+}
+
+Qt::Orientation LibraryWidget::splitterOrientation() const {
+    return this->m_mainSplitter->orientation();
+}
+
+void LibraryWidget::setSplitterOrientation(Qt::Orientation orient) {
+    this->m_mainSplitter->setOrientation(orient);
+}
+
 
 
 void LibraryWidget::updateSongView() {

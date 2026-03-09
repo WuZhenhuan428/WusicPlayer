@@ -61,25 +61,32 @@ QTreeView* PlaylistSearchPanel::getView() const {
 }
 
 void PlaylistSearchPanel::applyHeaderStateDeferred(const QByteArray& state) {
-    if (state.isEmpty()) {
-        return;
-    }
+    if (state.isEmpty()) return;
 
     QTimer::singleShot(0, this, [this, state](){
-        if (!treeSearchResult || !treeSearchResult->header()) {
+        if (treeSearchResult && treeSearchResult->header()) {
             treeSearchResult->header()->restoreState(state);
         }
     });
 }
 
-void PlaylistSearchPanel::closeEvent(QCloseEvent* event) {
+void PlaylistSearchPanel::emitStateSnapshot() {
     QByteArray geo = saveGeometry();
     QByteArray header;
     if (treeSearchResult && treeSearchResult->header()) {
         header = treeSearchResult->header()->saveState();
     }
-    emit sgnAboutToClose(geo, header);
+    emit sgnStateSnapshot(geo, header);
+}
+
+void PlaylistSearchPanel::closeEvent(QCloseEvent* event) {
+    emitStateSnapshot();
     QWidget::closeEvent(event);
+}
+
+void PlaylistSearchPanel::hideEvent(QHideEvent* event) {
+    emitStateSnapshot();
+    QWidget::hideEvent(event);
 }
 
 void PlaylistSearchPanel::keyPressEvent(QKeyEvent* event) {

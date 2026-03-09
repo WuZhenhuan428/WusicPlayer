@@ -1,16 +1,31 @@
 #include "MainWindow.h"
 #include <QHeaderView>
 #include <QTimer>
+#include <QPointer>
 
 #include "core/types.h"
 #include "view/playlist/playlist_widgets.h"
 #include "core/utils/AudioUtils.h"
 
 MainWindow::MainWindow(PlaybackController* playback_controller, QWidget *parent)
-    : m_playbackController(playback_controller), QMainWindow(parent)
-{    
-    m_playlistManager = new PlaylistManager(this);
-    m_playlistController = new PlaylistController(m_playlistManager, this, this);
+    : QMainWindow(parent),
+      m_playbackController(playback_controller),
+      m_playlistManager      (new PlaylistManager(this)),
+      m_playlistController   (new PlaylistController(m_playlistManager, this, this)),
+      m_windowConfigSection  (new WindowConfigSection()),
+      m_playbackConfigSection(new PlaybackConfigSection()),
+      m_searchPanelSection   (new SearchPanelSection()),
+      m_libraryViewSection   (new LibraryViewSection()),
+      m_desktopLyricsSection (new DesktopLyricsSection())
+{
+    ConfigManager& cm = ConfigManager::getInstance();
+    cm.registerSection(m_windowConfigSection);
+    cm.registerSection(m_playbackConfigSection);
+    cm.registerSection(m_libraryViewSection);
+    cm.registerSection(m_searchPanelSection);
+    cm.registerSection(m_desktopLyricsSection);
+    
+    cm.loadAll();
 
     // [Fix] Initialize view with default sort rules if needed, 
     // or trigger a rebuild if playlist already exists
@@ -178,7 +193,20 @@ void MainWindow::initConnection()
     });
     
     // lrc panel
-    connect(m_playbackController, &PlaybackController::sgnPositionChanged, m_sidePanel->getLyricsPanel(), &WLyricsPanel::getCurrentRow);
+    connect(m_playbackController, &PlaybackController::sgnPositionChanged, m_sidePanel->getLyricsPanel(), &WLyricsPanel::ScrollByPosition);
+
+    // desktop lrc
+    connect(m_playbackController, &PlaybackController::sgnPositionChanged,
+            dynamic_cast<WLyricsModel*>(m_sidePanel->getLyricsPanel()->model()), &WLyricsModel::setCurrentPosition);
+    connect(dynamic_cast<WLyricsModel*>(m_sidePanel->getLyricsPanel()->model()), &WLyricsModel::currentLineChanged,
+        this, [this](const QString &curr_text, const QString &next_text){
+            m_desktoplyricsWidget->setLrcLine(curr_text, next_text);
+    });
+
+    connect(actShowDesktopLyrics, &QAction::triggered, this, [this](){
+            m_desktoplyricsWidget->show();
+    });
+
 
     // search panel
     connect(actSearchPanel, &QAction::triggered, this, &MainWindow::onOpenSearchPanel);
@@ -238,10 +266,12 @@ void MainWindow::initUI()
     actInsertColumn = new QAction("Insert a column (&I)", menuView);
     actRemoveColumn = new QAction("Remove a column (&R)", menuView);
     actSearchPanel = new QAction("Open search panel (&S)", menuView);
+    actShowDesktopLyrics = new QAction("Show Desktop Lyrics (&D)", menuView);
     menuView->addAction(actSetSortRule);
     menuView->addAction(actInsertColumn);
     menuView->addAction(actRemoveColumn);
     menuView->addAction(actSearchPanel);
+    menuView->addAction(actShowDesktopLyrics);
     mainMenuBar->addMenu(menuView);
 
     menuHelp = new QMenu("&Help", mainMenuBar);
@@ -277,6 +307,10 @@ void MainWindow::initUI()
     mainLayout->addWidget(m_sidePanel, 1);
     mainLayout->setContentsMargins(0, 0, 0, 0);
     setCentralWidget(centerWidget);
+
+    // dekstop lrc panel
+    m_desktoplyricsWidget = new DesktopLyricsWidget();
+    m_desktoplyricsWidget->show();
 }
 
 void MainWindow::onOpenFile() {
@@ -326,7 +360,7 @@ void MainWindow::onOpenSearchPanel() {
             }
         });
 
-        connect(searchPanel, &PlaylistSearchPanel::sgnAboutToClose, this,
+        connect(searchPanel, &PlaylistSearchPanel::sgnStateSnapshot, this,
             [this](const QByteArray &geometry, const QByteArray &header){
                 m_searchPanelGeoCache = geometry;
                 m_searchPanelHeaderStateCache = header;
@@ -394,7 +428,7 @@ void MainWindow::restoreLastTrackWhenModelReady(int retry, qint64 last_pos) {
         m_playbackController->pause();
         return;
     }
-    if (++retry > 30) {    // ~1.5s timeout
+    if (++retry > 30) {    // 1.5s timeout
         return;
     }
     QTimer::singleShot(50, this, [this, retry, last_pos]() {
@@ -403,33 +437,34 @@ void MainWindow::restoreLastTrackWhenModelReady(int retry, qint64 last_pos) {
 }
 
 void MainWindow::applyConfig() {
-    const AppConfig& cfg = ConfigManager::getInstance().getAppConfig();
+    const auto& cfg = ConfigManager::getInstance();
 
     // load geometry & state
-    if (!cfg.window.geometry.isEmpty()) {
-        this->restoreGeometry(cfg.window.geometry);
+    if (!m_windowConfigSection->geometry.isEmpty()) {
+        this->restoreGeometry(m_windowConfigSection->geometry);
     }
-    if (!cfg.window.state.isEmpty()) {
-        this->restoreState(cfg.window.state);
+    if (!m_windowConfigSection->state.isEmpty()) {
+        this->restoreState(m_windowConfigSection->state);
     }
 
-    // window: flip
-    m_playbackController->setVolume(cfg.window.volume);
-    m_playbackController->setMute(cfg.window.isMuted);
-    // window: volume
+    m_playbackController->setVolume(m_playbackConfigSection->volume);
+    m_playbackController->setMute(m_playbackConfigSection->muted);
+
     const auto sliders = controlBar->findChildren<QSlider*>();
     for (QSlider* s : sliders) {
         if (s && s->orientation() == Qt::Horizontal && s->maximum() == 100  && s->maximumWidth() == 100) {
-            s->setValue(cfg.window.volume);
+            s->setValue(m_playbackConfigSection->volume);
             break;
         }
     }
 
+    m_playbackController->setPlayMode(m_playbackConfigSection->play_mode);
+
     // last_playlist & last_track (must wait cache + model rebuild)
     auto restorePlaybackState = [this, &cfg]() {
-        const playlistId last_pid = cfg.playback.last_pid;
-        const trackId last_tid = cfg.playback.last_tid;
-        const int last_position_ms = cfg.playback.position_ms;
+        const playlistId last_pid = m_playbackConfigSection->last_playlist_id;
+        const trackId last_tid = m_playbackConfigSection->last_track_id;
+        const int last_position_ms = m_playbackConfigSection->last_position_ms;
 
         if (last_pid.isNull()) {
             return;
@@ -478,87 +513,86 @@ void MainWindow::applyConfig() {
     restorePlaybackState();
     
     // view: columns
-    if (!cfg.view.columns.isEmpty()) {
+    if (!m_libraryViewSection->columns.isEmpty()) {
         QVector<TableColumn> columns;
-        columns.reserve(cfg.view.columns.size());
-        for (const auto& c : cfg.view.columns) {
+        columns.reserve(m_libraryViewSection->columns.size());
+        for (const auto& c : m_libraryViewSection->columns) {
             columns.append(c);
         }
         m_playlistController->viewModel()->setColumns(columns);
     }
     // view: song_tree_header_state
-    auto restoreHeaderState = [this, &cfg]() {
-        m_libraryPanel->songTreeHeader()->restoreState(cfg.view.state);
+    auto restoreLibraryWidgetState = [this, &cfg]() {
+        m_libraryPanel->setSongTreeHeaderState(m_libraryViewSection->song_tree_view_state);
+        m_libraryPanel->setSplitterState(m_libraryViewSection->splitter_state);
+        m_libraryPanel->setSplitterOrientation(m_libraryViewSection->splitter_orientation);
     };
     connect(m_playlistController->viewModel(), &QAbstractItemModel::modelReset, this,
-            restoreHeaderState, Qt::SingleShotConnection);
+            restoreLibraryWidgetState, Qt::SingleShotConnection);
 
-    // playback: mode
-    m_playbackController->setPlayMode(cfg.playback.play_mode);
 
     // search panel
-    if (!cfg.search_panel.geometry.isEmpty()) {
-        m_searchPanelGeoCache = cfg.search_panel.geometry;
+    if (!m_searchPanelSection->geometry.isEmpty()) {
+        m_searchPanelGeoCache = m_searchPanelSection->geometry;
     }
-    if (!cfg.search_panel.state.isEmpty()) {
-        m_searchPanelHeaderStateCache = cfg.search_panel.state;
+    if (!m_searchPanelSection->header_state.isEmpty()) {
+        m_searchPanelHeaderStateCache = m_searchPanelSection->header_state;
     }
+    if (this->searchPanel) {
+        m_searchPanelSection->is_visible ? this->searchPanel->show() : this->searchPanel->hide();
+    }
+
+    m_desktoplyricsWidget->restoreGeometry(m_desktopLyricsSection->geometry);
+    m_desktopLyricsSection->is_visible ? m_desktoplyricsWidget->show() : m_desktoplyricsWidget->hide();
 }
 
 void MainWindow::saveConfig() {
     ConfigManager& cm = ConfigManager::getInstance();
+    
+    m_windowConfigSection->geometry = (this->saveGeometry());
+    m_windowConfigSection->state = (this->saveState());
 
-    cm.setWindowGeometry(this->saveGeometry());
-    cm.setWindowState(this->saveState());
-
-    int volume = 100;
-    const auto sliders = controlBar->findChildren<QSlider*>();
-    for (QSlider* s : sliders) {
-        if (s && s->orientation() == Qt::Horizontal && s->maximum() == 100 && s->maximumWidth() == 100) {
-            volume = s->value();
-            break;
-        }
+    
+    QPointer<QSlider> volumeSliderPtr = controlBar->getVolumeSlider();
+    if (volumeSliderPtr) {
+        m_playbackConfigSection->volume = volumeSliderPtr->value();
     }
-    cm.setVolume(volume);
-    cm.setPlayMode(m_playbackController->playMode());
-    bool muted = false;
-    muted = m_playbackController->getMute();
-    cm.setMute(muted);
+    m_playbackConfigSection->muted = m_playbackController->getMute();
+    m_playbackConfigSection->play_mode = m_playbackController->playMode();
+    m_playbackConfigSection->last_device = m_playbackController->currentDeviceId();
 
     do {
         const playlistId last_pid = m_playlistController->currentPlaylist();
         const trackId last_tid = m_playlistController->currentTrackId();
-        if (last_pid.isNull() || last_tid.isNull()) {
-            break;
-        }
-        cm.setLastPlayInfo(
-            last_pid,
-            last_tid,
-            m_playbackController->getMediaPlayer()->hasAudio() ? static_cast<int>(m_playbackController->position()) : 0
-        );
-        
+        if (last_pid.isNull() || last_tid.isNull()) break;
+        m_playbackConfigSection->last_playlist_id = last_pid;
+        m_playbackConfigSection->last_track_id = last_tid;
+        m_playbackConfigSection->last_position_ms
+            = m_playbackController->getMediaPlayer()->hasAudio() 
+            ? m_playbackController->position() 
+            : 0;
     } while (0);
+
     
-    QList<TableColumn> cols;
-    const QVector<TableColumn>& vmCols = m_playlistController->viewModel()->getColumns();
-    for (const auto& c : vmCols) {
-        cols.append(c);
+    m_libraryViewSection->song_tree_view_state = m_libraryPanel->songTreeHeader()->saveState();
+    m_libraryViewSection->columns.clear();
+    for (const auto& c : m_playlistController->viewModel()->getColumns()) {
+        m_libraryViewSection->columns.append(c);
     }
-    cm.setTableColumns(cols);
+    m_libraryViewSection->group_rules = m_playlistController->groupRules();
+    m_libraryViewSection->sort_rules = m_playlistController->SortRules();
+    m_libraryViewSection->splitter_state = m_libraryPanel->splitterState();
+    m_libraryViewSection->song_tree_view_state = m_libraryPanel->songTreeHeaderState();
+    m_libraryViewSection->splitter_orientation = m_libraryPanel->splitterOrientation();
 
-    QByteArray song_tree_view_header = m_libraryPanel->songTreeHeader()->saveState();
-    cm.setSongTreeViewHeader(song_tree_view_header);
+    m_searchPanelSection->geometry = m_searchPanelGeoCache;
+    m_searchPanelSection->header_state = m_searchPanelHeaderStateCache;
+    m_searchPanelSection->is_visible = (searchPanel ? searchPanel->isVisible() : false);
 
-    if (searchPanel) {
-        m_searchPanelGeoCache = searchPanel->saveGeometry();
-        if (searchPanel->getView() && searchPanel->getView()->header()) {
-            m_searchPanelHeaderStateCache = searchPanel->getView()->header()->saveState();
-        }
-    }
-    cm.setSearchPanelHeader(m_searchPanelHeaderStateCache);
-    cm.setSearchPanelGeometry(m_searchPanelGeoCache);
+    m_desktopLyricsSection->geometry = m_desktoplyricsWidget->saveGeometry();
+    m_desktopLyricsSection->is_visible = !m_desktoplyricsWidget->isHidden();
 
-    cm.save();
+    cm.saveAll();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {

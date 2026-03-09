@@ -14,7 +14,7 @@ public:
     explicit WLyricsPanel(QWidget* parent = nullptr);
     ~WLyricsPanel();
 
-    void getCurrentRow(qint64 position_ms);
+    void ScrollByPosition(qint64 position_ms);
     bool setRawLyrics(const QString& raw_data);
     bool setLocalLrc(const QString& filepath);
     void setDefaultInfo();

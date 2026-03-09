@@ -2,41 +2,15 @@
 
 #include <QByteArray>
 #include <QList>
+#include <QVector>
 #include <QString>
 #include <QUuid>
 #include "core/types.h"
+#include "IConfigSection.hpp"
 
-// map config to json
-struct AppConfig {
-    struct WindowState
-    {
-        QByteArray geometry;
-        QByteArray state;
-        int volume = 100;
-        bool isMuted = false;
-    } window;
-
-    struct PlaybackState
-    {
-        playlistId last_pid;
-        trackId last_tid;
-        int position_ms = 0;
-        PlayMode play_mode = PlayMode::in_order;
-    } playback;
-    
-    struct ViewSettings
-    {
-        QList<TableColumn> columns;
-        QByteArray state;
-    } view;
-
-    struct SearchPanel
-    {
-        QByteArray geometry;
-        QByteArray state;
-    } search_panel;
-
-    int version = 1;
+namespace {
+    const int kConfigVersion = 1;  // use after officially release
+    static QString kFileName = "WusicPlayer.json";
 };
 
 class ConfigManager
@@ -45,33 +19,14 @@ public:
     ConfigManager(const ConfigManager&) = delete;
     ConfigManager& operator=(const ConfigManager&) = delete;
 
-    static ConfigManager& getInstance() {
-        static ConfigManager instance;
-        return instance;
-    }
-    void load();
-    void save();
-    void setDefault();
+    static ConfigManager& getInstance();
 
-    const AppConfig& getAppConfig() const;
-    const AppConfig::WindowState& getWindowState() const;
-    const AppConfig::PlaybackState& getPlaybackState() const;
-    const AppConfig::ViewSettings& getViewState() const;
-    const AppConfig::SearchPanel& getSearchPanelState() const;
-    
-    void setWindowGeometry(const QByteArray& geo);
-    void setWindowState(const QByteArray& state);
-    void setVolume(int volume);
-    void setMute(bool is_mute);
-    // setter: playback
-    void setLastPlayInfo(const playlistId& pid, const trackId& tid, int position_ms);
-    void setPlayMode(PlayMode mode);
-    // setter: view
-    void setTableColumns(const QList<TableColumn>& columns);
-    void setSongTreeViewHeader(QByteArray header);
-    // setter: search_panel
-    void setSearchPanelGeometry(QByteArray geo);
-    void setSearchPanelHeader(QByteArray header);
+    void registerSection(IConfigSection* s);
+    void loadAll();
+    QJsonObject saveAll() const;
+
+    int m_version;
+    QString m_filename;
 private:
     ConfigManager();
     ~ConfigManager() = default;
@@ -79,5 +34,5 @@ private:
     QString getConfigPath() const;
     QString getConfigFilepath() const;
 
-    AppConfig m_appConfig;
+    QVector<IConfigSection*> m_sections;
 };

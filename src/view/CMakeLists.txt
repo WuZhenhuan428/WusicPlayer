@@ -25,6 +25,8 @@ add_library(wusic_view STATIC
     WControlBar/wtimeprogress.cpp
     WControlBar/wtimeprogress.h
 
+    DesktopLyricsWidget/DesktopLyricsWidget.cpp
+    DesktopLyricsWidget/DesktopLyricsWidget.h
 )
 
 target_link_libraries(wusic_view

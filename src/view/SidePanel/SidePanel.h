@@ -21,7 +21,6 @@ public:
     explicit SidePanel(QWidget *parent = nullptr);
     ~SidePanel();
 
-    void setPlayer(Player* player);
     void loadCover(const QString& filepath);
     void loadMetaData(const TrackMetaData& meta);
     WLyricsPanel* getLyricsPanel() const;

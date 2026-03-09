@@ -165,3 +165,11 @@ void WControlBar::setDevice(const QList<QAudioDevice>& devices, const QByteArray
         });
     }
 }
+
+QSlider* WControlBar::getProgressSlider() const {
+    return sliderPostion;
+};
+
+QSlider* WControlBar::getVolumeSlider() const {
+    return sliderVolume;
+};

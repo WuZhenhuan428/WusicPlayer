@@ -174,3 +174,20 @@ trackId PlaylistController::currentTrackId() const { return m_manager->getCurren
 TrackMetaData PlaylistController::currentMetadata() const { return m_manager->getCurrentMetadata(); }
 
 void PlaylistController::loadCacheAfterShown() { m_manager->loadCacheAfterShown(); }
+
+
+void PlaylistController::setGroupRules(const QVector<SortRule>& rules) {
+    m_manager->getViewModel()->setGroupRules(rules);
+}
+
+void PlaylistController::setSortRules(const QVector<SortRule>& rules) {
+    m_manager->getViewModel()->setSortRules(rules);
+}
+
+const QVector<SortRule> PlaylistController::groupRules() const {
+    return m_manager->getViewModel()->SortRules();
+}
+
+const QVector<SortRule> PlaylistController::SortRules() const {
+    return m_manager->getViewModel()->groupRules();
+}

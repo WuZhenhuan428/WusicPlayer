@@ -6,12 +6,6 @@
 #include <QHash>
 #include <QString>
 
-struct LibraryWidgetStates
-{
-    QByteArray splitterState;
-    QByteArray songTreeViewHeaderState;
-};
-
 using trackId = QUuid;
 using playlistId = QUuid;
 
@@ -108,4 +102,19 @@ struct PlaybackQueueSnapshot
 {
     QVector<trackId> queue;
     qint64 version = 0;
+};
+
+
+// Desktop lyrics panel attributes
+enum class DisplayMode
+{
+    OneLine,
+    TwoLine
+};
+
+enum class AlignMode
+{
+    Left,
+    Middle,
+    Right
 };

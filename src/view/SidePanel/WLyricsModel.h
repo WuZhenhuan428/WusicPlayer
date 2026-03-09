@@ -7,7 +7,8 @@
 #include <QPainter>
 
 #include "lrc_parser.h"
-#include "core/types.h"
+#include "core/types.h"     
+
 
 class WLyricsModel : public QAbstractListModel
 {
@@ -25,7 +26,13 @@ public:
     void setDefaultInfo();
     bool setLocalLrc(const QString& filepath);
     bool setRawLyrics(const QString& raw_data);
-    int getCurrentRow(qint64 pos_ms);
+    int getRowByPosition(qint64 pos_ms);
+    void setCurrentPosition(qint64 pos_ms);
+    int currentRow() const;
+    QString prevLineText() const;
+    QString currentLineText() const;
+    QString nextLineText() const;
+
     
     // QAbstractListModel interface
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
@@ -34,8 +41,9 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     
 signals:
+    void currentLineChanged(const QString& curr_text, const QString& next_text);
 
 private:
-    void setStyle();
     LrcParser m_parser;
+    int m_currentRow = -1;
 };

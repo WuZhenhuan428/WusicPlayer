@@ -7,6 +7,9 @@
 
 int main(int argc, char *argv[])
 {
+    // if use wayland. use xcb plugin to enable custom title bar
+    qputenv("QT_QPA_PLATFORM", "xcb");
+
     QApplication a(argc, argv);
 
     QCoreApplication::setApplicationName("WusicPlayer");

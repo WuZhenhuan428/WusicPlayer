@@ -35,7 +35,11 @@ public:
     playlistId currentPlaylist() const;
     trackId currentTrackId() const;
     TrackMetaData currentMetadata() const;
-    PlayMode currentPlayMode() const;
+
+    void setGroupRules(const QVector<SortRule>& rules);
+    void setSortRules(const QVector<SortRule>& rules);
+    const QVector<SortRule> groupRules() const;
+    const QVector<SortRule> SortRules() const;
 
 signals:
     void playlistChanged();

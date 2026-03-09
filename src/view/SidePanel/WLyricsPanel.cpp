@@ -15,8 +15,8 @@ WLyricsPanel::WLyricsPanel(QWidget* parent)
 
 WLyricsPanel::~WLyricsPanel() {}
 
-void WLyricsPanel::getCurrentRow(qint64 position_ms) {
-    int row = m_lrcModel->getCurrentRow(position_ms);
+void WLyricsPanel::ScrollByPosition(qint64 position_ms) {
+    int row = m_lrcModel->getRowByPosition(position_ms);
     if (row >= 0 && row < m_lrcModel->rowCount()) {
         QModelIndex idx = m_lrcModel->index(row, 0);
         if (idx.isValid()) {

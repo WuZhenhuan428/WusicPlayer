@@ -24,8 +24,12 @@ public:
     void setSongTreeModel(QAbstractItemModel* model);
     void setPlaylists(const QVector<QPair<playlistId, QString>>& playlists);
 
-    LibraryWidgetStates getStates() const;
-    void setStates(LibraryWidgetStates states);
+    QByteArray songTreeHeaderState() const;
+    void setSongTreeHeaderState(QByteArray state);
+    QByteArray splitterState() const;
+    void setSplitterState(QByteArray state);
+    Qt::Orientation splitterOrientation() const;
+    void setSplitterOrientation(Qt::Orientation orient);
 
     QTreeView* songTreeView() const;
     QHeaderView* songTreeHeader() const;

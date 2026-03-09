@@ -171,6 +171,14 @@ void PlaylistLayoutBuilder::setSortRule(const QVector<SortRule>& sort_rule) {
     }
 }
 
+const QVector<SortRule> PlaylistLayoutBuilder::sortRules() const {
+    return this->m_sortRules;
+}
+
+const QVector<SortRule> PlaylistLayoutBuilder::groupRules() const {
+    return this->m_groupRules;
+}
+
 
 QVariant PlaylistLayoutBuilder::getMetaDataValue(const TrackMetaData& meta, SortType type) {
     static const QHash<SortType, QString TrackMetaData::*> strMap {

@@ -34,6 +34,10 @@ public:
      * @details format: `%key1% %key2% | %key3% %key4% ...`
      */
     void setSortExpression(const QString& expression);
+    void setGroupRules(const QVector<SortRule>& rules);
+    void setSortRules(const QVector<SortRule>& rules);
+    const QVector<SortRule> groupRules() const;
+    const QVector<SortRule> SortRules() const;
 
     /**
      * @attention default group rule = title or filename if title does not exist

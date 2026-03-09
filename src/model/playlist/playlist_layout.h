@@ -59,6 +59,8 @@ public:
 
     void setGroupRule(const QVector<SortRule>& group_rule);
     void setSortRule(const QVector<SortRule>& sort_rule);
+    const QVector<SortRule> sortRules() const;
+    const QVector<SortRule> groupRules() const;
 
     /**
      * @brief Auxiliary: used to handle event such as table header was clicked

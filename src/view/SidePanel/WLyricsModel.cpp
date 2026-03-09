@@ -24,9 +24,11 @@ bool WLyricsModel::setRawLyrics(const QString& raw_data) {
     beginResetModel();
     m_parser.clear();
     if (raw_data.isEmpty()) {
+        endResetModel();
         return false;
     }
     if (!m_parser.parseString(raw_data.toStdString())) {
+        endResetModel();
         return false;
     }
     endResetModel();
@@ -57,7 +59,7 @@ bool WLyricsModel::setLocalLrc(const QString& filepath) {
     return false;
 }
 
-int WLyricsModel::getCurrentRow(qint64 pos_ms) {
+int WLyricsModel::getRowByPosition(qint64 pos_ms) {
     const auto& lyrics = m_parser.getData().lyrics;
     if (lyrics.empty()) {
         return -1;
@@ -65,13 +67,17 @@ int WLyricsModel::getCurrentRow(qint64 pos_ms) {
     // dichotomy
     auto it = std::upper_bound(lyrics.begin(), lyrics.end(), pos_ms,
         [](qint64 ms, const LrcUnit& unit){
-            return ms < unit.time_ms;
+            return ms < static_cast<qint64>(unit.time_ms);
         }
     );
     if (it == lyrics.begin()) {
         return 0;
     }
     return std::distance(lyrics.begin(), it) - 1;
+}
+
+int WLyricsModel::currentRow() const {
+    return m_currentRow;
 }
 
 
@@ -122,7 +128,43 @@ QVariant WLyricsModel::data(const QModelIndex &index, int role) const {
     }
 
     if (role == UserDefineRole::CurrentLine) {
-
+        return row == m_currentRow;
     }
     return QVariant();
+}
+
+
+void WLyricsModel::setCurrentPosition(qint64 pos_ms) {
+    const int new_row = getRowByPosition(pos_ms);
+    if (new_row == m_currentRow) return;
+
+    const int old_row = m_currentRow;
+    m_currentRow = new_row;
+
+    if (old_row >= 0 && old_row < rowCount()) {
+        const QModelIndex idx = index(old_row, 0);
+        emit dataChanged(idx, idx, {UserDefineRole::CurrentLine});
+    }
+    if (m_currentRow >= 0 && m_currentRow < rowCount()) {
+        const QModelIndex idx = index(m_currentRow, 0);
+        emit dataChanged(idx, idx, {UserDefineRole::CurrentLine});
+        emit currentLineChanged(currentLineText(), nextLineText());
+    } else {
+        emit currentLineChanged(QString(), QString());
+    }
+}
+
+QString WLyricsModel::prevLineText() const {
+    if (m_currentRow < 1 || m_currentRow >= rowCount() + 1) return QString();
+    return data(index(m_currentRow-1, 0), Qt::DisplayRole).toString();
+}
+
+QString WLyricsModel::currentLineText() const {
+    if (m_currentRow < 0 || m_currentRow >= rowCount()) return QString();
+    return data(index(m_currentRow, 0), Qt::DisplayRole).toString();
+}
+
+QString WLyricsModel::nextLineText() const {
+    if (m_currentRow < -1 || m_currentRow >= rowCount() - 1)  return QString();
+    return data(index(m_currentRow+1, 0), Qt::DisplayRole).toString();
 }

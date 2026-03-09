@@ -43,10 +43,6 @@ SidePanel::SidePanel(QWidget *parent)
 
 SidePanel::~SidePanel() { }
 
-void SidePanel::setPlayer(Player* player) {
-    
-}
-
 void SidePanel::loadCover(const QString& filepath) {
     QPixmap pix = AudioUtils::parse_cover_to_qpixmap(filepath.toStdString());
     if (!pix.isNull()) {

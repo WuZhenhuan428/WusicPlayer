@@ -24,6 +24,8 @@ public:
     ~WControlBar();
     void setPlayMode(PlayMode mode);
     void setDevice(const QList<QAudioDevice>& devices, const QByteArray& current_id);
+    QSlider* getProgressSlider() const;
+    QSlider* getVolumeSlider() const;
 
 public slots:
     void onPlayerStateChanged(QMediaPlayer::PlaybackState newState);
