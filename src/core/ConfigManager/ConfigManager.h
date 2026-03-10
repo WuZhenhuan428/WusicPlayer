@@ -6,7 +6,7 @@
 #include <QString>
 #include <QUuid>
 #include "core/types.h"
-#include "IConfigSection.hpp"
+#include "view/ConfigBinder/IConfigSection.hpp"
 
 namespace {
     const int kConfigVersion = 1;  // use after officially release

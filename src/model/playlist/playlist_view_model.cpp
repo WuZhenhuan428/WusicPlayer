@@ -463,7 +463,7 @@ QModelIndex PlaylistViewModel::findTrackIndex(const trackId& tid) const {
         for (int track_row = 0; track_row < group->children.size(); ++track_row) {
             Node* track_node = group->children.at(track_row);
             if (track_node->id == tid) {
-                QModelIndex parent_index = createIndex(group_row, 0, group);
+                // QModelIndex parent_index = createIndex(group_row, 0, group); // unused
                 return createIndex(track_row, 0, track_node);
             }
         }
@@ -541,10 +541,6 @@ void PlaylistViewModel::setColumns(const QVector<TableColumn>& columns) {
 
 const QVector<TableColumn>& PlaylistViewModel::getColumns() const {
     return m_columns;
-}
-
-void PlaylistViewModel::requestMetaData(const trackId& tid) {
-    // Sync parsing used currently
 }
 
 void PlaylistViewModel::setGroupRules(const QVector<SortRule>& rules) {

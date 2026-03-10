@@ -119,7 +119,7 @@ QString PlaylistManager::nextTrack(PlayMode mode) {
     } else if (mode == PlayMode::loop) {
         next_id = PlaylistNavigator::nextOfLoop(m_view->playbackQueueSnapshot().queue, curr_id);
     } else if (mode == PlayMode::shuffle) {
-        next_id = PlaylistNavigator::nextOfShuffle(m_view->playbackQueueSnapshot().queue, curr_id);
+        next_id = PlaylistNavigator::nextOfShuffle(m_view->playbackQueueSnapshot().queue);
     } else if (mode == PlayMode::out_of_order_track) {
         next_id = PlaylistNavigator::nextOfOutOfOrderTrack(m_view->singleShuffleQueueSnapshot().queue, curr_id);
     } else if (mode == PlayMode::out_of_order_group) {
@@ -150,7 +150,7 @@ QString PlaylistManager::prevTrack(PlayMode mode) {
     } else if (mode == PlayMode::loop) {
         prev_id = PlaylistNavigator::previousOfLoop(m_view->playbackQueueSnapshot().queue, curr_id);
     } else if (mode == PlayMode::shuffle) {
-        prev_id = PlaylistNavigator::previousOfShuffle(m_view->playbackQueueSnapshot().queue, curr_id);
+        prev_id = PlaylistNavigator::previousOfShuffle(m_view->playbackQueueSnapshot().queue);
     } else if (mode == PlayMode::out_of_order_track) {
         prev_id = PlaylistNavigator::previousOfOutOfOrderTrack(m_view->singleShuffleQueueSnapshot().queue, curr_id);
     } else if (mode == PlayMode::out_of_order_group) {

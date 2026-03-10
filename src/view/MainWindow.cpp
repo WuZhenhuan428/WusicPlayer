@@ -10,22 +10,33 @@
 MainWindow::MainWindow(PlaybackController* playback_controller, QWidget *parent)
     : QMainWindow(parent),
       m_playbackController(playback_controller),
-      m_playlistManager      (new PlaylistManager(this)),
-      m_playlistController   (new PlaylistController(m_playlistManager, this, this)),
-      m_windowConfigSection  (new WindowConfigSection()),
-      m_playbackConfigSection(new PlaybackConfigSection()),
-      m_searchPanelSection   (new SearchPanelSection()),
-      m_libraryViewSection   (new LibraryViewSection()),
-      m_desktopLyricsSection (new DesktopLyricsSection())
+      m_playlistManager (new PlaylistManager(this)),
+      m_playlistController (new PlaylistController(m_playlistManager, this, this)),
+      m_desktopLyricsSection (std::make_unique<DesktopLyricsSection>()),
+      m_libraryViewSection (std::make_unique<LibraryViewSection>()),
+      m_playbackConfigSection (std::make_unique<PlaybackConfigSection>()),
+      m_searchPanelSection (std::make_unique<SearchPanelSection>()),
+      m_windowConfigSection (std::make_unique<WindowConfigSection>()),
+      m_desktopLyricsBinder (std::make_unique<DesktopLyricsBinder>()),
+      m_libraryViewBinder (std::make_unique<LibraryViewBinder>()),
+      m_playbackConfigBinder (std::make_unique<PlaybackConfigBinder>()),
+      m_searchPanelBinder (std::make_unique<SearchPanelBinder>()),
+      m_windowConfigBinder (std::make_unique<WindowConfigBinder>())
 {
     ConfigManager& cm = ConfigManager::getInstance();
-    cm.registerSection(m_windowConfigSection);
-    cm.registerSection(m_playbackConfigSection);
-    cm.registerSection(m_libraryViewSection);
-    cm.registerSection(m_searchPanelSection);
-    cm.registerSection(m_desktopLyricsSection);
+    cm.registerSection(m_windowConfigSection.get());
+    cm.registerSection(m_playbackConfigSection.get());
+    cm.registerSection(m_libraryViewSection.get());
+    cm.registerSection(m_searchPanelSection.get());
+    cm.registerSection(m_desktopLyricsSection.get());
     
     cm.loadAll();
+
+    m_binders.push_back(m_desktopLyricsBinder.get());
+    m_binders.push_back(m_libraryViewBinder.get());
+    m_binders.push_back(m_playbackConfigBinder.get());
+    m_binders.push_back(m_searchPanelBinder.get());
+    m_binders.push_back(m_windowConfigBinder.get());
 
     // [Fix] Initialize view with default sort rules if needed, 
     // or trigger a rebuild if playlist already exists
@@ -437,31 +448,14 @@ void MainWindow::restoreLastTrackWhenModelReady(int retry, qint64 last_pos) {
 }
 
 void MainWindow::applyConfig() {
-    const auto& cfg = ConfigManager::getInstance();
-
-    // load geometry & state
-    if (!m_windowConfigSection->geometry.isEmpty()) {
-        this->restoreGeometry(m_windowConfigSection->geometry);
-    }
-    if (!m_windowConfigSection->state.isEmpty()) {
-        this->restoreState(m_windowConfigSection->state);
-    }
-
-    m_playbackController->setVolume(m_playbackConfigSection->volume);
-    m_playbackController->setMute(m_playbackConfigSection->muted);
-
-    const auto sliders = controlBar->findChildren<QSlider*>();
-    for (QSlider* s : sliders) {
-        if (s && s->orientation() == Qt::Horizontal && s->maximum() == 100  && s->maximumWidth() == 100) {
-            s->setValue(m_playbackConfigSection->volume);
-            break;
+    MainWindowConfigContext ctx = this->buildConfigContext();
+    for (IConfigBinder* b : m_binders) {
+        if (b) {
+            b->apply(ctx);
         }
     }
 
-    m_playbackController->setPlayMode(m_playbackConfigSection->play_mode);
-
-    // last_playlist & last_track (must wait cache + model rebuild)
-    auto restorePlaybackState = [this, &cfg]() {
+    auto restorePlaybackState = [this]() {
         const playlistId last_pid = m_playbackConfigSection->last_playlist_id;
         const trackId last_tid = m_playbackConfigSection->last_track_id;
         const int last_position_ms = m_playbackConfigSection->last_position_ms;
@@ -511,91 +505,38 @@ void MainWindow::applyConfig() {
                 restorAfterCacheLoaded, Qt::SingleShotConnection);
     };
     restorePlaybackState();
-    
-    // view: columns
-    if (!m_libraryViewSection->columns.isEmpty()) {
-        QVector<TableColumn> columns;
-        columns.reserve(m_libraryViewSection->columns.size());
-        for (const auto& c : m_libraryViewSection->columns) {
-            columns.append(c);
-        }
-        m_playlistController->viewModel()->setColumns(columns);
-    }
-    // view: song_tree_header_state
-    auto restoreLibraryWidgetState = [this, &cfg]() {
-        m_libraryPanel->setSongTreeHeaderState(m_libraryViewSection->song_tree_view_state);
-        m_libraryPanel->setSplitterState(m_libraryViewSection->splitter_state);
-        m_libraryPanel->setSplitterOrientation(m_libraryViewSection->splitter_orientation);
-    };
-    connect(m_playlistController->viewModel(), &QAbstractItemModel::modelReset, this,
-            restoreLibraryWidgetState, Qt::SingleShotConnection);
-
-
-    // search panel
-    if (!m_searchPanelSection->geometry.isEmpty()) {
-        m_searchPanelGeoCache = m_searchPanelSection->geometry;
-    }
-    if (!m_searchPanelSection->header_state.isEmpty()) {
-        m_searchPanelHeaderStateCache = m_searchPanelSection->header_state;
-    }
-    if (this->searchPanel) {
-        m_searchPanelSection->is_visible ? this->searchPanel->show() : this->searchPanel->hide();
-    }
-
-    m_desktoplyricsWidget->restoreGeometry(m_desktopLyricsSection->geometry);
-    m_desktopLyricsSection->is_visible ? m_desktoplyricsWidget->show() : m_desktoplyricsWidget->hide();
 }
 
 void MainWindow::saveConfig() {
-    ConfigManager& cm = ConfigManager::getInstance();
-    
-    m_windowConfigSection->geometry = (this->saveGeometry());
-    m_windowConfigSection->state = (this->saveState());
-
-    
-    QPointer<QSlider> volumeSliderPtr = controlBar->getVolumeSlider();
-    if (volumeSliderPtr) {
-        m_playbackConfigSection->volume = volumeSliderPtr->value();
+    MainWindowConfigContext ctx = this->buildConfigContext();
+    for (auto* b : m_binders) {
+        if (b) {
+            b->collect(ctx);
+        }
     }
-    m_playbackConfigSection->muted = m_playbackController->getMute();
-    m_playbackConfigSection->play_mode = m_playbackController->playMode();
-    m_playbackConfigSection->last_device = m_playbackController->currentDeviceId();
-
-    do {
-        const playlistId last_pid = m_playlistController->currentPlaylist();
-        const trackId last_tid = m_playlistController->currentTrackId();
-        if (last_pid.isNull() || last_tid.isNull()) break;
-        m_playbackConfigSection->last_playlist_id = last_pid;
-        m_playbackConfigSection->last_track_id = last_tid;
-        m_playbackConfigSection->last_position_ms
-            = m_playbackController->getMediaPlayer()->hasAudio() 
-            ? m_playbackController->position() 
-            : 0;
-    } while (0);
-
-    
-    m_libraryViewSection->song_tree_view_state = m_libraryPanel->songTreeHeader()->saveState();
-    m_libraryViewSection->columns.clear();
-    for (const auto& c : m_playlistController->viewModel()->getColumns()) {
-        m_libraryViewSection->columns.append(c);
-    }
-    m_libraryViewSection->group_rules = m_playlistController->groupRules();
-    m_libraryViewSection->sort_rules = m_playlistController->SortRules();
-    m_libraryViewSection->splitter_state = m_libraryPanel->splitterState();
-    m_libraryViewSection->song_tree_view_state = m_libraryPanel->songTreeHeaderState();
-    m_libraryViewSection->splitter_orientation = m_libraryPanel->splitterOrientation();
-
-    m_searchPanelSection->geometry = m_searchPanelGeoCache;
-    m_searchPanelSection->header_state = m_searchPanelHeaderStateCache;
-    m_searchPanelSection->is_visible = (searchPanel ? searchPanel->isVisible() : false);
-
-    m_desktopLyricsSection->geometry = m_desktoplyricsWidget->saveGeometry();
-    m_desktopLyricsSection->is_visible = !m_desktoplyricsWidget->isHidden();
-
-    cm.saveAll();
+    ConfigManager::getInstance().saveAll();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
     saveConfig();
     QMainWindow::closeEvent(event);
+}
+
+MainWindowConfigContext MainWindow::buildConfigContext() {
+    MainWindowConfigContext ctx;
+    ctx.mainWindow = this;
+    ctx.playbackController = m_playbackController;
+    ctx.playlistController = m_playlistController;
+    ctx.libraryPanel = m_libraryPanel;
+    ctx.controlBar = controlBar;
+    ctx.searchPanel = searchPanel;
+    ctx.desktopLyrics = m_desktoplyricsWidget;
+
+    ctx.windowsSec = m_windowConfigSection.get();
+    ctx.playbackSec = m_playbackConfigSection.get();
+    ctx.librarySec = m_libraryViewSection.get();
+    ctx.searchSec = m_searchPanelSection.get();
+    ctx.desktopSec = m_desktopLyricsSection.get();
+
+    return ctx;
 }

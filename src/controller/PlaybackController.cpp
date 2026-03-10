@@ -1,9 +1,10 @@
 #include "PlaybackController.h"
 
 PlaybackController::PlaybackController(Player* player, QObject* parent)
-    : m_player(player), QObject(parent)
+    : QObject(parent),
+      m_player(player),
+      m_playMode(PlayMode::in_order)
 {
-    m_playMode = PlayMode::in_order;
     if (!player) {
         return;
     }

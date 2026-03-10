@@ -28,7 +28,7 @@ PlaylistSearchPanel::PlaylistSearchPanel(QWidget *parent)
             QAbstractItemModel* model = treeSearchResult->model();
             if (model) {
                 for (int i = 0; i < model->rowCount(); ++i) {
-                    QModelIndex idx = model->index(i, 0);
+                    // QModelIndex idx = model->index(i, 0);    // unused
                     if (model->hasChildren()) {
                         treeSearchResult->setFirstColumnSpanned(i, QModelIndex(), true);
                         treeSearchResult->expandAll();

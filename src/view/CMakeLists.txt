@@ -27,6 +27,25 @@ add_library(wusic_view STATIC
 
     DesktopLyricsWidget/DesktopLyricsWidget.cpp
     DesktopLyricsWidget/DesktopLyricsWidget.h
+
+    ConfigBinder/IConfigSection.hpp
+    ConfigBinder/LibraryViewSection.hpp
+    ConfigBinder/PlaybackConfigSection.hpp
+    ConfigBinder/SearchPanelSection.hpp
+    ConfigBinder/WindowConfigSection.hpp
+    ConfigBinder/DesktopLyricsSection.hpp
+    ConfigBinder/MainWindowConfigContext.hpp
+    ConfigBinder/IConfigBinder.hpp
+    ConfigBinder/LibraryViewBinder.hpp
+    ConfigBinder/LibraryViewBinder.cpp
+    ConfigBinder/PlaybackConfigBinder.hpp
+    ConfigBinder/PlaybackConfigBinder.cpp
+    ConfigBinder/SearchPanelBinder.hpp
+    ConfigBinder/SearchPanelBinder.cpp
+    ConfigBinder/WindowConfigBinder.hpp
+    ConfigBinder/WindowConfigBinder.cpp
+    ConfigBinder/DesktopLyricsBinder.hpp
+    ConfigBinder/DesktopLyricsBinder.cpp
 )
 
 target_link_libraries(wusic_view

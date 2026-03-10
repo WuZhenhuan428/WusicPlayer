@@ -2,6 +2,7 @@
 
 #include "IConfigSection.hpp"
 #include "core/types.h"
+#include <QObject>
 #include <QByteArray>
 #include <QVector>
 #include <QString>
@@ -81,6 +82,7 @@ public:
 
         return obj;
     }
+
 private:
     TableColumn jsonToColumn(const QJsonObject& obj) {
         TableColumn col;

@@ -2,9 +2,11 @@
 
 #include <QString>
 #include <QJsonObject>
+#include <QObject>
 
-class IConfigSection
+class IConfigSection : public QObject
 {
+    Q_OBJECT
 public:
     virtual ~IConfigSection() = default;
     virtual QString key() const = 0;

@@ -100,6 +100,8 @@ void LibraryWidget::initUI() {
     m_playlistTree->setHeaderLabel("Playlist");
     m_playlistTree->setMinimumWidth(120);
     m_playlistTree->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_playlistTree->setRootIsDecorated(false);
+    m_playlistTree->setIndentation(0);
 
     m_songTreeView = new QTreeView;
     m_songTreeView->setSelectionMode(QAbstractItemView::ExtendedSelection);

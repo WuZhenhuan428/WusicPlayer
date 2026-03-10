@@ -4,6 +4,8 @@
 #include <QByteArray>
 #include <QJsonObject>
 
+#include <QPointer>
+
 class PlaybackConfigSection : public IConfigSection
 {
 public:
@@ -34,12 +36,7 @@ public:
         QJsonObject obj;
         obj["volume"] = volume;       
         obj["muted"] = muted;
-
-        int mode_val = obj.value("play_mode").toInt(static_cast<int>(PlayMode::in_order));
-        if (mode_val < static_cast<int>(PlayMode::in_order) || mode_val > static_cast<int>(PlayMode::out_of_order_group)) {
-            mode_val = static_cast<int>(PlayMode::in_order);
-        }
-        obj["play_mode"] = mode_val;
+        obj["play_mode"] = static_cast<int>(play_mode);
 
         obj["last_playlist_id"] = last_playlist_id.toString(QUuid::WithoutBraces);
         obj["last_track_id"] = last_track_id.toString(QUuid::WithoutBraces);

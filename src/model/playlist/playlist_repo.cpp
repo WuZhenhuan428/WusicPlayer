@@ -76,27 +76,27 @@ static QString resolvePlaylistsCacheDir() {
     return playlists_dir;
 }
 
-static void migratePlaylistCache(const QString& fromDirPath, const QString& toDirPath) {
-    if (fromDirPath.isEmpty() || fromDirPath == toDirPath) return;
+// static void migratePlaylistCache(const QString& fromDirPath, const QString& toDirPath) {
+//     if (fromDirPath.isEmpty() || fromDirPath == toDirPath) return;
 
-    QDir fromDir(fromDirPath);
-    if (!fromDir.exists()) return;
+//     QDir fromDir(fromDirPath);
+//     if (!fromDir.exists()) return;
 
-    QDir toDir(toDirPath);
-    toDir.mkpath(".");
+//     QDir toDir(toDirPath);
+//     toDir.mkpath(".");
 
-    if (QFileInfo(fromDir.absolutePath()) == QFileInfo(toDir.absolutePath())) return;
+//     if (QFileInfo(fromDir.absolutePath()) == QFileInfo(toDir.absolutePath())) return;
 
-    const QStringList files = fromDir.entryList(QStringList() << "*.wcpl", QDir::Files);
-    for (const QString& file : files) {
-        const QString src = fromDir.filePath(file);
-        const QString dst = toDir.filePath(file);
-        if (QFile::exists(dst)) continue;
-        if (!QFile::rename(src, dst)) {
-            QFile::copy(src, dst);
-        }
-    }
-}
+//     const QStringList files = fromDir.entryList(QStringList() << "*.wcpl", QDir::Files);
+//     for (const QString& file : files) {
+//         const QString src = fromDir.filePath(file);
+//         const QString dst = toDir.filePath(file);
+//         if (QFile::exists(dst)) continue;
+//         if (!QFile::rename(src, dst)) {
+//             QFile::copy(src, dst);
+//         }
+//     }
+// }
 
 PlaylistRepo::PlaylistRepo(QObject *parent)
     : QObject(parent)

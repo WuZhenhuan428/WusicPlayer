@@ -29,6 +29,8 @@
 #include <QListView>
 #include <QHBoxLayout>
 
+#include <memory>
+
 #include "core/ConfigManager/ConfigManager.h"
 
 #include "model/playlist/playlist_manager.h"
@@ -43,12 +45,22 @@
 #include "controller/PlaybackController.h"
 #include "view/DesktopLyricsWidget/DesktopLyricsWidget.h"
 
-#include "core/ConfigManager/IConfigSection.hpp"
-#include "core/ConfigManager/WindowConfigSection.hpp"
-#include "core/ConfigManager/PlaybackConfigSection.hpp"
-#include "core/ConfigManager/SearchPanelSection.hpp"
-#include "core/ConfigManager/LibraryViewSection.hpp"
-#include "core/ConfigManager/DesktopLyricsSection.hpp"
+
+#include "view/ConfigBinder/IConfigSection.hpp"
+#include "view/ConfigBinder/DesktopLyricsSection.hpp"
+#include "view/ConfigBinder/LibraryViewSection.hpp"
+#include "view/ConfigBinder/PlaybackConfigSection.hpp"
+#include "view/ConfigBinder/SearchPanelSection.hpp"
+#include "view/ConfigBinder/WindowConfigSection.hpp"
+
+#include "view/ConfigBinder/MainWindowConfigContext.hpp"
+#include "view/ConfigBinder/IConfigBinder.hpp"
+#include "view/ConfigBinder/DesktopLyricsBinder.hpp"
+#include "view/ConfigBinder/LibraryViewBinder.hpp"
+#include "view/ConfigBinder/PlaybackConfigBinder.hpp"
+#include "view/ConfigBinder/SearchPanelBinder.hpp"
+#include "view/ConfigBinder/WindowConfigBinder.hpp"
+
 
 class MainWindow : public QMainWindow
 {
@@ -68,6 +80,21 @@ private:
     PlaylistManager* m_playlistManager;
     PlaylistController* m_playlistController;
 
+    std::unique_ptr<DesktopLyricsSection> m_desktopLyricsSection;
+    std::unique_ptr<LibraryViewSection> m_libraryViewSection;
+    std::unique_ptr<PlaybackConfigSection> m_playbackConfigSection;
+    std::unique_ptr<SearchPanelSection> m_searchPanelSection;
+    std::unique_ptr<WindowConfigSection> m_windowConfigSection;
+
+    MainWindowConfigContext buildConfigContext();
+    
+    QVector<IConfigBinder*> m_binders;
+    std::unique_ptr<DesktopLyricsBinder> m_desktopLyricsBinder;
+    std::unique_ptr<LibraryViewBinder> m_libraryViewBinder;
+    std::unique_ptr<PlaybackConfigBinder> m_playbackConfigBinder;
+    std::unique_ptr<SearchPanelBinder> m_searchPanelBinder;
+    std::unique_ptr<WindowConfigBinder> m_windowConfigBinder;
+
     bool m_cacheLoadScheduled = false;
     void restoreLastTrackWhenModelReady(int retry, qint64 last_pos);
 
@@ -81,11 +108,6 @@ private:
     // Config Manager
     void applyConfig();
     void saveConfig();
-    WindowConfigSection* m_windowConfigSection;
-    PlaybackConfigSection* m_playbackConfigSection;
-    SearchPanelSection* m_searchPanelSection;
-    LibraryViewSection* m_libraryViewSection;
-    DesktopLyricsSection* m_desktopLyricsSection;
     
     // UI Action
     void onOpenFile();
@@ -97,7 +119,7 @@ private:
     /// Menu widgets
     QMenuBar* mainMenuBar;
     QToolBar* bottomToolBar;
-    WControlBar* controlBar;
+    WControlBar* controlBar = nullptr;
 
     /// menu File
     QMenu* menuFile;
@@ -128,18 +150,20 @@ private:
     // +++main window
     /// Playlist | song table | cover & rolling lyrics
     
-    LibraryWidget* m_libraryPanel;
-    SidePanel* m_sidePanel;
+    LibraryWidget* m_libraryPanel = nullptr;
+    SidePanel* m_sidePanel = nullptr;
     
     QWidget* centerWidget;
     QHBoxLayout* mainLayout;
     // ---main window
 
     PlaylistSearchPanel* searchPanel = nullptr;
+    
+    DesktopLyricsWidget* m_desktoplyricsWidget = nullptr;
+
+public:
     QByteArray m_searchPanelHeaderStateCache;
     QByteArray m_searchPanelGeoCache;
-
-    DesktopLyricsWidget* m_desktoplyricsWidget;
 
 private slots:
     void updatePlaylist();

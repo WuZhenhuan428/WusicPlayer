@@ -58,8 +58,7 @@ namespace PlaylistNavigator {
         if (index != -1)  {
             if (index < queue.size() - 1) {
                 return queue.at(index+1);
-            }
-            else if (index = queue.size() - 1) {
+            } else if (index == queue.size() - 1) {
                 return queue.at(0);
             }
         }
@@ -74,7 +73,7 @@ namespace PlaylistNavigator {
         return trackId();
     }
 
-    trackId nextOfShuffle(const QVector<trackId>& queue, trackId current) {
+    trackId nextOfShuffle(const QVector<trackId>& queue) {
         int index = generate_random_index(queue.size()-1);
         return queue.at(index);
     }
@@ -110,7 +109,7 @@ namespace PlaylistNavigator {
         return trackId();
     }
 
-    trackId previousOfShuffle(const QVector<trackId>& queue, trackId current) {
+    trackId previousOfShuffle(const QVector<trackId>& queue) {
         int index = generate_random_index(queue.size()-1);
         return queue.at(index);
     }

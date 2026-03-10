@@ -83,9 +83,6 @@ public:
     QVector<trackId> generateGroupShuffleQueue();
     QVector<trackId> generateSingleShuffleQueue();
 
-/* ==== 元数据请求 ==== */
-    void requestMetaData(const trackId& tid);
-
 private:
     QVector<TableColumn> m_columns;
     void initDefaultColumns();
