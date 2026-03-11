@@ -21,7 +21,9 @@ MainWindow::MainWindow(PlaybackController* playback_controller, QWidget *parent)
       m_libraryViewBinder (std::make_unique<LibraryViewBinder>()),
       m_playbackConfigBinder (std::make_unique<PlaybackConfigBinder>()),
       m_searchPanelBinder (std::make_unique<SearchPanelBinder>()),
-      m_windowConfigBinder (std::make_unique<WindowConfigBinder>())
+      m_windowConfigBinder (std::make_unique<WindowConfigBinder>()),
+      m_playbackRestoreCoordinator (std::make_unique<PlaybackRestoreCoordinator>(
+        m_playbackConfigSection.get(), m_playlistController, m_playbackController, this))
 {
     ConfigManager& cm = ConfigManager::getInstance();
     cm.registerSection(m_windowConfigSection.get());
@@ -419,34 +421,6 @@ void MainWindow::playTrack(const QString& filepath) {
 }
 
 
-void MainWindow::restoreLastTrackWhenModelReady(int retry, qint64 last_pos) {
-    if (retry > 20) return;
-
-    QMediaPlayer* media_player = const_cast<QMediaPlayer*>(m_playbackController->getMediaPlayer());
-    if (!media_player) {
-        return;
-    }
-
-    const auto status = media_player->mediaStatus();
-    const bool can_seek = (
-        status == QMediaPlayer::LoadedMedia ||
-        status == QMediaPlayer::BufferedMedia ||
-        status == QMediaPlayer::BufferingMedia)
-        && (media_player->duration() > 0
-    );
-    if (can_seek) {
-        m_playbackController->setPosition(last_pos);
-        m_playbackController->pause();
-        return;
-    }
-    if (++retry > 30) {    // 1.5s timeout
-        return;
-    }
-    QTimer::singleShot(50, this, [this, retry, last_pos]() {
-        restoreLastTrackWhenModelReady(retry + 1, last_pos);
-    });
-}
-
 void MainWindow::applyConfig() {
     MainWindowConfigContext ctx = this->buildConfigContext();
     for (IConfigBinder* b : m_binders) {
@@ -454,57 +428,7 @@ void MainWindow::applyConfig() {
             b->apply(ctx);
         }
     }
-
-    auto restorePlaybackState = [this]() {
-        const playlistId last_pid = m_playbackConfigSection->last_playlist_id;
-        const trackId last_tid = m_playbackConfigSection->last_track_id;
-        const int last_position_ms = m_playbackConfigSection->last_position_ms;
-
-        if (last_pid.isNull()) {
-            return;
-        }
-
-        auto findQueueIndexByTrackId = [this](const trackId& tid) -> int {
-            if (tid.isNull()) {
-                return -1;
-            }
-            const auto& queue = m_playlistController->viewModel()->playbackQueue();
-            return queue.indexOf(tid);
-        };
-
-        auto seekWhenMediaReady = [this](int target_ms) {
-            if (target_ms <= 0) {
-                return;
-            }
-            auto retry_count = std::make_shared<int>(0);
-
-            QTimer::singleShot(0, this, [this, retry_count, target_ms]() {
-                restoreLastTrackWhenModelReady(*retry_count, target_ms);
-            });
-        };
-
-        auto restoreAfterModelReset = [this, last_tid, last_position_ms, findQueueIndexByTrackId, seekWhenMediaReady] () {
-            if (last_tid.isNull()) {
-                return;
-            }
-            const int queue_index = findQueueIndexByTrackId(last_tid);
-            if (queue_index < 0) {
-                return;
-            }
-            m_playlistController->play(queue_index);
-            seekWhenMediaReady(last_position_ms);
-        };
-
-        auto restorAfterCacheLoaded = [this, last_pid, restoreAfterModelReset](int) {
-            m_playlistController->switchToPlaylist(last_pid);
-            connect(m_playlistController->viewModel(), &QAbstractItemModel::modelReset, this,
-                    restoreAfterModelReset, Qt::SingleShotConnection);
-        };
-
-        connect(m_playlistController, &PlaylistController::cacheLoadFinished, this,
-                restorAfterCacheLoaded, Qt::SingleShotConnection);
-    };
-    restorePlaybackState();
+    m_playbackRestoreCoordinator->restorePlaybackState();
 }
 
 void MainWindow::saveConfig() {

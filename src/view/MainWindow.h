@@ -61,6 +61,8 @@
 #include "view/ConfigBinder/SearchPanelBinder.hpp"
 #include "view/ConfigBinder/WindowConfigBinder.hpp"
 
+#include "PlaybackRestoreCoordinator.hpp"
+
 
 class MainWindow : public QMainWindow
 {
@@ -94,9 +96,9 @@ private:
     std::unique_ptr<PlaybackConfigBinder> m_playbackConfigBinder;
     std::unique_ptr<SearchPanelBinder> m_searchPanelBinder;
     std::unique_ptr<WindowConfigBinder> m_windowConfigBinder;
+    std::unique_ptr<PlaybackRestoreCoordinator> m_playbackRestoreCoordinator;
 
     bool m_cacheLoadScheduled = false;
-    void restoreLastTrackWhenModelReady(int retry, qint64 last_pos);
 
     playlistId m_pendingRestorePlaylistId;
     trackId m_pendingRestoreTrackIdId;
