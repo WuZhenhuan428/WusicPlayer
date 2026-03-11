@@ -165,8 +165,8 @@ ctest --test-dir build --output-on-failure
 
 ## TODO
 
-- [ ] Complete controller-layer migration and stabilize interfaces
-- [ ] Improve audio device switching behavior
+- [x] Complete controller-layer migration and stabilize interfaces
+- [x] Improve audio device switching behavior
 - [ ] Replace the current search proxy model with an independent one
 - [ ] Binding shortcut keys
 - [ ] Polish UI/UX and visual theme consistency
