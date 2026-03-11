@@ -21,7 +21,7 @@ void LibraryWidget::initConnections() {
     });
 
     connect(m_playlistTree, &QTreeWidget::itemDoubleClicked, this,
-        [this](QTreeWidgetItem *item, int column){
+        [this](QTreeWidgetItem *item){
             WPlayListWidgetItem* temp = dynamic_cast<WPlayListWidgetItem*>(item);
             if(temp) {
                 emit sgnSwitchPlaylist(temp->id());
@@ -117,6 +117,8 @@ void LibraryWidget::initUI() {
     m_songTreeViewHeader->setContextMenuPolicy(Qt::CustomContextMenu);
     m_songTreeView->setHeaderHidden(false);
     m_songTreeViewHeader->setVisible(true);
+    m_songTreeView->setRootIsDecorated(false);
+    m_songTreeView->setIndentation(0);
 
     m_mainSplitter = new QSplitter(Qt::Horizontal, this);
     m_mainSplitter->addWidget(m_playlistTree);
