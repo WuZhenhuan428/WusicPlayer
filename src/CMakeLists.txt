@@ -15,8 +15,8 @@ wusic_add_static_resources(WusicPlayer)
 
 target_link_libraries(WusicPlayer
     PRIVATE
-        wusic_view
         wusic_controller
+        wusic_view
         wusic_model
         wusic_core
         wusic_headers

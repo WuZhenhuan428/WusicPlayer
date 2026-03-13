@@ -24,6 +24,7 @@
 #include <QSplitter>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
+#include <QListWidgetItem>
 #include <QTableView>
 #include <QLabel>
 #include <QListView>
@@ -108,7 +109,17 @@ private:
     int m_pendingRestorePositionMs = 0;
 
     void initUI();
+    void buildMenuBar();
+    void buildBottomToolBar();
+    void buildCentralArea();
     void initConnection();
+    void initPlaybackConnections();
+    void initMenuConnections();
+    void initPlaylistConnections();
+    void initLyricsConnections();
+    void ensureSettingsPanel();
+    void ensureShortcutsPage();
+    void ensureSearchPanel();
     
     // Config Manager
     void applyConfig();
@@ -174,6 +185,7 @@ private:
 
     ShortcutsPanel* m_shortcutsPanel = nullptr;
     ShortcutsController* m_shortcutsController = nullptr;
+    QListWidgetItem* m_shortcutsPageItem = nullptr;
 
 public:
     QByteArray m_searchPanelHeaderStateCache;

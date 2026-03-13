@@ -64,6 +64,14 @@ void MainWindow::showEvent(QShowEvent *event) {
 
 void MainWindow::initConnection()
 {
+    initPlaybackConnections();
+    initMenuConnections();
+    initPlaylistConnections();
+    initLyricsConnections();
+}
+
+void MainWindow::initPlaybackConnections()
+{
     connect(controlBar, &WControlBar::sgnBtnPlayClicked, m_playbackController, &PlaybackController::play);
     connect(controlBar, &WControlBar::sgnBtnPauseClicked, m_playbackController, &PlaybackController::pause);
     connect(controlBar, &WControlBar::sgnBtnStopClicked, m_playbackController, &PlaybackController::stop);
@@ -105,7 +113,6 @@ void MainWindow::initConnection()
     });
     connect(m_playbackController, &PlaybackController::sgnDevicesChanged, controlBar, &WControlBar::setDevice);
     connect(controlBar, &WControlBar::sgnSelectDeviceId, m_playbackController, &PlaybackController::setDeviceById);
-    controlBar->setDevice(m_playbackController->availableDevices(), m_playbackController->currentDeviceId());
 
     connect(m_playbackController, &PlaybackController::sgnPositionChanged, controlBar, &WControlBar::updatePosition);
     connect(m_playbackController, &PlaybackController::sgnPlaybackStateChanged, controlBar, &WControlBar::onPlayerStateChanged);
@@ -114,7 +121,18 @@ void MainWindow::initConnection()
         controlBar->setPlayMode(mode);
     });
 
-    // Menu
+    connect(m_playbackController, &PlaybackController::sgnMediaStateChanged, this, [this](QMediaPlayer::MediaStatus status){
+        if (status == QMediaPlayer::MediaStatus::EndOfMedia) {
+            QString next_track = m_playlistController->nextTrack(m_playbackController->playMode());
+            if (!next_track.isEmpty()) {
+                playTrack(next_track);
+            }
+        }
+    });
+}
+
+void MainWindow::initMenuConnections()
+{
     connect(actOpenFile, &QAction::triggered, this, &MainWindow::onOpenFile);
     connect(actAddFile, &QAction::triggered, this, [this](){ m_playlistController->importFiles(); });
     connect(actAddFolder, &QAction::triggered, this, [this](){ m_playlistController->importDir(); });
@@ -132,11 +150,6 @@ void MainWindow::initConnection()
     connect(actSavePlaylist, &QAction::triggered, this, [this](){
         m_playlistController->savePlaylist();
     });
-
-    connect(m_libraryPanel, &LibraryWidget::sgnRenamePlaylist, m_playlistController, &PlaylistController::renamePlaylist);
-    connect(m_libraryPanel, &LibraryWidget::sgnRemovePlaylist, m_playlistController, &PlaylistController::removePlaylist);
-    connect(m_libraryPanel, &LibraryWidget::sgnSavePlaylist, m_playlistController, &PlaylistController::savePlaylist);
-    connect(m_libraryPanel, &LibraryWidget::sgnCopyPlaylist, m_playlistController, &PlaylistController::copyPlaylist);
 
     connect(actExit, &QAction::triggered, this, &QWidget::close);
     connect(actAbout, &QAction::triggered, this, [=](){
@@ -178,19 +191,16 @@ void MainWindow::initConnection()
     });
 
     connect(actSettings, &QAction::triggered, this, &MainWindow::onOpenSettingsPanel);
-    // read file
+
     connect(this, &MainWindow::sgnLoadPlaylist, m_playlistController, &PlaylistController::loadPlaylist);
-
-    connect(m_playbackController, &PlaybackController::sgnMediaStateChanged, [=](QMediaPlayer::MediaStatus status){
-        if (status == QMediaPlayer::MediaStatus::EndOfMedia) {
-            QString next_track = m_playlistController->nextTrack(m_playbackController->playMode());
-            if (!next_track.isEmpty()) {
-                playTrack(next_track);
-            }
-        }
+    connect(actSearchPanel, &QAction::triggered, this, &MainWindow::onOpenSearchPanel);
+    connect(actShowDesktopLyrics, &QAction::triggered, this, [this](){
+        m_desktoplyricsWidget->show();
     });
+}
 
-    // main window: playlist & song table
+void MainWindow::initPlaylistConnections()
+{
     connect(m_playlistController, &PlaylistController::requestPlay, this, &MainWindow::playTrack);
     connect(m_playlistController, &PlaylistController::playlistChanged, this, &MainWindow::updatePlaylist);
 
@@ -207,26 +217,7 @@ void MainWindow::initConnection()
         }
     });
     
-    // lrc panel
-    connect(m_playbackController, &PlaybackController::sgnPositionChanged, m_sidePanel->getLyricsPanel(), &WLyricsPanel::ScrollByPosition);
-
-    // desktop lrc
-    connect(m_playbackController, &PlaybackController::sgnPositionChanged,
-            dynamic_cast<WLyricsModel*>(m_sidePanel->getLyricsPanel()->model()), &WLyricsModel::setCurrentPosition);
-    connect(dynamic_cast<WLyricsModel*>(m_sidePanel->getLyricsPanel()->model()), &WLyricsModel::currentLineChanged,
-        this, [this](const QString &curr_text, const QString &next_text){
-            m_desktoplyricsWidget->setLrcLine(curr_text, next_text);
-    });
-
-    connect(actShowDesktopLyrics, &QAction::triggered, this, [this](){
-            m_desktoplyricsWidget->show();
-    });
-
-
-    // search panel
-    connect(actSearchPanel, &QAction::triggered, this, &MainWindow::onOpenSearchPanel);
-
-    // library panel
+        // library panel
     connect(m_libraryPanel, &LibraryWidget::sgnImportFiles, m_playlistController, &PlaylistController::importFiles);
     connect(m_libraryPanel, &LibraryWidget::sgnImportDir, m_playlistController, &PlaylistController::importDir);
     connect(m_libraryPanel, &LibraryWidget::sgnSwitchPlaylist, m_playlistController, &PlaylistController::switchToPlaylist);
@@ -240,14 +231,42 @@ void MainWindow::initConnection()
             m_playlistController->play(queueIndex);
         }
     });
+
+    connect(m_libraryPanel, &LibraryWidget::sgnRenamePlaylist, m_playlistController, &PlaylistController::renamePlaylist);
+    connect(m_libraryPanel, &LibraryWidget::sgnRemovePlaylist, m_playlistController, &PlaylistController::removePlaylist);
+    connect(m_libraryPanel, &LibraryWidget::sgnSavePlaylist, m_playlistController, &PlaylistController::savePlaylist);
+    connect(m_libraryPanel, &LibraryWidget::sgnCopyPlaylist, m_playlistController, &PlaylistController::copyPlaylist);
+}
+
+void MainWindow::initLyricsConnections()
+{
+    auto* lyricsModel = dynamic_cast<WLyricsModel*>(m_sidePanel->getLyricsPanel()->model());
+
+    connect(m_playbackController, &PlaybackController::sgnPositionChanged,
+            m_sidePanel->getLyricsPanel(), &WLyricsPanel::ScrollByPosition);
+
+    if (lyricsModel) {
+        connect(m_playbackController, &PlaybackController::sgnPositionChanged,
+                lyricsModel, &WLyricsModel::setCurrentPosition);
+        connect(lyricsModel, &WLyricsModel::currentLineChanged,
+                this, [this](const QString &curr_text, const QString &next_text){
+                    m_desktoplyricsWidget->setLrcLine(curr_text, next_text);
+                });
+    }
 }
 
 void MainWindow::initUI()
 {
-// Global config
+    // Global config
     this->setContextMenuPolicy(Qt::NoContextMenu);
- 
-// MenuBar
+
+    buildMenuBar();
+    buildBottomToolBar();
+    buildCentralArea();
+}
+
+void MainWindow::buildMenuBar()
+{
     mainMenuBar = new QMenuBar;
 
     menuFile = new QMenu("&File", mainMenuBar);
@@ -303,20 +322,26 @@ void MainWindow::initUI()
     mainMenuBar->addMenu(menuHelp);
 
     setMenuBar(mainMenuBar);
+}
 
-// Bottom toolbar, btn & progress bar
-    /// PushButton instant -> BottomToolBarArea
+void MainWindow::buildBottomToolBar()
+{
+    // Bottom toolbar, btn & progress bar
+    // PushButton instant -> BottomToolBarArea
     bottomToolBar = new QToolBar(this);
     bottomToolBar->setObjectName("BottomToolBar");
     bottomToolBar->setMovable(false);
     bottomToolBar->setFloatable(false);
     controlBar = new WControlBar(bottomToolBar);
+    controlBar->setDevice(m_playbackController->availableDevices(), m_playbackController->currentDeviceId());
     bottomToolBar->addWidget(controlBar);
     addToolBar(Qt::BottomToolBarArea, bottomToolBar);
+}
 
-// Main window
-    /// playlist & table with splitter
-    
+void MainWindow::buildCentralArea()
+{
+    // Main window
+    // playlist & table with splitter
     centerWidget = new QWidget(this);
     m_libraryPanel = new LibraryWidget(m_playlistController->viewModel(), centerWidget);
     m_sidePanel = new SidePanel(centerWidget);
@@ -328,7 +353,7 @@ void MainWindow::initUI()
     mainLayout->setContentsMargins(0, 0, 0, 0);
     setCentralWidget(centerWidget);
 
-    // dekstop lrc panel
+    // desktop lrc panel
     m_desktoplyricsWidget = new DesktopLyricsWidget();
     m_desktoplyricsWidget->show();
 }
@@ -350,24 +375,8 @@ void MainWindow::onOpenFile() {
 }
 
 void MainWindow::onOpenSettingsPanel() {
-    if (!m_settingsPanel) {
-        m_settingsPanel = new SettingsPanel;
-        m_settingsPanel->setWindowFlag(Qt::Window, true);
-        m_settingsPanel->setAttribute(Qt::WA_DeleteOnClose, true);
-
-        connect(m_settingsPanel, &QObject::destroyed, this, [this]() {
-            m_settingsPanel = nullptr;
-        });
-    }
-
-    if (!m_shortcutsPanel) {
-        m_shortcutsPanel = new ShortcutsPanel(this);
-    }
-    if (!m_shortcutsController) {
-        m_shortcutsController = new ShortcutsController(this);
-    }
-    m_settingsPanel->registerWidget(new QListWidgetItem("Shortcuts"), m_shortcutsPanel);
-    m_shortcutsPanel->setViewModel(m_shortcutsController->viewModel());
+    ensureSettingsPanel();
+    ensureShortcutsPage();
 
     m_settingsPanel->show();
     m_settingsPanel->raise();
@@ -375,6 +384,49 @@ void MainWindow::onOpenSettingsPanel() {
 }
 
 void MainWindow::onOpenSearchPanel() {
+    ensureSearchPanel();
+
+    searchPanel->show();
+    searchPanel->raise();
+    searchPanel->activateWindow();
+}
+
+void MainWindow::ensureSettingsPanel()
+{
+    if (m_settingsPanel) {
+        return;
+    }
+
+    m_settingsPanel = new SettingsPanel;
+    m_settingsPanel->setWindowFlag(Qt::Window, true);
+    m_settingsPanel->setAttribute(Qt::WA_DeleteOnClose, true);
+
+    connect(m_settingsPanel, &QObject::destroyed, this, [this]() {
+        m_settingsPanel = nullptr;
+        m_shortcutsPageItem = nullptr;
+        m_shortcutsPanel = nullptr;
+    });
+}
+
+void MainWindow::ensureShortcutsPage()
+{
+    if (!m_shortcutsController) {
+        m_shortcutsController = new ShortcutsController(this);
+    }
+
+    if (!m_shortcutsPanel) {
+        m_shortcutsPanel = new ShortcutsPanel(this);
+        m_shortcutsPanel->setViewModel(m_shortcutsController->viewModel());
+    }
+
+    if (!m_shortcutsPageItem) {
+        m_shortcutsPageItem = new QListWidgetItem("Shortcuts");
+        m_settingsPanel->registerWidget(m_shortcutsPageItem, m_shortcutsPanel);
+    }
+}
+
+void MainWindow::ensureSearchPanel()
+{
     if (!searchPanel) {
         searchPanel = new PlaylistSearchPanel;
         searchPanel->setWindowFlag(Qt::Window, true);
@@ -416,10 +468,6 @@ void MainWindow::onOpenSearchPanel() {
             searchPanel = nullptr;
         });
     }
-    
-    searchPanel->show();
-    searchPanel->raise();
-    searchPanel->activateWindow();
 }
 
 void MainWindow::updatePlaylist() {
