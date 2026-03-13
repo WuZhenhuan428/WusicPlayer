@@ -60,7 +60,7 @@ WControlBar::WControlBar(QWidget* parent)
         action->setCheckable(true);
         menuMode->addAction(action);
 
-        connect(action, &QAction::toggled, this, [this](bool checked) {
+        connect(action, &QAction::toggled, this, [this]() {
             QAction* act = qobject_cast<QAction*>(sender());
             if (act) {
                 act->setChecked(true);
