@@ -16,7 +16,9 @@ add_library(wusic_model STATIC
     playlist/playlist_view_model.cpp
     playlist/playlist_view_model.h
 
-
+    ShortcutsViewModel/shortcuts_view_model.cpp
+    ShortcutsViewModel/shortcuts_view_model.hpp
+    ShortcutsViewModel/shortcuts_types.hpp
 )
 
 target_link_libraries(wusic_model

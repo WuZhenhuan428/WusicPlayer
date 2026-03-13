@@ -48,6 +48,12 @@ add_library(wusic_view STATIC
     ConfigBinder/WindowConfigBinder.cpp
     ConfigBinder/DesktopLyricsBinder.hpp
     ConfigBinder/DesktopLyricsBinder.cpp
+
+    SettingsPanel/SettingsPanel.cpp
+    SettingsPanel/SettingsPanel.hpp
+
+    SettingsPanel/ShortcutsPanel/ShortcutsPanel.cpp
+    SettingsPanel/ShortcutsPanel/ShortcutsPanel.hpp
 )
 
 target_link_libraries(wusic_view

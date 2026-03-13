@@ -4,6 +4,8 @@ add_library(wusic_controller STATIC
     PlaylistController.h
     PlaylistController.cpp
     # ...existing code...
+    shortcuts_controller.cpp
+    shortcuts_controller.hpp
 )
 
 target_link_libraries(wusic_controller

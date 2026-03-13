@@ -4,7 +4,6 @@ add_library(wusic_core STATIC
     utils/AudioUtils.h
     ConfigManager/ConfigManager.h
     ConfigManager/ConfigManager.cpp
-
 )
 
 target_link_libraries(wusic_core

@@ -63,6 +63,9 @@
 
 #include "PlaybackRestoreCoordinator.hpp"
 
+#include "view/SettingsPanel/SettingsPanel.hpp"
+#include "view/SettingsPanel/ShortcutsPanel/ShortcutsPanel.hpp"
+#include "controller/shortcuts_controller.hpp"
 
 class MainWindow : public QMainWindow
 {
@@ -115,6 +118,7 @@ private:
     void onOpenFile();
     
     void onOpenSearchPanel();
+    void onOpenSettingsPanel();
     void playTrack(const QString& filepath);
     
     // UI Widgets declaraion
@@ -123,7 +127,7 @@ private:
     QToolBar* bottomToolBar;
     WControlBar* controlBar = nullptr;
 
-    /// menu File
+    // menu File
     QMenu* menuFile;
     QAction* actOpenFile;
     QAction* actAddFile;
@@ -148,6 +152,10 @@ private:
     QMenu* menuHelp;
     QAction* actManual;
     QAction* actAbout;
+
+    // menu settings
+    QMenu* menuSettings;
+    QAction* actSettings;
     
     // +++main window
     /// Playlist | song table | cover & rolling lyrics
@@ -160,8 +168,12 @@ private:
     // ---main window
 
     PlaylistSearchPanel* searchPanel = nullptr;
+    SettingsPanel* m_settingsPanel = nullptr;
     
     DesktopLyricsWidget* m_desktoplyricsWidget = nullptr;
+
+    ShortcutsPanel* m_shortcutsPanel = nullptr;
+    ShortcutsController* m_shortcutsController = nullptr;
 
 public:
     QByteArray m_searchPanelHeaderStateCache;

@@ -171,7 +171,6 @@ void LibraryWidget::setSplitterOrientation(Qt::Orientation orient) {
 }
 
 
-
 void LibraryWidget::updateSongView() {
     QAbstractItemModel* model = m_songTreeView->model();
     if (!model) return;

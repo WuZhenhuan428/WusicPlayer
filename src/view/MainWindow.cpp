@@ -23,7 +23,7 @@ MainWindow::MainWindow(PlaybackController* playback_controller, QWidget *parent)
       m_searchPanelBinder (std::make_unique<SearchPanelBinder>()),
       m_windowConfigBinder (std::make_unique<WindowConfigBinder>()),
       m_playbackRestoreCoordinator (std::make_unique<PlaybackRestoreCoordinator>(
-        m_playbackConfigSection.get(), m_playlistController, m_playbackController, this))
+            m_playbackConfigSection.get(), m_playlistController, m_playbackController, this))
 {
     ConfigManager& cm = ConfigManager::getInstance();
     cm.registerSection(m_windowConfigSection.get());
@@ -176,6 +176,8 @@ void MainWindow::initConnection()
             m_playlistController->viewModel()->removeColumn(dialog.index());
         }
     });
+
+    connect(actSettings, &QAction::triggered, this, &MainWindow::onOpenSettingsPanel);
     // read file
     connect(this, &MainWindow::sgnLoadPlaylist, m_playlistController, &PlaylistController::loadPlaylist);
 
@@ -287,6 +289,11 @@ void MainWindow::initUI()
     menuView->addAction(actShowDesktopLyrics);
     mainMenuBar->addMenu(menuView);
 
+    menuSettings = new QMenu("&Settings", mainMenuBar);
+    actSettings = new QAction("&Settings", menuSettings);
+    menuSettings->addAction(actSettings);
+    mainMenuBar->addMenu(menuSettings);
+
     menuHelp = new QMenu("&Help", mainMenuBar);
     actManual = new QAction("&Manual", menuHelp);
     actAbout = new QAction("&About", menuHelp);
@@ -340,6 +347,31 @@ void MainWindow::onOpenFile() {
     else {
         qDebug() << "[INFO] filepath is empty!";
     }
+}
+
+void MainWindow::onOpenSettingsPanel() {
+    if (!m_settingsPanel) {
+        m_settingsPanel = new SettingsPanel;
+        m_settingsPanel->setWindowFlag(Qt::Window, true);
+        m_settingsPanel->setAttribute(Qt::WA_DeleteOnClose, true);
+
+        connect(m_settingsPanel, &QObject::destroyed, this, [this]() {
+            m_settingsPanel = nullptr;
+        });
+    }
+
+    if (!m_shortcutsPanel) {
+        m_shortcutsPanel = new ShortcutsPanel(this);
+    }
+    if (!m_shortcutsController) {
+        m_shortcutsController = new ShortcutsController(this);
+    }
+    m_settingsPanel->registerWidget(new QListWidgetItem("Shortcuts"), m_shortcutsPanel);
+    m_shortcutsPanel->setViewModel(m_shortcutsController->viewModel());
+
+    m_settingsPanel->show();
+    m_settingsPanel->raise();
+    m_settingsPanel->activateWindow();
 }
 
 void MainWindow::onOpenSearchPanel() {
