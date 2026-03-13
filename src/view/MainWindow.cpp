@@ -48,10 +48,19 @@ MainWindow::MainWindow(PlaybackController* playback_controller, QWidget *parent)
     this->setMinimumSize(960, 540);
     this->initUI();
     this->initConnection();
-    this->applyConfig();
 }
 
 MainWindow::~MainWindow() {}
+
+void MainWindow::initializeAfterConstruction()
+{
+    applyConfig();
+}
+
+void MainWindow::persistState()
+{
+    saveConfig();
+}
 
 void MainWindow::showEvent(QShowEvent *event) {
     QMainWindow::showEvent(event);
@@ -333,9 +342,9 @@ void MainWindow::buildBottomToolBar()
     bottomToolBar->setMovable(false);
     bottomToolBar->setFloatable(false);
     controlBar = new WControlBar(bottomToolBar);
-    controlBar->setDevice(m_playbackController->availableDevices(), m_playbackController->currentDeviceId());
     bottomToolBar->addWidget(controlBar);
     addToolBar(Qt::BottomToolBarArea, bottomToolBar);
+    controlBar->setDevice(m_playbackController->availableDevices(), m_playbackController->currentDeviceId());
 }
 
 void MainWindow::buildCentralArea()
@@ -522,7 +531,7 @@ void MainWindow::saveConfig() {
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
-    saveConfig();
+    emit sgnAboutToClose();
     QMainWindow::closeEvent(event);
 }
 

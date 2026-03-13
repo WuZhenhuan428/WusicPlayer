@@ -75,6 +75,8 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(PlaybackController* playback_controller, QWidget *parent = nullptr);
     ~MainWindow();
+    void initializeAfterConstruction();
+    void persistState();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -197,4 +199,5 @@ private slots:
 signals:
     void sgnLoadPlaylist();
     void sgnCurrentPlaylistChanged(playlistId pid);
+    void sgnAboutToClose();
 };

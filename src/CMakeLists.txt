@@ -9,6 +9,8 @@ add_subdirectory(static)
 
 qt_add_executable(WusicPlayer
     main.cpp
+    app_controller.cpp
+    app_controller.h
 )
 
 wusic_add_static_resources(WusicPlayer)

@@ -3,6 +3,7 @@
 #include <QApplication>
 #include "core/ConfigManager/ConfigManager.h"
 #include "controller/PlaybackController.h"
+#include "app_controller.h"
 #include <QDebug>
 
 int main(int argc, char *argv[])
@@ -17,7 +18,7 @@ int main(int argc, char *argv[])
     PlaybackController playbackController(&player);
     ConfigManager::getInstance();
 
-    MainWindow w(&playbackController);
-    w.show();
+    AppController appController(&playbackController);
+    appController.showMainWindow();
     return a.exec();
 }
