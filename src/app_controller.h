@@ -4,6 +4,7 @@
 #include <memory>
 #include <QPointer>
 #include <QVector>
+#include <QByteArray>
 
 class QListWidgetItem;
 class PlaylistSearchPanel;
@@ -22,12 +23,14 @@ class LibraryViewBinder;
 class PlaybackConfigBinder;
 class SearchPanelBinder;
 class WindowConfigBinder;
+class SettingsPanelBinder;
 
 class DesktopLyricsSection;
 class LibraryViewSection;
 class PlaybackConfigSection;
 class SearchPanelSection;
 class WindowConfigSection;
+class SettingsPanelSection;
 
 class PlaybackRestoreCoordinator;
 class MainWindowConfigContext;
@@ -40,6 +43,7 @@ public:
     ~AppController() override;
 
     void showMainWindow();
+    QByteArray m_settingsPanelGeoCache;
 
 private:
     void initializeCoreConnections();
@@ -74,6 +78,7 @@ private:
     std::unique_ptr<PlaybackConfigSection> m_playbackConfigSection;
     std::unique_ptr<SearchPanelSection> m_searchPanelSection;
     std::unique_ptr<WindowConfigSection> m_windowConfigSection;
+    std::unique_ptr<SettingsPanelSection> m_settingsPanelSection;
 
     QVector<IConfigBinder*> m_binders;
     std::unique_ptr<DesktopLyricsBinder> m_desktopLyricsBinder;
@@ -81,6 +86,8 @@ private:
     std::unique_ptr<PlaybackConfigBinder> m_playbackConfigBinder;
     std::unique_ptr<SearchPanelBinder> m_searchPanelBinder;
     std::unique_ptr<WindowConfigBinder> m_windowConfigBinder;
+    std::unique_ptr<SettingsPanelBinder> m_settingsPanelBinder;
+
     std::unique_ptr<PlaybackRestoreCoordinator> m_playbackRestoreCoordinator;
 
     QPointer<SettingsPanel> m_settingsPanel;

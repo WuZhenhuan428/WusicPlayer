@@ -30,13 +30,16 @@ add_library(wusic_view STATIC
 
     PlaybackRestoreCoordinator.hpp
 
+    ConfigBinder/MainWindowConfigContext.hpp
+
     ConfigBinder/IConfigSection.hpp
     ConfigBinder/LibraryViewSection.hpp
     ConfigBinder/PlaybackConfigSection.hpp
     ConfigBinder/SearchPanelSection.hpp
     ConfigBinder/WindowConfigSection.hpp
     ConfigBinder/DesktopLyricsSection.hpp
-    ConfigBinder/MainWindowConfigContext.hpp
+    ConfigBinder/SettingsPanelSection.hpp
+    
     ConfigBinder/IConfigBinder.hpp
     ConfigBinder/LibraryViewBinder.hpp
     ConfigBinder/LibraryViewBinder.cpp
@@ -48,6 +51,8 @@ add_library(wusic_view STATIC
     ConfigBinder/WindowConfigBinder.cpp
     ConfigBinder/DesktopLyricsBinder.hpp
     ConfigBinder/DesktopLyricsBinder.cpp
+    ConfigBinder/SettingsPanelBinder.hpp
+    ConfigBinder/SettingsPanelBinder.cpp
 
     SettingsPanel/SettingsPanel.cpp
     SettingsPanel/SettingsPanel.hpp

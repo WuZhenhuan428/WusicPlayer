@@ -7,6 +7,8 @@
 #include <QListWidgetItem>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QCloseEvent>
+#include <QHideEvent>
 
 class SettingsPanel : public QWidget
 {
@@ -16,6 +18,14 @@ public:
     ~SettingsPanel();
 
     void registerWidget(QListWidgetItem* title, QWidget* widget);
+    void emitStateSnapshot();
+
+protected:
+    void closeEvent(QCloseEvent* event) override;
+    void hideEvent(QHideEvent* event) override;
+
+signals:
+    void sgnStateSnapshot(const QByteArray& geometry);
 
 private:
     QListWidget *m_listWidget;

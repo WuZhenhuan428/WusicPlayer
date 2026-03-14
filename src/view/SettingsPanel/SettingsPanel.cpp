@@ -42,3 +42,18 @@ void SettingsPanel::registerWidget(QListWidgetItem* title, QWidget* widget) {
     m_listWidget->addItem(title);
     m_stackedWidget->addWidget(widget);
 }
+
+void SettingsPanel::emitStateSnapshot() {
+    QByteArray geometry = saveGeometry();
+    emit sgnStateSnapshot(geometry);
+}
+
+void SettingsPanel::closeEvent(QCloseEvent* event) {
+    emitStateSnapshot();
+    QWidget::closeEvent(event);
+}
+
+void SettingsPanel::hideEvent(QHideEvent* event) {
+    emitStateSnapshot();
+    QWidget::hideEvent(event);
+}

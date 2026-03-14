@@ -33,6 +33,8 @@
 #include "view/ConfigBinder/PlaybackConfigBinder.hpp"
 #include "view/ConfigBinder/SearchPanelBinder.hpp"
 #include "view/ConfigBinder/WindowConfigBinder.hpp"
+#include "view/ConfigBinder/SettingsPanelSection.hpp"
+#include "view/ConfigBinder/SettingsPanelBinder.hpp"
 #include "view/PlaybackRestoreCoordinator.hpp"
 
 AppController::AppController(PlaybackController* playbackController, QObject* parent)
@@ -46,11 +48,13 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
       m_playbackConfigSection(std::make_unique<PlaybackConfigSection>()),
       m_searchPanelSection(std::make_unique<SearchPanelSection>()),
       m_windowConfigSection(std::make_unique<WindowConfigSection>()),
+      m_settingsPanelSection(std::make_unique<SettingsPanelSection>()),
       m_desktopLyricsBinder(std::make_unique<DesktopLyricsBinder>()),
       m_libraryViewBinder(std::make_unique<LibraryViewBinder>()),
       m_playbackConfigBinder(std::make_unique<PlaybackConfigBinder>()),
       m_searchPanelBinder(std::make_unique<SearchPanelBinder>()),
       m_windowConfigBinder(std::make_unique<WindowConfigBinder>()),
+      m_settingsPanelBinder(std::make_unique<SettingsPanelBinder>()),
       m_playbackRestoreCoordinator(std::make_unique<PlaybackRestoreCoordinator>(
                     m_playbackConfigSection.get(), m_playlistController.get(), m_playbackController, this))
 {
@@ -385,6 +389,7 @@ void AppController::initializeConfig() {
     cm.registerSection(m_libraryViewSection.get());
     cm.registerSection(m_searchPanelSection.get());
     cm.registerSection(m_desktopLyricsSection.get());
+    cm.registerSection(m_settingsPanelSection.get());
     cm.loadAll();
 
     m_binders.push_back(m_desktopLyricsBinder.get());
@@ -392,23 +397,27 @@ void AppController::initializeConfig() {
     m_binders.push_back(m_playbackConfigBinder.get());
     m_binders.push_back(m_searchPanelBinder.get());
     m_binders.push_back(m_windowConfigBinder.get());
+    m_binders.push_back(m_settingsPanelBinder.get());
 }
 
 MainWindowConfigContext AppController::buildConfigContext() const {
     MainWindowConfigContext ctx;
     ctx.mainWindow = m_mainWindow.get();
+    ctx.appController = const_cast<AppController*>(this);
     ctx.playbackController = m_playbackController;
     ctx.playlistController = m_playlistController.get();
     ctx.libraryPanel = m_mainWindow->libraryPanel();
     ctx.controlBar = m_mainWindow->controlBarWidget();
     ctx.searchPanel = m_mainWindow->searchPanelWidget();
     ctx.desktopLyrics = m_mainWindow->desktopLyricsWidget();
+    ctx.settingsPanel = m_settingsPanel;
 
     ctx.windowsSec = m_windowConfigSection.get();
     ctx.playbackSec = m_playbackConfigSection.get();
     ctx.librarySec = m_libraryViewSection.get();
     ctx.searchSec = m_searchPanelSection.get();
     ctx.desktopSec = m_desktopLyricsSection.get();
+    ctx.settingsSec = m_settingsPanelSection.get();
     return ctx;
 }
 
@@ -470,6 +479,16 @@ void AppController::ensureSettingsPanel() {
     m_settingsPanel = new SettingsPanel;
     m_settingsPanel->setWindowFlag(Qt::Window, true);
     m_settingsPanel->setAttribute(Qt::WA_DeleteOnClose, true);
+
+    const QByteArray geo_cache = m_settingsPanelGeoCache;
+    if (!geo_cache.isEmpty()) {
+        m_settingsPanel->restoreGeometry(geo_cache);
+    }
+
+    connect(m_settingsPanel, &SettingsPanel::sgnStateSnapshot, this,
+            [this](const QByteArray& geometry) {
+                m_settingsPanelGeoCache = geometry;
+            });
 
     connect(m_settingsPanel, &QObject::destroyed, this, [this]() {
         m_settingsPanel = nullptr;
