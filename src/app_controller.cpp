@@ -6,6 +6,8 @@
 #include <QAbstractItemView>
 #include <QTreeView>
 #include <QMessageBox>
+#include <QTimer>
+#include <QWindow>
 
 #include "view/MainWindow.h"
 #include "view/playlist/playlist_widgets.h"
@@ -57,8 +59,10 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
     m_playlistController->viewModel()->setSingleGrouping(defaultRule);
 
     initializeConfig();
+    m_desktopLyricsVisibleCache = m_desktopLyricsSection->is_visible;
     applyConfig();
     initializeCoreConnections();
+    configureDesktopLyricsWindowRelation();
 
     connect(m_mainWindow.get(), &MainWindow::sgnOpenSearchPanelRequested,
         this, &AppController::onOpenSearchPanelRequested);
@@ -89,9 +93,16 @@ void AppController::initializeCoreConnections()
     auto* controlBar = m_mainWindow->controlBarWidget();
     auto* libraryPanel = m_mainWindow->libraryPanel();
     auto* sidePanel = m_mainWindow->sidePanel();
+    auto* desktopLyrics = m_mainWindow->desktopLyricsWidget();
 
         connect(m_mainWindow.get(), &MainWindow::sgnPlayTrackRequested,
             this, &AppController::handlePlayTrackRequest);
+    connect(desktopLyrics, &DesktopLyricsWidget::sgnVisibilityChanged, this, [this](bool visible) {
+        m_desktopLyricsVisibleCache = visible;
+        if (m_desktopLyricsSection) {
+            m_desktopLyricsSection->is_visible = visible;
+        }
+    });
 
     connect(controlBar, &WControlBar::sgnBtnPlayClicked, playbackController, &PlaybackController::play);
     connect(controlBar, &WControlBar::sgnBtnPauseClicked, playbackController, &PlaybackController::pause);
@@ -314,8 +325,43 @@ void AppController::handleShowDesktopLyricsRequested()
 {
     auto* desktopLyrics = m_mainWindow->desktopLyricsWidget();
     if (desktopLyrics) {
+        m_desktopLyricsVisibleCache = true;
+        if (m_desktopLyricsSection) {
+            m_desktopLyricsSection->is_visible = true;
+        }
+        configureDesktopLyricsWindowRelation();
         desktopLyrics->show();
     }
+}
+
+void AppController::configureDesktopLyricsWindowRelation()
+{
+    auto* desktopLyrics = m_mainWindow ? m_mainWindow->desktopLyricsWidget() : nullptr;
+    auto* mainWindow = m_mainWindow.get();
+    if (!desktopLyrics || !mainWindow) {
+        return;
+    }
+
+    desktopLyrics->setParent(nullptr);
+    desktopLyrics->setWindowFlag(Qt::Tool, true);
+    desktopLyrics->setWindowFlag(Qt::FramelessWindowHint, true);
+    desktopLyrics->setWindowFlag(Qt::WindowStaysOnTopHint, true);
+
+    QPointer<DesktopLyricsWidget> desktopLyricsGuard = desktopLyrics;
+    QPointer<MainWindow> mainWindowGuard = mainWindow;
+    QTimer::singleShot(0, this, [desktopLyricsGuard, mainWindowGuard]() {
+        if (!desktopLyricsGuard || !mainWindowGuard) {
+            return;
+        }
+        mainWindowGuard->winId();
+        desktopLyricsGuard->winId();
+
+        QWindow* desktopHandle = desktopLyricsGuard->windowHandle();
+        QWindow* mainHandle = mainWindowGuard->windowHandle();
+        if (desktopHandle && mainHandle) {
+            desktopHandle->setTransientParent(mainHandle);
+        }
+    });
 }
 
 void AppController::refreshPlaylistView()
@@ -380,6 +426,16 @@ void AppController::saveConfig() {
     if (!m_mainWindow) {
         return;
     }
+
+    if (m_hasSavedConfigOnExit) {
+        return;
+    }
+    m_hasSavedConfigOnExit = true;
+
+    if (m_desktopLyricsSection) {
+        m_desktopLyricsSection->is_visible = m_desktopLyricsVisibleCache;
+    }
+
     MainWindowConfigContext ctx = buildConfigContext();
     for (IConfigBinder* b : m_binders) {
         if (b) {

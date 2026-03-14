@@ -137,6 +137,16 @@ void DesktopLyricsWidget::mouseMoveEvent(QMouseEvent* event) {
     }
 }
 
+void DesktopLyricsWidget::showEvent(QShowEvent* event) {
+    QWidget::showEvent(event);
+    emit sgnVisibilityChanged(true);
+}
+
+void DesktopLyricsWidget::hideEvent(QHideEvent* event) {
+    QWidget::hideEvent(event);
+    emit sgnVisibilityChanged(false);
+}
+
 
 void DesktopLyricsWidget::setDisplayMode(DisplayMode disp_mode, AlignMode line_up_mode, AlignMode line_down_mode) {
     m_displayMode = disp_mode;

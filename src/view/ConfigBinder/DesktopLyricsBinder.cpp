@@ -15,5 +15,4 @@ void DesktopLyricsBinder::apply(MainWindowConfigContext& ctx) {
 
 void DesktopLyricsBinder::collect(MainWindowConfigContext& ctx) {
     ctx.desktopSec->geometry = ctx.desktopLyrics->saveGeometry();
-    ctx.desktopSec->is_visible = !ctx.desktopLyrics->isHidden();
 }

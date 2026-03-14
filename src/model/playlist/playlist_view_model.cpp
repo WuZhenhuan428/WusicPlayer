@@ -129,16 +129,16 @@ void PlaylistViewModel::rebuildAsync() {
         return;
     }
 
-    const Playlist playlistCopy = *playlistPtr;
+    auto playlistSnapshot = std::make_shared<Playlist>(*playlistPtr);
     PlaylistLayoutBuilder builderCopy = m_layoutBuilder;
 
     QPointer<PlaylistViewModel> self(this);
-    QThread* worker = QThread::create([self, token, playlistCopy, builderCopy]() mutable {
+    QThread* worker = QThread::create([self, token, playlistSnapshot, builderCopy]() mutable {
         if (!self) {
             return;
         }
 
-        LayoutResult layout = builderCopy.build(playlistCopy);
+        LayoutResult layout = builderCopy.build(*playlistSnapshot);
         if (!self) {
             delete layout.root;
             return;

@@ -49,6 +49,7 @@ private:
     void handleRemoveColumnRequested();
     void handleShowAboutMessagebox();
     void handleShowDesktopLyricsRequested();
+    void configureDesktopLyricsWindowRelation();
     void refreshPlaylistView();
     void ensureSettingsPanel();
     void ensureShortcutsPage();
@@ -87,4 +88,6 @@ private:
     QPointer<ShortcutsController> m_shortcutsController;
     QPointer<PlaylistSearchPanel> m_searchPanel;
     QListWidgetItem* m_shortcutsPageItem = nullptr;
+    bool m_desktopLyricsVisibleCache = false;
+    bool m_hasSavedConfigOnExit = false;
 };

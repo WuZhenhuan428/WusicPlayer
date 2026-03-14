@@ -9,6 +9,8 @@
 #include <QString>
 #include <QFont>
 #include <QMouseEvent>
+#include <QShowEvent>
+#include <QHideEvent>
 #include <QPoint>
 #include <QVector>
 #include <QByteArray>
@@ -31,6 +33,11 @@ public:
 protected:
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
+    void showEvent(QShowEvent* event) override;
+    void hideEvent(QHideEvent* event) override;
+
+signals:
+    void sgnVisibilityChanged(bool visible);
 private:
 
     void initUI();
