@@ -30,11 +30,6 @@
 #include <QListView>
 #include <QHBoxLayout>
 
-#include <memory>
-
-#include "core/ConfigManager/ConfigManager.h"
-
-#include "model/playlist/playlist_manager.h"
 #include "view/playlist/playlist_widgets.h"
 #include "view/search_panel/playlist_search_panel.h"
 #include "view/WControlBar/WControlBar.h"
@@ -46,37 +41,27 @@
 #include "controller/PlaybackController.h"
 #include "view/DesktopLyricsWidget/DesktopLyricsWidget.h"
 
-
-#include "view/ConfigBinder/IConfigSection.hpp"
-#include "view/ConfigBinder/DesktopLyricsSection.hpp"
-#include "view/ConfigBinder/LibraryViewSection.hpp"
-#include "view/ConfigBinder/PlaybackConfigSection.hpp"
-#include "view/ConfigBinder/SearchPanelSection.hpp"
-#include "view/ConfigBinder/WindowConfigSection.hpp"
-
-#include "view/ConfigBinder/MainWindowConfigContext.hpp"
-#include "view/ConfigBinder/IConfigBinder.hpp"
-#include "view/ConfigBinder/DesktopLyricsBinder.hpp"
-#include "view/ConfigBinder/LibraryViewBinder.hpp"
-#include "view/ConfigBinder/PlaybackConfigBinder.hpp"
-#include "view/ConfigBinder/SearchPanelBinder.hpp"
-#include "view/ConfigBinder/WindowConfigBinder.hpp"
-
-#include "PlaybackRestoreCoordinator.hpp"
-
-#include "view/SettingsPanel/SettingsPanel.hpp"
-#include "view/SettingsPanel/ShortcutsPanel/ShortcutsPanel.hpp"
-#include "controller/shortcuts_controller.hpp"
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow(PlaybackController* playback_controller, QWidget *parent = nullptr);
+    MainWindow(PlaybackController* playback_controller, PlaylistController* playlist_controller, QWidget *parent = nullptr);
     ~MainWindow();
-    void initializeAfterConstruction();
-    void persistState();
+    // widget getter
+    PlaylistController* playlistController() const;
+    PlaybackController* playbackController() const;
+    LibraryWidget* libraryPanel() const;
+    SidePanel* sidePanel() const;
+    WControlBar* controlBarWidget() const;
+    DesktopLyricsWidget* desktopLyricsWidget() const;
+    PlaylistSearchPanel* searchPanelWidget() const;
+    
+    void playTrackInUi(const QString& filepath);
+    void setSearchPanel(PlaylistSearchPanel* panel);
+    QByteArray searchPanelHeaderStateCache() const;
+    QByteArray searchPanelGeometryCache() const;
+    void setSearchPanelStateCache(const QByteArray& geometry, const QByteArray& header);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -85,54 +70,19 @@ protected:
 
 private:
     PlaybackController* m_playbackController;
-    PlaylistManager* m_playlistManager;
     PlaylistController* m_playlistController;
 
-    std::unique_ptr<DesktopLyricsSection> m_desktopLyricsSection;
-    std::unique_ptr<LibraryViewSection> m_libraryViewSection;
-    std::unique_ptr<PlaybackConfigSection> m_playbackConfigSection;
-    std::unique_ptr<SearchPanelSection> m_searchPanelSection;
-    std::unique_ptr<WindowConfigSection> m_windowConfigSection;
-
-    MainWindowConfigContext buildConfigContext();
-    
-    QVector<IConfigBinder*> m_binders;
-    std::unique_ptr<DesktopLyricsBinder> m_desktopLyricsBinder;
-    std::unique_ptr<LibraryViewBinder> m_libraryViewBinder;
-    std::unique_ptr<PlaybackConfigBinder> m_playbackConfigBinder;
-    std::unique_ptr<SearchPanelBinder> m_searchPanelBinder;
-    std::unique_ptr<WindowConfigBinder> m_windowConfigBinder;
-    std::unique_ptr<PlaybackRestoreCoordinator> m_playbackRestoreCoordinator;
-
     bool m_cacheLoadScheduled = false;
-
-    playlistId m_pendingRestorePlaylistId;
-    trackId m_pendingRestoreTrackIdId;
-    int m_pendingRestorePositionMs = 0;
 
     void initUI();
     void buildMenuBar();
     void buildBottomToolBar();
     void buildCentralArea();
     void initConnection();
-    void initPlaybackConnections();
     void initMenuConnections();
-    void initPlaylistConnections();
-    void initLyricsConnections();
-    void ensureSettingsPanel();
-    void ensureShortcutsPage();
-    void ensureSearchPanel();
-    
-    // Config Manager
-    void applyConfig();
-    void saveConfig();
     
     // UI Action
     void onOpenFile();
-    
-    void onOpenSearchPanel();
-    void onOpenSettingsPanel();
-    void playTrack(const QString& filepath);
     
     // UI Widgets declaraion
     /// Menu widgets
@@ -166,38 +116,40 @@ private:
     QAction* actManual;
     QAction* actAbout;
 
-    // menu settings
+    // menu Settings
     QMenu* menuSettings;
     QAction* actSettings;
     
     // +++main window
-    /// Playlist | song table | cover & rolling lyrics
-    
     LibraryWidget* m_libraryPanel = nullptr;
     SidePanel* m_sidePanel = nullptr;
-    
     QWidget* centerWidget;
     QHBoxLayout* mainLayout;
-    // ---main window
 
     PlaylistSearchPanel* searchPanel = nullptr;
-    SettingsPanel* m_settingsPanel = nullptr;
-    
     DesktopLyricsWidget* m_desktoplyricsWidget = nullptr;
-
-    ShortcutsPanel* m_shortcutsPanel = nullptr;
-    ShortcutsController* m_shortcutsController = nullptr;
-    QListWidgetItem* m_shortcutsPageItem = nullptr;
 
 public:
     QByteArray m_searchPanelHeaderStateCache;
     QByteArray m_searchPanelGeoCache;
-
-private slots:
-    void updatePlaylist();
     
 signals:
     void sgnLoadPlaylist();
     void sgnCurrentPlaylistChanged(playlistId pid);
     void sgnAboutToClose();
+    void sgnOpenSearchPanelRequested();
+    void sgnOpenSettingsPanelRequested();
+    void sgnImportFilesRequested();
+    void sgnImportFolderRequested();
+    void sgnCreatePlaylistRequested();
+    void sgnCopyPlaylistRequested();
+    void sgnRenamePlaylistRequested();
+    void sgnRemovePlaylistRequested();
+    void sgnSavePlaylistRequested();
+    void sgnPlayTrackRequested(const QString& filepath);
+    void sgnSetSortRuleRequested();
+    void sgnInsertColumnRequested();
+    void sgnRemoveColumnRequested();
+    void sgnShowAboutMessagebox();
+    void sgnShowDesktopLyricsRequested();
 };

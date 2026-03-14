@@ -2,6 +2,7 @@
 #include "view/DesktopLyricsWidget/DesktopLyricsWidget.h"
 #include "DesktopLyricsSection.hpp"
 #include <QDebug>
+#include <QTimer>
 
 void DesktopLyricsBinder::apply(MainWindowConfigContext& ctx) {
     if (!ctx.desktopLyrics || !ctx.desktopSec) {
@@ -9,7 +10,7 @@ void DesktopLyricsBinder::apply(MainWindowConfigContext& ctx) {
         return;
     }
         ctx.desktopLyrics->restoreGeometry(ctx.desktopSec->geometry);
-        ctx.desktopSec->is_visible ? ctx.desktopLyrics->show() : ctx.desktopLyrics->hide();
+        ctx.desktopSec->is_visible ? QTimer::singleShot(20, [ctx](){ctx.desktopLyrics->show();}) : ctx.desktopLyrics->hide();
 }
 
 void DesktopLyricsBinder::collect(MainWindowConfigContext& ctx) {
