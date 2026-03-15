@@ -34,11 +34,11 @@ public:
     void setItems(const QVector<ShortcutItem>& items);
     const QVector<ShortcutItem>& items();
 
-    bool updateBinding(const QString& action_id, const QKeySequence& new_key);
+    bool updateBinding(ShortcutActionId action_id, const QKeySequence& new_key);
     void recomputeConflicts();
 
 signals:
-    void sgnBindingChanged(const QString& action_id, const QKeySequence& new_key);
+    void sgnBindingChanged(ShortcutActionId action_id, const QKeySequence& new_key);
     void sgnConflictUpdated();
 
 protected:
@@ -51,7 +51,7 @@ protected:
     bool setData(const QModelIndex& index, const QVariant& value, int role) override;
 
 private:
-    int findRowbyActionId(const QString& action_id) const;
+    int findRowbyActionId(ShortcutActionId action_id) const;
     // static QStrign scopeToString(ShortcutScope s);  // replace with libmagicenum
     QVector<ShortcutItem> m_items;
 };

@@ -10,6 +10,7 @@ class WControlBar;
 class PlaylistSearchPanel;
 class DesktopLyricsWidget;
 class SettingsPanel;
+class ShortcutsController;
 
 class LibraryViewSection;
 class PlaybackConfigSection;
@@ -17,6 +18,7 @@ class SearchPanelSection;
 class WindowConfigSection;
 class DesktopLyricsSection;
 class SettingsPanelSection;
+class ShortcutsSection;
 
 class MainWindowConfigContext
 {
@@ -30,6 +32,7 @@ public:
     PlaylistSearchPanel* searchPanel{};
     DesktopLyricsWidget* desktopLyrics{};
     SettingsPanel* settingsPanel{};
+    ShortcutsController* shortcutsController{};
 
     WindowConfigSection* windowsSec{};
     PlaybackConfigSection* playbackSec{};
@@ -37,4 +40,5 @@ public:
     SearchPanelSection* searchSec{};
     DesktopLyricsSection* desktopSec{};
     SettingsPanelSection* settingsSec{};
+    ShortcutsSection* shortcutsSec{};
 };

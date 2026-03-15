@@ -20,7 +20,7 @@ const QVector<ShortcutItem>& ShortcutsViewModel::items() {
     return m_items;
 }
 
-bool ShortcutsViewModel::updateBinding(const QString& action_id, const QKeySequence& new_key) {
+bool ShortcutsViewModel::updateBinding(ShortcutActionId action_id, const QKeySequence& new_key) {
     const int row = findRowbyActionId(action_id);
     if (row < 0) return false;
 
@@ -51,7 +51,7 @@ void ShortcutsViewModel::recomputeConflicts() {
         } else {
             const int j = key_first_row.value(key);
             m_items[i].conflict = true;
-            m_items[i].conflict_with_action_id = m_items[j].desc.action_id;
+            m_items[i].conflict_with_action_id = shortcutActionIdToString(m_items[j].desc.action_id);
         }
     }
 
@@ -65,12 +65,12 @@ void ShortcutsViewModel::recomputeConflicts() {
 
 QModelIndex ShortcutsViewModel::index(int row, int column, const QModelIndex &parent) const {
     if (!hasIndex(row, column, parent)) return QModelIndex();
-    if (row < 0 && row >= m_items.size()) return QModelIndex();
+    if (row < 0 || row >= m_items.size()) return QModelIndex();
     return createIndex(row, column);    // <-
 }
 
 int ShortcutsViewModel::rowCount(const QModelIndex &parent) const {
-    if (!parent.isValid()) return 0;
+    if (parent.isValid()) return 0;
     return m_items.size();
 }
 
@@ -98,7 +98,7 @@ QVariant ShortcutsViewModel::data(const QModelIndex &index, int role) const {
         }
     }
 
-    if (role == RoleActionId) return item.desc.action_id;
+    if (role == RoleActionId) return shortcutActionIdToString(item.desc.action_id);
     if (role == RoleConflict) return item.conflict;
     if (role == RoleConflictWith) return item.conflict_with_action_id;
     if (role == RoleEnabled) return item.binding.enabled;
@@ -110,7 +110,7 @@ QVariant ShortcutsViewModel::headerData(int section, Qt::Orientation orientation
     if (orientation != Qt::Horizontal || role != Qt::DisplayRole) return {};
     switch (section) {
     case ColActionName: return "Action";
-    case ColKeySequence: return "Shortcutr";
+    case ColKeySequence: return "Shortcuts";
     case ColScope: return "Scope";
     case ColConflict: return "Status";
     default: return {};
@@ -121,7 +121,9 @@ Qt::ItemFlags ShortcutsViewModel::flags(const QModelIndex& index) const {
     if (!index.isValid()) return Qt::NoItemFlags;
     auto f = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
     if (index.column() == ColKeySequence) {
-        f |= Qt::ItemIsSelectable;
+        if (index.row() >= 0 && index.row() < m_items.size() && m_items[index.row()].desc.editable) {
+            f |= Qt::ItemIsEditable;
+        }
     }
     return f;
 }
@@ -130,13 +132,19 @@ bool ShortcutsViewModel::setData(const QModelIndex& index, const QVariant& value
     if (!index.isValid()) return false;
     if (index.column() != ColKeySequence) return false;
     if (role != Qt::EditRole) return false;
+    if (index.row() < 0 || index.row() >= m_items.size()) return false;
+    if (!m_items[index.row()].desc.editable) return false;
 
-    const QString action_id = data(this->index(index.row(), 0), RoleActionId).toString();
+    const QString actionIdText = data(this->index(index.row(), 0), RoleActionId).toString();
+    ShortcutActionId actionId = ShortcutActionId::play_pause;
+    if (!shortcutActionIdFromString(actionIdText, actionId)) {
+        return false;
+    }
     const QKeySequence seq(value.toString());
-    return updateBinding(action_id, seq);
+    return updateBinding(actionId, seq);
 }
 
-int ShortcutsViewModel::findRowbyActionId(const QString& action_id) const {
+int ShortcutsViewModel::findRowbyActionId(ShortcutActionId action_id) const {
     for (int i = 0; i < m_items.size(); ++i) {
         if (m_items[i].desc.action_id == action_id) {
             return i;

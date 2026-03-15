@@ -11,6 +11,7 @@ ShortcutsPanel::ShortcutsPanel(QWidget* parent)
     m_searchLineLayout->addWidget(m_lineEditSearch);
 
     m_viewShortcuts = new QTableView(this);
+    m_viewShortcuts->setEditTriggers(QAbstractItemView::DoubleClicked | QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed);
 
     m_btnApply = new QPushButton("Apply", this);
     m_btnRestore = new QPushButton("Restore", this);

@@ -18,15 +18,18 @@ DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent)
     this->initUI();
     this->resize(700, 120);
     
-    this->setWindowFlags(Qt::FramelessWindowHint | Qt::Tool | Qt::WindowStaysOnTopHint);
+    this->setWindowFlags(Qt::FramelessWindowHint | Qt::Window | Qt::WindowStaysOnTopHint);
     this->setAttribute(Qt::WA_TranslucentBackground);
     this->setAttribute(Qt::WA_TransparentForMouseEvents);
 
     QFont font_test;
-    font_test.setFamily("Noto sans");
+    font_test.setFamily("JetBrains Maple Mono");
     font_test.setPixelSize(30);
     setLrcFont(font_test);
     applyConfig();
+
+    m_lrcLineUp->setStyleSheet("color:#00A3CC");
+    m_lrcLineDown->setStyleSheet("color:#00A3CC");
 
     this->initConnect();
 }

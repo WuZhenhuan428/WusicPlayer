@@ -24,6 +24,7 @@ class PlaybackConfigBinder;
 class SearchPanelBinder;
 class WindowConfigBinder;
 class SettingsPanelBinder;
+class ShortcutsBinder;
 
 class DesktopLyricsSection;
 class LibraryViewSection;
@@ -31,6 +32,7 @@ class PlaybackConfigSection;
 class SearchPanelSection;
 class WindowConfigSection;
 class SettingsPanelSection;
+class ShortcutsSection;
 
 class PlaybackRestoreCoordinator;
 class MainWindowConfigContext;
@@ -56,7 +58,9 @@ private:
     void configureDesktopLyricsWindowRelation();
     void refreshPlaylistView();
     void ensureSettingsPanel();
+    void ensureShortcutsController();
     void ensureShortcutsPage();
+    void registerDefaultShortcuts();
     void ensureSearchPanel();
     void initializeConfig();
     void applyConfig();
@@ -79,6 +83,7 @@ private:
     std::unique_ptr<SearchPanelSection> m_searchPanelSection;
     std::unique_ptr<WindowConfigSection> m_windowConfigSection;
     std::unique_ptr<SettingsPanelSection> m_settingsPanelSection;
+    std::unique_ptr<ShortcutsSection> m_shortcutsSection;
 
     QVector<IConfigBinder*> m_binders;
     std::unique_ptr<DesktopLyricsBinder> m_desktopLyricsBinder;
@@ -87,6 +92,7 @@ private:
     std::unique_ptr<SearchPanelBinder> m_searchPanelBinder;
     std::unique_ptr<WindowConfigBinder> m_windowConfigBinder;
     std::unique_ptr<SettingsPanelBinder> m_settingsPanelBinder;
+    std::unique_ptr<ShortcutsBinder> m_shortcutsBinder;
 
     std::unique_ptr<PlaybackRestoreCoordinator> m_playbackRestoreCoordinator;
 
@@ -95,6 +101,7 @@ private:
     QPointer<ShortcutsController> m_shortcutsController;
     QPointer<PlaylistSearchPanel> m_searchPanel;
     QListWidgetItem* m_shortcutsPageItem = nullptr;
+    bool m_shortcutsRegistered = false;
     bool m_desktopLyricsVisibleCache = false;
     bool m_hasSavedConfigOnExit = false;
 };

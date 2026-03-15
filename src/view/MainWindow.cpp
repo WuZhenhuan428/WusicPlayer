@@ -223,5 +223,8 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
 
 void MainWindow::closeEvent(QCloseEvent *event) {
     emit sgnAboutToClose();
+    if (m_desktoplyricsWidget) {
+        m_desktoplyricsWidget->close();
+    }
     QMainWindow::closeEvent(event);
 }

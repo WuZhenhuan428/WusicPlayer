@@ -39,6 +39,7 @@ add_library(wusic_view STATIC
     ConfigBinder/WindowConfigSection.hpp
     ConfigBinder/DesktopLyricsSection.hpp
     ConfigBinder/SettingsPanelSection.hpp
+    ConfigBinder/ShortcutsSection.hpp
     
     ConfigBinder/IConfigBinder.hpp
     ConfigBinder/LibraryViewBinder.hpp
@@ -53,6 +54,8 @@ add_library(wusic_view STATIC
     ConfigBinder/DesktopLyricsBinder.cpp
     ConfigBinder/SettingsPanelBinder.hpp
     ConfigBinder/SettingsPanelBinder.cpp
+    ConfigBinder/ShortcutsBinder.hpp
+    ConfigBinder/ShortcutsBinder.cpp
 
     SettingsPanel/SettingsPanel.cpp
     SettingsPanel/SettingsPanel.hpp

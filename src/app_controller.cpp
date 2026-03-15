@@ -7,7 +7,6 @@
 #include <QTreeView>
 #include <QMessageBox>
 #include <QTimer>
-#include <QWindow>
 
 #include "view/MainWindow.h"
 #include "view/playlist/playlist_widgets.h"
@@ -16,7 +15,7 @@
 #include "view/SettingsPanel/ShortcutsPanel/ShortcutsPanel.hpp"
 
 #include "controller/PlaybackController.h"
-#include "controller/shortcuts_controller.hpp"
+#include "controller/shortcuts_controller.h"
 #include "controller/PlaylistController.h"
 #include "model/playlist/playlist_manager.h"
 
@@ -35,6 +34,8 @@
 #include "view/ConfigBinder/WindowConfigBinder.hpp"
 #include "view/ConfigBinder/SettingsPanelSection.hpp"
 #include "view/ConfigBinder/SettingsPanelBinder.hpp"
+#include "view/ConfigBinder/ShortcutsSection.hpp"
+#include "view/ConfigBinder/ShortcutsBinder.hpp"
 #include "view/PlaybackRestoreCoordinator.hpp"
 
 AppController::AppController(PlaybackController* playbackController, QObject* parent)
@@ -49,12 +50,14 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
       m_searchPanelSection(std::make_unique<SearchPanelSection>()),
       m_windowConfigSection(std::make_unique<WindowConfigSection>()),
       m_settingsPanelSection(std::make_unique<SettingsPanelSection>()),
+    m_shortcutsSection(std::make_unique<ShortcutsSection>()),
       m_desktopLyricsBinder(std::make_unique<DesktopLyricsBinder>()),
       m_libraryViewBinder(std::make_unique<LibraryViewBinder>()),
       m_playbackConfigBinder(std::make_unique<PlaybackConfigBinder>()),
       m_searchPanelBinder(std::make_unique<SearchPanelBinder>()),
       m_windowConfigBinder(std::make_unique<WindowConfigBinder>()),
       m_settingsPanelBinder(std::make_unique<SettingsPanelBinder>()),
+    m_shortcutsBinder(std::make_unique<ShortcutsBinder>()),
       m_playbackRestoreCoordinator(std::make_unique<PlaybackRestoreCoordinator>(
                     m_playbackConfigSection.get(), m_playlistController.get(), m_playbackController, this))
 {
@@ -63,6 +66,7 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
     m_playlistController->viewModel()->setSingleGrouping(defaultRule);
 
     initializeConfig();
+    ensureShortcutsController();
     m_desktopLyricsVisibleCache = m_desktopLyricsSection->is_visible;
     applyConfig();
     initializeCoreConnections();
@@ -341,31 +345,13 @@ void AppController::handleShowDesktopLyricsRequested()
 void AppController::configureDesktopLyricsWindowRelation()
 {
     auto* desktopLyrics = m_mainWindow ? m_mainWindow->desktopLyricsWidget() : nullptr;
-    auto* mainWindow = m_mainWindow.get();
-    if (!desktopLyrics || !mainWindow) {
+    if (!desktopLyrics) {
         return;
     }
 
-    desktopLyrics->setParent(nullptr);
-    desktopLyrics->setWindowFlag(Qt::Tool, true);
-    desktopLyrics->setWindowFlag(Qt::FramelessWindowHint, true);
-    desktopLyrics->setWindowFlag(Qt::WindowStaysOnTopHint, true);
-
-    QPointer<DesktopLyricsWidget> desktopLyricsGuard = desktopLyrics;
-    QPointer<MainWindow> mainWindowGuard = mainWindow;
-    QTimer::singleShot(0, this, [desktopLyricsGuard, mainWindowGuard]() {
-        if (!desktopLyricsGuard || !mainWindowGuard) {
-            return;
-        }
-        mainWindowGuard->winId();
-        desktopLyricsGuard->winId();
-
-        QWindow* desktopHandle = desktopLyricsGuard->windowHandle();
-        QWindow* mainHandle = mainWindowGuard->windowHandle();
-        if (desktopHandle && mainHandle) {
-            desktopHandle->setTransientParent(mainHandle);
-        }
-    });
+    if (desktopLyrics->parentWidget() != nullptr) {
+        desktopLyrics->setParent(nullptr);
+    }
 }
 
 void AppController::refreshPlaylistView()
@@ -390,6 +376,7 @@ void AppController::initializeConfig() {
     cm.registerSection(m_searchPanelSection.get());
     cm.registerSection(m_desktopLyricsSection.get());
     cm.registerSection(m_settingsPanelSection.get());
+    cm.registerSection(m_shortcutsSection.get());
     cm.loadAll();
 
     m_binders.push_back(m_desktopLyricsBinder.get());
@@ -398,6 +385,7 @@ void AppController::initializeConfig() {
     m_binders.push_back(m_searchPanelBinder.get());
     m_binders.push_back(m_windowConfigBinder.get());
     m_binders.push_back(m_settingsPanelBinder.get());
+    m_binders.push_back(m_shortcutsBinder.get());
 }
 
 MainWindowConfigContext AppController::buildConfigContext() const {
@@ -411,6 +399,7 @@ MainWindowConfigContext AppController::buildConfigContext() const {
     ctx.searchPanel = m_mainWindow->searchPanelWidget();
     ctx.desktopLyrics = m_mainWindow->desktopLyricsWidget();
     ctx.settingsPanel = m_settingsPanel;
+    ctx.shortcutsController = m_shortcutsController;
 
     ctx.windowsSec = m_windowConfigSection.get();
     ctx.playbackSec = m_playbackConfigSection.get();
@@ -418,6 +407,7 @@ MainWindowConfigContext AppController::buildConfigContext() const {
     ctx.searchSec = m_searchPanelSection.get();
     ctx.desktopSec = m_desktopLyricsSection.get();
     ctx.settingsSec = m_settingsPanelSection.get();
+    ctx.shortcutsSec = m_shortcutsSection.get();
     return ctx;
 }
 
@@ -498,19 +488,154 @@ void AppController::ensureSettingsPanel() {
 }
 
 void AppController::ensureShortcutsPage() {
-    if (!m_shortcutsController) {
-        m_shortcutsController = new ShortcutsController(this);
-    }
+    ensureShortcutsController();
 
     if (!m_shortcutsPanel) {
         m_shortcutsPanel = new ShortcutsPanel(m_mainWindow.get());
         m_shortcutsPanel->setViewModel(m_shortcutsController->viewModel());
+
+        connect(m_shortcutsPanel, &ShortcutsPanel::sgnDefaultConfig, this, [this]() {
+            if (m_shortcutsController) {
+                m_shortcutsController->resetAllToDefault();
+            }
+        });
+
+        connect(m_shortcutsPanel, &ShortcutsPanel::sgnRestoreConfig, this, [this]() {
+            if (m_shortcutsController && m_shortcutsSection) {
+                m_shortcutsController->applyBindings(m_shortcutsSection->bindings);
+            }
+        });
+
+        connect(m_shortcutsPanel, &ShortcutsPanel::sgnApplyConfig, this, [this]() {
+            MainWindowConfigContext ctx = buildConfigContext();
+            if (m_shortcutsBinder) {
+                m_shortcutsBinder->collect(ctx);
+            }
+            ConfigManager::getInstance().saveAll();
+        });
     }
 
     if (!m_shortcutsPageItem) {
         m_shortcutsPageItem = new QListWidgetItem("Shortcuts");
         m_settingsPanel->registerWidget(m_shortcutsPageItem, m_shortcutsPanel);
     }
+}
+
+void AppController::ensureShortcutsController()
+{
+    if (m_shortcutsController) {
+        return;
+    }
+
+    m_shortcutsController = new ShortcutsController(this);
+    registerDefaultShortcuts();
+}
+
+void AppController::registerDefaultShortcuts()
+{
+    if (!m_shortcutsController || m_shortcutsRegistered) {
+        return;
+    }
+
+    m_shortcutsController->setScopeHost(ShortcutScope::Application, m_mainWindow.get());
+    m_shortcutsController->setScopeHost(ShortcutScope::MainWindow, m_mainWindow.get());
+    m_shortcutsController->setScopeHost(ShortcutScope::DesktopLyrics, m_mainWindow.get());
+
+    m_shortcutsController->registerOperation(
+        ShortcutActionId::save_playlist,
+        "Save Playlist",
+        ShortcutScope::PlaylistView,
+        QKeySequence(Qt::CTRL | Qt::Key_S),
+        [this](){
+            m_playlistController.get()->savePlaylist();
+        },
+        m_mainWindow.get(),
+        true
+    );
+
+    m_shortcutsController->registerOperation(
+        ShortcutActionId::open_file,
+        "Open File",
+        ShortcutScope::PlaylistView,
+        QKeySequence(Qt::CTRL | Qt::Key_O),
+        [this](){ m_playlistController.get()->importFiles(); },
+        m_mainWindow.get(),
+        true
+    );
+
+    m_shortcutsController->registerOperation(
+        ShortcutActionId::open_playlist,
+        "Open playlist",
+        ShortcutScope::PlaylistView,
+        QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_O),
+        [this](){m_playlistController.get()->loadPlaylist();},
+        m_mainWindow.get(),
+        true
+    );
+
+    m_shortcutsController->registerOperation(
+        ShortcutActionId::play_pause,
+        "Play / Pause",
+        ShortcutScope::Application,
+        QKeySequence(Qt::Key_Space),
+        [this]() {
+            const QMediaPlayer* player = m_playbackController->getMediaPlayer();
+            if (player && player->playbackState() == QMediaPlayer::PlayingState) {
+                m_playbackController->pause();
+            } else {
+                m_playbackController->play();
+            }
+        },
+        m_mainWindow.get(),
+        true
+    );
+
+    m_shortcutsController->registerOperation(
+        ShortcutActionId::stop,
+        "Stop",
+        ShortcutScope::Application,
+        QKeySequence(Qt::Key_S),
+        [this]() {
+            m_playbackController->stop();
+        },
+        m_mainWindow.get(),
+        true
+    );
+
+    m_shortcutsController->registerOperation(
+        ShortcutActionId::open_search,
+        "Open Search Panel",
+        ShortcutScope::MainWindow,
+        QKeySequence(Qt::CTRL | Qt::Key_F),
+        [this]() {
+            onOpenSearchPanelRequested();
+        },
+        m_mainWindow.get(),
+        true
+    );
+
+    m_shortcutsController->registerOperation(
+        ShortcutActionId::show_hide_desktop_lyrics,
+        "Show / Hide Desktop Lyrics",
+        ShortcutScope::Application,
+        QKeySequence(Qt::CTRL | Qt::Key_L),
+        [this]() {
+            auto* desktopLyrics = m_mainWindow->desktopLyricsWidget();
+            if (!desktopLyrics) {
+                return;
+            }
+            if (desktopLyrics->isVisible()) {
+                desktopLyrics->hide();
+            } else {
+                configureDesktopLyricsWindowRelation();
+                desktopLyrics->show();
+            }
+        },
+        m_mainWindow.get(),
+        true
+    );
+
+    m_shortcutsRegistered = true;
 }
 
 void AppController::ensureSearchPanel() {
