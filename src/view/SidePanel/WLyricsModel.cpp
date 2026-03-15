@@ -17,35 +17,45 @@ void WLyricsModel::setDefaultInfo() {
     m_parser.clear();
     QString foo("[00:00.00] Wusic Player");
     m_parser.parseString(foo.toUtf8().toStdString());
+    m_currentRow = -1;
     endResetModel();
+
+    emit currentLineChanged(QStringLiteral("Wusic Player"), QString());
 }
 
 bool WLyricsModel::setRawLyrics(const QString& raw_data) {
     beginResetModel();
     m_parser.clear();
+    m_currentRow = -1;
     if (raw_data.isEmpty()) {
         endResetModel();
+        emit currentLineChanged(QString(), QString());
         return false;
     }
     if (!m_parser.parseString(raw_data.toStdString())) {
         endResetModel();
+        emit currentLineChanged(QString(), QString());
         return false;
     }
     endResetModel();
+    emit currentLineChanged(QString(), QString());
     return true;
 }
 
 bool WLyricsModel::setLocalLrc(const QString& filepath) {
     beginResetModel();
     m_parser.clear();
+    m_currentRow = -1;
     if (filepath.isEmpty()) {
         endResetModel();
+        emit currentLineChanged(QString(), QString());
         return false;
     }
     QFileInfo audio_fileinfo(filepath);
     if (!audio_fileinfo.exists()) {
         qDebug() << "[WARNING] Audio file does not exist: " << filepath;
         endResetModel();
+        emit currentLineChanged(QString(), QString());
         return false;
     }
     QString lrc_path = audio_fileinfo.path() + "/" + audio_fileinfo.completeBaseName() + ".lrc";
@@ -53,9 +63,11 @@ bool WLyricsModel::setLocalLrc(const QString& filepath) {
     if (possibel_lrc_fileinfo.exists() && possibel_lrc_fileinfo.isFile()) {
         m_parser.parseFile(lrc_path.toStdString());
         endResetModel();
+        emit currentLineChanged(QString(), QString());
         return true;
     }
     endResetModel();
+    emit currentLineChanged(QString(), QString());
     return false;
 }
 

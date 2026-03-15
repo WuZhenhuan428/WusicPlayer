@@ -93,6 +93,12 @@ void DesktopLyricsWidget::setLrcLine(const QString& curr_line, const QString& ne
         m_lrcLineUp->setText(curr_line);
         m_lrcLineDown->clear();
     } else if (m_displayMode == DisplayMode::TwoLine) {
+        if (curr_line.isEmpty() && next_line.isEmpty()) {
+            m_lrcLineUp->clear();
+            m_lrcLineDown->clear();
+            m_has_up_line_changed = true;
+            return;
+        }
         if (m_has_up_line_changed) {
             m_lrcLineDown->setText(curr_line);
             m_lrcLineUp->setText(next_line);
