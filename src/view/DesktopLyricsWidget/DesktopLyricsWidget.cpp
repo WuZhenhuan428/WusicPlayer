@@ -16,7 +16,7 @@ DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent)
 
 {
     this->initUI();
-    this->resize(700, 120);
+    this->setFixedSize(700, 120);
     
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::Window | Qt::WindowStaysOnTopHint);
     this->setAttribute(Qt::WA_TranslucentBackground);
