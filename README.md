@@ -97,7 +97,7 @@ This project is mainly developed and built with **VS Code + CMake Tools**.
 
 To build the development env:
 
-1. Install Qt (used in this project: `~/Qt/6.10.2/gcc_64`, configure at `CMakePreset.txt`)
+1. Install Qt (used in this project: `~/Qt/6.10.2/gcc_64`, configure at `CMakePreset.json`)
 2. Open this folder in VS Code
 3. Select a Kit (GCC + Ninja)
 4. Configure and Build from CMake Tools
@@ -152,7 +152,7 @@ ctest --preset test-local-qt
 - [x] Complete controller-layer migration and stabilize interfaces
 - [x] Improve audio device switching behavior
 - [ ] Replace the current search proxy model with an independent one
-- [ ] Binding shortcut keys
+- [x] Binding shortcut keys
 - [ ] Polish UI/UX and visual theme consistency
 - [ ] Expand unit test coverage
 - [ ] Evaluate distribution formats (AppImage / Flatpak / package repos)
