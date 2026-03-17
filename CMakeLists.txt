@@ -6,6 +6,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(WUSIC_BUILD_TESTS "Build unit tests" ON)
+option(WUSIC_USE_LOCAL_QT "Prefer local Qt installation over system Qt" ON)
+
+set(WUSIC_LOCAL_QT_PATH "$ENV{HOME}/Qt/6.10.2/gcc_64" CACHE PATH "Local Qt installation prefix")
+
+if (WUSIC_USE_LOCAL_QT)
+    if (EXISTS "${WUSIC_LOCAL_QT_PATH}/lib/cmake/Qt6/Qt6Config.cmake")
+        list(PREPEND CMAKE_PREFIX_PATH "${WUSIC_LOCAL_QT_PATH}")
+        message(STATUS "Using local Qt from: ${WUSIC_LOCAL_QT_PATH}")
+    else ()
+        message(WARNING "WUSIC_USE_LOCAL_QT is ON but Qt6Config.cmake was not found in ${WUSIC_LOCAL_QT_PATH}")
+    endif ()
+endif ()
 
 add_compile_options(-Wall -Wextra)
 

@@ -7,7 +7,10 @@
 #include <QTreeView>
 #include <QMessageBox>
 #include <QTimer>
+#include <qkeysequence.h>
+#include <qnamespace.h>
 
+#include "model/ShortcutsViewModel/shortcuts_types.hpp"
 #include "view/MainWindow.h"
 #include "view/playlist/playlist_widgets.h"
 #include "view/search_panel/playlist_search_panel.h"
@@ -41,23 +44,23 @@
 AppController::AppController(PlaybackController* playbackController, QObject* parent)
     : QObject(parent),
       m_playbackController(playbackController),
-    m_playlistManager(std::make_unique<PlaylistManager>()),
-    m_playlistController(std::make_unique<PlaylistController>(m_playlistManager.get(), nullptr, this)),
-    m_mainWindow(std::make_unique<MainWindow>(m_playbackController, m_playlistController.get())),
+      m_playlistManager(std::make_unique<PlaylistManager>()),
+      m_playlistController(std::make_unique<PlaylistController>(m_playlistManager.get(), nullptr, this)),
+      m_mainWindow(std::make_unique<MainWindow>(m_playbackController, m_playlistController.get())),
       m_desktopLyricsSection(std::make_unique<DesktopLyricsSection>()),
       m_libraryViewSection(std::make_unique<LibraryViewSection>()),
       m_playbackConfigSection(std::make_unique<PlaybackConfigSection>()),
       m_searchPanelSection(std::make_unique<SearchPanelSection>()),
       m_windowConfigSection(std::make_unique<WindowConfigSection>()),
       m_settingsPanelSection(std::make_unique<SettingsPanelSection>()),
-    m_shortcutsSection(std::make_unique<ShortcutsSection>()),
+      m_shortcutsSection(std::make_unique<ShortcutsSection>()),
       m_desktopLyricsBinder(std::make_unique<DesktopLyricsBinder>()),
       m_libraryViewBinder(std::make_unique<LibraryViewBinder>()),
       m_playbackConfigBinder(std::make_unique<PlaybackConfigBinder>()),
       m_searchPanelBinder(std::make_unique<SearchPanelBinder>()),
       m_windowConfigBinder(std::make_unique<WindowConfigBinder>()),
       m_settingsPanelBinder(std::make_unique<SettingsPanelBinder>()),
-    m_shortcutsBinder(std::make_unique<ShortcutsBinder>()),
+      m_shortcutsBinder(std::make_unique<ShortcutsBinder>()),
       m_playbackRestoreCoordinator(std::make_unique<PlaybackRestoreCoordinator>(
                     m_playbackConfigSection.get(), m_playlistController.get(), m_playbackController, this))
 {
@@ -587,6 +590,18 @@ void AppController::registerDefaultShortcuts()
             }
         },
         m_mainWindow.get(),
+        true
+    );
+
+    m_shortcutsController->registerOperation(
+        ShortcutActionId::open_settings,
+        "Open settings",
+        ShortcutScope::MainWindow,
+        QKeySequence(Qt::CTRL | Qt::Key_Comma),
+        [this]() {
+            onOpenSettingsPanelRequested();
+        },
+        this,
         true
     );
 

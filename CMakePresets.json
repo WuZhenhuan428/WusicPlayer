@@ -1,0 +1,57 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "WUSIC_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "dev-local-qt",
+      "displayName": "Dev (Local Qt)",
+      "inherits": "base",
+      "cacheVariables": {
+        "WUSIC_USE_LOCAL_QT": "ON",
+        "WUSIC_LOCAL_QT_PATH": "$env{HOME}/Qt/6.10.2/gcc_64"
+      }
+    },
+    {
+      "name": "dev-system-qt",
+      "displayName": "Dev (System Qt)",
+      "inherits": "base",
+      "cacheVariables": {
+        "WUSIC_USE_LOCAL_QT": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build-local-qt",
+      "configurePreset": "dev-local-qt"
+    },
+    {
+      "name": "build-system-qt",
+      "configurePreset": "dev-system-qt"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test-local-qt",
+      "configurePreset": "dev-local-qt",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

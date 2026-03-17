@@ -88,6 +88,7 @@ src/
 - CMake >= 3.21
 - C++ compiler with C++17/20 support
 - TagLib
+- magic-enum
 - pkg-config
 
 ### VS Code + CMake Tools
@@ -96,34 +97,28 @@ This project is mainly developed and built with **VS Code + CMake Tools**.
 
 To build the development env:
 
-1. Install Qt (used in this project: `~/Qt/6.10.1/gcc_64`)
+1. Install Qt (used in this project: `~/Qt/6.10.2/gcc_64`, configure at `CMakePreset.txt`)
 2. Open this folder in VS Code
 3. Select a Kit (GCC + Ninja)
 4. Configure and Build from CMake Tools
 
-### Command-Line (equivalent)
+### Command-Line (with cmake preset)
 
-1. setup cmake environment
+1. set your qt path first, than setup cmake environment
     ```bash
-    cmake \
-        -DCMAKE_BUILD_TYPE=Debug \
-        -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE \
-        -DCMAKE_TOOLCHAIN_FILE=~/Qt/6.10.1/gcc_64/lib/cmake/Qt6/qt.toolchain.cmake \
-        -DQT_QML_GENERATE_QMLLS_INI=ON \
-        -DCMAKE_CXX_FLAGS_DEBUG_INIT="-DQT_QML_DEBUG -DQT_DECLARATIVE_DEBUG" \
-        -DCMAKE_CXX_FLAGS_RELWITHDEBINFO_INIT="-DQT_QML_DEBUG -DQT_DECLARATIVE_DEBUG" \
-        -S . -B build -G Ninja
+    cmake --preset dev-local-qt
     ```
 
 2. build 
     ```bash
-    cmake --build build --config Debug --target all --
+    cmake --build --preset build-local-qt
     ```
 
 3. run
     ```bash
     build/src/WusicPlayer
     ```
+> if system Qt libs & manually intalled Qt are both exists, use `cmake --preset` to select which you wanna use
 ---
 
 ## Tests
@@ -135,24 +130,13 @@ To build the development env:
 `WUSIC_BUILD_TESTS` is enabled by default.
 
 ```bash
-cmake -S . -B build \
-  -DCMAKE_BUILD_TYPE=Debug \
-  -DCMAKE_TOOLCHAIN_FILE="$HOME/Qt/6.10.1/gcc_64/lib/cmake/Qt6/qt.toolchain.cmake" \
-  -DWUSIC_BUILD_TESTS=ON \
-  -G Ninja
+cmake --preset dev-local-qt
 ```
 
-### Disable tests
-```bash
-cmake -S . -B build \
-  -DCMAKE_TOOLCHAIN_FILE="$HOME/Qt/6.10.1/gcc_64/lib/cmake/Qt6/qt.toolchain.cmake" \
-  -DWUSIC_BUILD_TESTS=OFF \
-  -G Ninja
-```
 
 ### Run tests (CLI)
 ```bash
-ctest --test-dir build --output-on-failure
+ctest --preset test-local-qt
 ```
 
 ### Run tests (VS Code)

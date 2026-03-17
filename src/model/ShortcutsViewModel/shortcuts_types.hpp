@@ -22,7 +22,8 @@ enum class ShortcutActionId
     show_hide_desktop_lyrics,
     save_playlist,
     open_file,
-    open_playlist
+    open_playlist,
+    open_settings
     // ...
 };
 
