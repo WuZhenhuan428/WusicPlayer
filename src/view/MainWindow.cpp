@@ -3,8 +3,6 @@
 #include <QTimer>
 #include <QPointer>
 
-#include "core/types.h"
-#include "view/playlist/playlist_widgets.h"
 
 MainWindow::MainWindow(PlaybackController* playback_controller, PlaylistController* playlist_controller, QWidget *parent)
     : QMainWindow(parent),

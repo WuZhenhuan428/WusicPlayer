@@ -15,6 +15,7 @@
 #include <QVector>
 #include <QByteArray>
 #include "core/types.h"
+#include "core/hsv_types.h"
 
 class DesktopLyricsWidget : public QWidget
 {
@@ -29,6 +30,8 @@ public:
     void applyConfig();
     const QByteArray getGeometry() const;
     void setGeometry(const QByteArray& geo);
+    void updateLineColor();
+    void setLineColor(rgb_t rgb_active, rgb_t rgb_inactive);
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
@@ -62,4 +65,7 @@ private:
     QHBoxLayout* m_toolBarLayout = nullptr;
     QVBoxLayout* m_lrcLineLayout = nullptr;
     QVBoxLayout* m_mainLayout = nullptr;
+
+    rgb_t m_rgb_active;
+    rgb_t m_rgb_inactive;
 };

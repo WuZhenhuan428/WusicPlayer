@@ -30,7 +30,6 @@
 #include <QListView>
 #include <QHBoxLayout>
 
-#include "view/playlist/playlist_widgets.h"
 #include "view/search_panel/playlist_search_panel.h"
 #include "view/WControlBar/WControlBar.h"
 #include "view/SidePanel/SidePanel.h"

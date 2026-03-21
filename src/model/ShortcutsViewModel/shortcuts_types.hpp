@@ -23,7 +23,8 @@ enum class ShortcutActionId
     save_playlist,
     open_file,
     open_playlist,
-    open_settings
+    open_settings,
+    open_hsv_test
     // ...
 };
 

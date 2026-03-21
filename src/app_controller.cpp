@@ -41,6 +41,8 @@
 #include "view/ConfigBinder/ShortcutsBinder.hpp"
 #include "view/PlaybackRestoreCoordinator.hpp"
 
+#include "view/hsv_dialog/hsv_dialog.h"
+
 AppController::AppController(PlaybackController* playbackController, QObject* parent)
     : QObject(parent),
       m_playbackController(playbackController),
@@ -165,41 +167,31 @@ void AppController::initializeCoreConnections()
     });
 
     auto* lyricsModel = dynamic_cast<WLyricsModel*>(sidePanel->getLyricsPanel()->model());
-    connect(playbackController, &PlaybackController::sgnPositionChanged,
-            sidePanel->getLyricsPanel(), &WLyricsPanel::ScrollByPosition);
+    connect(playbackController, &PlaybackController::sgnPositionChanged, sidePanel->getLyricsPanel(), &WLyricsPanel::ScrollByPosition);
+
     if (lyricsModel) {
-        connect(playbackController, &PlaybackController::sgnPositionChanged,
-                lyricsModel, &WLyricsModel::setCurrentPosition);
-        connect(lyricsModel, &WLyricsModel::currentLineChanged, this,
-                [this](const QString& currText, const QString& nextText) {
+        connect(playbackController, &PlaybackController::sgnPositionChanged, lyricsModel, &WLyricsModel::setCurrentPosition);
+        connect(lyricsModel, &WLyricsModel::currentLineChanged, this, [this](const QString& currText, const QString& nextText) {
             m_mainWindow->desktopLyricsWidget()->setLrcLine(currText, nextText);
         });
+        connect(lyricsModel, &WLyricsModel::currentLineChanged, this, [this](){
+            m_mainWindow->desktopLyricsWidget()->updateLineColor();
+        });
+        ///< TODO: add palette widget and bind signals to m_mainWindow->desktopLyricsWidget()->setLineColor(rgb_t rgb_active, rgb_t rgb_inactive);
     }
 
-    connect(m_mainWindow.get(), &MainWindow::sgnImportFilesRequested,
-        this, [playlistController]() { playlistController->importFiles(); });
-    connect(m_mainWindow.get(), &MainWindow::sgnImportFolderRequested,
-        this, [playlistController]() { playlistController->importDir(); });
-    connect(m_mainWindow.get(), &MainWindow::sgnCreatePlaylistRequested,
-        playlistController, &PlaylistController::createNewPlaylist);
-    connect(m_mainWindow.get(), &MainWindow::sgnLoadPlaylist,
-        playlistController, &PlaylistController::loadPlaylist);
-    connect(m_mainWindow.get(), &MainWindow::sgnCopyPlaylistRequested,
-        this, [playlistController]() { playlistController->copyPlaylist(); });
-    connect(m_mainWindow.get(), &MainWindow::sgnRenamePlaylistRequested,
-        this, [playlistController]() { playlistController->renamePlaylist(); });
-    connect(m_mainWindow.get(), &MainWindow::sgnRemovePlaylistRequested,
-        this, [playlistController]() { playlistController->removePlaylist(); });
-    connect(m_mainWindow.get(), &MainWindow::sgnSavePlaylistRequested,
-        this, [playlistController]() { playlistController->savePlaylist(); });
-    connect(m_mainWindow.get(), &MainWindow::sgnSetSortRuleRequested,
-        this, &AppController::handleSetSortRuleRequested);
-    connect(m_mainWindow.get(), &MainWindow::sgnInsertColumnRequested,
-        this, &AppController::handleInsertColumnRequested);
-    connect(m_mainWindow.get(), &MainWindow::sgnRemoveColumnRequested,
-        this, &AppController::handleRemoveColumnRequested);
-    connect(m_mainWindow.get(), &MainWindow::sgnShowAboutMessagebox,
-        this, &AppController::handleShowAboutMessagebox);
+    connect(m_mainWindow.get(), &MainWindow::sgnImportFilesRequested, this, [playlistController]() { playlistController->importFiles(); });
+    connect(m_mainWindow.get(), &MainWindow::sgnImportFolderRequested, this, [playlistController]() { playlistController->importDir(); });
+    connect(m_mainWindow.get(), &MainWindow::sgnCreatePlaylistRequested, playlistController, &PlaylistController::createNewPlaylist);
+    connect(m_mainWindow.get(), &MainWindow::sgnLoadPlaylist, playlistController, &PlaylistController::loadPlaylist);
+    connect(m_mainWindow.get(), &MainWindow::sgnCopyPlaylistRequested, this, [playlistController]() { playlistController->copyPlaylist(); });
+    connect(m_mainWindow.get(), &MainWindow::sgnRenamePlaylistRequested, this, [playlistController]() { playlistController->renamePlaylist(); });
+    connect(m_mainWindow.get(), &MainWindow::sgnRemovePlaylistRequested, this, [playlistController]() { playlistController->removePlaylist(); });
+    connect(m_mainWindow.get(), &MainWindow::sgnSavePlaylistRequested, this, [playlistController]() { playlistController->savePlaylist(); });
+    connect(m_mainWindow.get(), &MainWindow::sgnSetSortRuleRequested, this, &AppController::handleSetSortRuleRequested);
+    connect(m_mainWindow.get(), &MainWindow::sgnInsertColumnRequested, this, &AppController::handleInsertColumnRequested);
+    connect(m_mainWindow.get(), &MainWindow::sgnRemoveColumnRequested, this, &AppController::handleRemoveColumnRequested);
+    connect(m_mainWindow.get(), &MainWindow::sgnShowAboutMessagebox, this, &AppController::handleShowAboutMessagebox);
 
     connect(controlBar, &WControlBar::sgnBtnNextClicked, this, [this, playlistController, playbackController]() {
         QString nextTrack = playlistController->nextTrack(playbackController->playMode());
@@ -233,20 +225,13 @@ void AppController::initializeCoreConnections()
     connect(playlistController, &PlaylistController::playlistChanged,
             this, &AppController::refreshPlaylistView);
 
-    connect(libraryPanel, &LibraryWidget::sgnImportFiles,
-        playlistController, &PlaylistController::importFiles);
-    connect(libraryPanel, &LibraryWidget::sgnImportDir,
-        playlistController, &PlaylistController::importDir);
-    connect(libraryPanel, &LibraryWidget::sgnSwitchPlaylist,
-        playlistController, &PlaylistController::switchToPlaylist);
-    connect(libraryPanel, &LibraryWidget::sgnRenamePlaylist,
-        playlistController, &PlaylistController::renamePlaylist);
-    connect(libraryPanel, &LibraryWidget::sgnRemovePlaylist,
-        playlistController, &PlaylistController::removePlaylist);
-    connect(libraryPanel, &LibraryWidget::sgnSavePlaylist,
-        playlistController, &PlaylistController::savePlaylist);
-    connect(libraryPanel, &LibraryWidget::sgnCopyPlaylist,
-        playlistController, &PlaylistController::copyPlaylist);
+    connect(libraryPanel, &LibraryWidget::sgnImportFiles, playlistController, &PlaylistController::importFiles);
+    connect(libraryPanel, &LibraryWidget::sgnImportDir, playlistController, &PlaylistController::importDir);
+    connect(libraryPanel, &LibraryWidget::sgnSwitchPlaylist, playlistController, &PlaylistController::switchToPlaylist);
+    connect(libraryPanel, &LibraryWidget::sgnRenamePlaylist, playlistController, &PlaylistController::renamePlaylist);
+    connect(libraryPanel, &LibraryWidget::sgnRemovePlaylist, playlistController, &PlaylistController::removePlaylist);
+    connect(libraryPanel, &LibraryWidget::sgnSavePlaylist, playlistController, &PlaylistController::savePlaylist);
+    connect(libraryPanel, &LibraryWidget::sgnCopyPlaylist, playlistController, &PlaylistController::copyPlaylist);
 
     connect(libraryPanel, &LibraryWidget::sgnPlayTrackByModelIndex,
         this, [playlistController](const QModelIndex& index) {
@@ -464,6 +449,21 @@ void AppController::onOpenSearchPanelRequested() {
     m_searchPanel->activateWindow();
 }
 
+void AppController::onOpenHSVPanelRequested() {
+    if (!m_mainWindow->desktopLyricsWidget()) {
+        qDebug() << __FILE__ << ":" << __LINE__ <<"Desktop lrc panel dose not exist!";
+        return;
+    }
+    if (!m_hsv_panel) {
+        m_hsv_panel = new HSVDialog(rgb_t{0xFF, 0xFF, 0xFF});
+    }
+    connect(m_hsv_panel, &HSVDialog::sgnSelectColor, this, [this](rgb_t rgb){
+        m_mainWindow->desktopLyricsWidget()->setLineColor(rgb, rgb_t{0x7F, 0x7F, 0x7F});
+    });
+    m_hsv_panel->show();
+    m_hsv_panel->setAttribute(Qt::WA_DeleteOnClose);
+}
+
 void AppController::ensureSettingsPanel() {
     if (m_settingsPanel) {
         return;
@@ -649,6 +649,16 @@ void AppController::registerDefaultShortcuts()
         m_mainWindow.get(),
         true
     );
+
+    // m_shortcutsController->registerOperation(
+    //     ShortcutActionId::open_hsv_test,
+    //     "Open hsv pallete",
+    //     ShortcutScope::DesktopLyrics,
+    //     QKeySequence(Qt::CTRL | Qt::Key_T),
+    //     [this]() { this->onOpenHSVPanelRequested(); },
+    //     m_mainWindow.get(),
+    //     true
+    // );
 
     m_shortcutsRegistered = true;
 }

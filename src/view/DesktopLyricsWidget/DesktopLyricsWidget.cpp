@@ -28,9 +28,6 @@ DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent)
     setLrcFont(font_test);
     applyConfig();
 
-    m_lrcLineUp->setStyleSheet("color:#00A3CC");
-    m_lrcLineDown->setStyleSheet("color:#00A3CC");
-
     this->initConnect();
 }
 
@@ -87,6 +84,31 @@ void DesktopLyricsWidget::initConnect() {
     });
 }
 
+void DesktopLyricsWidget::updateLineColor() {
+    QPalette pe_active;
+    pe_active.setColor(QPalette::WindowText, QColor(m_rgb_active.r, m_rgb_active.g, m_rgb_active.b));
+    if (m_displayMode == DisplayMode::OneLine) {
+        m_lrcLineUp->setPalette(pe_active);
+        m_lrcLineDown->setPalette(pe_active);
+    }
+    if (m_displayMode == DisplayMode::TwoLine) {
+        QPalette pe_inactive;
+        pe_inactive.setColor(QPalette::WindowText, QColor(m_rgb_inactive.r, m_rgb_inactive.g, m_rgb_inactive.b));
+        if (m_has_up_line_changed) {
+            m_lrcLineUp->setPalette(pe_active);
+            m_lrcLineDown->setPalette(pe_inactive);
+        } else {
+            m_lrcLineUp->setPalette(pe_inactive);
+            m_lrcLineDown->setPalette(pe_active);
+        }
+    }
+}
+
+void DesktopLyricsWidget::setLineColor(rgb_t rgb_active, rgb_t rgb_inactive) {
+    m_rgb_active = rgb_active;
+    m_rgb_inactive = rgb_inactive;
+    this->updateLineColor();
+}
 
 void DesktopLyricsWidget::setLrcLine(const QString& curr_line, const QString& next_line) {
     if (m_displayMode == DisplayMode::OneLine) {

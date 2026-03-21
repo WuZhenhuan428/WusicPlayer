@@ -1,6 +1,7 @@
 add_library(wusic_core STATIC
     # add existing code here
     types.h
+    hsv_types.h
     utils/AudioUtils.h
     ConfigManager/ConfigManager.h
     ConfigManager/ConfigManager.cpp
