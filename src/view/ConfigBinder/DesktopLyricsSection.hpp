@@ -3,6 +3,7 @@
 #include "IConfigSection.hpp"
 #include <QByteArray>
 #include <QJsonObject>
+#include <QFont>
 
 class DesktopLyricsSection : public IConfigSection
 {
@@ -15,6 +16,8 @@ public:
     int rgb_inactive_r;
     int rgb_inactive_g;
     int rgb_inactive_b;
+
+    QString font_string;
 
     QString key() const override {
         return "desktop_lyrics";
@@ -30,6 +33,7 @@ public:
         rgb_inactive_r = obj.value("rgb_inactive_r").toInt();
         rgb_inactive_g = obj.value("rgb_inactive_g").toInt();
         rgb_inactive_b = obj.value("rgb_inactive_b").toInt();
+        font_string = obj.value("font_string").toString();
     }
 
     QJsonObject save() const override {
@@ -42,6 +46,7 @@ public:
         obj["rgb_inactive_r"] = rgb_inactive_r;
         obj["rgb_inactive_g"] = rgb_inactive_g;
         obj["rgb_inactive_b"] = rgb_inactive_b;
+        obj["font_string"] = font_string;
         
         return obj;
     }

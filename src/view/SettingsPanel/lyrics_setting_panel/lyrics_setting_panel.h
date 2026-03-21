@@ -19,7 +19,7 @@ class LyricsSettingPanel : public QWidget
 {
     Q_OBJECT
 public:
-    explicit LyricsSettingPanel(QWidget* parent = nullptr);
+    explicit LyricsSettingPanel(rgb_t active, rgb_t inactive, QWidget* parent = nullptr);
     ~LyricsSettingPanel() = default;
 
     QListWidgetItem* getTitleItem();
@@ -40,6 +40,7 @@ private:
     void init_connections();
 
 signals:
+    void sgnFontChanged(QFont font);
     void sgnDisplayModeChanged(bool is_two_line);
     void sgnActiveColorChanged(rgb_t rgb);
     void sgnInactiveColorChanged(rgb_t rgb);

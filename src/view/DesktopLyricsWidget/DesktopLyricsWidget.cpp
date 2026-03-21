@@ -144,10 +144,11 @@ void DesktopLyricsWidget::setLrcLine(const QString& curr_line, const QString& ne
 }
 
 void DesktopLyricsWidget::setLrcFont(QFont font) {
-    m_lrcLineUp->setFont(font);
-    m_lrcLineDown->setFont(font);
+    m_font = font;
+    m_lrcLineUp->setFont(m_font);
+    m_lrcLineDown->setFont(m_font);
 
-    QFontMetrics fm(font);
+    QFontMetrics fm(m_font);
     const int line_height = fm.height();
     m_lrcLineUp->setFixedHeight(line_height);
     m_lrcLineDown->setFixedHeight(line_height);
@@ -158,6 +159,10 @@ void DesktopLyricsWidget::setLrcFont(QFont font) {
     const QMargins mg = m_mainLayout->contentsMargins();
     const int height = mg.top() + toolbar_height + (lines * line_height) + spacing + mg.bottom();
     setFixedHeight(height);
+}
+
+QFont DesktopLyricsWidget::getFont() {
+    return m_font;
 }
 
 

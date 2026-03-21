@@ -436,7 +436,9 @@ void AppController::onOpenSettingsPanelRequested() {
     ensureShortcutsPage();
     // ensure lyrics panel
     if (!m_lyrics_settings_panel) {
-        m_lyrics_settings_panel = new LyricsSettingPanel;
+        m_lyrics_settings_panel = new LyricsSettingPanel(
+            m_mainWindow->desktopLyricsWidget()->getActiveLineColor(),
+            m_mainWindow->desktopLyricsWidget()->getInactiveLineColor());
     }
     connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnActiveColorChanged, this, [this](rgb_t rgb){
         m_mainWindow->desktopLyricsWidget()->setActiveLineColor(rgb);
@@ -447,6 +449,8 @@ void AppController::onOpenSettingsPanelRequested() {
     connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnDisplayModeChanged, this, [this](bool is_two_line){
         m_mainWindow->desktopLyricsWidget()->setDisplayMode( is_two_line ? DisplayMode::TwoLine : DisplayMode::OneLine );
     });
+    connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnFontChanged, m_mainWindow->desktopLyricsWidget(), &DesktopLyricsWidget::setLrcFont);
+
     m_settingsPanel->registerWidget(m_lyrics_settings_panel->getTitleItem(), m_lyrics_settings_panel);
 
     m_settingsPanel->show();

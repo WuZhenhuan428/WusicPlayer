@@ -26,6 +26,7 @@ public:
 
     void setLrcLine(const QString& curr_line, const QString& next_line = QString());
     void setLrcFont(QFont font);
+    QFont getFont();
     void setDisplayMode(DisplayMode disp_mode);
     void setUpLineAlignMode(AlignMode line_up_mode);
     void setDownLineAlignMode(AlignMode line_down_mode);

@@ -6,10 +6,12 @@
 #include <QFont>
 #include <QPalette>
 
-LyricsSettingPanel::LyricsSettingPanel(QWidget* parent)
+LyricsSettingPanel::LyricsSettingPanel(rgb_t active, rgb_t inactive, QWidget* parent)
     : QWidget(parent)
 {
     m_is_two_line = false;
+    m_active_rgb = active;
+    m_inactive_rgb = inactive;
     init_UI();
     init_connections();
 }
@@ -25,6 +27,7 @@ void LyricsSettingPanel::init_UI() {
     // font line
     m_lb_font = new QLabel("Font: ", this);
     m_le_font = new QLineEdit(this);
+    m_le_font->setReadOnly(true);
     m_btn_font = new QPushButton("Edit", this);
     m_hbl_font = new QHBoxLayout;
     m_hbl_font->addWidget(m_lb_font);
@@ -99,6 +102,7 @@ void LyricsSettingPanel::init_connections() {
             m_font_view = template_str.arg(m_font.family()).arg(m_font.styleName()).arg(m_font.pointSize());
 
             m_le_font->setText(m_font_view);
+            emit sgnFontChanged(m_font);
         }
     });
 
