@@ -26,12 +26,17 @@ public:
 
     void setLrcLine(const QString& curr_line, const QString& next_line = QString());
     void setLrcFont(QFont font);
-    void setDisplayMode(DisplayMode disp_mode, AlignMode line_up_mode, AlignMode line_down_mode);
+    void setDisplayMode(DisplayMode disp_mode);
+    void setUpLineAlignMode(AlignMode line_up_mode);
+    void setDownLineAlignMode(AlignMode line_down_mode);
     void applyConfig();
     const QByteArray getGeometry() const;
     void setGeometry(const QByteArray& geo);
     void updateLineColor();
-    void setLineColor(rgb_t rgb_active, rgb_t rgb_inactive);
+    void setActiveLineColor(rgb_t rgb_active);
+    void setInactiveLineColor(rgb_t rgb_inactive);
+    rgb_t getActiveLineColor();
+    rgb_t getInactiveLineColor();
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;

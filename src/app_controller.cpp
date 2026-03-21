@@ -41,7 +41,7 @@
 #include "view/ConfigBinder/ShortcutsBinder.hpp"
 #include "view/PlaybackRestoreCoordinator.hpp"
 
-#include "view/hsv_dialog/hsv_dialog.h"
+#include "view/SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.h"
 
 AppController::AppController(PlaybackController* playbackController, QObject* parent)
     : QObject(parent),
@@ -72,7 +72,7 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
 
     initializeConfig();
     ensureShortcutsController();
-    m_desktopLyricsVisibleCache = m_desktopLyricsSection->is_visible;
+    m_desktop_lyrics_visible_cache = m_desktopLyricsSection->is_visible;
     applyConfig();
     initializeCoreConnections();
     configureDesktopLyricsWindowRelation();
@@ -111,7 +111,7 @@ void AppController::initializeCoreConnections()
         connect(m_mainWindow.get(), &MainWindow::sgnPlayTrackRequested,
             this, &AppController::handlePlayTrackRequest);
     connect(desktopLyrics, &DesktopLyricsWidget::sgnVisibilityChanged, this, [this](bool visible) {
-        m_desktopLyricsVisibleCache = visible;
+        m_desktop_lyrics_visible_cache = visible;
         if (m_desktopLyricsSection) {
             m_desktopLyricsSection->is_visible = visible;
         }
@@ -177,7 +177,6 @@ void AppController::initializeCoreConnections()
         connect(lyricsModel, &WLyricsModel::currentLineChanged, this, [this](){
             m_mainWindow->desktopLyricsWidget()->updateLineColor();
         });
-        ///< TODO: add palette widget and bind signals to m_mainWindow->desktopLyricsWidget()->setLineColor(rgb_t rgb_active, rgb_t rgb_inactive);
     }
 
     connect(m_mainWindow.get(), &MainWindow::sgnImportFilesRequested, this, [playlistController]() { playlistController->importFiles(); });
@@ -321,7 +320,7 @@ void AppController::handleShowDesktopLyricsRequested()
 {
     auto* desktopLyrics = m_mainWindow->desktopLyricsWidget();
     if (desktopLyrics) {
-        m_desktopLyricsVisibleCache = true;
+        m_desktop_lyrics_visible_cache = true;
         if (m_desktopLyricsSection) {
             m_desktopLyricsSection->is_visible = true;
         }
@@ -414,13 +413,13 @@ void AppController::saveConfig() {
         return;
     }
 
-    if (m_hasSavedConfigOnExit) {
+    if (m_has_saved_config_on_exit) {
         return;
     }
-    m_hasSavedConfigOnExit = true;
+    m_has_saved_config_on_exit = true;
 
     if (m_desktopLyricsSection) {
-        m_desktopLyricsSection->is_visible = m_desktopLyricsVisibleCache;
+        m_desktopLyricsSection->is_visible = m_desktop_lyrics_visible_cache;
     }
 
     MainWindowConfigContext ctx = buildConfigContext();
@@ -435,6 +434,20 @@ void AppController::saveConfig() {
 void AppController::onOpenSettingsPanelRequested() {
     ensureSettingsPanel();
     ensureShortcutsPage();
+    // ensure lyrics panel
+    if (!m_lyrics_settings_panel) {
+        m_lyrics_settings_panel = new LyricsSettingPanel;
+    }
+    connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnActiveColorChanged, this, [this](rgb_t rgb){
+        m_mainWindow->desktopLyricsWidget()->setActiveLineColor(rgb);
+    });
+    connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnInactiveColorChanged, this, [this](rgb_t rgb){
+        m_mainWindow->desktopLyricsWidget()->setInactiveLineColor(rgb);
+    });
+    connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnDisplayModeChanged, this, [this](bool is_two_line){
+        m_mainWindow->desktopLyricsWidget()->setDisplayMode( is_two_line ? DisplayMode::TwoLine : DisplayMode::OneLine );
+    });
+    m_settingsPanel->registerWidget(m_lyrics_settings_panel->getTitleItem(), m_lyrics_settings_panel);
 
     m_settingsPanel->show();
     m_settingsPanel->raise();
@@ -447,21 +460,6 @@ void AppController::onOpenSearchPanelRequested() {
     m_searchPanel->show();
     m_searchPanel->raise();
     m_searchPanel->activateWindow();
-}
-
-void AppController::onOpenHSVPanelRequested() {
-    if (!m_mainWindow->desktopLyricsWidget()) {
-        qDebug() << __FILE__ << ":" << __LINE__ <<"Desktop lrc panel dose not exist!";
-        return;
-    }
-    if (!m_hsv_panel) {
-        m_hsv_panel = new HSVDialog(rgb_t{0xFF, 0xFF, 0xFF});
-    }
-    connect(m_hsv_panel, &HSVDialog::sgnSelectColor, this, [this](rgb_t rgb){
-        m_mainWindow->desktopLyricsWidget()->setLineColor(rgb, rgb_t{0x7F, 0x7F, 0x7F});
-    });
-    m_hsv_panel->show();
-    m_hsv_panel->setAttribute(Qt::WA_DeleteOnClose);
 }
 
 void AppController::ensureSettingsPanel() {
@@ -486,7 +484,6 @@ void AppController::ensureSettingsPanel() {
     connect(m_settingsPanel, &QObject::destroyed, this, [this]() {
         m_settingsPanel = nullptr;
         m_shortcutsPanel = nullptr;
-        m_shortcutsPageItem = nullptr;
     });
 }
 
@@ -518,10 +515,7 @@ void AppController::ensureShortcutsPage() {
         });
     }
 
-    if (!m_shortcutsPageItem) {
-        m_shortcutsPageItem = new QListWidgetItem("Shortcuts");
-        m_settingsPanel->registerWidget(m_shortcutsPageItem, m_shortcutsPanel);
-    }
+    m_settingsPanel->registerWidget(m_shortcutsPanel->getListItem(), m_shortcutsPanel);
 }
 
 void AppController::ensureShortcutsController()
@@ -536,7 +530,7 @@ void AppController::ensureShortcutsController()
 
 void AppController::registerDefaultShortcuts()
 {
-    if (!m_shortcutsController || m_shortcutsRegistered) {
+    if (!m_shortcutsController || m_shortcuts_registered) {
         return;
     }
 
@@ -650,17 +644,7 @@ void AppController::registerDefaultShortcuts()
         true
     );
 
-    // m_shortcutsController->registerOperation(
-    //     ShortcutActionId::open_hsv_test,
-    //     "Open hsv pallete",
-    //     ShortcutScope::DesktopLyrics,
-    //     QKeySequence(Qt::CTRL | Qt::Key_T),
-    //     [this]() { this->onOpenHSVPanelRequested(); },
-    //     m_mainWindow.get(),
-    //     true
-    // );
-
-    m_shortcutsRegistered = true;
+    m_shortcuts_registered = true;
 }
 
 void AppController::ensureSearchPanel() {

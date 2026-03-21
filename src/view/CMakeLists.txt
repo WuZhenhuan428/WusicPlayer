@@ -63,19 +63,24 @@ add_library(wusic_view STATIC
     SettingsPanel/ShortcutsPanel/ShortcutsPanel.cpp
     SettingsPanel/ShortcutsPanel/ShortcutsPanel.hpp
 
-    hsv_dialog/basic_colors_item.cpp
-    hsv_dialog/basic_colors_item.h
-    hsv_dialog/color_preview_item.cpp
-    hsv_dialog/color_preview_item.h
-    hsv_dialog/hsv_dialog.cpp
-    hsv_dialog/hsv_dialog.h
-    hsv_dialog/hsv_palette.cpp
-    hsv_dialog/hsv_palette.h
-    hsv_dialog/hsv_to_rgb.c
-    hsv_dialog/hsv_to_rgb.h
-    hsv_dialog/label_matrix.cpp
-    hsv_dialog/label_matrix.h
+    SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.cpp
+    SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.h
 
+    dialogs/hsv_dialog/basic_colors_item.cpp
+    dialogs/hsv_dialog/basic_colors_item.h
+    dialogs/hsv_dialog/color_preview_item.cpp
+    dialogs/hsv_dialog/color_preview_item.h
+    dialogs/hsv_dialog/hsv_dialog.cpp
+    dialogs/hsv_dialog/hsv_dialog.h
+    dialogs/hsv_dialog/hsv_palette.cpp
+    dialogs/hsv_dialog/hsv_palette.h
+    dialogs/hsv_dialog/hsv_to_rgb.c
+    dialogs/hsv_dialog/hsv_to_rgb.h
+    dialogs/hsv_dialog/label_matrix.cpp
+    dialogs/hsv_dialog/label_matrix.h
+
+    dialogs/font_select_dialog.cpp
+    dialogs/font_select_dialog.h
 )
 
 target_link_libraries(wusic_view

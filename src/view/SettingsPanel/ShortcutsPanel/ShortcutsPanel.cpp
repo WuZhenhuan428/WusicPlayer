@@ -35,6 +35,13 @@ ShortcutsPanel::ShortcutsPanel(QWidget* parent)
 
 ShortcutsPanel::~ShortcutsPanel() {}
 
+QListWidgetItem* ShortcutsPanel::getListItem() {
+    if (!m_list_item) {
+        m_list_item = new QListWidgetItem("Shortctus");
+    }
+    return m_list_item;
+}
+
 void ShortcutsPanel::setViewModel(QAbstractTableModel* model) {
     m_viewShortcuts->setModel(model);
 }

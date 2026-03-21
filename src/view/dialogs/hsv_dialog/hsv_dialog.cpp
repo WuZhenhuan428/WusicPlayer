@@ -1,5 +1,4 @@
 #include "hsv_dialog.h"
-#include "hsv_to_rgb.h"
 
 #include <QStyle>
 
@@ -52,16 +51,21 @@ HSVDialog::HSVDialog(rgb_t curr_rgb, QWidget *parent)
     connect(m_label_matrix, &LabelMatrix::sgnEditColor, m_hsv_palette, &HSVPalette::setHsv);
     connect(m_hsv_palette, &HSVPalette::sgnMouseMovingColor, m_color_preview, &ColorPreviewItem::updateCurrColor);
     connect(m_hsv_palette, &HSVPalette::sgnMouseReleaseColor, m_color_preview, &ColorPreviewItem::updateColor);
+    
     connect(m_btn_apply, &QPushButton::clicked, this, [this](){
-        sgnSelectColor(m_hsv_palette->getRgb());
+        m_current_color = m_hsv_palette->getRgb();
     });
     connect(m_btn_ok, &QPushButton::clicked, this, [this](){
-        sgnSelectColor(m_hsv_palette->getRgb());
-        this->close();
+        m_current_color = m_hsv_palette->getRgb();
+        this->accept();
     });
     connect(m_btn_cancel, &QPushButton::clicked, this, [this](){
-        this->close();
+        this->reject();
     });
 }
 
 HSVDialog::~HSVDialog() {}
+
+rgb_t HSVDialog::getColor() {
+    return m_current_color;
+}

@@ -20,6 +20,8 @@ public:
     explicit HSVDialog(rgb_t curr_rgb, QWidget *parent = nullptr);
     ~HSVDialog();
 
+    rgb_t getColor();
+
 private:
     rgb_t m_current_color;
 

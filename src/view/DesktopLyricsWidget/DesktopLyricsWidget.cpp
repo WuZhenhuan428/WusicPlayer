@@ -104,10 +104,21 @@ void DesktopLyricsWidget::updateLineColor() {
     }
 }
 
-void DesktopLyricsWidget::setLineColor(rgb_t rgb_active, rgb_t rgb_inactive) {
+void DesktopLyricsWidget::setActiveLineColor(rgb_t rgb_active) {
     m_rgb_active = rgb_active;
+    this->updateLineColor();
+}
+
+void DesktopLyricsWidget::setInactiveLineColor(rgb_t rgb_inactive) {
     m_rgb_inactive = rgb_inactive;
     this->updateLineColor();
+}
+
+rgb_t DesktopLyricsWidget::getActiveLineColor() {
+    return m_rgb_active;
+}
+rgb_t DesktopLyricsWidget::getInactiveLineColor() {
+    return m_rgb_inactive;
 }
 
 void DesktopLyricsWidget::setLrcLine(const QString& curr_line, const QString& next_line) {
@@ -179,12 +190,21 @@ void DesktopLyricsWidget::hideEvent(QHideEvent* event) {
 }
 
 
-void DesktopLyricsWidget::setDisplayMode(DisplayMode disp_mode, AlignMode line_up_mode, AlignMode line_down_mode) {
+void DesktopLyricsWidget::setDisplayMode(DisplayMode disp_mode) {
     m_displayMode = disp_mode;
+    this->applyConfig();
+}
+
+void DesktopLyricsWidget::setUpLineAlignMode(AlignMode line_up_mode) {
     m_lineUpMode = line_up_mode;
+    this->applyConfig();
+}
+
+void DesktopLyricsWidget::setDownLineAlignMode(AlignMode line_down_mode) {
     m_lineDownMode = line_down_mode;
     this->applyConfig();
 }
+
 
 void DesktopLyricsWidget::applyConfig() {
     if (m_displayMode == DisplayMode::OneLine) {
@@ -208,6 +228,9 @@ void DesktopLyricsWidget::applyConfig() {
     } else if (m_lineDownMode == AlignMode::Right) {
         m_lrcLineDown->setAlignment(Qt::AlignRight);
     }
+
+    this->setActiveLineColor(m_rgb_active);
+    this->setInactiveLineColor(m_rgb_inactive);                                     
 }
 
 const QByteArray DesktopLyricsWidget::getGeometry() const {

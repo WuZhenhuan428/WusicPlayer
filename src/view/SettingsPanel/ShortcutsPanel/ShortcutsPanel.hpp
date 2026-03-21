@@ -8,6 +8,8 @@
 
 #include <QHBoxLayout>
 
+#include <QListWidgetItem>
+
 class ShortcutsPanel : public QWidget
 {
     Q_OBJECT
@@ -16,6 +18,8 @@ public:
     ~ShortcutsPanel();
 
     void setViewModel(QAbstractTableModel* model);
+
+    QListWidgetItem* getListItem();
 
 signals:
     void sgnApplyConfig();
@@ -32,4 +36,6 @@ private:
     QHBoxLayout* m_searchLineLayout;
     QHBoxLayout* m_buttomLayout;
     QVBoxLayout* m_mainLayout;
+
+    QListWidgetItem* m_list_item = nullptr;
 };

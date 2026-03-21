@@ -37,7 +37,7 @@ class ShortcutsSection;
 class PlaybackRestoreCoordinator;
 class MainWindowConfigContext;
 
-class HSVDialog;
+class LyricsSettingPanel;
 
 class AppController : public QObject
 {
@@ -72,7 +72,6 @@ private:
 private slots:
     void onOpenSettingsPanelRequested();
     void onOpenSearchPanelRequested();
-    void onOpenHSVPanelRequested();
 
 private:
     PlaybackController* m_playbackController = nullptr;
@@ -103,9 +102,8 @@ private:
     QPointer<ShortcutsPanel> m_shortcutsPanel;
     QPointer<ShortcutsController> m_shortcutsController;
     QPointer<PlaylistSearchPanel> m_searchPanel;
-    QListWidgetItem* m_shortcutsPageItem = nullptr;
-    QPointer<HSVDialog> m_hsv_panel;
-    bool m_shortcutsRegistered = false;
-    bool m_desktopLyricsVisibleCache = false;
-    bool m_hasSavedConfigOnExit = false;
+    QPointer<LyricsSettingPanel> m_lyrics_settings_panel;
+    bool m_shortcuts_registered = false;
+    bool m_desktop_lyrics_visible_cache = false;
+    bool m_has_saved_config_on_exit = false;
 };
