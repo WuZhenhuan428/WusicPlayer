@@ -5,6 +5,7 @@
 #include <QGuiApplication>
 #include <QFontMetrics>
 #include <QMargins>
+#include <QWindow>
 
 DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent)
     : QWidget(parent),
@@ -13,7 +14,6 @@ DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent)
       m_lineUpMode(AlignMode::Left),
       m_lineDownMode(AlignMode::Right),
       m_has_up_line_changed(false)
-
 {
     this->initUI();
     this->setFixedSize(700, 120);
@@ -77,7 +77,7 @@ void DesktopLyricsWidget::initConnect() {
     connect(m_btnLock, &QPushButton::clicked, this, [this](){
         m_isLocked = !m_isLocked;
         if (m_isLocked) {
-            m_btnLock->setText("U");    // need unlock
+            m_btnLock->setText("U");    // need Unlock
         } else if (!m_isLocked) {
             m_btnLock->setText("L");
         }
@@ -169,18 +169,12 @@ QFont DesktopLyricsWidget::getFont() {
 void DesktopLyricsWidget::mousePressEvent(QMouseEvent* event) {
     if (m_isLocked) {
         event->ignore();
-    } else if (event->button() == Qt::LeftButton) {
-        m_dragPosition = event->globalPosition().toPoint() - this->frameGeometry().topLeft();
-        event->accept();
+        return;
     }
-}
-
-void DesktopLyricsWidget::mouseMoveEvent(QMouseEvent* event) {
-    if (m_isLocked) {
-        event->ignore();
-    } else if (event->buttons() & Qt::LeftButton) {
-        this->move(event->globalPosition().toPoint() - m_dragPosition);
-        event->accept();
+    if (event->button() == Qt::LeftButton) {
+        if (windowHandle()) {
+            windowHandle()->startSystemMove();
+        }
     }
 }
 

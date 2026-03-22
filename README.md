@@ -41,6 +41,10 @@ This project is under active refactoring and feature iteration.
 - Architecture is being migrated toward a clearer `view` / `controller` / `model` / `core` split.
 - Packaging is **not provided yet**. (such as `.deb` / `.rpm` / `.exe`)
 - Bugs are possible; feedback is welcome.
+- Some features are not available on wayland, they are basically available on x11 and very easy to implement on Windows.
+```
+凸(>皿<)凸
+```
 
 ---
 
