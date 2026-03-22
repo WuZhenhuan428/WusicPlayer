@@ -5,6 +5,7 @@
 
 #include <QFont>
 #include <QPalette>
+#include <qfont.h>
 
 LyricsSettingPanel::LyricsSettingPanel(rgb_t active, rgb_t inactive, QWidget* parent)
     : QWidget(parent)
@@ -21,6 +22,25 @@ QListWidgetItem* LyricsSettingPanel::getTitleItem() {
         m_title_widget = new QListWidgetItem("Lyrics");
     }
     return m_title_widget;
+}
+
+void LyricsSettingPanel::setLineEditText(const QString& font_string) {
+    m_le_font->setText(make_font_view(font_string));
+}
+
+void LyricsSettingPanel::setLineEditText(const QFont& font) {
+    m_le_font->setText(make_font_view(font));
+}
+
+QString LyricsSettingPanel::make_font_view(const QFont& font) {
+    QString template_str = "%1 %2 %3pt";
+    return template_str.arg(font.family()).arg(font.styleName()).arg(font.pointSize());
+}
+
+QString LyricsSettingPanel::make_font_view(const QString& raw_string) {
+    QFont font;
+    font.fromString(raw_string);
+    return make_font_view(font);
 }
 
 void LyricsSettingPanel::init_UI() {
@@ -61,12 +81,14 @@ void LyricsSettingPanel::init_UI() {
     m_hbl_color->addWidget(m_btn_active_color);
     m_hbl_color->addWidget(m_lb_inactive);
     m_hbl_color->addWidget(m_btn_inactive_color);
+    m_hbl_color->addStretch();
 
     // all
     m_vbl_main = new QVBoxLayout;
     m_vbl_main->addLayout(m_hbl_font);
     m_vbl_main->addLayout(m_hbl_mode);
     m_vbl_main->addLayout(m_hbl_color);
+    m_vbl_main->addStretch();
 
     this->setLayout(m_vbl_main);
 
@@ -98,8 +120,7 @@ void LyricsSettingPanel::init_connections() {
         int result = font_dialog.exec();
         if (result == QDialog::Accepted) {
             m_font = font_dialog.selectFont();
-            QString template_str = "%1 %2 %3pt";
-            m_font_view = template_str.arg(m_font.family()).arg(m_font.styleName()).arg(m_font.pointSize());
+            m_font_view = make_font_view(m_font);
 
             m_le_font->setText(m_font_view);
             emit sgnFontChanged(m_font);

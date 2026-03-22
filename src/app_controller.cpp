@@ -439,6 +439,7 @@ void AppController::onOpenSettingsPanelRequested() {
         m_lyrics_settings_panel = new LyricsSettingPanel(
             m_mainWindow->desktopLyricsWidget()->getActiveLineColor(),
             m_mainWindow->desktopLyricsWidget()->getInactiveLineColor());
+        m_lyrics_settings_panel->setLineEditText(m_mainWindow->desktopLyricsWidget()->getFont());
     }
     connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnActiveColorChanged, this, [this](rgb_t rgb){
         m_mainWindow->desktopLyricsWidget()->setActiveLineColor(rgb);

@@ -23,6 +23,8 @@ public:
     ~LyricsSettingPanel() = default;
 
     QListWidgetItem* getTitleItem();
+    void setLineEditText(const QString& font_string);
+    void setLineEditText(const QFont& font);
 
 private:
     QFont m_font;
@@ -38,6 +40,9 @@ private:
 
     void init_UI();
     void init_connections();
+
+    QString make_font_view(const QFont& font);
+    QString make_font_view(const QString& raw_string);
 
 signals:
     void sgnFontChanged(QFont font);
