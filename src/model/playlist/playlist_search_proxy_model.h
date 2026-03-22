@@ -1,13 +1,12 @@
 #pragma once
 #include <QSortFilterProxyModel>
-#include "playlist_view_model.h"
 
 class PlaylistSearchProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 public:
     explicit PlaylistSearchProxyModel(QObject* parent = nullptr);
-    ~PlaylistSearchProxyModel();
+    ~PlaylistSearchProxyModel() = default;
 
     void setKeyword(const QString& keyword);
     QString keyword() const;

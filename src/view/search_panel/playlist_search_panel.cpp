@@ -1,47 +1,60 @@
 #include "playlist_search_panel.h"
 #include <QTimer>
 #include <QHeaderView>
+#include <qabstractitemmodel.h>
+#include <qnamespace.h>
 
 PlaylistSearchPanel::PlaylistSearchPanel(QWidget *parent)
     :QWidget(parent)
 {
     setWindowTitle("Search");
-    leKeyword = new QLineEdit;
-    leKeyword->setAttribute(Qt::WA_InputMethodEnabled, true);
-    treeSearchResult = new QTreeView;
-    vbMainLayout = new QVBoxLayout;
+    m_le_keyword = new QLineEdit;
+    m_le_keyword->setAttribute(Qt::WA_InputMethodEnabled, true);
+    m_search_result_tree_view = new QTreeView;
+    m_vbl_main = new QVBoxLayout;
     
-    treeSearchResult->setSelectionMode(QAbstractItemView::SingleSelection);
-    treeSearchResult->setRootIsDecorated(true);
-    treeSearchResult->setAlternatingRowColors(true);
+    m_search_result_tree_view->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_search_result_tree_view->setRootIsDecorated(true);
+    m_search_result_tree_view->setAlternatingRowColors(true);
     
-    vbMainLayout->addWidget(leKeyword);
-    vbMainLayout->addWidget(treeSearchResult);
-    setLayout(vbMainLayout);
+    m_vbl_main->addWidget(m_le_keyword);
+    m_vbl_main->addWidget(m_search_result_tree_view);
+    setLayout(m_vbl_main);
     
-    m_searchModel = new PlaylistSearchProxyModel(this);
-    treeSearchResult->setModel(m_searchModel);
+    m_search_model = new PlaylistSearchProxyModel(this);
+    m_search_result_tree_view->setModel(m_search_model);
     
-    connect(leKeyword, &QLineEdit::textChanged, this, [this](const QString& keyword){
-        QTimer::singleShot(150, [this, keyword](){
-            m_searchModel->setKeyword(keyword);
-            QAbstractItemModel* model = treeSearchResult->model();
-            if (model) {
-                for (int i = 0; i < model->rowCount(); ++i) {
-                    // QModelIndex idx = model->index(i, 0);    // unused
-                    if (model->hasChildren()) {
-                        treeSearchResult->setFirstColumnSpanned(i, QModelIndex(), true);
-                        treeSearchResult->expandAll();
+    connect(m_le_keyword, &QLineEdit::textChanged, this, [this](const QString& keyword){
+        if (!m_tim_input) {
+            m_tim_input = new QTimer;
+            m_tim_input->setSingleShot(true);
+        }
+        m_tim_input->setInterval(150);
+        m_keywords = keyword;
+
+        connect(m_tim_input, &QTimer::timeout, this, [this](){
+            /// move this lambda to function: void handlerTimTimerout();
+            m_search_model->setKeyword(m_keywords);
+            QAbstractItemModel* search_result_model = m_search_result_tree_view->model();
+            if (search_result_model) {
+                for (int i = 0; i < search_result_model->rowCount(); ++i) {
+                    QModelIndex idx = search_result_model->index(i, 0);
+                    if (search_result_model->hasChildren(idx)) {
+                        m_search_result_tree_view->setFirstColumnSpanned(i, QModelIndex(), true);
+                        m_search_result_tree_view->setExpanded(idx, true);
                     }
                 }
             }
-        });
+        }, Qt::SingleShotConnection);
+
+        m_tim_input->start();
     });
-    connect(treeSearchResult, &QTreeView::doubleClicked, this, [this](const QModelIndex &proxy_index){
-        if (!proxy_index.isValid() || !m_searchModel) {
+    
+    connect(m_search_result_tree_view, &QTreeView::doubleClicked, this, [this](const QModelIndex &proxy_index){
+        if (!proxy_index.isValid() || !m_search_model) {
             return;
         }
-        const QModelIndex source_index = m_searchModel->mapToSource(proxy_index);
+        const QModelIndex source_index = m_search_model->mapToSource(proxy_index);
         if (!source_index.isValid()) {
             return;
         }
@@ -52,20 +65,20 @@ PlaylistSearchPanel::PlaylistSearchPanel(QWidget *parent)
 PlaylistSearchPanel::~PlaylistSearchPanel() {}
 
 void PlaylistSearchPanel::setSourceModel(QAbstractItemModel* source_model) {
-    this->m_searchModel->setSourceModel(source_model);
-    this->treeSearchResult->expandAll();
+    this->m_search_model->setSourceModel(source_model);
+    this->m_search_result_tree_view->expandAll();
 }
 
 QTreeView* PlaylistSearchPanel::getView() const {
-    return this->treeSearchResult;
+    return this->m_search_result_tree_view;
 }
 
 void PlaylistSearchPanel::applyHeaderStateDeferred(const QByteArray& state) {
     if (state.isEmpty()) return;
 
     QTimer::singleShot(0, this, [this, state](){
-        if (treeSearchResult && treeSearchResult->header()) {
-            treeSearchResult->header()->restoreState(state);
+        if (m_search_result_tree_view && m_search_result_tree_view->header()) {
+            m_search_result_tree_view->header()->restoreState(state);
         }
     });
 }
@@ -73,8 +86,8 @@ void PlaylistSearchPanel::applyHeaderStateDeferred(const QByteArray& state) {
 void PlaylistSearchPanel::emitStateSnapshot() {
     QByteArray geo = saveGeometry();
     QByteArray header;
-    if (treeSearchResult && treeSearchResult->header()) {
-        header = treeSearchResult->header()->saveState();
+    if (m_search_result_tree_view && m_search_result_tree_view->header()) {
+        header = m_search_result_tree_view->header()->saveState();
     }
     emit sgnStateSnapshot(geo, header);
 }

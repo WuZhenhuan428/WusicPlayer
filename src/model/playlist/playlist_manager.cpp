@@ -1,6 +1,7 @@
 #include "playlist_manager.h"
 
 #include <QTimer>
+#include "core/utils/AudioUtils.h"
 
 PlaylistManager::PlaylistManager(QObject* parent)
     : QObject(parent)
@@ -114,16 +115,22 @@ QString PlaylistManager::nextTrack(PlayMode mode) {
     trackId next_id = trackId();
     trackId curr_id = m_context->getPlayTrackId();
     PlaybackQueueSnapshot queue;
-    if (mode == PlayMode::in_order){
+    switch (mode) {
+    case PlayMode::in_order:
         next_id = PlaylistNavigator::nextOfInOrder(m_view->playbackQueueSnapshot().queue, curr_id);
-    } else if (mode == PlayMode::loop) {
+        break;
+    case PlayMode::loop:
         next_id = PlaylistNavigator::nextOfLoop(m_view->playbackQueueSnapshot().queue, curr_id);
-    } else if (mode == PlayMode::shuffle) {
+        break;
+    case PlayMode::shuffle:
         next_id = PlaylistNavigator::nextOfShuffle(m_view->playbackQueueSnapshot().queue);
-    } else if (mode == PlayMode::out_of_order_track) {
+        break;
+    case PlayMode::out_of_order_track:
         next_id = PlaylistNavigator::nextOfOutOfOrderTrack(m_view->singleShuffleQueueSnapshot().queue, curr_id);
-    } else if (mode == PlayMode::out_of_order_group) {
+        break;
+    case PlayMode::out_of_order_group:
         next_id = PlaylistNavigator::nextOfOutOfOrderGroup(m_view->groupShuffleQueueSnapshot().queue, curr_id);
+        break;
     }
 
     if (!next_id.isNull()) {
@@ -145,16 +152,22 @@ QString PlaylistManager::prevTrack(PlayMode mode) {
     trackId prev_id = trackId();
     trackId curr_id = m_context->getPlayTrackId();
     PlaybackQueueSnapshot queue;
-    if (mode == PlayMode::in_order){
+    switch (mode) {
+    case PlayMode::in_order:
         prev_id = PlaylistNavigator::previousOfInOrder(m_view->playbackQueueSnapshot().queue, curr_id);
-    } else if (mode == PlayMode::loop) {
+        break;
+    case PlayMode::loop:
         prev_id = PlaylistNavigator::previousOfLoop(m_view->playbackQueueSnapshot().queue, curr_id);
-    } else if (mode == PlayMode::shuffle) {
+        break;
+    case PlayMode::shuffle:
         prev_id = PlaylistNavigator::previousOfShuffle(m_view->playbackQueueSnapshot().queue);
-    } else if (mode == PlayMode::out_of_order_track) {
+        break;
+    case PlayMode::out_of_order_track:
         prev_id = PlaylistNavigator::previousOfOutOfOrderTrack(m_view->singleShuffleQueueSnapshot().queue, curr_id);
-    } else if (mode == PlayMode::out_of_order_group) {
+        break;
+    case PlayMode::out_of_order_group:
         prev_id = PlaylistNavigator::previousOfOutOfOrderGroup(m_view->groupShuffleQueueSnapshot().queue, curr_id);
+        break;
     }
 
     if (!prev_id.isNull()) {

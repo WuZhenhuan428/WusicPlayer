@@ -15,6 +15,8 @@
 #include <QJsonValueRef>
 #include <QJsonObject>
 
+#include "core/utils/AudioUtils.h"
+
 static QJsonObject metaToJson(const TrackMetaData& meta) {
     QJsonObject obj;
     obj["album"] = meta.album;

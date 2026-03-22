@@ -4,6 +4,7 @@
 #include <QFileInfo>
 #include <QMap>
 #include <QCollator>
+#include "core/utils/AudioUtils.h"
 
 static std::function<bool(const Node*, const Node*)>
 createComparator(const QVector<SortRule>& rules) {

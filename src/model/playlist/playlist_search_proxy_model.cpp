@@ -6,10 +6,6 @@ PlaylistSearchProxyModel::PlaylistSearchProxyModel(QObject* parent)
     this->setDynamicSortFilter(true);
 }
 
-PlaylistSearchProxyModel::~PlaylistSearchProxyModel() {
-
-}
-
 void PlaylistSearchProxyModel::setKeyword(const QString& keyword) {
     const QString trimmed = keyword.trimmed();
     if (m_keyword == trimmed) {

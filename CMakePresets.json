@@ -33,6 +33,16 @@
       "cacheVariables": {
         "WUSIC_USE_LOCAL_QT": "OFF"
       }
+    },
+    {
+      "name": "dev-local-gprof",
+      "displayName": "Dev gprof (Local Qt)",
+      "inherits": "base",
+      "cacheVariables": {
+        "WUSIC_USE_LOCAL_QT": "ON",
+        "WUSIC_LOCAL_QT_PATH": "$env{HOME}/Qt/6.10.2/gcc_64",
+        "WUSIC_ENABLE_GPROF": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -43,12 +53,23 @@
     {
       "name": "build-system-qt",
       "configurePreset": "dev-system-qt"
+    },
+    {
+      "name": "build-local-gprof",
+      "configurePreset": "dev-local-gprof"
     }
   ],
   "testPresets": [
     {
       "name": "test-local-qt",
       "configurePreset": "dev-local-qt",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "test-local-gprof",
+      "configurePreset": "dev-local-gprof",
       "output": {
         "outputOnFailure": true
       }

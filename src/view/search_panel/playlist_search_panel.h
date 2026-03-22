@@ -9,6 +9,7 @@
 #include <QCloseEvent>
 #include <QHideEvent>
 #include <QKeyEvent>
+#include <QTimer>
 
 #include "model/playlist/playlist_search_proxy_model.h"
 
@@ -34,9 +35,12 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
 
 private:
-    QLineEdit* leKeyword;
-    QTreeView* treeSearchResult;
-    QVBoxLayout* vbMainLayout;
+    QLineEdit* m_le_keyword;
+    QTreeView* m_search_result_tree_view;
+    QVBoxLayout* m_vbl_main;
 
-    PlaylistSearchProxyModel* m_searchModel;
+    PlaylistSearchProxyModel* m_search_model;
+
+    QTimer* m_tim_input = nullptr;
+    QString m_keywords;
 };

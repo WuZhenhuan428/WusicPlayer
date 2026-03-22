@@ -8,7 +8,6 @@
 #include "playlist_context.h"
 #include "playlist_repo.h"
 #include "playlist_view_model.h"
-#include "core/utils/AudioUtils.h"
 
 struct PlaylistInfo
 {

@@ -10,6 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(WUSIC_BUILD_TESTS "Build unit tests" ON)
 option(WUSIC_USE_LOCAL_QT "Prefer local Qt installation over system Qt" ON)
+option(WUSIC_ENABLE_GPROF "Enable gprof instrumentation (-pg)" OFF)
 
 set(WUSIC_LOCAL_QT_PATH "$ENV{HOME}/Qt/6.10.2/gcc_64" CACHE PATH "Local Qt installation prefix")
 
@@ -23,6 +24,16 @@ if (WUSIC_USE_LOCAL_QT)
 endif ()
 
 add_compile_options(-Wall -Wextra)
+
+if (WUSIC_ENABLE_GPROF)
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        add_compile_options(-pg)
+        add_link_options(-pg)
+        message(STATUS "gprof instrumentation enabled (-pg)")
+    else ()
+        message(WARNING "WUSIC_ENABLE_GPROF is ON, but compiler ${CMAKE_CXX_COMPILER_ID} may not support -pg")
+    endif ()
+endif ()
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Multimedia)
 find_package(magic_enum CONFIG REQUIRED)
