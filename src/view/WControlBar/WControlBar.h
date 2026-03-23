@@ -50,31 +50,29 @@ signals:
     void sgnSelectDeviceId(QByteArray id);
 
 private:
-    QPushButton* btnPlay;
-    QPushButton* btnPause;
-    QPushButton* btnStop;
-    QPushButton* btnNext;
-    QPushButton* btnPrev;
-    QPushButton* btnMute;
-    QPushButton* btnMode;
-    QPushButton* btnDevices;
-    QMenu* menuMode;
-    QAction* actInOrder;    // 顺序播放
-    QAction* actLoop;       // 循环播放
-    QAction* actShuffle;    // 随机播放 - 不停止
-    QAction* actOutOfOrderTrack; // 乱序播放 - 有最后一首
-    QAction* actOutOfOrderGroup;// 组间乱序 / 组内顺序
-    QActionGroup* actGroup;     // exclusive group -> show available icon
+    QPushButton* m_btn_play;
+    QPushButton* m_btn_pause;
+    QPushButton* m_btn_stop;
+    QPushButton* m_btn_next;
+    QPushButton* m_btn_prev;
+    QPushButton* m_btn_mute;
+    QPushButton* m_btn_mode;
+    QPushButton* m_btn_devices;
+    QMenu* m_menu_mode;
+    QAction* m_act_in_order;    // 顺序播放
+    QAction* m_act_loop;       // 循环播放
+    QAction* m_act_shuffle;    // 随机播放 - 不停止
+    QAction* m_act_out_of_order_track; // 乱序播放 - 有最后一首
+    QAction* m_act_out_of_order_group;// 组间乱序 / 组内顺序
+    QActionGroup* m_act_group;     // exclusive group -> show available icon
 
     /// Progress Bar: Position/Duration
-    QSlider* sliderPostion;
-    WTimeProgress* timeProgress;
-    QSlider* sliderVolume;
+    QSlider* m_slider_position;
+    WTimeProgress* m_time_progress;
+    QSlider* m_slider_volume;
 
-    QHBoxLayout* hbMain;
+    QHBoxLayout* m_hbl_main;
 
-    QMenu* menuDevices;
+    QMenu* m_menu_devices;
     QList<QAudioDevice> m_devices;
-
-private slots:
 };

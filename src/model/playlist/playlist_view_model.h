@@ -100,18 +100,18 @@ signals:
 private:
     PlaylistRepo* m_repo = nullptr;
     playlistId m_pid;
-    trackId m_activeTrackId;
+    trackId m_active_track_id;
     Node* m_root = nullptr;
 
-    int m_rebuildToken = 0;
+    int m_rebuild_token = 0;
 
-    QTimer* m_batchRebuildTimer = nullptr;
+    QTimer* m_batch_rebuild_timer = nullptr;
 
-    QVector<trackId> m_playbackQueue; // Linear queue for playback logic (separate from Tree structure)
-    QVector<trackId> m_singleShuffleQueue;
-    QVector<trackId> m_groupShuffleQueue;
+    QVector<trackId> m_playback_queue; // Linear queue for playback logic (separate from Tree structure)
+    QVector<trackId> m_single_shuffle_queue;
+    QVector<trackId> m_group_shuffle_queue;
 
-    PlayMode m_playMode;
+    PlayMode m_play_mode;
 
-    PlaylistLayoutBuilder m_layoutBuilder;
+    PlaylistLayoutBuilder m_layout_builder;
 };

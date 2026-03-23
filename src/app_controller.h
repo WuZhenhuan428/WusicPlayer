@@ -47,7 +47,7 @@ public:
     ~AppController() override;
 
     void showMainWindow();
-    QByteArray m_settingsPanelGeoCache;
+    QByteArray m_settings_panel_geo_cache;
 
 private:
     void initializeCoreConnections();
@@ -74,34 +74,34 @@ private slots:
     void onOpenSearchPanelRequested();
 
 private:
-    PlaybackController* m_playbackController = nullptr;
-    std::unique_ptr<PlaylistManager> m_playlistManager;
-    std::unique_ptr<PlaylistController> m_playlistController;
-    std::unique_ptr<MainWindow> m_mainWindow;
+    PlaybackController* m_playback_controller = nullptr;
+    std::unique_ptr<PlaylistManager> m_playlist_manager;
+    std::unique_ptr<PlaylistController> m_playlist_controller;
+    std::unique_ptr<MainWindow> m_main_window;
 
-    std::unique_ptr<DesktopLyricsSection> m_desktopLyricsSection;
-    std::unique_ptr<LibraryViewSection> m_libraryViewSection;
-    std::unique_ptr<PlaybackConfigSection> m_playbackConfigSection;
-    std::unique_ptr<SearchPanelSection> m_searchPanelSection;
-    std::unique_ptr<WindowConfigSection> m_windowConfigSection;
-    std::unique_ptr<SettingsPanelSection> m_settingsPanelSection;
-    std::unique_ptr<ShortcutsSection> m_shortcutsSection;
+    std::unique_ptr<DesktopLyricsSection> m_desktop_lyrics_section;
+    std::unique_ptr<LibraryViewSection> m_library_view_section;
+    std::unique_ptr<PlaybackConfigSection> m_playback_config_section;
+    std::unique_ptr<SearchPanelSection> m_search_panel_section;
+    std::unique_ptr<WindowConfigSection> m_window_config_section;
+    std::unique_ptr<SettingsPanelSection> m_settings_panel_section;
+    std::unique_ptr<ShortcutsSection> m_shortcuts_section;
 
     QVector<IConfigBinder*> m_binders;
-    std::unique_ptr<DesktopLyricsBinder> m_desktopLyricsBinder;
-    std::unique_ptr<LibraryViewBinder> m_libraryViewBinder;
-    std::unique_ptr<PlaybackConfigBinder> m_playbackConfigBinder;
-    std::unique_ptr<SearchPanelBinder> m_searchPanelBinder;
-    std::unique_ptr<WindowConfigBinder> m_windowConfigBinder;
-    std::unique_ptr<SettingsPanelBinder> m_settingsPanelBinder;
-    std::unique_ptr<ShortcutsBinder> m_shortcutsBinder;
+    std::unique_ptr<DesktopLyricsBinder> m_desktop_lyrics_binder;
+    std::unique_ptr<LibraryViewBinder> m_library_view_binder;
+    std::unique_ptr<PlaybackConfigBinder> m_playback_config_binder;
+    std::unique_ptr<SearchPanelBinder> m_search_panel_binder;
+    std::unique_ptr<WindowConfigBinder> m_window_config_binder;
+    std::unique_ptr<SettingsPanelBinder> m_settings_sanel_binder;
+    std::unique_ptr<ShortcutsBinder> m_shortcuts_binder;
 
-    std::unique_ptr<PlaybackRestoreCoordinator> m_playbackRestoreCoordinator;
+    std::unique_ptr<PlaybackRestoreCoordinator> m_playback_restore_coordinator;
 
-    QPointer<SettingsPanel> m_settingsPanel;
-    QPointer<ShortcutsPanel> m_shortcutsPanel;
-    QPointer<ShortcutsController> m_shortcutsController;
-    QPointer<PlaylistSearchPanel> m_searchPanel;
+    QPointer<SettingsPanel> m_settings_panel;
+    QPointer<ShortcutsPanel> m_shortcuts_panel;
+    QPointer<ShortcutsController> m_shortcuts_controller;
+    QPointer<PlaylistSearchPanel> m_search_panel;
     QPointer<LyricsSettingPanel> m_lyrics_settings_panel;
     bool m_shortcuts_registered = false;
     bool m_desktop_lyrics_visible_cache = false;

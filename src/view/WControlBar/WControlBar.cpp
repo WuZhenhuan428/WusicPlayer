@@ -6,59 +6,59 @@
 WControlBar::WControlBar(QWidget* parent)
     : QWidget(parent)
 {
-    btnPlay = new QPushButton(">", this);
-    btnPause = new QPushButton("||", this);
-    btnStop = new QPushButton(">|", this);
-    btnPrev = new QPushButton("<<", this);
-    btnNext = new QPushButton(">>", this);
-    btnMode = new QPushButton("M", this);
-    btnMute = new QPushButton("V", this);
-    btnDevices = new QPushButton("D", this);
-    btnPlay->setFixedSize(25, 25);
-    btnPause->setFixedSize(25, 25);
-    btnStop->setFixedSize(25, 25);
-    btnPrev->setFixedSize(25, 25);
-    btnNext->setFixedSize(25, 25);
-    btnMode->setFixedSize(25, 25);
-    btnMute->setFixedSize(25, 25);
-    btnDevices->setFixedSize(25, 25);
+    m_btn_play = new QPushButton(">", this);
+    m_btn_pause = new QPushButton("||", this);
+    m_btn_stop = new QPushButton(">|", this);
+    m_btn_prev = new QPushButton("<<", this);
+    m_btn_next = new QPushButton(">>", this);
+    m_btn_mode = new QPushButton("M", this);
+    m_btn_mute = new QPushButton("V", this);
+    m_btn_devices = new QPushButton("D", this);
+    m_btn_play->setFixedSize(25, 25);
+    m_btn_pause->setFixedSize(25, 25);
+    m_btn_stop->setFixedSize(25, 25);
+    m_btn_prev->setFixedSize(25, 25);
+    m_btn_next->setFixedSize(25, 25);
+    m_btn_mode->setFixedSize(25, 25);
+    m_btn_mute->setFixedSize(25, 25);
+    m_btn_devices->setFixedSize(25, 25);
 
-    menuMode = new QMenu(this);
-    actInOrder = new QAction("In order", menuMode);
-    actLoop = new QAction("Loop", menuMode);
-    actShuffle = new QAction("Shuffle", menuMode);
-    actOutOfOrderTrack = new QAction("Out of order by track", menuMode);
-    actOutOfOrderGroup = new QAction("Out of order by troup", menuMode);
+    m_menu_mode = new QMenu(this);
+    m_act_in_order = new QAction("In order", m_menu_mode);
+    m_act_loop = new QAction("Loop", m_menu_mode);
+    m_act_shuffle = new QAction("Shuffle", m_menu_mode);
+    m_act_out_of_order_track = new QAction("Out of order by track", m_menu_mode);
+    m_act_out_of_order_group = new QAction("Out of order by troup", m_menu_mode);
 
-    menuDevices = new QMenu(this);
+    m_menu_devices = new QMenu(this);
 
     /// Position Bar: position/Duration
-    sliderPostion = new QSlider(Qt::Horizontal, this);
-    sliderPostion->setRange(0, 100);
+    m_slider_position = new QSlider(Qt::Horizontal, this);
+    m_slider_position->setRange(0, 100);
     /// bar's time progress
-    timeProgress = new WTimeProgress(this);
-    sliderVolume = new QSlider(Qt::Horizontal, this);
-    sliderVolume->setRange(0, 100);
-    sliderVolume->setValue(100);
-    sliderVolume->setMinimumWidth(SLIDER_VOLUME_MIN_WIDTH);
-    sliderVolume->setMaximumWidth(SLIDER_VOLUME_MAX_WIDTH);
+    m_time_progress = new WTimeProgress(this);
+    m_slider_volume = new QSlider(Qt::Horizontal, this);
+    m_slider_volume->setRange(0, 100);
+    m_slider_volume->setValue(100);
+    m_slider_volume->setMinimumWidth(SLIDER_VOLUME_MIN_WIDTH);
+    m_slider_volume->setMaximumWidth(SLIDER_VOLUME_MAX_WIDTH);
 
-    hbMain = new QHBoxLayout(this);
-    hbMain->addWidget(btnPlay);
-    hbMain->addWidget(btnPause);
-    hbMain->addWidget(btnStop);
-    hbMain->addWidget(btnPrev);
-    hbMain->addWidget(btnNext);
-    hbMain->addWidget(sliderPostion);
-    hbMain->addWidget(timeProgress);
-    hbMain->addWidget(btnDevices);
-    hbMain->addWidget(btnMode);
-    hbMain->addWidget(btnMute);
-    hbMain->addWidget(sliderVolume);
+    m_hbl_main = new QHBoxLayout(this);
+    m_hbl_main->addWidget(m_btn_play);
+    m_hbl_main->addWidget(m_btn_pause);
+    m_hbl_main->addWidget(m_btn_stop);
+    m_hbl_main->addWidget(m_btn_prev);
+    m_hbl_main->addWidget(m_btn_next);
+    m_hbl_main->addWidget(m_slider_position);
+    m_hbl_main->addWidget(m_time_progress);
+    m_hbl_main->addWidget(m_btn_devices);
+    m_hbl_main->addWidget(m_btn_mode);
+    m_hbl_main->addWidget(m_btn_mute);
+    m_hbl_main->addWidget(m_slider_volume);
 
-    for (QAction* action : {actInOrder, actLoop, actShuffle, actOutOfOrderTrack, actOutOfOrderGroup}) {
+    for (QAction* action : {m_act_in_order, m_act_loop, m_act_shuffle, m_act_out_of_order_track, m_act_out_of_order_group}) {
         action->setCheckable(true);
-        menuMode->addAction(action);
+        m_menu_mode->addAction(action);
 
         connect(action, &QAction::toggled, this, [this]() {
             QAction* act = qobject_cast<QAction*>(sender());
@@ -68,93 +68,92 @@ WControlBar::WControlBar(QWidget* parent)
         });
     }
     
-    this->setLayout(hbMain);
+    this->setLayout(m_hbl_main);
 
+    m_act_group = new QActionGroup(this);
+    m_act_group->setExclusive(true);
+    m_act_group->addAction(m_act_in_order);
+    m_act_group->addAction(m_act_loop);
+    m_act_group->addAction(m_act_shuffle);
+    m_act_group->addAction(m_act_out_of_order_track);
+    m_act_group->addAction(m_act_out_of_order_group);
 
-    actGroup = new QActionGroup(this);
-    actGroup->setExclusive(true);
-    actGroup->addAction(actInOrder);
-    actGroup->addAction(actLoop);
-    actGroup->addAction(actShuffle);
-    actGroup->addAction(actOutOfOrderTrack);
-    actGroup->addAction(actOutOfOrderGroup);
-
-    connect(btnPlay, &QPushButton::clicked, this, [this](){emit sgnBtnPlayClicked();});
-    connect(btnPause, &QPushButton::clicked, this, [this](){emit sgnBtnPauseClicked();});
-    connect(btnStop, &QPushButton::clicked, this, [this](){emit sgnBtnStopClicked();});
-    connect(btnNext, &QPushButton::clicked, this, [this](){emit sgnBtnNextClicked();});
-    connect(btnPrev, &QPushButton::clicked, this, [this](){emit sgnBtnPrevClicked();});
-    connect(btnMute, &QPushButton::clicked, this, [this](){emit sgnBtnMuteClicked();});
-    connect(btnMode, &QPushButton::clicked, this, [this](){
-        QPoint pos = btnMode->mapToGlobal(QPoint(0, btnMode->height()));
-        menuMode->exec(pos);
+    connect(m_btn_play, &QPushButton::clicked, this, [this](){emit sgnBtnPlayClicked();});
+    connect(m_btn_pause, &QPushButton::clicked, this, [this](){emit sgnBtnPauseClicked();});
+    connect(m_btn_stop, &QPushButton::clicked, this, [this](){emit sgnBtnStopClicked();});
+    connect(m_btn_next, &QPushButton::clicked, this, [this](){emit sgnBtnNextClicked();});
+    connect(m_btn_prev, &QPushButton::clicked, this, [this](){emit sgnBtnPrevClicked();});
+    connect(m_btn_mute, &QPushButton::clicked, this, [this](){emit sgnBtnMuteClicked();});
+    connect(m_btn_mode, &QPushButton::clicked, this, [this](){
+        QPoint pos = m_btn_mode->mapToGlobal(QPoint(0, m_btn_mode->height()));
+        m_menu_mode->exec(pos);
     });
 
-    connect(actInOrder, &QAction::triggered, this, [this](){emit sgnInOrder();});
-    connect(actLoop, &QAction::triggered, this, [this](){emit sgnLoop();});
-    connect(actShuffle, &QAction::triggered, this, [this](){emit sgnShuffle();});
-    connect(actOutOfOrderTrack, &QAction::triggered, this, [this](){emit sgnOutOfOrderTrack();});
-    connect(actOutOfOrderGroup, &QAction::triggered, this, [this](){emit sgnOutOfOrderGroup();});
+    connect(m_act_in_order, &QAction::triggered, this, [this](){emit sgnInOrder();});
+    connect(m_act_loop, &QAction::triggered, this, [this](){emit sgnLoop();});
+    connect(m_act_shuffle, &QAction::triggered, this, [this](){emit sgnShuffle();});
+    connect(m_act_out_of_order_track, &QAction::triggered, this, [this](){emit sgnOutOfOrderTrack();});
+    connect(m_act_out_of_order_group, &QAction::triggered, this, [this](){emit sgnOutOfOrderGroup();});
 
-    connect(sliderPostion, &QSlider::sliderReleased, this, [this](){emit sgnSliderPositionReleased(sliderPostion->value());});
-    connect(sliderVolume, &QSlider::sliderReleased, this, [this](){emit sgnSliderVolumeReleased(sliderVolume->value());});
-    connect(sliderVolume, &QSlider::sliderMoved, this, [this](){emit sgnSliderVolumeMoved(sliderVolume->value());});
-    connect(sliderPostion, &QSlider::sliderMoved, this, [this](int value){
-        timeProgress->setCurrentTime(value);
+    connect(m_slider_position, &QSlider::sliderReleased, this, [this](){emit sgnSliderPositionReleased(m_slider_position->value());});
+    connect(m_slider_volume, &QSlider::sliderReleased, this, [this](){emit sgnSliderVolumeReleased(m_slider_volume->value());});
+    connect(m_slider_volume, &QSlider::sliderMoved, this, [this](){emit sgnSliderVolumeMoved(m_slider_volume->value());});
+    connect(m_slider_position, &QSlider::sliderMoved, this, [this](int value){
+        m_time_progress->setCurrentTime(value);
     });
-    connect(btnDevices, &QPushButton::clicked, this, [this](){
-        QPoint pos = btnDevices->mapToGlobal(QPoint(0, btnDevices->height()));
-        menuDevices->exec(pos);
+    connect(m_btn_devices, &QPushButton::clicked, this, [this](){
+        QPoint pos = m_btn_devices->mapToGlobal(QPoint(0, m_btn_devices->height()));
+        m_menu_devices->exec(pos);
     });
 }
 
 WControlBar::~WControlBar() {}
 
 void WControlBar::onPlayerStateChanged(QMediaPlayer::PlaybackState newState) {
-    btnPlay->setEnabled( newState != QMediaPlayer::PlaybackState::PlayingState );
-    btnPause->setEnabled( newState != QMediaPlayer::PlaybackState::PausedState );
+    m_btn_play->setEnabled( newState != QMediaPlayer::PlaybackState::PlayingState );
+    m_btn_pause->setEnabled( newState != QMediaPlayer::PlaybackState::PausedState );
 }
 
 void WControlBar::updateDuration(qint64 duration_ms) {
     qint64 duration_s = duration_ms / 1000;
-    sliderPostion->setRange(0, duration_s);
-    timeProgress->setTotalTime(duration_s);
+    m_slider_position->setRange(0, duration_s);
+    m_time_progress->setTotalTime(duration_s);
 }
 
 void WControlBar::updatePosition(qint64 position_ms) {
-    if (!sliderPostion->isSliderDown())
+    if (!m_slider_position->isSliderDown())
     {
-        sliderPostion->setValue(position_ms/1000);
-        timeProgress->setCurrentTime(position_ms/1000);
+        m_slider_position->setValue(position_ms/1000);
+        m_time_progress->setCurrentTime(position_ms/1000);
     }
 }
 
 void WControlBar::setPlayMode(PlayMode mode) {
-    for (QAction* action : {actInOrder, actLoop, actShuffle, actOutOfOrderTrack, actOutOfOrderGroup}) {
+    for (QAction* action : {m_act_in_order, m_act_loop, m_act_shuffle, m_act_out_of_order_track, m_act_out_of_order_group}) {
         action->setCheckable(true);
         action->setIconText("");
     }
     if (mode == PlayMode::in_order) {
-        actInOrder->setChecked(true);
+        m_act_in_order->setChecked(true);
     } else if (mode == PlayMode::loop) {
-        actLoop->setChecked(true);
+        m_act_loop->setChecked(true);
     } else if (mode == PlayMode::shuffle)  {
-        actShuffle->setChecked(true);
+        m_act_shuffle->setChecked(true);
     } else if (mode == PlayMode::out_of_order_group) {
-        actOutOfOrderGroup->setChecked(true);
+        m_act_out_of_order_group->setChecked(true);
     } else if (mode == PlayMode::out_of_order_track) {
-        actOutOfOrderTrack->setChecked(true);
+        m_act_out_of_order_track->setChecked(true);
     }
 }
 
 void WControlBar::setDevice(const QList<QAudioDevice>& devices, const QByteArray& current_id) {
     m_devices = devices;
 
-    menuDevices->clear();
-    auto* group = new QActionGroup(menuDevices);
+    m_menu_devices->clear();
+    auto* group = new QActionGroup(m_menu_devices);
     group->setExclusive(true);
     for (const auto& dev : m_devices) {
-        QAction* act = menuDevices->addAction(dev.description());
+        QAction* act = m_menu_devices->addAction(dev.description());
         act->setCheckable(true);
         act->setChecked(dev.id() == current_id);
         act->setData(dev.id());
@@ -167,9 +166,9 @@ void WControlBar::setDevice(const QList<QAudioDevice>& devices, const QByteArray
 }
 
 QSlider* WControlBar::getProgressSlider() const {
-    return sliderPostion;
+    return m_slider_position;
 };
 
 QSlider* WControlBar::getVolumeSlider() const {
-    return sliderVolume;
+    return m_slider_volume;
 };

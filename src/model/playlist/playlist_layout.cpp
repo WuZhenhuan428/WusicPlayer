@@ -55,27 +55,27 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
                 node->meta.title = QFileInfo(t.filepath).fileName();
             }
             node->meta = AudioUtils::format(node->meta);
-            result.updatedMeta.append({t.tid, node->meta});
+            result.updated_meta.append({t.tid, node->meta});
         }
         trackNodes.append(node);
     }
 
     // global sorting: make the items in the same group are relatively orderly
-    if (!m_sortRules.isEmpty()) {
-        std::sort(trackNodes.begin(), trackNodes.end(), createComparator(m_sortRules));
+    if (!m_sort_rules.isEmpty()) {
+        std::sort(trackNodes.begin(), trackNodes.end(), createComparator(m_sort_rules));
     }
 
     // grouping
     std::function<void(Node*, QVector<Node*>&, int)> 
     processGroup = [&](Node* parent, QVector<Node*>& nodes, int levelIndex) {
-        if (levelIndex >= m_groupRules.size()) {
+        if (levelIndex >= m_group_rules.size()) {
             parent->children.append(nodes);
             for (auto node : nodes)
                 node->parent = parent;
             return;
         }
 
-        SortRule current_sort_rule = m_groupRules[levelIndex];
+        SortRule current_sort_rule = m_group_rules[levelIndex];
 
         QMap<QString, QVector<Node*>> buckets;
         for (Node* node : nodes) {
@@ -98,7 +98,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
 
         for (const auto& key : keys) {
             Node* groupNode = new Node(parent);
-            groupNode->groupName = key;
+            groupNode->group_name = key;
             parent->children.append(groupNode);
 
             processGroup(groupNode, buckets[key], levelIndex + 1);
@@ -111,7 +111,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
     std::function<void(Node*)>
     collectLeaves = [&](Node* n) {
         if (!n->id.isNull()) {
-            result.playbackQueue.append(n->id);
+            result.playback_queue.append(n->id);
             return;
         }
         for (Node* child : n->children)
@@ -124,60 +124,60 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
 
 void PlaylistLayoutBuilder::updateSort(SortRule rule, bool overrideExisting) {
     if (overrideExisting) {
-        m_groupRules.clear();
-        m_sortRules.clear();
+        m_group_rules.clear();
+        m_sort_rules.clear();
     }
 
-    m_groupRules.clear(); // Currently enforcing single grouping for this method based on usage context
-    m_groupRules.append(rule);
+    m_group_rules.clear(); // Currently enforcing single grouping for this method based on usage context
+    m_group_rules.append(rule);
 
-    m_sortRules.clear();
+    m_sort_rules.clear();
     
     // Default smart sorting: if grouping by Album, sort tracks by Disc -> Track#
     if (rule.type == SortType::album) {
-         m_sortRules.append({SortType::disc_number, Qt::AscendingOrder});
-         m_sortRules.append({SortType::track_number, Qt::AscendingOrder});
+         m_sort_rules.append({SortType::disc_number, Qt::AscendingOrder});
+         m_sort_rules.append({SortType::track_number, Qt::AscendingOrder});
     } 
     // If grouping by Artist, sort by Year -> Album -> Track#
     else if (rule.type == SortType::artist) {
-         m_sortRules.append({SortType::year, Qt::DescendingOrder});
-         m_sortRules.append({SortType::album, Qt::AscendingOrder});
-         m_sortRules.append({SortType::track_number, Qt::AscendingOrder});
+         m_sort_rules.append({SortType::year, Qt::DescendingOrder});
+         m_sort_rules.append({SortType::album, Qt::AscendingOrder});
+         m_sort_rules.append({SortType::track_number, Qt::AscendingOrder});
     }
     // Default fallback: Title
     else {
-         m_sortRules.append({SortType::title, Qt::AscendingOrder});
+         m_sort_rules.append({SortType::title, Qt::AscendingOrder});
     }
 }
 
 void PlaylistLayoutBuilder::setGroupRule(const QVector<SortRule>& group_rule) {
-    this->m_groupRules.clear();
+    this->m_group_rules.clear();
     if (group_rule.isEmpty()) {
         return;
     } else {
         for (const auto& it : group_rule) {
-            this->m_groupRules.append(it);
+            this->m_group_rules.append(it);
         }
     }
 }
 
 void PlaylistLayoutBuilder::setSortRule(const QVector<SortRule>& sort_rule) {
-    this->m_sortRules.clear();
+    this->m_sort_rules.clear();
     if (sort_rule.isEmpty()) {
         return;
     } else {
         for (const auto & it : sort_rule) {
-            this->m_sortRules.append(it);
+            this->m_sort_rules.append(it);
         }
     }
 }
 
 const QVector<SortRule> PlaylistLayoutBuilder::sortRules() const {
-    return this->m_sortRules;
+    return this->m_sort_rules;
 }
 
 const QVector<SortRule> PlaylistLayoutBuilder::groupRules() const {
-    return this->m_groupRules;
+    return this->m_group_rules;
 }
 
 

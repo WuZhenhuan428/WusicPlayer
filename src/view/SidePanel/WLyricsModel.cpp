@@ -17,7 +17,7 @@ void WLyricsModel::setDefaultInfo() {
     m_parser.clear();
     QString foo("[00:00.00] Wusic Player");
     m_parser.parseString(foo.toUtf8().toStdString());
-    m_currentRow = -1;
+    m_current_row = -1;
     endResetModel();
 
     emit currentLineChanged(QStringLiteral("Wusic Player"), QString());
@@ -26,7 +26,7 @@ void WLyricsModel::setDefaultInfo() {
 bool WLyricsModel::setRawLyrics(const QString& raw_data) {
     beginResetModel();
     m_parser.clear();
-    m_currentRow = -1;
+    m_current_row = -1;
     if (raw_data.isEmpty()) {
         endResetModel();
         emit currentLineChanged(QString(), QString());
@@ -45,7 +45,7 @@ bool WLyricsModel::setRawLyrics(const QString& raw_data) {
 bool WLyricsModel::setLocalLrc(const QString& filepath) {
     beginResetModel();
     m_parser.clear();
-    m_currentRow = -1;
+    m_current_row = -1;
     if (filepath.isEmpty()) {
         endResetModel();
         emit currentLineChanged(QString(), QString());
@@ -89,7 +89,7 @@ int WLyricsModel::getRowByPosition(qint64 pos_ms) {
 }
 
 int WLyricsModel::currentRow() const {
-    return m_currentRow;
+    return m_current_row;
 }
 
 
@@ -140,7 +140,7 @@ QVariant WLyricsModel::data(const QModelIndex &index, int role) const {
     }
 
     if (role == UserDefineRole::CurrentLine) {
-        return row == m_currentRow;
+        return row == m_current_row;
     }
     return QVariant();
 }
@@ -148,17 +148,17 @@ QVariant WLyricsModel::data(const QModelIndex &index, int role) const {
 
 void WLyricsModel::setCurrentPosition(qint64 pos_ms) {
     const int new_row = getRowByPosition(pos_ms);
-    if (new_row == m_currentRow) return;
+    if (new_row == m_current_row) return;
 
-    const int old_row = m_currentRow;
-    m_currentRow = new_row;
+    const int old_row = m_current_row;
+    m_current_row = new_row;
 
     if (old_row >= 0 && old_row < rowCount()) {
         const QModelIndex idx = index(old_row, 0);
         emit dataChanged(idx, idx, {UserDefineRole::CurrentLine});
     }
-    if (m_currentRow >= 0 && m_currentRow < rowCount()) {
-        const QModelIndex idx = index(m_currentRow, 0);
+    if (m_current_row >= 0 && m_current_row < rowCount()) {
+        const QModelIndex idx = index(m_current_row, 0);
         emit dataChanged(idx, idx, {UserDefineRole::CurrentLine});
         emit currentLineChanged(currentLineText(), nextLineText());
     } else {
@@ -167,16 +167,16 @@ void WLyricsModel::setCurrentPosition(qint64 pos_ms) {
 }
 
 QString WLyricsModel::prevLineText() const {
-    if (m_currentRow < 1 || m_currentRow >= rowCount() + 1) return QString();
-    return data(index(m_currentRow-1, 0), Qt::DisplayRole).toString();
+    if (m_current_row < 1 || m_current_row >= rowCount() + 1) return QString();
+    return data(index(m_current_row-1, 0), Qt::DisplayRole).toString();
 }
 
 QString WLyricsModel::currentLineText() const {
-    if (m_currentRow < 0 || m_currentRow >= rowCount()) return QString();
-    return data(index(m_currentRow, 0), Qt::DisplayRole).toString();
+    if (m_current_row < 0 || m_current_row >= rowCount()) return QString();
+    return data(index(m_current_row, 0), Qt::DisplayRole).toString();
 }
 
 QString WLyricsModel::nextLineText() const {
-    if (m_currentRow < -1 || m_currentRow >= rowCount() - 1)  return QString();
-    return data(index(m_currentRow+1, 0), Qt::DisplayRole).toString();
+    if (m_current_row < -1 || m_current_row >= rowCount() - 1)  return QString();
+    return data(index(m_current_row+1, 0), Qt::DisplayRole).toString();
 }

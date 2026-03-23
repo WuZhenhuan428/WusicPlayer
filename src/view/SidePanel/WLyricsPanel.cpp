@@ -3,8 +3,8 @@
 WLyricsPanel::WLyricsPanel(QWidget* parent)
     : QListView(parent)
 {
-    m_lrcModel = new WLyricsModel(this);
-    this->setModel(m_lrcModel);
+    m_lrc_model = new WLyricsModel(this);
+    this->setModel(m_lrc_model);
     this->setWordWrap(true);
     this->setSelectionMode(QAbstractItemView::NoSelection);
     this->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -16,9 +16,9 @@ WLyricsPanel::WLyricsPanel(QWidget* parent)
 WLyricsPanel::~WLyricsPanel() {}
 
 void WLyricsPanel::ScrollByPosition(qint64 position_ms) {
-    int row = m_lrcModel->getRowByPosition(position_ms);
-    if (row >= 0 && row < m_lrcModel->rowCount()) {
-        QModelIndex idx = m_lrcModel->index(row, 0);
+    int row = m_lrc_model->getRowByPosition(position_ms);
+    if (row >= 0 && row < m_lrc_model->rowCount()) {
+        QModelIndex idx = m_lrc_model->index(row, 0);
         if (idx.isValid()) {
             this->scrollTo(idx, QAbstractItemView::PositionAtCenter);
         }
@@ -26,21 +26,21 @@ void WLyricsPanel::ScrollByPosition(qint64 position_ms) {
 }
 
 bool WLyricsPanel::setRawLyrics(const QString& raw_data) {
-    if (m_lrcModel->setRawLyrics(raw_data)) {
+    if (m_lrc_model->setRawLyrics(raw_data)) {
         return true;
     }
     return false;
 }
 
 bool WLyricsPanel::setLocalLrc(const QString& filepath) {
-    if (m_lrcModel->setLocalLrc(filepath)) {
+    if (m_lrc_model->setLocalLrc(filepath)) {
         return true;
     }
     return false;
 }
 
 void WLyricsPanel::setDefaultInfo() {
-    m_lrcModel->setDefaultInfo();
+    m_lrc_model->setDefaultInfo();
 }
 
 void WLyricsPanel::wheelEvent(QWheelEvent* event) {

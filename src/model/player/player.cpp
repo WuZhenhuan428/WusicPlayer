@@ -4,52 +4,52 @@
 
 Player::Player(QObject *parent)
     : QObject{parent},
-    m_mediaPlayer(new QMediaPlayer(this)),
-    m_audioOutput(new QAudioOutput(this)),
-    m_mediaDevices(new QMediaDevices(this))
+    m_audio_output(new QAudioOutput(this)),
+    m_media_devices(new QMediaDevices(this)),
+    m_media_player(new QMediaPlayer(this))
 {
     setDevice();
-    connect(m_mediaPlayer, &QMediaPlayer::positionChanged, this, &Player::positionChanged);
-    connect(m_mediaPlayer, &QMediaPlayer::durationChanged, this, &Player::durationChanged);
-    connect(m_mediaPlayer, &QMediaPlayer::playbackStateChanged, this, &Player::onPlaybackStateChanged);
+    connect(m_media_player, &QMediaPlayer::positionChanged, this, &Player::positionChanged);
+    connect(m_media_player, &QMediaPlayer::durationChanged, this, &Player::durationChanged);
+    connect(m_media_player, &QMediaPlayer::playbackStateChanged, this, &Player::onPlaybackStateChanged);
 
-    connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, this, &Player::onAudioOutputchanged);
+    connect(m_media_devices, &QMediaDevices::audioOutputsChanged, this, &Player::onAudioOutputchanged);
 }
 
 Player::~Player() {
-    if (m_mediaPlayer) {
-        m_mediaPlayer->stop();
+    if (m_media_player) {
+        m_media_player->stop();
     }
 }
 
 
 void Player::read(const QString& filepath) {
     openFile(filepath);
-    m_mediaPlayer->play();
+    m_media_player->play();
 }
 
 void Player::play() {
-    m_mediaPlayer->play();
+    m_media_player->play();
 }
 
 void Player::pause() {
-    m_mediaPlayer->pause();
+    m_media_player->pause();
 }
 
 void Player::stop() {
-    m_mediaPlayer->stop();
+    m_media_player->stop();
 }
 
 void Player::openFile(const QString& filepath) {
-    m_mediaPlayer->setSource(QUrl::fromLocalFile(filepath));
+    m_media_player->setSource(QUrl::fromLocalFile(filepath));
 }
 
 QMediaPlayer* Player::getMediaPlayer() const {
-    return this->m_mediaPlayer;
+    return this->m_media_player;
 }
 
 Player::State Player::state() const {
-    return const_cast<Player*>(this)->mapPlaybackState(m_mediaPlayer->playbackState());
+    return const_cast<Player*>(this)->mapPlaybackState(m_media_player->playbackState());
 }
 
 Player::State Player::mapPlaybackState(QMediaPlayer::PlaybackState state) {
@@ -72,14 +72,14 @@ void Player::onPlaybackStateChanged(QMediaPlayer::PlaybackState state) {
 void Player::setDevice() {
     QAudioDevice curr_device = QMediaDevices::defaultAudioOutput();
     qDebug() << "[INFO] Output device:" << curr_device.description();
-    this->m_audioOutput->setDevice(curr_device);
-    this->m_mediaPlayer->setAudioOutput(m_audioOutput);
+    this->m_audio_output->setDevice(curr_device);
+    this->m_media_player->setAudioOutput(m_audio_output);
 }
 
 void Player::setOutputDevice(const QAudioDevice& device) {
     if (device.isNull()) return;
-    m_audioOutput->setDevice(device);
-    m_prefferedOutputId = device.id();
+    m_audio_output->setDevice(device);
+    m_preffered_output_id = device.id();
     qDebug() << "[INFO] Switch to device:" << device.description();
 }
 
@@ -95,7 +95,7 @@ void Player::setOutputDeviceById(const QByteArray& id) {
 }
 
 QAudioDevice Player::currentOutputDevice() const {
-    return m_audioOutput ? m_audioOutput->device() : QAudioDevice();
+    return m_audio_output ? m_audio_output->device() : QAudioDevice();
 }
 
 QList<QAudioDevice> Player::devices() const {
@@ -110,7 +110,7 @@ void Player::onAudioOutputchanged() {
     }
 
     // is current device still available
-    const QByteArray curr_id = m_audioOutput->device().id();
+    const QByteArray curr_id = m_audio_output->device().id();
     bool curr_still_exists = false;
     for (const auto& device : outputs) {
         if (device.id() == curr_id) {
@@ -120,14 +120,14 @@ void Player::onAudioOutputchanged() {
     }
 
     if (curr_still_exists) {
-        emit deviceChanged(m_audioOutput->device());
+        emit deviceChanged(m_audio_output->device());
         return;
     }
 
     // if current device failed
     for (const auto& device : outputs) {
-        if (!m_prefferedOutputId.isEmpty() && device.id() == m_prefferedOutputId) {
-            m_audioOutput->setDevice(device);
+        if (!m_preffered_output_id.isEmpty() && device.id() == m_preffered_output_id) {
+            m_audio_output->setDevice(device);
             emit deviceChanged(device);
             qDebug() << "[INFO] Restored preffered output device: " << device.description();
             return;
@@ -135,20 +135,20 @@ void Player::onAudioOutputchanged() {
     }
 
     const QAudioDevice fallback = QMediaDevices::defaultAudioOutput();
-    m_audioOutput->setDevice(fallback);
+    m_audio_output->setDevice(fallback);
     emit deviceChanged(fallback);
     qDebug() << "[AUDIO] Fallback to default output:" << fallback.description();
 }
 
 
 void Player::setPosition(qint64 position) {
-    m_mediaPlayer->setPosition(position);
+    m_media_player->setPosition(position);
 }
 
 void Player::flipMute() {
-    bool muteState = this->m_audioOutput->isMuted();
-    this->m_audioOutput->setMuted(!muteState);
-    if (1 == muteState) {
+    bool is_mute = this->m_audio_output->isMuted();
+    this->m_audio_output->setMuted(!is_mute);
+    if (1 == is_mute) {
         qDebug() << "[INFO] Mute: off";
     } else {
         qDebug() << "[INFO] Mute: on";
@@ -156,8 +156,8 @@ void Player::flipMute() {
 }
 
 void Player::setVolume(qint64 volume) {
-    double audioGain = mapSliderToVolume(volume, -50.0);
-    this->m_audioOutput->setVolume(audioGain);
+    double audio_gain = mapSliderToVolume(volume, -50.0);
+    this->m_audio_output->setVolume(audio_gain);
 }
 
 /**
@@ -167,11 +167,11 @@ void Player::setVolume(qint64 volume) {
  * @param minDb: 最小分贝值
  * @return : 音频增益0.0 - 1.0
  */
-double Player::mapSliderToVolume(qint64 value, double minDb) {
+double Player::mapSliderToVolume(qint64 value, double min_db) {
     if (value <= 0.0) {
         return 0.0;
     }
     double x = static_cast<double>(value) / 100.0;
-    double db = minDb + (0.0 - minDb) * x;
+    double db = min_db + (0.0 - min_db) * x;
     return qPow(10.0, db/20.0);
 };

@@ -1,6 +1,5 @@
 #pragma once
 #include "WLyricsModel.h"
-#include "core/types.h"
 
 #include <QWidget>
 #include <QListView>
@@ -19,6 +18,6 @@ public:
     bool setLocalLrc(const QString& filepath);
     void setDefaultInfo();
 private:
-    WLyricsModel* m_lrcModel;
+    WLyricsModel* m_lrc_model;
     void wheelEvent(QWheelEvent* event);
 };

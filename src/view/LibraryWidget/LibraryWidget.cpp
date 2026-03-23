@@ -14,13 +14,13 @@ LibraryWidget::LibraryWidget(QAbstractItemModel* song_model, QWidget *parent)
 LibraryWidget::~LibraryWidget() {}
 
 void LibraryWidget::initConnections() {
-    connect(m_playlistTree, &QTreeWidget::customContextMenuRequested, this, &LibraryWidget::callTreeContextMenu);
+    connect(m_playlist_tree, &QTreeWidget::customContextMenuRequested, this, &LibraryWidget::callTreeContextMenu);
 
-    connect(m_songTreeView, &QTreeView::doubleClicked, this, [this](const QModelIndex &index) {
+    connect(m_song_tree_view, &QTreeView::doubleClicked, this, [this](const QModelIndex &index) {
         emit sgnPlayTrackByModelIndex(index);
     });
 
-    connect(m_playlistTree, &QTreeWidget::itemDoubleClicked, this,
+    connect(m_playlist_tree, &QTreeWidget::itemDoubleClicked, this,
         [this](QTreeWidgetItem *item){
             WPlayListWidgetItem* temp = dynamic_cast<WPlayListWidgetItem*>(item);
             if(temp) {
@@ -29,14 +29,14 @@ void LibraryWidget::initConnections() {
         }
     );
 
-    connect(m_songTreeViewHeader, &QHeaderView::customContextMenuRequested, this, [this](const QPoint& pos){
-        int logical_index = m_songTreeViewHeader->logicalIndexAt(pos);
+    connect(m_song_tree_view_header, &QHeaderView::customContextMenuRequested, this, [this](const QPoint& pos){
+        int logical_index = m_song_tree_view_header->logicalIndexAt(pos);
         QMenu menu(this);
         QAction* actInsert = menu.addAction("Insert Column Here");
         QAction* actRemove = menu.addAction("Remove This Column");
 
         connect(actInsert, &QAction::triggered, [this, logical_index](){
-            auto* my_model = dynamic_cast<PlaylistViewModel*>(m_songTreeView->model());
+            auto* my_model = dynamic_cast<PlaylistViewModel*>(m_song_tree_view->model());
             if (!my_model) return;
             WInsertColumnDialog dialog;
             int maxIndex = my_model->getColumns().size();
@@ -48,7 +48,7 @@ void LibraryWidget::initConnections() {
             }
         });
         connect(actRemove, &QAction::triggered, [this, logical_index](){
-            auto* my_model = dynamic_cast<PlaylistViewModel*>(m_songTreeView->model());
+            auto* my_model = dynamic_cast<PlaylistViewModel*>(m_song_tree_view->model());
             WColumnIndexDialog dialog(tr("Remove column"), tr("Input the column index except 0"), this);
             int maxIndex = my_model->getColumns().size() - 1;
             dialog.setMaxIndex(maxIndex);
@@ -57,7 +57,7 @@ void LibraryWidget::initConnections() {
                 my_model->removeColumn(dialog.index());
             }
         });
-        menu.exec(m_songTreeViewHeader->mapToGlobal(pos));
+        menu.exec(m_song_tree_view_header->mapToGlobal(pos));
     });
 }
 
@@ -67,7 +67,7 @@ void LibraryWidget::initConnections() {
 
 // old: onTreeContextMenuRequested
 void LibraryWidget::callTreeContextMenu(const QPoint &pos) {
-    QTreeWidgetItem* item = m_playlistTree->itemAt(pos);
+    QTreeWidgetItem* item = m_playlist_tree->itemAt(pos);
     if (!item) return;
 
     WPlayListWidgetItem* playlist_item = dynamic_cast<WPlayListWidgetItem*>(item);
@@ -92,101 +92,101 @@ void LibraryWidget::callTreeContextMenu(const QPoint &pos) {
 
     connect(actRemove, &QAction::triggered, this, [this, pid](){ emit sgnRemovePlaylist(pid); });
 
-    menu.exec(m_playlistTree->mapToGlobal(pos));
+    menu.exec(m_playlist_tree->mapToGlobal(pos));
 }
 
 void LibraryWidget::initUI() {
-    m_playlistTree = new QTreeWidget;
-    m_playlistTree->setHeaderLabel("Playlist");
-    m_playlistTree->setMinimumWidth(120);
-    m_playlistTree->setContextMenuPolicy(Qt::CustomContextMenu);
-    m_playlistTree->setRootIsDecorated(false);
-    m_playlistTree->setIndentation(0);
+    m_playlist_tree = new QTreeWidget;
+    m_playlist_tree->setHeaderLabel("Playlist");
+    m_playlist_tree->setMinimumWidth(120);
+    m_playlist_tree->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_playlist_tree->setRootIsDecorated(false);
+    m_playlist_tree->setIndentation(0);
 
-    m_songTreeView = new QTreeView;
-    m_songTreeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    m_songTreeView->setSortingEnabled(true);
-    m_songTreeView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    m_songTreeView->setAlternatingRowColors(true);
-    m_songTreeViewHeader = m_songTreeView->header();
-    m_songTreeViewHeader->setSectionResizeMode(0, QHeaderView::Interactive);
-    m_songTreeViewHeader->setSectionsMovable(true);
-    m_songTreeViewHeader->setFirstSectionMovable(true);
-    m_songTreeViewHeader->setMinimumSectionSize(30);
-    m_songTreeViewHeader->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    m_songTreeViewHeader->setContextMenuPolicy(Qt::CustomContextMenu);
-    m_songTreeView->setHeaderHidden(false);
-    m_songTreeViewHeader->setVisible(true);
-    m_songTreeView->setRootIsDecorated(false);
-    m_songTreeView->setIndentation(0);
+    m_song_tree_view = new QTreeView;
+    m_song_tree_view->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    m_song_tree_view->setSortingEnabled(true);
+    m_song_tree_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_song_tree_view->setAlternatingRowColors(true);
+    m_song_tree_view_header = m_song_tree_view->header();
+    m_song_tree_view_header->setSectionResizeMode(0, QHeaderView::Interactive);
+    m_song_tree_view_header->setSectionsMovable(true);
+    m_song_tree_view_header->setFirstSectionMovable(true);
+    m_song_tree_view_header->setMinimumSectionSize(30);
+    m_song_tree_view_header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    m_song_tree_view_header->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_song_tree_view->setHeaderHidden(false);
+    m_song_tree_view_header->setVisible(true);
+    m_song_tree_view->setRootIsDecorated(false);
+    m_song_tree_view->setIndentation(0);
 
-    m_mainSplitter = new QSplitter(Qt::Horizontal, this);
-    m_mainSplitter->addWidget(m_playlistTree);
-    m_mainSplitter->addWidget(m_songTreeView);
-    m_mainSplitter->setStretchFactor(0, 1);
-    m_mainSplitter->setStretchFactor(1, 3);
-    m_mainSplitter->setChildrenCollapsible(false);
+    m_main_splitter = new QSplitter(Qt::Horizontal, this);
+    m_main_splitter->addWidget(m_playlist_tree);
+    m_main_splitter->addWidget(m_song_tree_view);
+    m_main_splitter->setStretchFactor(0, 1);
+    m_main_splitter->setStretchFactor(1, 3);
+    m_main_splitter->setChildrenCollapsible(false);
 
-    m_mainLayout = new QHBoxLayout;
-    m_mainLayout->addWidget(m_mainSplitter);
+    m_main_layout = new QHBoxLayout;
+    m_main_layout->addWidget(m_main_splitter);
 
-    this->setLayout(m_mainLayout);
+    this->setLayout(m_main_layout);
 }
 
 void LibraryWidget::setSongTreeModel(QAbstractItemModel* model) {
-    m_songTreeView->setModel(model);
+    m_song_tree_view->setModel(model);
     if (!model) return;
     connect(model, &QAbstractItemModel::modelReset, this, &LibraryWidget::updateSongView, Qt::UniqueConnection);
 }
 
 void LibraryWidget::setPlaylists(const QVector<QPair<playlistId, QString>>& playlists) {
-    this->m_playlistTree->clear();
+    this->m_playlist_tree->clear();
     for (const auto& list : playlists) {
-        new WPlayListWidgetItem(this->m_playlistTree, list.second, list.first);
+        new WPlayListWidgetItem(this->m_playlist_tree, list.second, list.first);
     }
 }
 
 QByteArray LibraryWidget::songTreeHeaderState() const {
-    return this->m_songTreeViewHeader->saveState();
+    return this->m_song_tree_view_header->saveState();
 }
 
 void LibraryWidget::setSongTreeHeaderState(QByteArray state) {
-    this->m_songTreeViewHeader->restoreState(state);
+    this->m_song_tree_view_header->restoreState(state);
 }
 
 QByteArray LibraryWidget::splitterState() const {
-    return this->m_mainSplitter->saveState();
+    return this->m_main_splitter->saveState();
 }
 
 void LibraryWidget::setSplitterState(QByteArray state) {
-    this->m_mainSplitter->restoreState(state);
+    this->m_main_splitter->restoreState(state);
 }
 
 Qt::Orientation LibraryWidget::splitterOrientation() const {
-    return this->m_mainSplitter->orientation();
+    return this->m_main_splitter->orientation();
 }
 
 void LibraryWidget::setSplitterOrientation(Qt::Orientation orient) {
-    this->m_mainSplitter->setOrientation(orient);
+    this->m_main_splitter->setOrientation(orient);
 }
 
 
 void LibraryWidget::updateSongView() {
-    QAbstractItemModel* model = m_songTreeView->model();
+    QAbstractItemModel* model = m_song_tree_view->model();
     if (!model) return;
     for (int i = 0; i < model->rowCount(); ++i) {
         QModelIndex idx = model->index(i, 0);
         if (model->hasChildren(idx)) {
-            m_songTreeView->setFirstColumnSpanned(i, QModelIndex(), true);
-            m_songTreeView->setExpanded(idx, true);
+            m_song_tree_view->setFirstColumnSpanned(i, QModelIndex(), true);
+            m_song_tree_view->setExpanded(idx, true);
         }
     }
 }
 
 QTreeView* LibraryWidget::songTreeView() const {
-    return m_songTreeView;
+    return m_song_tree_view;
 }
 
 QHeaderView* LibraryWidget::songTreeHeader() const {
-    return m_songTreeViewHeader;
+    return m_song_tree_view_header;
 }

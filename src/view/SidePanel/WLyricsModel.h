@@ -7,7 +7,6 @@
 #include <QPainter>
 
 #include "lrc_parser.h"
-#include "core/types.h"     
 
 
 class WLyricsModel : public QAbstractListModel
@@ -45,5 +44,5 @@ signals:
 
 private:
     LrcParser m_parser;
-    int m_currentRow = -1;
+    int m_current_row = -1;
 };

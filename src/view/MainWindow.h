@@ -68,10 +68,10 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private:
-    PlaybackController* m_playbackController;
-    PlaylistController* m_playlistController;
+    PlaybackController* m_playback_controller;
+    PlaylistController* m_playlist_controller;
 
-    bool m_cacheLoadScheduled = false;
+    bool m_cache_load_scheduled = false;
 
     void initUI();
     void buildMenuBar();
@@ -85,52 +85,52 @@ private:
     
     // UI Widgets declaraion
     /// Menu widgets
-    QMenuBar* mainMenuBar;
-    QToolBar* bottomToolBar;
-    WControlBar* controlBar = nullptr;
+    QMenuBar* m_menubar_main;
+    QToolBar* m_bottom_toolbar;
+    WControlBar* m_control_bar = nullptr;
 
     // menu File
-    QMenu* menuFile;
-    QAction* actOpenFile;
-    QAction* actAddFile;
-    QAction* actAddFolder;
-    QAction* actNewPlaylist;
-    QAction* actLoadPlaylist;
-    QAction* actCopyPlaylist;
-    QAction* actRenamePlaylist;
-    QAction* actRemovePlaylist;
-    QAction* actSavePlaylist;
-    QAction* actExit;
+    QMenu* m_menu_file;
+    QAction* m_act_open_file;
+    QAction* m_act_add_file;
+    QAction* m_act_add_folder;
+    QAction* m_act_new_playlist;
+    QAction* m_act_load_playlist;
+    QAction* m_act_copy_playlist;
+    QAction* m_act_rename_playlist;
+    QAction* m_act_remove_playlist;
+    QAction* m_act_save_playlist;
+    QAction* m_act_exit;
     
     // menu View
-    QMenu* menuView;
-    QAction* actSetSortRule;
-    QAction* actInsertColumn;
-    QAction* actRemoveColumn;
-    QAction* actSearchPanel;
-    QAction* actShowDesktopLyrics;
+    QMenu* m_menu_view;
+    QAction* m_act_set_sort_rule;
+    QAction* m_act_insert_column;
+    QAction* m_act_remove_column;
+    QAction* m_act_search_panel;
+    QAction* m_act_show_desktop_lyrics;
     
     // menu Help
-    QMenu* menuHelp;
-    QAction* actManual;
-    QAction* actAbout;
+    QMenu* m_menu_help;
+    QAction* m_act_manual;
+    QAction* m_act_about;
 
     // menu Settings
-    QMenu* menuSettings;
-    QAction* actSettings;
+    QMenu* m_menu_settings;
+    QAction* m_act_settings;
     
     // +++main window
-    LibraryWidget* m_libraryPanel = nullptr;
-    SidePanel* m_sidePanel = nullptr;
-    QWidget* centerWidget;
-    QHBoxLayout* mainLayout;
+    LibraryWidget* m_library_panel = nullptr;
+    SidePanel* m_side_panel = nullptr;
+    QWidget* m_center_widget;
+    QHBoxLayout* m_hbl_main;
 
-    PlaylistSearchPanel* searchPanel = nullptr;
-    DesktopLyricsWidget* m_desktoplyricsWidget = nullptr;
+    PlaylistSearchPanel* m_search_panel = nullptr;
+    DesktopLyricsWidget* m_desktop_lyrics_widget = nullptr;
 
 public:
-    QByteArray m_searchPanelHeaderStateCache;
-    QByteArray m_searchPanelGeoCache;
+    QByteArray m_search_panel_header_state_cache;
+    QByteArray m_search_panel_geo_cache;
     
 signals:
     void sgnLoadPlaylist();

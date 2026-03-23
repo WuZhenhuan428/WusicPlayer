@@ -35,8 +35,8 @@ signals:
     void changedCurrentPlayMode(const PlayMode& mode);
 
 private:
-    playlistId m_currentPlaylistId;
-    trackId m_currentTrackId;
+    playlistId m_current_playlist_id;
+    trackId m_current_track_id;
     PlayMode m_mode;
 };
 

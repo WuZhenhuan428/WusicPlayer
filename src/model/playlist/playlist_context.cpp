@@ -17,26 +17,26 @@ void PlaylistContext::setPlayMode(PlayMode mode) {
 }
 
 void PlaylistContext::setPlaylist(const playlistId& pid) {
-    if (this->m_currentPlaylistId == pid) { return; }
+    if (this->m_current_playlist_id == pid) { return; }
     // PlaylistManager从UI获取id并通过PlaylistRepo进行检查，
     // 此处不需要进行额外的检查（大概）
-    m_currentPlaylistId = pid;
+    m_current_playlist_id = pid;
     emit changedCurrentListId(pid);
 }
 
 void PlaylistContext::setPlayTrack(const trackId& current) {
     // 输入端应当提前进行合法性检查
     // 重复播放音轨应当从头开始播放，无需保证是同一个轨道
-    m_currentTrackId = current;
+    m_current_track_id = current;
     emit changedCurrentTrackId(current);
 }
 
 const playlistId& PlaylistContext::getPlaylistId() {
-    return this->m_currentPlaylistId;
+    return this->m_current_playlist_id;
 }
 
 const trackId& PlaylistContext::getPlayTrackId() {
-    return this->m_currentTrackId;
+    return this->m_current_track_id;
 }
 
 PlayMode PlaylistContext::getPlayMode() {

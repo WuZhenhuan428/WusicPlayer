@@ -56,15 +56,15 @@ signals:
     void deviceChanged(QAudioDevice device);
 
 private:
-    QAudioOutput* m_audioOutput;
-    QMediaDevices* m_mediaDevices;
-    QByteArray m_prefferedOutputId;
-    QMediaPlayer* m_mediaPlayer;
+    QAudioOutput* m_audio_output;
+    QMediaDevices* m_media_devices;
+    QByteArray m_preffered_output_id;
+    QMediaPlayer* m_media_player;
     
-    double m_minDb;
+    double m_min_db;
     void setDevice();
     void openFile(const QString& filepath);
-    double mapSliderToVolume(qint64 value, double minDb = -60.0);
+    double mapSliderToVolume(qint64 value, double min_db = -60.0);
     Player::State mapPlaybackState(QMediaPlayer::PlaybackState state);
 
     void onPlaybackStateChanged(QMediaPlayer::PlaybackState state);

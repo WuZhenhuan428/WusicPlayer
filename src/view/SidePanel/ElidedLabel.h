@@ -20,12 +20,12 @@ public:
         this->setFullText(text);
     }
 
-    QString fullText() const { return m_fullText; }
+    QString fullText() const { return m_full_text; }
 
 public slots:
     void setFullText(const QString& text) {
-        if (m_fullText != text) {
-            m_fullText = text;
+        if (m_full_text != text) {
+            m_full_text = text;
             updateElidedText();
         }
     }
@@ -40,12 +40,12 @@ private:
     void updateElidedText() {
         QFontMetrics metrics(font());
         const int avaliable_width = qMax(0, this->contentsRect().width());
-        QString elided_text = metrics.elidedText(m_fullText, Qt::ElideRight, avaliable_width);
+        QString elided_text = metrics.elidedText(m_full_text, Qt::ElideRight, avaliable_width);
         if (elided_text != text()) {
             QLabel::setText(elided_text);
-            setToolTip(m_fullText != elided_text ? m_fullText : "");
+            setToolTip(m_full_text != elided_text ? m_full_text : "");
         }
     }
 
-    QString m_fullText;
+    QString m_full_text;
 };

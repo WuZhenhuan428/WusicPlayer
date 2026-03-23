@@ -3,44 +3,44 @@
 SettingsPanel::SettingsPanel(QWidget *parent)
     : QWidget(parent)
 {
-    m_listWidget = new QListWidget(this);
-    m_stackedWidget = new QStackedWidget(this);
+    m_list_widget = new QListWidget(this);
+    m_stacked_widget = new QStackedWidget(this);
 
-    m_settingsLayout = new QHBoxLayout();
+    m_hbl_settings = new QHBoxLayout();
     
-    m_settingsLayout->addWidget(m_listWidget);
-    m_settingsLayout->addWidget(m_stackedWidget);
+    m_hbl_settings->addWidget(m_list_widget);
+    m_hbl_settings->addWidget(m_stacked_widget);
 
-    m_btnClose = new QPushButton("Close", this);
-    m_bottomLayout = new QHBoxLayout();
-    m_bottomLayout->addStretch();
-    m_bottomLayout->addWidget(m_btnClose);
+    m_btn_close = new QPushButton("Close", this);
+    m_hbl_bottom = new QHBoxLayout();
+    m_hbl_bottom->addStretch();
+    m_hbl_bottom->addWidget(m_btn_close);
 
-    m_mainLayout = new QVBoxLayout();
-    m_mainLayout->addLayout(m_settingsLayout);
-    m_mainLayout->addLayout(m_bottomLayout);
+    m_vbl_main = new QVBoxLayout();
+    m_vbl_main->addLayout(m_hbl_settings);
+    m_vbl_main->addLayout(m_hbl_bottom);
 
     this->setWindowTitle(tr("Settings"));
 
-    this->setLayout(m_mainLayout);
+    this->setLayout(m_vbl_main);
 
 
-    m_listWidget->setMinimumWidth(120);
-    m_listWidget->setMaximumWidth(120);
+    m_list_widget->setMinimumWidth(120);
+    m_list_widget->setMaximumWidth(120);
 
 
-    connect(m_listWidget, &QListWidget::doubleClicked, this, [this](const QModelIndex &index){
-        m_stackedWidget->setCurrentIndex(index.row());
+    connect(m_list_widget, &QListWidget::doubleClicked, this, [this](const QModelIndex &index){
+        m_stacked_widget->setCurrentIndex(index.row());
     });
-    connect(m_btnClose, &QPushButton::clicked, this, &QWidget::close);
+    connect(m_btn_close, &QPushButton::clicked, this, &QWidget::close);
 }
 
 SettingsPanel::~SettingsPanel() {}
 
 
 void SettingsPanel::registerWidget(QListWidgetItem* title, QWidget* widget) {
-    m_listWidget->addItem(title);
-    m_stackedWidget->addWidget(widget);
+    m_list_widget->addItem(title);
+    m_stacked_widget->addWidget(widget);
 }
 
 void SettingsPanel::emitStateSnapshot() {

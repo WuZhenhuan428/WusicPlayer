@@ -28,11 +28,11 @@ signals:
     void sgnStateSnapshot(const QByteArray& geometry);
 
 private:
-    QListWidget *m_listWidget;
-    QStackedWidget* m_stackedWidget;
+    QListWidget *m_list_widget;
+    QStackedWidget* m_stacked_widget;
 
-    QHBoxLayout* m_settingsLayout;
-    QHBoxLayout* m_bottomLayout;
-    QVBoxLayout* m_mainLayout;
-    QPushButton* m_btnClose;
+    QHBoxLayout* m_hbl_settings;
+    QHBoxLayout* m_hbl_bottom;
+    QVBoxLayout* m_vbl_main;
+    QPushButton* m_btn_close;
 };

@@ -3,34 +3,34 @@
 ShortcutsPanel::ShortcutsPanel(QWidget* parent)
     : QWidget(parent)
 {
-    m_labelSearch = new QLabel("Search functions:", this);
-    m_lineEditSearch = new QLineEdit(this);
-    m_searchLineLayout = new QHBoxLayout();
+    m_lb_search = new QLabel("Search functions:", this);
+    m_le_search = new QLineEdit(this);
+    m_hbl_search_line = new QHBoxLayout();
 
-    m_searchLineLayout->addWidget(m_labelSearch);
-    m_searchLineLayout->addWidget(m_lineEditSearch);
+    m_hbl_search_line->addWidget(m_lb_search);
+    m_hbl_search_line->addWidget(m_le_search);
 
-    m_viewShortcuts = new QTableView(this);
-    m_viewShortcuts->setEditTriggers(QAbstractItemView::DoubleClicked | QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed);
+    m_table_view_shortcuts = new QTableView(this);
+    m_table_view_shortcuts->setEditTriggers(QAbstractItemView::DoubleClicked | QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed);
 
-    m_btnApply = new QPushButton("Apply", this);
-    m_btnRestore = new QPushButton("Restore", this);
-    m_btnDefault = new QPushButton("Default", this);
-    m_buttomLayout = new QHBoxLayout();
-    m_buttomLayout->addWidget(m_btnApply);
-    m_buttomLayout->addWidget(m_btnRestore);
-    m_buttomLayout->addWidget(m_btnDefault);
+    m_btn_apply = new QPushButton("Apply", this);
+    m_btn_restore = new QPushButton("Restore", this);
+    m_btn_default = new QPushButton("Default", this);
+    m_hbl_buttom = new QHBoxLayout();
+    m_hbl_buttom->addWidget(m_btn_apply);
+    m_hbl_buttom->addWidget(m_btn_restore);
+    m_hbl_buttom->addWidget(m_btn_default);
 
-    m_mainLayout = new QVBoxLayout();
-    m_mainLayout->addLayout(m_searchLineLayout);
-    m_mainLayout->addWidget(m_viewShortcuts);
-    m_mainLayout->addLayout(m_buttomLayout);
+    m_vbl_main = new QVBoxLayout();
+    m_vbl_main->addLayout(m_hbl_search_line);
+    m_vbl_main->addWidget(m_table_view_shortcuts);
+    m_vbl_main->addLayout(m_hbl_buttom);
 
-    this->setLayout(m_mainLayout);
+    this->setLayout(m_vbl_main);
 
-    connect(m_btnApply, &QPushButton::clicked, this, [this](){ emit sgnApplyConfig(); });
-    connect(m_btnDefault, &QPushButton::clicked, this, [this](){ emit sgnDefaultConfig(); });
-    connect(m_btnRestore, &QPushButton::clicked, this, [this](){ emit sgnRestoreConfig(); });
+    connect(m_btn_apply, &QPushButton::clicked, this, [this](){ emit sgnApplyConfig(); });
+    connect(m_btn_default, &QPushButton::clicked, this, [this](){ emit sgnDefaultConfig(); });
+    connect(m_btn_restore, &QPushButton::clicked, this, [this](){ emit sgnRestoreConfig(); });
 }
 
 ShortcutsPanel::~ShortcutsPanel() {}
@@ -43,5 +43,5 @@ QListWidgetItem* ShortcutsPanel::getListItem() {
 }
 
 void ShortcutsPanel::setViewModel(QAbstractTableModel* model) {
-    m_viewShortcuts->setModel(model);
+    m_table_view_shortcuts->setModel(model);
 }

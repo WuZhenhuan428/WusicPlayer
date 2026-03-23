@@ -1,6 +1,5 @@
 #pragma once
 
-#include "model/player/player.h"
 #include "WLyricsPanel.h"
 #include "core/types.h"
 #include "ElidedLabel.h"
@@ -30,14 +29,14 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
-    QLabel* m_coverLabel;
-    WLyricsPanel* m_lyricsPanel;
-    QPixmap m_originalCover;
-    QSplitter* m_panelSplitter;
+    QLabel* m_lb_cover;
+    WLyricsPanel* m_lyrics_panel;
+    QPixmap m_original_cover;
+    QSplitter* m_panel_splitter;
 
-    ElidedLabel* m_nameLabel;
-    ElidedLabel* m_albumLabel;
+    ElidedLabel* m_lb_title;
+    ElidedLabel* m_lb_album;
 
-    QVBoxLayout* m_mainLayout;
+    QVBoxLayout* m_vbl_main;
     void updateCoverScale();
 };

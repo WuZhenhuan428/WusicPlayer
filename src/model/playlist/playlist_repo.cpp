@@ -15,8 +15,6 @@
 #include <QJsonValueRef>
 #include <QJsonObject>
 
-#include "core/utils/AudioUtils.h"
-
 static QJsonObject metaToJson(const TrackMetaData& meta) {
     QJsonObject obj;
     obj["album"] = meta.album;
@@ -81,7 +79,7 @@ static QString resolvePlaylistsCacheDir() {
 PlaylistRepo::PlaylistRepo(QObject *parent)
     : QObject(parent)
 {
-    m_cacheDir = resolvePlaylistsCacheDir();
+    m_cache_dir = resolvePlaylistsCacheDir();
 }
 
 PlaylistRepo::~PlaylistRepo() {}
@@ -94,7 +92,7 @@ void PlaylistRepo::saveListToCache(std::shared_ptr<Playlist> playlist) {
     if (!playlist) {
         return;
     }
-    if (m_cacheDir.isEmpty()) {
+    if (m_cache_dir.isEmpty()) {
         qDebug() << "[WARNING] Cache dir is empty, skip saving playlist.";
         return;
     }
@@ -144,7 +142,7 @@ void PlaylistRepo::loadCacheAsync() {
 }
 
 QString PlaylistRepo::cacheFilePath(const playlistId& pid) const {
-    QDir dir(m_cacheDir);
+    QDir dir(m_cache_dir);
     return dir.filePath(pid.toString(playlistId::WithoutBraces) + ".wcpl");
 }
 
@@ -236,11 +234,11 @@ void PlaylistRepo::loadCacheFromDisk() {
 
 QVector<std::shared_ptr<Playlist>> PlaylistRepo::loadCacheFromDiskToVector() const {
     QVector<std::shared_ptr<Playlist>> loaded;
-    if (m_cacheDir.isEmpty()) {
+    if (m_cache_dir.isEmpty()) {
         return loaded;
     }
 
-    QDir dir(m_cacheDir);
+    QDir dir(m_cache_dir);
     if (!dir.exists()) {
         return loaded;
     }
@@ -498,7 +496,7 @@ void PlaylistRepo::removeList(const playlistId& pid) {
         return;
     }
     m_list.removeOne(src);
-    if (!m_cacheDir.isEmpty()) {
+    if (!m_cache_dir.isEmpty()) {
         QFile::remove(cacheFilePath(pid));
     }
     emit playlistChanged();

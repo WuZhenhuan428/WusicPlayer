@@ -51,25 +51,24 @@ private:
     void initUI();
     void initConnect();
 
-    QPoint m_dragPosition;
-    bool m_isLocked;
+    bool m_is_locked;
     QFont m_font;
 
-    DisplayMode m_displayMode;
-    AlignMode m_lineUpMode;
-    AlignMode m_lineDownMode;
+    DisplayMode m_display_mode;
+    AlignMode m_line_up_mode;
+    AlignMode m_line_down_mode;
     bool m_has_up_line_changed;
 
 
-    QPushButton* m_btnLock = nullptr;
-    QPushButton* m_btnShutDown = nullptr;
+    QPushButton* m_btn_lock = nullptr;
+    QPushButton* m_btn_shut_down = nullptr;
 
-    QLabel* m_lrcLineUp = nullptr;
-    QLabel* m_lrcLineDown = nullptr;
+    QLabel* m_lrc_line_up = nullptr;
+    QLabel* m_lrc_line_down = nullptr;
 
-    QHBoxLayout* m_toolBarLayout = nullptr;
-    QVBoxLayout* m_lrcLineLayout = nullptr;
-    QVBoxLayout* m_mainLayout = nullptr;
+    QHBoxLayout* m_hbl_toolbar = nullptr;
+    QVBoxLayout* m_hbl_lrc = nullptr;
+    QVBoxLayout* m_vbl_main = nullptr;
 
     rgb_t m_rgb_active;
     rgb_t m_rgb_inactive;

@@ -10,10 +10,8 @@ PlaylistManager::PlaylistManager(QObject* parent)
     m_repo = new PlaylistRepo(this);
     m_view = new PlaylistViewModel(m_repo, this);
 
-    connect(m_context, &PlaylistContext::changedCurrentListId
-            , m_view, &PlaylistViewModel::setPlaylist);
-    connect(m_context, &PlaylistContext::changedCurrentTrackId,
-            m_view, &PlaylistViewModel::setActiveTrack);
+    connect(m_context, &PlaylistContext::changedCurrentListId , m_view, &PlaylistViewModel::setPlaylist);
+    connect(m_context, &PlaylistContext::changedCurrentTrackId, m_view, &PlaylistViewModel::setActiveTrack);
 
     connect(m_repo, &PlaylistRepo::playlistChanged, this, &PlaylistManager::retransmissionPlaylistChanged);
     connect(m_repo, &PlaylistRepo::cacheLoadStarted, this, &PlaylistManager::cacheLoadStarted);
@@ -93,17 +91,17 @@ void PlaylistManager::addFolder(const playlistId& pid, const QString& directory)
     }
 
     const auto& files = AudioUtils::findAll(directory.toStdString());
-    QStringList tracksToAdd;
-    tracksToAdd.reserve(static_cast<int>(files.size()));
+    QStringList tracks_to_add;
+    tracks_to_add.reserve(static_cast<int>(files.size()));
 
     for(const auto& file : files) {
         if (AudioUtils::isAudioFile(file)) {
-            tracksToAdd.append(QString::fromStdString(file));
+            tracks_to_add.append(QString::fromStdString(file));
         }
     }
 
-    if (!tracksToAdd.isEmpty()) {
-        m_repo->addTracksToPlaylist(curr_pid, tracksToAdd);
+    if (!tracks_to_add.isEmpty()) {
+        m_repo->addTracksToPlaylist(curr_pid, tracks_to_add);
     }
 }
 
@@ -160,7 +158,7 @@ QString PlaylistManager::prevTrack(PlayMode mode) {
         prev_id = PlaylistNavigator::previousOfLoop(m_view->playbackQueueSnapshot().queue, curr_id);
         break;
     case PlayMode::shuffle:
-        prev_id = PlaylistNavigator::previousOfShuffle(m_view->playbackQueueSnapshot().queue);
+        prev_id = PlaylistNavigator::previousOfShuffle(m_view->playbackQueueSnapshot().queue); 
         break;
     case PlayMode::out_of_order_track:
         prev_id = PlaylistNavigator::previousOfOutOfOrderTrack(m_view->singleShuffleQueueSnapshot().queue, curr_id);
@@ -186,15 +184,15 @@ PlaylistViewModel* PlaylistManager::getViewModel() {
 }
 
 void PlaylistManager::play(int index) {
-    trackId id = m_view->trackAt(index);
-    m_context->setPlayTrack(id);
+    trackId tid = m_view->trackAt(index);
+    m_context->setPlayTrack(tid);
 
-    auto listId = m_context->getPlaylistId();
-    auto playlist = m_repo->findPlaylistById(listId);
+    auto pid = m_context->getPlaylistId();
+    auto playlist = m_repo->findPlaylistById(pid);
     if (!playlist) {
         return;
     }
-    Track* t = playlist->findTrackByID(id);
+    Track* t = playlist->findTrackByID(tid);
     if (t) {
         emit requestPlay(t->filepath);
     }

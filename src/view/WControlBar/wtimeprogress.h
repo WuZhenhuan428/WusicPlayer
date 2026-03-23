@@ -15,16 +15,14 @@ public:
     void setTotalTime(const qint64& time_s);
     void setCurrentTime(const qint64& time_s);
 private:
-    qint64 totalTime;
-    qint64 currTime;
     qint64 m_currentTime = 0;
     qint64 m_totalTime = 0;
-    QHBoxLayout* layout;
-    QLabel* lbCurrTime;
-    QLabel* lbSeparator;
-    QLabel* lbTotalTime;
+    QHBoxLayout* m_hbl_main;
+    QLabel* m_lb_current_time;
+    QLabel* m_lb_separator;
+    QLabel* m_lb_total_time;
 
     QString formatTime(const qint64& time_s);
 
-    int hour_flag;
+    int m_hour_flag;
 };

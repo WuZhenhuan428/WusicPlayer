@@ -57,10 +57,10 @@ private slots:
     void updateSongView();
 
 private:
-    QTreeView* m_songTreeView;
-    QSplitter* m_mainSplitter;
-    QTreeWidget* m_playlistTree;
-    QHeaderView* m_songTreeViewHeader;
+    QTreeView* m_song_tree_view;
+    QSplitter* m_main_splitter;
+    QTreeWidget* m_playlist_tree;
+    QHeaderView* m_song_tree_view_header;
 
-    QHBoxLayout* m_mainLayout;
+    QHBoxLayout* m_main_layout;
 };

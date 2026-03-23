@@ -10,7 +10,7 @@
 struct Node {
     trackId id; // Track UUID. If null, it's a group node.
     TrackMetaData meta;
-    QString groupName;
+    QString group_name;
     Node* parent = nullptr;
     QVector<Node*> children;
 
@@ -25,28 +25,28 @@ struct Node {
     ~Node() { qDeleteAll(children); }
 };
 
-struct trackEntry
+struct TrackEntry
 {
     trackId id;
     TrackMetaData meta;
 };
 
-struct groupEntry
+struct GroupEntry
 {
     QString name;
-    QVector<trackEntry> tracks;
+    QVector<TrackEntry> tracks;
 };
 
-struct playlistLayout
+struct PlaylistLayout
 {
-    QVector<groupEntry> groups;
+    QVector<GroupEntry> groups;
 };
 
 struct LayoutResult
 {
     Node* root;
-    QVector<trackId> playbackQueue;
-    QVector<trackEntry> updatedMeta;
+    QVector<trackId> playback_queue;
+    QVector<TrackEntry> updated_meta;
 };
 
 
@@ -71,6 +71,6 @@ public:
     static QVariant getMetaDataValue(const TrackMetaData& mata, SortType type);
 
 private:
-    QVector<SortRule> m_groupRules;
-    QVector<SortRule> m_sortRules;
+    QVector<SortRule> m_group_rules;
+    QVector<SortRule> m_sort_rules;
 };

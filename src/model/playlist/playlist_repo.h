@@ -53,6 +53,6 @@ private:
     bool writeJsonPlaylist(QIODevice& device, const std::shared_ptr<Playlist>& playlist) const;
 
     QVector<std::shared_ptr<Playlist>> m_list;
-    QString m_cacheDir;     // <standard app data dir>/playlists
+    QString m_cache_dir;     // <standard app data dir>/playlists
     static constexpr int kSchemaVersion = 1;
 };

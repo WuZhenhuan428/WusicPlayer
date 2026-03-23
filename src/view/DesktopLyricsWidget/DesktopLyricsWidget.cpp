@@ -9,10 +9,10 @@
 
 DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent)
     : QWidget(parent),
-      m_isLocked(false),
-      m_displayMode(DisplayMode::TwoLine),
-      m_lineUpMode(AlignMode::Left),
-      m_lineDownMode(AlignMode::Right),
+      m_is_locked(false),
+      m_display_mode(DisplayMode::TwoLine),
+      m_line_up_mode(AlignMode::Left),
+      m_line_down_mode(AlignMode::Right),
       m_has_up_line_changed(false)
 {
     this->initUI();
@@ -34,52 +34,52 @@ DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent)
 DesktopLyricsWidget::~DesktopLyricsWidget() {}
 
 void DesktopLyricsWidget::initUI() {
-    m_btnShutDown = new QPushButton(this);
-    m_btnLock = new QPushButton(this);
+    m_btn_shut_down = new QPushButton(this);
+    m_btn_lock = new QPushButton(this);
 
-    m_btnLock->setText("L");
-    m_btnLock->setFixedSize(20, 20);
-    m_btnShutDown->setText("X");
-    m_btnShutDown->setFixedSize(20, 20);
+    m_btn_lock->setText("L");
+    m_btn_lock->setFixedSize(20, 20);
+    m_btn_shut_down->setText("X");
+    m_btn_shut_down->setFixedSize(20, 20);
     
-    m_toolBarLayout = new QHBoxLayout();
-    m_toolBarLayout->setContentsMargins(0, 0, 0, 0);
-    m_toolBarLayout->addStretch();
-    m_toolBarLayout->addWidget(m_btnLock);
-    m_toolBarLayout->addWidget(m_btnShutDown);
+    m_hbl_toolbar = new QHBoxLayout();
+    m_hbl_toolbar->setContentsMargins(0, 0, 0, 0);
+    m_hbl_toolbar->addStretch();
+    m_hbl_toolbar->addWidget(m_btn_lock);
+    m_hbl_toolbar->addWidget(m_btn_shut_down);
     
-    m_lrcLineUp = new QLabel(this);
-    m_lrcLineDown = new QLabel(this);
+    m_lrc_line_up = new QLabel(this);
+    m_lrc_line_down = new QLabel(this);
     
-    m_lrcLineUp->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    m_lrcLineDown->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    m_lrcLineUp->setAlignment(Qt::AlignCenter);
-    m_lrcLineDown->setAlignment(Qt::AlignCenter);
+    m_lrc_line_up->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    m_lrc_line_down->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    m_lrc_line_up->setAlignment(Qt::AlignCenter);
+    m_lrc_line_down->setAlignment(Qt::AlignCenter);
 
-    m_lrcLineLayout = new QVBoxLayout();
-    m_lrcLineLayout->setContentsMargins(0, 0, 0, 0);
-    m_lrcLineLayout->addSpacing(2);
-    m_lrcLineLayout->addWidget(m_lrcLineUp);
-    m_lrcLineLayout->addWidget(m_lrcLineDown);
+    m_hbl_lrc = new QVBoxLayout();
+    m_hbl_lrc->setContentsMargins(0, 0, 0, 0);
+    m_hbl_lrc->addSpacing(2);
+    m_hbl_lrc->addWidget(m_lrc_line_up);
+    m_hbl_lrc->addWidget(m_lrc_line_down);
     
-    m_mainLayout = new QVBoxLayout();
-    m_mainLayout->setContentsMargins(0, 0, 0, 0);
-    m_mainLayout->setSpacing(6);
-    m_mainLayout->addLayout(m_toolBarLayout);
-    m_mainLayout->addLayout(m_lrcLineLayout);
-    m_mainLayout->addStretch();
+    m_vbl_main = new QVBoxLayout();
+    m_vbl_main->setContentsMargins(0, 0, 0, 0);
+    m_vbl_main->setSpacing(6);
+    m_vbl_main->addLayout(m_hbl_toolbar);
+    m_vbl_main->addLayout(m_hbl_lrc);
+    m_vbl_main->addStretch();
     
-    this->setLayout(m_mainLayout);
+    this->setLayout(m_vbl_main);
 }
 
 void DesktopLyricsWidget::initConnect() {
-    connect(m_btnShutDown, &QPushButton::clicked, this, &QWidget::hide);
-    connect(m_btnLock, &QPushButton::clicked, this, [this](){
-        m_isLocked = !m_isLocked;
-        if (m_isLocked) {
-            m_btnLock->setText("U");    // need Unlock
-        } else if (!m_isLocked) {
-            m_btnLock->setText("L");
+    connect(m_btn_shut_down, &QPushButton::clicked, this, &QWidget::hide);
+    connect(m_btn_lock, &QPushButton::clicked, this, [this](){
+        m_is_locked = !m_is_locked;
+        if (m_is_locked) {
+            m_btn_lock->setText("U");    // need Unlock
+        } else if (!m_is_locked) {
+            m_btn_lock->setText("L");
         }
     });
 }
@@ -87,19 +87,19 @@ void DesktopLyricsWidget::initConnect() {
 void DesktopLyricsWidget::updateLineColor() {
     QPalette pe_active;
     pe_active.setColor(QPalette::WindowText, QColor(m_rgb_active.r, m_rgb_active.g, m_rgb_active.b));
-    if (m_displayMode == DisplayMode::OneLine) {
-        m_lrcLineUp->setPalette(pe_active);
-        m_lrcLineDown->setPalette(pe_active);
+    if (m_display_mode == DisplayMode::OneLine) {
+        m_lrc_line_up->setPalette(pe_active);
+        m_lrc_line_down->setPalette(pe_active);
     }
-    if (m_displayMode == DisplayMode::TwoLine) {
+    if (m_display_mode == DisplayMode::TwoLine) {
         QPalette pe_inactive;
         pe_inactive.setColor(QPalette::WindowText, QColor(m_rgb_inactive.r, m_rgb_inactive.g, m_rgb_inactive.b));
         if (m_has_up_line_changed) {
-            m_lrcLineUp->setPalette(pe_active);
-            m_lrcLineDown->setPalette(pe_inactive);
+            m_lrc_line_up->setPalette(pe_active);
+            m_lrc_line_down->setPalette(pe_inactive);
         } else {
-            m_lrcLineUp->setPalette(pe_inactive);
-            m_lrcLineDown->setPalette(pe_active);
+            m_lrc_line_up->setPalette(pe_inactive);
+            m_lrc_line_down->setPalette(pe_active);
         }
     }
 }
@@ -122,22 +122,22 @@ rgb_t DesktopLyricsWidget::getInactiveLineColor() {
 }
 
 void DesktopLyricsWidget::setLrcLine(const QString& curr_line, const QString& next_line) {
-    if (m_displayMode == DisplayMode::OneLine) {
-        m_lrcLineUp->setText(curr_line);
-        m_lrcLineDown->clear();
-    } else if (m_displayMode == DisplayMode::TwoLine) {
+    if (m_display_mode == DisplayMode::OneLine) {
+        m_lrc_line_up->setText(curr_line);
+        m_lrc_line_down->clear();
+    } else if (m_display_mode == DisplayMode::TwoLine) {
         if (curr_line.isEmpty() && next_line.isEmpty()) {
-            m_lrcLineUp->clear();
-            m_lrcLineDown->clear();
+            m_lrc_line_up->clear();
+            m_lrc_line_down->clear();
             m_has_up_line_changed = true;
             return;
         }
         if (m_has_up_line_changed) {
-            m_lrcLineDown->setText(curr_line);
-            m_lrcLineUp->setText(next_line);
+            m_lrc_line_down->setText(curr_line);
+            m_lrc_line_up->setText(next_line);
         } else if (!m_has_up_line_changed) {
-            m_lrcLineUp->setText(curr_line);
-            m_lrcLineDown->setText(next_line);
+            m_lrc_line_up->setText(curr_line);
+            m_lrc_line_down->setText(next_line);
         }
         m_has_up_line_changed = !m_has_up_line_changed;
     }
@@ -145,18 +145,18 @@ void DesktopLyricsWidget::setLrcLine(const QString& curr_line, const QString& ne
 
 void DesktopLyricsWidget::setLrcFont(QFont font) {
     m_font = font;
-    m_lrcLineUp->setFont(m_font);
-    m_lrcLineDown->setFont(m_font);
+    m_lrc_line_up->setFont(m_font);
+    m_lrc_line_down->setFont(m_font);
 
     QFontMetrics fm(m_font);
     const int line_height = fm.height();
-    m_lrcLineUp->setFixedHeight(line_height);
-    m_lrcLineDown->setFixedHeight(line_height);
+    m_lrc_line_up->setFixedHeight(line_height);
+    m_lrc_line_down->setFixedHeight(line_height);
 
-    const int lines = (m_displayMode == DisplayMode::TwoLine) ? 2 : 1;
+    const int lines = (m_display_mode == DisplayMode::TwoLine) ? 2 : 1;
     const int toolbar_height = 24;
-    const int spacing = m_mainLayout->spacing() + m_lrcLineLayout->spacing();
-    const QMargins mg = m_mainLayout->contentsMargins();
+    const int spacing = m_vbl_main->spacing() + m_hbl_lrc->spacing();
+    const QMargins mg = m_vbl_main->contentsMargins();
     const int height = mg.top() + toolbar_height + (lines * line_height) + spacing + mg.bottom();
     setFixedHeight(height);
 }
@@ -167,7 +167,7 @@ QFont DesktopLyricsWidget::getFont() {
 
 
 void DesktopLyricsWidget::mousePressEvent(QMouseEvent* event) {
-    if (m_isLocked) {
+    if (m_is_locked) {
         event->ignore();
         return;
     }
@@ -190,42 +190,42 @@ void DesktopLyricsWidget::hideEvent(QHideEvent* event) {
 
 
 void DesktopLyricsWidget::setDisplayMode(DisplayMode disp_mode) {
-    m_displayMode = disp_mode;
+    m_display_mode = disp_mode;
     this->applyConfig();
 }
 
 void DesktopLyricsWidget::setUpLineAlignMode(AlignMode line_up_mode) {
-    m_lineUpMode = line_up_mode;
+    m_line_up_mode = line_up_mode;
     this->applyConfig();
 }
 
 void DesktopLyricsWidget::setDownLineAlignMode(AlignMode line_down_mode) {
-    m_lineDownMode = line_down_mode;
+    m_line_down_mode = line_down_mode;
     this->applyConfig();
 }
 
 
 void DesktopLyricsWidget::applyConfig() {
-    if (m_displayMode == DisplayMode::OneLine) {
-        m_lrcLineDown->hide();
-    } else if (m_displayMode == DisplayMode::TwoLine) {
-        m_lrcLineDown->show();
+    if (m_display_mode == DisplayMode::OneLine) {
+        m_lrc_line_down->hide();
+    } else if (m_display_mode == DisplayMode::TwoLine) {
+        m_lrc_line_down->show();
     }
 
-    if (m_lineUpMode == AlignMode::Left) {
-        m_lrcLineUp->setAlignment(Qt::AlignLeft);
-    } else if (m_lineUpMode == AlignMode::Middle) {
-        m_lrcLineUp->setAlignment(Qt::AlignCenter);
-    } else if (m_lineUpMode == AlignMode::Right) {
-        m_lrcLineUp->setAlignment(Qt::AlignRight);
+    if (m_line_up_mode == AlignMode::Left) {
+        m_lrc_line_up->setAlignment(Qt::AlignLeft);
+    } else if (m_line_up_mode == AlignMode::Middle) {
+        m_lrc_line_up->setAlignment(Qt::AlignCenter);
+    } else if (m_line_up_mode == AlignMode::Right) {
+        m_lrc_line_up->setAlignment(Qt::AlignRight);
     }
 
-    if (m_lineDownMode == AlignMode::Left) {
-        m_lrcLineDown->setAlignment(Qt::AlignLeft);
-    } else if (m_lineDownMode == AlignMode::Middle) {
-        m_lrcLineDown->setAlignment(Qt::AlignCenter);
-    } else if (m_lineDownMode == AlignMode::Right) {
-        m_lrcLineDown->setAlignment(Qt::AlignRight);
+    if (m_line_down_mode == AlignMode::Left) {
+        m_lrc_line_down->setAlignment(Qt::AlignLeft);
+    } else if (m_line_down_mode == AlignMode::Middle) {
+        m_lrc_line_down->setAlignment(Qt::AlignCenter);
+    } else if (m_line_down_mode == AlignMode::Right) {
+        m_lrc_line_down->setAlignment(Qt::AlignRight);
     }
 
     this->setActiveLineColor(m_rgb_active);

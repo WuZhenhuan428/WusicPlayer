@@ -16,7 +16,6 @@
 #include <QString>
 
 #include <QVector>
-#include <utility>
 
 #include "core/types.h"
 
