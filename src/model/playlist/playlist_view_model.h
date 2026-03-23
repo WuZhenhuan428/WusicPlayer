@@ -37,7 +37,7 @@ public:
     void setGroupRules(const QVector<SortRule>& rules);
     void setSortRules(const QVector<SortRule>& rules);
     const QVector<SortRule> groupRules() const;
-    const QVector<SortRule> SortRules() const;
+    const QVector<SortRule> sortRules() const;
 
     /**
      * @attention default group rule = title or filename if title does not exist

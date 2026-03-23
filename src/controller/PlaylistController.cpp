@@ -185,9 +185,9 @@ void PlaylistController::setSortRules(const QVector<SortRule>& rules) {
 }
 
 const QVector<SortRule> PlaylistController::groupRules() const {
-    return m_manager->getViewModel()->SortRules();
+    return m_manager->getViewModel()->groupRules();
 }
 
-const QVector<SortRule> PlaylistController::SortRules() const {
-    return m_manager->getViewModel()->groupRules();
+const QVector<SortRule> PlaylistController::sortRules() const {
+    return m_manager->getViewModel()->sortRules();
 }

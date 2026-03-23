@@ -37,7 +37,7 @@ void LibraryViewBinder::collect(MainWindowConfigContext& ctx) {
         ctx.librarySec->columns.append(c);
     }
     ctx.librarySec->group_rules = ctx.playlistController->groupRules();
-    ctx.librarySec->sort_rules = ctx.playlistController->SortRules();
+    ctx.librarySec->sort_rules = ctx.playlistController->sortRules();
     ctx.librarySec->splitter_state = ctx.libraryPanel->splitterState();
     ctx.librarySec->song_tree_view_state = ctx.libraryPanel->songTreeHeaderState();
     ctx.librarySec->splitter_orientation = ctx.libraryPanel->splitterOrientation();

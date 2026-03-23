@@ -2,7 +2,6 @@
 #include <QObject>
 #include <QVector>
 #include <QByteArray>
-#include <type_traits>
 #include <QWidget>
 #include "view/LibraryWidget/LibraryWidget.h"
 #include "model/playlist/playlist_manager.h"
@@ -39,7 +38,7 @@ public:
     void setGroupRules(const QVector<SortRule>& rules);
     void setSortRules(const QVector<SortRule>& rules);
     const QVector<SortRule> groupRules() const;
-    const QVector<SortRule> SortRules() const;
+    const QVector<SortRule> sortRules() const;
 
 signals:
     void playlistChanged();

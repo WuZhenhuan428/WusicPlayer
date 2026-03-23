@@ -555,6 +555,6 @@ const QVector<SortRule> PlaylistViewModel::groupRules() const {
     return m_layout_builder.groupRules();
 }
 
-const QVector<SortRule> PlaylistViewModel::SortRules() const {
+const QVector<SortRule> PlaylistViewModel::sortRules() const {
     return m_layout_builder.sortRules();
 }
