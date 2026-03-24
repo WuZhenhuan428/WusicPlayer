@@ -11,14 +11,15 @@ add_library(wusic_model STATIC
     playlist/playlist_manager.h
     playlist/playlist_repo.cpp
     playlist/playlist_repo.h
-    playlist/playlist_search_proxy_model.cpp
-    playlist/playlist_search_proxy_model.h
     playlist/playlist_view_model.cpp
     playlist/playlist_view_model.h
 
     ShortcutsViewModel/shortcuts_view_model.cpp
     ShortcutsViewModel/shortcuts_view_model.hpp
     ShortcutsViewModel/shortcuts_types.hpp
+
+    search_model/search_model.cpp
+    search_model/search_model.h
 )
 
 target_link_libraries(wusic_model

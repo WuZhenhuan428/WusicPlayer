@@ -2,8 +2,6 @@
 #include <QObject>
 #include <QVector>
 #include <QByteArray>
-#include <QWidget>
-#include "view/LibraryWidget/LibraryWidget.h"
 #include "model/playlist/playlist_manager.h"
 #include "core/types.h"
 
@@ -34,6 +32,8 @@ public:
     playlistId currentPlaylist() const;
     trackId currentTrackId() const;
     TrackMetaData currentMetadata() const;
+
+    std::shared_ptr<Playlist> findPlaylistById(playlistId pid);
 
     void setGroupRules(const QVector<SortRule>& rules);
     void setSortRules(const QVector<SortRule>& rules);

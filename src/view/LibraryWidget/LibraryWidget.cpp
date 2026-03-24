@@ -36,7 +36,7 @@ void LibraryWidget::initConnections() {
         QAction* actRemove = menu.addAction("Remove This Column");
 
         connect(actInsert, &QAction::triggered, [this, logical_index](){
-            auto* my_model = dynamic_cast<PlaylistViewModel*>(m_song_tree_view->model());
+            PlaylistViewModel* my_model = dynamic_cast<PlaylistViewModel*>(m_song_tree_view->model());
             if (!my_model) return;
             WInsertColumnDialog dialog;
             int maxIndex = my_model->getColumns().size();
@@ -48,7 +48,7 @@ void LibraryWidget::initConnections() {
             }
         });
         connect(actRemove, &QAction::triggered, [this, logical_index](){
-            auto* my_model = dynamic_cast<PlaylistViewModel*>(m_song_tree_view->model());
+            PlaylistViewModel* my_model = dynamic_cast<PlaylistViewModel*>(m_song_tree_view->model());
             WColumnIndexDialog dialog(tr("Remove column"), tr("Input the column index except 0"), this);
             int maxIndex = my_model->getColumns().size() - 1;
             dialog.setMaxIndex(maxIndex);

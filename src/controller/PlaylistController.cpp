@@ -173,6 +173,13 @@ playlistId PlaylistController::currentPlaylist() const { return m_manager->getCu
 trackId PlaylistController::currentTrackId() const { return m_manager->getCurrentTrackId(); }
 TrackMetaData PlaylistController::currentMetadata() const { return m_manager->getCurrentMetadata(); }
 
+std::shared_ptr<Playlist> PlaylistController::findPlaylistById(playlistId pid) {
+    if (pid.isNull()) {
+        return nullptr;
+    }
+    return m_manager->m_repo->findPlaylistById(pid);
+}
+
 void PlaylistController::loadCacheAfterShown() { m_manager->loadCacheAfterShown(); }
 
 

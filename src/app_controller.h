@@ -13,6 +13,7 @@ class ShortcutsPanel;
 class ShortcutsController;
 class PlaylistManager;
 class PlaylistController;
+class InMemorySearchBackend;
 
 class PlaybackController;
 class MainWindow;
@@ -77,6 +78,7 @@ private:
     PlaybackController* m_playback_controller = nullptr;
     std::unique_ptr<PlaylistManager> m_playlist_manager;
     std::unique_ptr<PlaylistController> m_playlist_controller;
+    std::unique_ptr<InMemorySearchBackend> m_search_backend;
     std::unique_ptr<MainWindow> m_main_window;
 
     std::unique_ptr<DesktopLyricsSection> m_desktop_lyrics_section;

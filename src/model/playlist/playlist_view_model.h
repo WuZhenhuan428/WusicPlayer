@@ -28,11 +28,6 @@ public:
 
 /* ==== Context & Repo 绑定 ==== */
     void setPlaylist(const playlistId& pid);
-
-    /**
-     * @brief Parse the DSL used to set the sorting rules
-     * @details format: `%key1% %key2% | %key3% %key4% ...`
-     */
     void setSortExpression(const QString& expression);
     void setGroupRules(const QVector<SortRule>& rules);
     void setSortRules(const QVector<SortRule>& rules);
@@ -88,7 +83,7 @@ private:
     void initDefaultColumns();
 
     QModelIndex findTrackIndex(const trackId& tid) const;
-    QPersistentModelIndex m_activeTrackIndex;
+    QPersistentModelIndex m_active_track_index;
 
     void scheduleBatchRebuild();
 

@@ -69,7 +69,7 @@ void PlaylistViewModel::rebuild() {
         m_root = new Node();
         m_playback_queue.clear();
         endResetModel();
-        m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(m_active_track_id));
+        m_active_track_index = QPersistentModelIndex(findTrackIndex(m_active_track_id));
         return;
     }
     
@@ -79,7 +79,7 @@ void PlaylistViewModel::rebuild() {
         m_root = new Node();
         m_playback_queue.clear();
         endResetModel();
-        m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(m_active_track_id));
+        m_active_track_index = QPersistentModelIndex(findTrackIndex(m_active_track_id));
         return;
     }
 
@@ -100,7 +100,7 @@ void PlaylistViewModel::rebuild() {
     m_group_shuffle_queue = generateGroupShuffleQueue();
     
     endResetModel();
-    m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(m_active_track_id));
+    m_active_track_index = QPersistentModelIndex(findTrackIndex(m_active_track_id));
     qDebug() << "[INFO] rebuild finished. Queue size:" << m_playback_queue.size();
     emit changedPlaybackQueue();
 }
@@ -114,7 +114,7 @@ void PlaylistViewModel::rebuildAsync() {
         m_root = new Node();
         m_playback_queue.clear();
         endResetModel();
-        m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(m_active_track_id));
+        m_active_track_index = QPersistentModelIndex(findTrackIndex(m_active_track_id));
         return;
     }
 
@@ -125,7 +125,7 @@ void PlaylistViewModel::rebuildAsync() {
         m_root = new Node();
         m_playback_queue.clear();
         endResetModel();
-        m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(m_active_track_id));
+        m_active_track_index = QPersistentModelIndex(findTrackIndex(m_active_track_id));
         return;
     }
 
@@ -161,7 +161,7 @@ void PlaylistViewModel::rebuildAsync() {
             self->m_single_shuffle_queue = self->generateSingleShuffleQueue();
             self->m_group_shuffle_queue = self->generateGroupShuffleQueue();
             self->endResetModel();
-            self->m_activeTrackIndex = QPersistentModelIndex(self->findTrackIndex(self->m_active_track_id));
+            self->m_active_track_index = QPersistentModelIndex(self->findTrackIndex(self->m_active_track_id));
 
             auto playlistPtr = self->m_repo ? self->m_repo->findPlaylistById(self->m_pid) : nullptr;
             if (playlistPtr && !layout.updated_meta.isEmpty()) {
@@ -269,7 +269,7 @@ void PlaylistViewModel::setSingleGrouping(SortRule rule) {
 void PlaylistViewModel::setActiveTrack(const trackId& tid) {
     QModelIndex old_index = getCurrentTrackIndex();
     m_active_track_id = tid;
-    m_activeTrackIndex = QPersistentModelIndex(findTrackIndex(tid));
+    m_active_track_index = QPersistentModelIndex(findTrackIndex(tid));
 
     QModelIndex new_index = getCurrentTrackIndex();
 
@@ -290,7 +290,7 @@ void PlaylistViewModel::clear() {
     m_root = new Node();
     m_playback_queue.clear();
     endResetModel();
-    m_activeTrackIndex = QPersistentModelIndex();
+    m_active_track_index = QPersistentModelIndex();
 }
 
 /* ==== QAbstractItemModel Interface ==== */
@@ -447,8 +447,8 @@ trackId PlaylistViewModel::trackAt(const QModelIndex& index) const {
 }
 
 QModelIndex PlaylistViewModel::getCurrentTrackIndex() {
-    if (m_activeTrackIndex.isValid()) {
-        return m_activeTrackIndex;
+    if (m_active_track_index.isValid()) {
+        return m_active_track_index;
     }
     return findTrackIndex(m_active_track_id);
 }

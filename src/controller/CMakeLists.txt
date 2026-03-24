@@ -5,6 +5,11 @@ add_library(wusic_controller STATIC
     PlaylistController.h
     PlaylistController.cpp
 
+    search_backend/i_search_backend.h
+    search_backend/i_search_backend.cpp
+    search_backend/in_memory_search_backend.h
+    search_backend/in_memory_search_backend.cpp
+
     shortcuts_controller.cpp
     shortcuts_controller.h
 )

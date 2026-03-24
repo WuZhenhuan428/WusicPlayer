@@ -20,6 +20,7 @@
 #include "controller/PlaybackController.h"
 #include "controller/shortcuts_controller.h"
 #include "controller/PlaylistController.h"
+#include "controller/search_backend/in_memory_search_backend.h"
 #include "model/playlist/playlist_manager.h"
 
 #include "core/ConfigManager/ConfigManager.h"
@@ -48,6 +49,7 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
       m_playback_controller(playbackController),
       m_playlist_manager(std::make_unique<PlaylistManager>()),
       m_playlist_controller(std::make_unique<PlaylistController>(m_playlist_manager.get(), nullptr, this)),
+    m_search_backend(std::make_unique<InMemorySearchBackend>(m_playlist_controller.get())),
       m_main_window(std::make_unique<MainWindow>(m_playback_controller, m_playlist_controller.get())),
       m_desktop_lyrics_section(std::make_unique<DesktopLyricsSection>()),
       m_library_view_section(std::make_unique<LibraryViewSection>()),
@@ -660,7 +662,8 @@ void AppController::ensureSearchPanel() {
     m_search_panel = new PlaylistSearchPanel;
     m_search_panel->setWindowFlag(Qt::Window, true);
     m_search_panel->setAttribute(Qt::WA_DeleteOnClose, true);
-    m_search_panel->setSourceModel(m_playlist_controller->viewModel());
+    m_search_panel->setSearchBackend(m_search_backend.get());
+    m_search_backend->warmup(m_playlist_controller->currentPlaylist());
 
     const QByteArray geoCache = m_main_window->searchPanelGeometryCache();
     if (!geoCache.isEmpty()) {
@@ -675,13 +678,16 @@ void AppController::ensureSearchPanel() {
         if (m_search_panel) {
             m_search_panel->applyHeaderStateDeferred(m_main_window->searchPanelHeaderStateCache());
         }
-    }, Qt::SingleShotConnection);
+        if (m_search_backend) {
+            m_search_backend->invalidate(playlistId{});
+            m_search_backend->warmup(m_playlist_controller->currentPlaylist());
+        }
+    });
 
     connect(m_search_panel, &PlaylistSearchPanel::sgnRequestPlayTrack,
-            m_main_window.get(), [this](const QModelIndex &source_index) {
+            m_main_window.get(), [this](const trackId& id) {
         auto* model = m_playlist_controller->viewModel();
         if (!model) return;
-        trackId id = model->trackAt(source_index);
         if (id.isNull()) return;
 
         int queueIndex = model->playbackQueue().indexOf(id);

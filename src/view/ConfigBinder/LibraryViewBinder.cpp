@@ -1,7 +1,6 @@
 #include "LibraryViewBinder.hpp"
 #include "LibraryViewSection.hpp"
 #include "controller/PlaylistController.h"
-#include "core/types.h"
 #include <QAbstractItemModel>
 #include "view/MainWindow.h"
 #include <QDebug>

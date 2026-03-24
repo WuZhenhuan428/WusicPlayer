@@ -4,6 +4,8 @@
 #include <QLineEdit>
 #include <QTreeView>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QComboBox>
 #include <QAbstractItemModel>
 
 #include <QCloseEvent>
@@ -11,7 +13,7 @@
 #include <QKeyEvent>
 #include <QTimer>
 
-#include "model/playlist/playlist_search_proxy_model.h"
+#include "core/types.h"
 
 class PlaylistSearchPanel : public QWidget
 {
@@ -20,13 +22,13 @@ public:
     explicit PlaylistSearchPanel(QWidget *parent = nullptr);
     ~PlaylistSearchPanel();
 
-    void setSourceModel(QAbstractItemModel* source_model);
+    void setSearchBackend(class ISearchBackend* backend);
     QTreeView* getView() const;
     void applyHeaderStateDeferred(const QByteArray& state);
     void emitStateSnapshot();
 
 signals:
-    void sgnRequestPlayTrack(const QModelIndex &source_index);
+    void sgnRequestPlayTrack(const trackId& track_id);
     void sgnStateSnapshot(const QByteArray& geometry, const QByteArray& header);
 
 protected:
@@ -36,11 +38,12 @@ protected:
 
 private:
     QLineEdit* m_le_keyword;
+    QComboBox* m_cb_mode;
     QTreeView* m_search_result_tree_view;
+    QHBoxLayout* m_hbl_query;
     QVBoxLayout* m_vbl_main;
 
-    PlaylistSearchProxyModel* m_search_model;
+    class SearchModel* m_search_model;
 
     QTimer* m_tim_input = nullptr;
-    QString m_keywords;
 };
