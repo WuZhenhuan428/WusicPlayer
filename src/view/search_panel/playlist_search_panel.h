@@ -12,6 +12,7 @@
 #include <QHideEvent>
 #include <QKeyEvent>
 #include <QTimer>
+#include <QPoint>
 
 #include "core/types.h"
 
@@ -35,6 +36,10 @@ protected:
     void closeEvent(QCloseEvent* event) override;
     void hideEvent(QHideEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
+
+private:
+    void showHeaderContextMenu(const QPoint& pos);
+    bool hasOtherVisibleColumns(int column_to_hide) const;
 
 private:
     QLineEdit* m_le_keyword;

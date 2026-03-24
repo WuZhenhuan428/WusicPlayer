@@ -5,6 +5,8 @@
 
 #include <QTimer>
 #include <QHeaderView>
+#include <QMenu>
+#include <QAction>
 
 #include "core/search_types.h"
 
@@ -26,6 +28,7 @@ PlaylistSearchPanel::PlaylistSearchPanel(QWidget *parent)
     m_search_result_tree_view->setSelectionMode(QAbstractItemView::SingleSelection);
     m_search_result_tree_view->setRootIsDecorated(false);
     m_search_result_tree_view->setAlternatingRowColors(true);
+    m_search_result_tree_view->setMinimumWidth(120);
     
     m_hbl_query->addWidget(m_le_keyword, 1);
     m_hbl_query->addWidget(m_cb_mode);
@@ -35,6 +38,9 @@ PlaylistSearchPanel::PlaylistSearchPanel(QWidget *parent)
     
     m_search_model = new SearchModel(nullptr, this);
     m_search_result_tree_view->setModel(m_search_model);
+    if (m_search_result_tree_view->header()) {
+        m_search_result_tree_view->header()->setContextMenuPolicy(Qt::CustomContextMenu);
+    }
     
     m_tim_input = new QTimer(this);
     m_tim_input->setSingleShot(true);
@@ -74,6 +80,11 @@ PlaylistSearchPanel::PlaylistSearchPanel(QWidget *parent)
         }
         emit sgnRequestPlayTrack(id);
     });
+
+    if (m_search_result_tree_view->header()) {
+        connect(m_search_result_tree_view->header(), &QHeaderView::customContextMenuRequested,
+                this, &PlaylistSearchPanel::showHeaderContextMenu);
+    }
 }
 
 PlaylistSearchPanel::~PlaylistSearchPanel() {}
@@ -124,4 +135,61 @@ void PlaylistSearchPanel::keyPressEvent(QKeyEvent* event) {
     } else {
         QWidget::keyPressEvent(event);
     }
+}
+
+void PlaylistSearchPanel::showHeaderContextMenu(const QPoint& pos) {
+    if (!m_search_result_tree_view || !m_search_result_tree_view->header() || !m_search_model) {
+        return;
+    }
+
+    QHeaderView* header = m_search_result_tree_view->header();
+    QMenu menu(this);
+    const int count = m_search_model->columnCount();
+
+    for (int logical_index = 0; logical_index < count; ++logical_index) {
+
+        QString label = m_search_model->headerData(logical_index, Qt::Horizontal, Qt::DisplayRole).toString();
+        if (label.isEmpty()) {
+            label = tr("Column %1").arg(logical_index + 1);
+        }
+
+        QAction* action = menu.addAction(label);
+        action->setCheckable(true);
+        const bool visible = !header->isSectionHidden(logical_index);
+        action->setChecked(visible);
+
+        connect(action, &QAction::toggled, this, [this, logical_index](bool checked) {
+            if (!m_search_result_tree_view || !m_search_result_tree_view->header()) {
+                return;
+            }
+
+            QHeaderView* local_header = m_search_result_tree_view->header();
+            if (!checked && !hasOtherVisibleColumns(logical_index)) {
+                return;
+            }
+
+            local_header->setSectionHidden(logical_index, !checked);
+            emitStateSnapshot();
+        });
+    }
+
+    menu.exec(header->mapToGlobal(pos));
+}
+
+bool PlaylistSearchPanel::hasOtherVisibleColumns(int column_to_hide) const {
+    if (!m_search_result_tree_view || !m_search_result_tree_view->header() || !m_search_model) {
+        return false;
+    }
+
+    QHeaderView* header = m_search_result_tree_view->header();
+    const int count = m_search_model->columnCount();
+    for (int i = 0; i < count; ++i) {
+        if (i == column_to_hide) {
+            continue;
+        }
+        if (!header->isSectionHidden(i)) {
+            return true;
+        }
+    }
+    return false;
 }

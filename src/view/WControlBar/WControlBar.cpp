@@ -28,7 +28,10 @@ WControlBar::WControlBar(QWidget* parent)
     m_act_loop = new QAction("Loop", m_menu_mode);
     m_act_shuffle = new QAction("Shuffle", m_menu_mode);
     m_act_out_of_order_track = new QAction("Out of order by track", m_menu_mode);
-    m_act_out_of_order_group = new QAction("Out of order by troup", m_menu_mode);
+    m_act_out_of_order_group = new QAction("Out of order by group", m_menu_mode);
+
+    m_act_group = new QActionGroup(this);
+    m_act_group->setExclusive(true);
 
     m_menu_devices = new QMenu(this);
 
@@ -59,24 +62,10 @@ WControlBar::WControlBar(QWidget* parent)
     for (QAction* action : {m_act_in_order, m_act_loop, m_act_shuffle, m_act_out_of_order_track, m_act_out_of_order_group}) {
         action->setCheckable(true);
         m_menu_mode->addAction(action);
-
-        connect(action, &QAction::toggled, this, [this]() {
-            QAction* act = qobject_cast<QAction*>(sender());
-            if (act) {
-                act->setChecked(true);
-            }
-        });
+        m_act_group->addAction(action);
     }
     
     this->setLayout(m_hbl_main);
-
-    m_act_group = new QActionGroup(this);
-    m_act_group->setExclusive(true);
-    m_act_group->addAction(m_act_in_order);
-    m_act_group->addAction(m_act_loop);
-    m_act_group->addAction(m_act_shuffle);
-    m_act_group->addAction(m_act_out_of_order_track);
-    m_act_group->addAction(m_act_out_of_order_group);
 
     connect(m_btn_play, &QPushButton::clicked, this, [this](){emit sgnBtnPlayClicked();});
     connect(m_btn_pause, &QPushButton::clicked, this, [this](){emit sgnBtnPauseClicked();});
