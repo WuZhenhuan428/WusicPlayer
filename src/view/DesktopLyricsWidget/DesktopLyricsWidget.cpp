@@ -132,6 +132,14 @@ void DesktopLyricsWidget::setLrcLine(const QString& curr_line, const QString& ne
             m_has_up_line_changed = true;
             return;
         }
+
+        if (!curr_line.isEmpty() && next_line.isEmpty()) {
+            m_lrc_line_up->setText(curr_line);
+            m_lrc_line_down->clear();
+            m_has_up_line_changed = false;
+            return;
+        }
+
         if (m_has_up_line_changed) {
             m_lrc_line_down->setText(curr_line);
             m_lrc_line_up->setText(next_line);

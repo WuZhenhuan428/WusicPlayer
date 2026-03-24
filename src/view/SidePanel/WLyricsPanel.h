@@ -5,6 +5,7 @@
 #include <QListView>
 #include <QWheelEvent>
 #include <QObject>
+#include "core/types.h"
 
 class WLyricsPanel : public QListView
 {
@@ -16,7 +17,7 @@ public:
     void ScrollByPosition(qint64 position_ms);
     bool setRawLyrics(const QString& raw_data);
     bool setLocalLrc(const QString& filepath);
-    void setDefaultInfo();
+    void setDefaultInfo(const TrackMetaData& meta);
 private:
     WLyricsModel* m_lrc_model;
     void wheelEvent(QWheelEvent* event);

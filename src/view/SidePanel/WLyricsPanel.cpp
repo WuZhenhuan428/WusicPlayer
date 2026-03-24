@@ -39,8 +39,8 @@ bool WLyricsPanel::setLocalLrc(const QString& filepath) {
     return false;
 }
 
-void WLyricsPanel::setDefaultInfo() {
-    m_lrc_model->setDefaultInfo();
+void WLyricsPanel::setDefaultInfo(const TrackMetaData& meta) {
+    m_lrc_model->setDefaultInfo(meta);
 }
 
 void WLyricsPanel::wheelEvent(QWheelEvent* event) {

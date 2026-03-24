@@ -172,12 +172,27 @@ void AppController::initializeCoreConnections()
     connect(playbackController, &PlaybackController::sgnPositionChanged, sidePanel->getLyricsPanel(), &WLyricsPanel::ScrollByPosition);
 
     if (lyricsModel) {
-        connect(playbackController, &PlaybackController::sgnPositionChanged, lyricsModel, &WLyricsModel::setCurrentPosition);
+        m_lyrics_follow_conn = connect(playbackController, &PlaybackController::sgnPositionChanged,
+                                       lyricsModel, &WLyricsModel::setCurrentPosition);
         connect(lyricsModel, &WLyricsModel::currentLineChanged, this, [this](const QString& currText, const QString& nextText) {
             m_main_window->desktopLyricsWidget()->setLrcLine(currText, nextText);
         });
         connect(lyricsModel, &WLyricsModel::currentLineChanged, this, [this](){
             m_main_window->desktopLyricsWidget()->updateLineColor();
+        });
+        connect(lyricsModel, &WLyricsModel::sgnUseTimelineFollow, this, [this, playbackController, lyricsModel](bool enable) {
+            if (enable) {
+                if (!m_lyrics_follow_conn) {
+                    m_lyrics_follow_conn = connect(playbackController, &PlaybackController::sgnPositionChanged,
+                                                   lyricsModel, &WLyricsModel::setCurrentPosition);
+                }
+                return;
+            }
+
+            if (m_lyrics_follow_conn) {
+                disconnect(m_lyrics_follow_conn);
+                m_lyrics_follow_conn = QMetaObject::Connection{};
+            }
         });
     }
 

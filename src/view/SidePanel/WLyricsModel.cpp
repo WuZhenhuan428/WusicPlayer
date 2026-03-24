@@ -12,15 +12,21 @@ WLyricsModel::WLyricsModel(QObject* parent)
 
 WLyricsModel::~WLyricsModel() {}
 
-void WLyricsModel::setDefaultInfo() {
+void WLyricsModel::setDefaultInfo(const TrackMetaData& meta) {
+    const QString title = meta.title.trimmed().isEmpty() ? QStringLiteral("Unknown Title") : meta.title.trimmed();
+    const QString artist = meta.artist.trimmed().isEmpty() ? QStringLiteral("Unknown Artist") : meta.artist.trimmed();
+    const QString album = meta.album.trimmed().isEmpty() ? QStringLiteral("Unknown Album") : meta.album.trimmed();
+    const QString title_artist = title + QStringLiteral(" - ") + artist;
+
     beginResetModel();
     m_parser.clear();
-    QString foo("[00:00.00] Wusic Player");
-    m_parser.parseString(foo.toUtf8().toStdString());
+    QString default_lines = QStringLiteral("[00:00.00] %1\n[00:01.00] %2").arg(title_artist, album);
+    m_parser.parseString(default_lines.toUtf8().toStdString());
     m_current_row = -1;
     endResetModel();
 
-    emit currentLineChanged(QStringLiteral("Wusic Player"), QString());
+    emit sgnUseTimelineFollow(false);
+    emit currentLineChanged(album, title_artist);
 }
 
 bool WLyricsModel::setRawLyrics(const QString& raw_data) {
@@ -38,6 +44,7 @@ bool WLyricsModel::setRawLyrics(const QString& raw_data) {
         return false;
     }
     endResetModel();
+    emit sgnUseTimelineFollow(true);
     emit currentLineChanged(QString(), QString());
     return true;
 }
@@ -63,6 +70,7 @@ bool WLyricsModel::setLocalLrc(const QString& filepath) {
     if (possibel_lrc_fileinfo.exists() && possibel_lrc_fileinfo.isFile()) {
         m_parser.parseFile(lrc_path.toStdString());
         endResetModel();
+        emit sgnUseTimelineFollow(true);
         emit currentLineChanged(QString(), QString());
         return true;
     }

@@ -96,7 +96,7 @@ bool SidePanel::loadLyrics(const TrackMetaData& meta) {
         } else if (m_lyrics_panel->setLocalLrc(meta.filepath)) {
             qDebug() << "[LRC] Loaded from local .lrc file.";
         } else {
-            m_lyrics_panel->setDefaultInfo();
+            m_lyrics_panel->setDefaultInfo(meta);
             qDebug() << "[LRC] Use default info";
         }
         return true;

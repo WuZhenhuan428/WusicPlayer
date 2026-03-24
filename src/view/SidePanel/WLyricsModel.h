@@ -7,6 +7,7 @@
 #include <QPainter>
 
 #include "lrc_parser.h"
+#include "core/types.h"
 
 
 class WLyricsModel : public QAbstractListModel
@@ -22,7 +23,7 @@ public:
     explicit WLyricsModel(QObject* parent = nullptr);
     ~WLyricsModel();
 
-    void setDefaultInfo();
+    void setDefaultInfo(const TrackMetaData& meta);
     bool setLocalLrc(const QString& filepath);
     bool setRawLyrics(const QString& raw_data);
     int getRowByPosition(qint64 pos_ms);
@@ -41,6 +42,7 @@ public:
     
 signals:
     void currentLineChanged(const QString& curr_text, const QString& next_text);
+    void sgnUseTimelineFollow(bool enable);
 
 private:
     LrcParser m_parser;
