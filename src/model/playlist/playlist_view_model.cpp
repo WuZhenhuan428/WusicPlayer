@@ -1,5 +1,4 @@
 #include "playlist_view_model.h"
-#include "core/utils/AudioUtils.h"
 #include <QFileInfo>
 #include <QTime>
 #include <QRegularExpression>
@@ -334,6 +333,7 @@ int PlaylistViewModel::rowCount(const QModelIndex &parent) const {
 }
 
 int PlaylistViewModel::columnCount(const QModelIndex &parent) const {
+    Q_UNUSED(parent);
     return m_columns.size();
 }
 
