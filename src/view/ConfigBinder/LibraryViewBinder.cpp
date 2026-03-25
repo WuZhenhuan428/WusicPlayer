@@ -14,10 +14,14 @@ void LibraryViewBinder::apply(MainWindowConfigContext& ctx) {
         ctx.playlistController->viewModel()->setColumns(ctx.librarySec->columns);
     }
 
-    auto* panel = ctx.libraryPanel;
-    auto* sec = ctx.librarySec;
-    auto* vm = ctx.playlistController->viewModel();
-    auto* main_window = ctx.mainWindow;
+    ctx.playlistController->setGroupRules(ctx.librarySec->group_rules);
+    ctx.playlistController->setSortRules(ctx.librarySec->sort_rules);
+    ctx.playlistController->viewModel()->rebuildAsync();
+
+    LibraryWidget* panel = ctx.libraryPanel;
+    LibraryViewSection* sec = ctx.librarySec;
+    PlaylistViewModel* vm = ctx.playlistController->viewModel();
+    MainWindow* main_window = ctx.mainWindow;
 
     auto restoreLibraryWidgetState = [panel, sec]() {
         if (!panel || !sec) return;

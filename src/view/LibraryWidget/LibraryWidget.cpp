@@ -151,7 +151,11 @@ QByteArray LibraryWidget::songTreeHeaderState() const {
 }
 
 void LibraryWidget::setSongTreeHeaderState(QByteArray state) {
-    this->m_song_tree_view_header->restoreState(state);
+    // Block signals to prevent sortIndicatorChanged from triggering
+    // PlaylistViewModel::sort(), which would override the configured sort rules
+    m_song_tree_view_header->blockSignals(true);
+    m_song_tree_view_header->restoreState(state);
+    m_song_tree_view_header->blockSignals(false);
 }
 
 QByteArray LibraryWidget::splitterState() const {

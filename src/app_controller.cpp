@@ -49,7 +49,7 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
       m_playback_controller(playbackController),
       m_playlist_manager(std::make_unique<PlaylistManager>()),
       m_playlist_controller(std::make_unique<PlaylistController>(m_playlist_manager.get(), nullptr, this)),
-    m_search_backend(std::make_unique<InMemorySearchBackend>(m_playlist_controller.get())),
+      m_search_backend(std::make_unique<InMemorySearchBackend>(m_playlist_controller.get())),
       m_main_window(std::make_unique<MainWindow>(m_playback_controller, m_playlist_controller.get())),
       m_desktop_lyrics_section(std::make_unique<DesktopLyricsSection>()),
       m_library_view_section(std::make_unique<LibraryViewSection>()),
@@ -68,10 +68,6 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
       m_playback_restore_coordinator(std::make_unique<PlaybackRestoreCoordinator>(
                     m_playback_config_section.get(), m_playlist_controller.get(), m_playback_controller, this))
 {
-    SortRule defaultRule;
-    defaultRule.type = SortType::album;
-    m_playlist_controller->viewModel()->setSingleGrouping(defaultRule);
-
     initializeConfig();
     ensureShortcutsController();
     m_desktop_lyrics_visible_cache = m_desktop_lyrics_section->is_visible;
@@ -103,15 +99,15 @@ void AppController::showMainWindow() {
 
 void AppController::initializeCoreConnections()
 {
-    auto* playlistController = m_playlist_controller.get();
-    auto* playbackController = m_playback_controller;
-    auto* controlBar = m_main_window->controlBarWidget();
-    auto* libraryPanel = m_main_window->libraryPanel();
-    auto* sidePanel = m_main_window->sidePanel();
-    auto* desktopLyrics = m_main_window->desktopLyricsWidget();
+    PlaylistController* playlistController = m_playlist_controller.get();
+    PlaybackController* playbackController = m_playback_controller;
+    WControlBar* controlBar = m_main_window->controlBarWidget();
+    LibraryWidget* libraryPanel = m_main_window->libraryPanel();
+    SidePanel* sidePanel = m_main_window->sidePanel();
+    DesktopLyricsWidget* desktopLyrics = m_main_window->desktopLyricsWidget();
 
-        connect(m_main_window.get(), &MainWindow::sgnPlayTrackRequested,
-            this, &AppController::handlePlayTrackRequest);
+    connect(m_main_window.get(), &MainWindow::sgnPlayTrackRequested,
+        this, &AppController::handlePlayTrackRequest);
     connect(desktopLyrics, &DesktopLyricsWidget::sgnVisibilityChanged, this, [this](bool visible) {
         m_desktop_lyrics_visible_cache = visible;
         if (m_desktop_lyrics_section) {
