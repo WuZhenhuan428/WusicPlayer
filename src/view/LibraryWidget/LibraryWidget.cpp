@@ -2,6 +2,7 @@
 #include "model/playlist/playlist_view_model.h"
 #include "view/playlist/playlist_widgets.h"
 #include <QMenu>
+#include <QInputDialog>
 
 LibraryWidget::LibraryWidget(QAbstractItemModel* song_model, QWidget *parent)
     : QWidget(parent)
@@ -14,7 +15,11 @@ LibraryWidget::LibraryWidget(QAbstractItemModel* song_model, QWidget *parent)
 LibraryWidget::~LibraryWidget() {}
 
 void LibraryWidget::initConnections() {
-    connect(m_playlist_tree, &QTreeWidget::customContextMenuRequested, this, &LibraryWidget::callTreeContextMenu);
+    connect(m_playlist_tree, &QTreeWidget::customContextMenuRequested,
+            this, &LibraryWidget::callTreeContextMenu);
+    
+    connect(m_song_tree_view, &QTreeView::customContextMenuRequested,
+            this, &LibraryWidget::callSongContextMenu);
 
     connect(m_song_tree_view, &QTreeView::doubleClicked, this, [this](const QModelIndex &index) {
         emit sgnPlayTrackByModelIndex(index);
@@ -61,9 +66,43 @@ void LibraryWidget::initConnections() {
     });
 }
 
-#include "../playlist/playlist_widgets.h"
-#include <QMenu>
-#include <QInputDialog>
+void LibraryWidget::callSongContextMenu(const QPoint &pos) {
+    /* or create new Qt::Role in model to get track info */
+    QModelIndex index = m_song_tree_view->indexAt(pos);
+    if (!index.isValid())
+        return;
+
+    index = index.sibling(index.row(), 0);
+
+    auto* model = qobject_cast<PlaylistViewModel*>(m_song_tree_view->model());
+    if (!model)
+        return;
+
+    trackId tid = model->trackAt(index);
+    if (tid.isNull())
+        return;
+
+    auto* node = static_cast<Node*>(index.internalPointer());
+    if (!node)
+        return;
+
+    const TrackMetaData meta = node->meta;
+    const QString path = meta.filepath;
+
+    QMenu menu(this);
+    QAction* actPlay = menu.addAction("Play");
+    QAction* actProp = menu.addAction("Property");
+
+    connect(actPlay, &QAction::triggered, this, [this, index](){
+        emit sgnPlayTrackByModelIndex(index);
+    });
+
+    connect(actProp, &QAction::triggered, this, [this, tid, meta, path]{
+        emit sgnTrackPropertyRequested(tid, path, meta);
+    });
+
+    menu.exec(m_song_tree_view->viewport()->mapToGlobal(pos));
+}
 
 // old: onTreeContextMenuRequested
 void LibraryWidget::callTreeContextMenu(const QPoint &pos) {
@@ -104,6 +143,7 @@ void LibraryWidget::initUI() {
     m_playlist_tree->setIndentation(0);
 
     m_song_tree_view = new QTreeView;
+    m_song_tree_view->setContextMenuPolicy(Qt::CustomContextMenu);
     m_song_tree_view->setSelectionMode(QAbstractItemView::ExtendedSelection);
     m_song_tree_view->setSortingEnabled(true);
     m_song_tree_view->setEditTriggers(QAbstractItemView::NoEditTriggers);

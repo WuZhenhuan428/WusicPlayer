@@ -5,9 +5,7 @@
 #include <QDebug>
 #include <QUuid>
 
-#include <vector>
-
-#include "core/utils/AudioUtils.h"
+#include "core/types.h"
 
 struct Track
 {

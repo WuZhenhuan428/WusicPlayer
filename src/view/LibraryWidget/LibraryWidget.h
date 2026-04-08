@@ -39,6 +39,7 @@ signals:
     void sgnImportDir(const playlistId& pid = playlistId());
 
     void sgnPlayTrackByModelIndex(const QModelIndex &index);
+    void sgnTrackPropertyRequested(trackId tid, QString filepath, TrackMetaData meta);
     void sgnRenamePlaylist(playlistId id);
     void sgnCopyPlaylist(playlistId id);
     void sgnRemovePlaylist(playlistId id);
@@ -54,6 +55,7 @@ private:
 
 private slots:
     void callTreeContextMenu(const QPoint &pos);
+    void callSongContextMenu(const QPoint &pos);
     void updateSongView();
 
 private:

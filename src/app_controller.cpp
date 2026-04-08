@@ -7,8 +7,9 @@
 #include <QTreeView>
 #include <QMessageBox>
 #include <QTimer>
-#include <qkeysequence.h>
-#include <qnamespace.h>
+#include <QKeySequence>
+
+#include "core/types.h"
 
 #include "model/ShortcutsViewModel/shortcuts_types.hpp"
 #include "view/MainWindow.h"
@@ -43,6 +44,8 @@
 #include "view/PlaybackRestoreCoordinator.hpp"
 
 #include "view/SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.h"
+
+#include "view/tag_edit_widget/tag_edit_widget.h"
 
 AppController::AppController(PlaybackController* playbackController, QObject* parent)
     : QObject(parent),
@@ -244,6 +247,16 @@ void AppController::initializeCoreConnections()
     connect(libraryPanel, &LibraryWidget::sgnRemovePlaylist, playlistController, &PlaylistController::removePlaylist);
     connect(libraryPanel, &LibraryWidget::sgnSavePlaylist, playlistController, &PlaylistController::savePlaylist);
     connect(libraryPanel, &LibraryWidget::sgnCopyPlaylist, playlistController, &PlaylistController::copyPlaylist);
+    connect(libraryPanel, &LibraryWidget::sgnTrackPropertyRequested,
+        this, [](trackId tid, const QString&, TrackMetaData meta){
+            TagEditWidget* tag_edit_widget = new TagEditWidget(meta, tid);
+            tag_edit_widget->setAttribute(Qt::WA_DeleteOnClose);
+            tag_edit_widget->show();
+        }
+    );
+
+    ///< TODO: foo
+    /* then connect signal from tag edit page to apply/refresh functions */
 
     connect(libraryPanel, &LibraryWidget::sgnPlayTrackByModelIndex,
         this, [playlistController](const QModelIndex& index) {

@@ -2,11 +2,9 @@
 
 #include "core/types.h"
 
-#include <iostream>
 #include <filesystem>
 #include <vector>
 #include <string>
-#include <sstream>
 #include <algorithm>
 
 #include <taglib/tag.h>
@@ -26,12 +24,14 @@
 #include <taglib/asffile.h>
 
 #include <QString>
-#include <QPixmap>
+#include <QtGui/QPixmap>
 #include <QFileInfo>
 #include <QDir>
 #include <QFileInfo>
 #include <QStringList>
-#include <QImageReader>
+#include <QtGui/QImageReader>
+
+#include <QMap>
 
 namespace fs = std::filesystem;
 
@@ -299,59 +299,116 @@ public:
         return AudioUtils::find_cover_at_folder(QString::fromStdString(filepath));
     }
 
+
+    static QMap<QString, QStringList> parse_meta_to_map(const std::string& filepath) {
+        QMap<QString, QStringList> result;
+
+        auto normalizeKey = [](const QString& key) -> QString {
+            QString normalized;
+            normalized.reserve(key.size());
+
+            for (const QChar& ch : key) {
+                if (ch == '_' || ch == '-' || ch == ' ') {
+                    continue;
+                }
+                normalized.append(ch.toUpper());
+            }
+            return normalized;
+        };
+
+        TagLib::FileRef f(filepath.c_str());
+        if (f.isNull() || !f.tag()) {
+            return {};
+        }
+
+        TagLib::PropertyMap props = f.file()->properties();
+        
+        for (auto it = props.begin(); it != props.end(); ++it) {
+            QString key = QString::fromStdString(it->first.to8Bit(true));
+            QStringList values;
+
+            for (const auto& v : it->second) {
+                values << QString::fromStdString(v.to8Bit(true));
+            }
+
+            // Keep both original key and normalized key for compatibility.
+            result.insert(key, values);
+            result.insert(normalizeKey(key), values);
+        }
+        return result;
+    }
+
+
     static TrackMetaData parse(const std::string& filepath) {
         TrackMetaData meta;
 
-        TagLib::FileRef f(filepath.c_str());
-        if (f.isNull() || !f.tag() || !f.audioProperties()) {
-            meta.isValid = false;
-            return meta;
-        }
-
+        const auto map = parse_meta_to_map(filepath);
         QFileInfo ff(QString::fromStdString(filepath));
         meta.filepath = QString::fromStdString(filepath);
         meta.filename = ff.fileName();
 
-        TagLib::Tag* tag = f.tag();
-        // basic properties
-        meta.album = QString::fromStdString(tag->album().to8Bit(true));
-        meta.title = QString::fromStdString(tag->title().to8Bit(true));
-        meta.artist = QString::fromStdString(tag->artist().to8Bit(true));
-        meta.comment = QString::fromStdString(tag->comment().to8Bit(true));
-        meta.genre = QString::fromStdString(tag->genre().to8Bit(true));
-        meta.track_number = tag->track();
-        meta.year = tag->year();
-
-        meta.duration_s = f.audioProperties()->lengthInSeconds();
-
-        // @todo: file type parse
-        
-        TagLib::PropertyMap props = f.file()->properties();
-
-        // get extend fileds
-        auto getString = [&](const char* key) -> std::string {
-            if (props.contains(key) && !props[key].isEmpty()) {
-                return props[key].front().to8Bit(true);
+        auto firstValue = [&](std::initializer_list<QString> keys) -> QString {
+            for (const QString& key : keys) {
+                const QStringList values = map.value(key);
+                if (!values.isEmpty()) {
+                    return values.first().trimmed();
+                }
             }
-            return "";
+            return {};
         };
 
-        meta.album_artist = QString::fromStdString(getString("ALBUMARTIST"));
-        if (meta.album_artist.isEmpty()) {
-            meta.album_artist = QString::fromStdString(getString("ALBUM ARTIST"));
-        }
-        if (meta.album_artist.isEmpty()) {
-            // qDebug() << "[INFO] AudioUtils::parse album_artist is empty!";
-        }
+        auto parseLeadingInt = [](QString value) -> int {
+            value = value.trimmed();
+            if (value.isEmpty()) {
+                return 0;
+            }
 
-        meta.lyrics = QString::fromStdString(getString("LYRICS"));
+            // Handle values like "3/12".
+            const int slash = value.indexOf('/');
+            if (slash > 0) {
+                value = value.left(slash).trimmed();
+            }
 
-        std::string disc_str = getString("DISCNUMBER");
+            QString digits;
+            for (const QChar& ch : value) {
+                if (ch.isDigit()) {
+                    digits.append(ch);
+                } else {
+                    break;
+                }
+            }
+
+            bool ok = false;
+            int number = digits.toInt(&ok);
+            return ok ? number : 0;
+        };
+
+        // basic properties
+        meta.album = firstValue({"ALBUM"});
+        meta.title = firstValue({"TITLE"});
+        meta.artist = firstValue({"ARTIST"});
+        meta.comment = firstValue({"COMMENT", "DESCRIPTION"});
+        meta.genre = firstValue({"GENRE"});
+        meta.track_number = parseLeadingInt(firstValue({"TRACKNUMBER", "TRACK"}));
+        meta.year = parseLeadingInt(firstValue({"DATE", "YEAR"}));
+        meta.duration_s = parseLeadingInt(firstValue({"LENGTH", "DURATION"}));
+        meta.album_artist = firstValue({"ALBUMARTIST", "ALBUM ARTIST", "ALBUMARTISTSORT"});
+        meta.lyrics = firstValue({"LYRICS", "UNSYNCEDLYRICS", "SYNCLYRICS"});
+
+        std::string disc_str = firstValue({"DISCNUMBER", "DISC"}).toStdString();
         auto [num, total] = parse_disc_number(disc_str);
         meta.disc_number = num;
         meta.disc_total = total;
 
-        meta.isValid = true;
+        // Fallback duration from audio properties when metadata map has no length.
+        if (meta.duration_s <= 0) {
+            TagLib::FileRef f(filepath.c_str());
+            if (!f.isNull() && f.audioProperties()) {
+                meta.duration_s = f.audioProperties()->lengthInSeconds();
+            }
+        }
+
+        meta.isValid = ff.exists();
         return meta;
     }
 

@@ -43,7 +43,7 @@ struct TrackMetaData
     QString comment;
     QString composer;
     QString date;
-    int     disc_number = 0;    // 2/3 -> disck_number / disc_total
+    int     disc_number = 0;    // e.g. `2/3` means `disc_number / disc_total`
     int     disc_total = 0;
     int     duration_s;
     QString encoder;
