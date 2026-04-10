@@ -23,6 +23,7 @@ public:
     void play();
     void pause();
     void stop();
+    Player::State currentState();
     void setPosition(qint64 pos_ms);
     qint64 position();
     void setVolume(int percent);

@@ -13,7 +13,6 @@
 
 // Class Declaration
 class Player;
-enum class State;
 
 
 // Member Declaration

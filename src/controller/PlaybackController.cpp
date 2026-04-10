@@ -54,6 +54,10 @@ void PlaybackController::stop() {
     m_player->stop();
 }
 
+Player::State PlaybackController::currentState() {
+    return m_player->state();
+}
+
 void PlaybackController::setPosition(qint64 pos_ms) {
     m_player->setPosition(pos_ms);
 }
@@ -71,7 +75,7 @@ void PlaybackController::read(QString filepath) {
 }
 
 void PlaybackController::setMute(bool mute_on) {
-    bool now_muted;
+    bool now_muted = false;
     if (m_player->getMediaPlayer() && m_player->getMediaPlayer()->audioOutput()) {
         now_muted = m_player->getMediaPlayer()->audioOutput()->isMuted();
     }

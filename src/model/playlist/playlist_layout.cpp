@@ -49,7 +49,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
                 node->meta.filename = QFileInfo(t.filepath).fileName();
             }
         } else {
-            node->meta = AudioUtils::parse(t.filepath.toStdString());
+            node->meta = AudioUtils::parse_to_local_meta(t.filepath.toStdString());
             node->meta.filepath = t.filepath;
             if (!node->meta.isValid) {
                 node->meta.title = QFileInfo(t.filepath).fileName();
@@ -80,7 +80,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
         QMap<QString, QVector<Node*>> buckets;
         for (Node* node : nodes) {
             QString key = getMetaDataValue(node->meta, current_sort_rule.type).toString();
-            // @note: AudioUtils::parse()将对内容进行格式化, if表达式将废弃
+            // @note: AudioUtils::parse_to_local_meta()将对内容进行格式化, if表达式将废弃
             if (key.isEmpty())
                 key = "unknown";
             buckets[key].append(node);

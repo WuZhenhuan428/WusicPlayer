@@ -300,6 +300,61 @@ public:
     }
 
 
+    static bool taglib_writeback(const std::string& filepath, const QMap<QString, QStringList>& tags) {
+        TagLib::FileRef f(filepath.c_str());
+        if (f.isNull() || !f.file()) {
+            return false;
+        }
+
+        if (tags.isEmpty()) {
+            return false;
+        }
+
+        auto normalizeKey = [](QString key) -> QString {
+            key = key.trimmed();
+            if (key.startsWith('<') && key.endsWith('>') && key.size() > 2) {
+                key = key.mid(1, key.size() - 2);
+            }
+
+            QString normalized;
+            normalized.reserve(key.size());
+            for (const QChar& ch : key) {
+                if (ch == '_' || ch == '-' || ch == ' ') {
+                    continue;
+                }
+                normalized.append(ch.toUpper());
+            }
+            return normalized;
+        };
+
+        TagLib::PropertyMap props = f.file()->properties();
+        for (auto it = tags.constBegin(); it != tags.constEnd(); ++it) {
+            const QString normalizedKey = normalizeKey(it.key());
+            if (normalizedKey.isEmpty()) {
+                continue;
+            }
+
+            const TagLib::String tagKey(normalizedKey.toUtf8().constData(), TagLib::String::Latin1);
+            const auto values = it.value();
+            TagLib::StringList list;
+
+            for (const QString& value : values) {
+                const QString cleaned = value.trimmed();
+                if (!cleaned.isEmpty()) {
+                    list.append(TagLib::String(cleaned.toUtf8().constData(), TagLib::String::UTF8));
+                }
+            }
+
+            props.erase(tagKey);
+            if (!list.isEmpty()) {
+                props.insert(tagKey, list);
+            }
+        }
+
+        f.setProperties(props);
+        return f.file()->save();
+    }
+
     static QMap<QString, QStringList> parse_meta_to_map(const std::string& filepath) {
         QMap<QString, QStringList> result;
 
@@ -339,7 +394,7 @@ public:
     }
 
 
-    static TrackMetaData parse(const std::string& filepath) {
+    static TrackMetaData parse_to_local_meta(const std::string& filepath) {
         TrackMetaData meta;
 
         const auto map = parse_meta_to_map(filepath);
@@ -347,14 +402,19 @@ public:
         meta.filepath = QString::fromStdString(filepath);
         meta.filename = ff.fileName();
 
-        auto firstValue = [&](std::initializer_list<QString> keys) -> QString {
-            for (const QString& key : keys) {
-                const QStringList values = map.value(key);
-                if (!values.isEmpty()) {
-                    return values.first().trimmed();
+        auto normalizeMultiProps = [&](QString key) -> QString {
+            const QStringList values = map.value(key);
+            if (!values.isEmpty()) {
+                QString temp;
+                for (int i = 0; i < values.size(); ++i) {
+                    temp += values.at(i);
+                    if (i < (values.size() - 1)) {
+                        temp += u",";
+                    }
                 }
+                return temp;
             }
-            return {};
+            return QString{};
         };
 
         auto parseLeadingInt = [](QString value) -> int {
@@ -384,18 +444,18 @@ public:
         };
 
         // basic properties
-        meta.album = firstValue({"ALBUM"});
-        meta.title = firstValue({"TITLE"});
-        meta.artist = firstValue({"ARTIST"});
-        meta.comment = firstValue({"COMMENT", "DESCRIPTION"});
-        meta.genre = firstValue({"GENRE"});
-        meta.track_number = parseLeadingInt(firstValue({"TRACKNUMBER", "TRACK"}));
-        meta.year = parseLeadingInt(firstValue({"DATE", "YEAR"}));
-        meta.duration_s = parseLeadingInt(firstValue({"LENGTH", "DURATION"}));
-        meta.album_artist = firstValue({"ALBUMARTIST", "ALBUM ARTIST", "ALBUMARTISTSORT"});
-        meta.lyrics = firstValue({"LYRICS", "UNSYNCEDLYRICS", "SYNCLYRICS"});
+        meta.album = normalizeMultiProps("ALBUM");
+        meta.title = normalizeMultiProps("TITLE");
+        meta.artist = normalizeMultiProps("ARTIST");
+        meta.comment = normalizeMultiProps("COMMENT");
+        meta.genre = normalizeMultiProps("GENRE");
+        meta.track_number = parseLeadingInt(normalizeMultiProps("TRACKNUMBER"));
+        meta.year = parseLeadingInt(normalizeMultiProps("DATE"));
+        meta.duration_s = parseLeadingInt(normalizeMultiProps("LENGTH"));
+        meta.album_artist = normalizeMultiProps("ALBUMARTIST");
+        meta.lyrics = normalizeMultiProps("LYRICS");
 
-        std::string disc_str = firstValue({"DISCNUMBER", "DISC"}).toStdString();
+        std::string disc_str = normalizeMultiProps("DISCNUMBER").toStdString();
         auto [num, total] = parse_disc_number(disc_str);
         meta.disc_number = num;
         meta.disc_total = total;

@@ -40,6 +40,7 @@ class PlaybackRestoreCoordinator;
 class MainWindowConfigContext;
 
 class LyricsSettingPanel;
+class TagEditWidget;
 
 class AppController : public QObject
 {
@@ -106,6 +107,7 @@ private:
     QPointer<ShortcutsController> m_shortcuts_controller;
     QPointer<PlaylistSearchPanel> m_search_panel;
     QPointer<LyricsSettingPanel> m_lyrics_settings_panel;
+    QPointer<TagEditWidget> m_tag_edit_widget;
     bool m_shortcuts_registered = false;
     bool m_desktop_lyrics_visible_cache = false;
     bool m_has_saved_config_on_exit = false;

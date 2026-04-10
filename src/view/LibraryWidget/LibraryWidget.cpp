@@ -171,6 +171,8 @@ void LibraryWidget::initUI() {
     m_main_layout->addWidget(m_main_splitter);
 
     this->setLayout(m_main_layout);
+
+    m_main_splitter->setContentsMargins(0, 0, 0, 0);
 }
 
 void LibraryWidget::setSongTreeModel(QAbstractItemModel* model) {

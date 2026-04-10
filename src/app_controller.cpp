@@ -10,6 +10,7 @@
 #include <QKeySequence>
 
 #include "core/types.h"
+#include "core/utils/AudioUtils.h"
 
 #include "model/ShortcutsViewModel/shortcuts_types.hpp"
 #include "view/MainWindow.h"
@@ -248,15 +249,60 @@ void AppController::initializeCoreConnections()
     connect(libraryPanel, &LibraryWidget::sgnSavePlaylist, playlistController, &PlaylistController::savePlaylist);
     connect(libraryPanel, &LibraryWidget::sgnCopyPlaylist, playlistController, &PlaylistController::copyPlaylist);
     connect(libraryPanel, &LibraryWidget::sgnTrackPropertyRequested,
-        this, [](trackId tid, const QString&, TrackMetaData meta){
-            TagEditWidget* tag_edit_widget = new TagEditWidget(meta, tid);
-            tag_edit_widget->setAttribute(Qt::WA_DeleteOnClose);
-            tag_edit_widget->show();
+        this, [this](trackId tid, const QString&, TrackMetaData meta){
+            if (m_tag_edit_widget) {
+                m_tag_edit_widget.clear();
+            }
+            m_tag_edit_widget = new TagEditWidget(meta, tid);
+
+            connect(m_tag_edit_widget, &TagEditWidget::sgnSaveTags, this,
+                [this](QMap<QString, QStringList> tags, trackId changedTid) {
+                    auto curr_id = m_playlist_controller->currentTrackId();
+                    qint64 curr_pos_ms = m_playback_controller->position();
+                    Player::State old_state = m_playback_controller->currentState();;
+                    if (curr_id == changedTid) {
+                        if (old_state == Player::State::PLAYING || old_state == Player::State::PAUSED) {
+                            m_playback_controller->stop();
+                        }
+                    }
+
+                    QString target_filepath;
+                    auto playlist = m_playlist_controller->findPlaylistById(m_playlist_controller->currentPlaylist());
+                    if (playlist) {
+                        Track* track = playlist->findTrackByID(changedTid);
+                        if (track) {
+                            target_filepath = track->filepath;
+                        }
+                    }
+
+                    if (target_filepath.isEmpty()) {
+                        target_filepath = m_playlist_controller->currentMetadata().filepath;
+                    }
+
+                    if (!AudioUtils::taglib_writeback(target_filepath.toStdString(), tags)) {
+                        qDebug() << "Failed to write tag info!";
+                    }
+
+                    if (curr_id == changedTid) {
+                        auto* model = m_playlist_controller->viewModel();
+                        if (!model)
+                            return;
+                        int queue_index = model->playbackQueue().indexOf(changedTid);
+                        if (queue_index >= 0)
+                            m_playlist_controller->play(queue_index);
+                        if (old_state != Player::State::PLAYING)
+                            m_playback_controller->pause();
+
+                        m_playback_controller->setPosition(curr_pos_ms);
+                    }
+                }
+            );
+
+            m_tag_edit_widget->setAttribute(Qt::WA_DeleteOnClose);
+            m_tag_edit_widget->show();
+
         }
     );
-
-    ///< TODO: foo
-    /* then connect signal from tag edit page to apply/refresh functions */
 
     connect(libraryPanel, &LibraryWidget::sgnPlayTrackByModelIndex,
         this, [playlistController](const QModelIndex& index) {

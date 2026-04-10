@@ -13,6 +13,8 @@
 #include <QMap>
 #include <QString>
 
+#include <QStandardItemModel>
+
 
 class TagEditWidget : public QWidget
 {
@@ -26,15 +28,23 @@ public:
     explicit TagEditWidget(TrackMetaData meta, trackId tid, QWidget* parent = nullptr);
     ~TagEditWidget();
 
-private:    // methods    
+private:    // methods
     void initUI();
+    void initUIProperties(const QString& filepath);
     void initConnections();
     void initTableModel(TrackMetaData meta);
 
+    void handleSaveTags();
+
     QString keyToName(const QString& key);
 
+signals:
+    void sgnSaveTags(QMap<QString, QStringList> tags, trackId tid);
+
 private:    // data structure
+    QStandardItemModel* m_table_model = nullptr;
     QMap<QString, QStringList> m_meta_buffer;
+    trackId m_tid;
 
 private:    // ui widgets
     QVBoxLayout* m_vbl_main;

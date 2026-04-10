@@ -23,23 +23,29 @@ SidePanel::SidePanel(QWidget *parent)
     m_lb_album->setText("Version 0.01");
     m_lb_album->setAlignment(Qt::AlignHCenter);
 
+    m_lb_title->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    m_lb_album->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+    m_lb_title->setFixedHeight(m_lb_title->sizeHint().height());
+    m_lb_album->setFixedHeight(m_lb_album->sizeHint().height());
+
     m_lyrics_panel = new WLyricsPanel(this);
     m_panel_splitter->addWidget(m_lb_cover);
     m_panel_splitter->addWidget(m_lb_title);
     m_panel_splitter->addWidget(m_lb_album);
     m_panel_splitter->addWidget(m_lyrics_panel);
     m_panel_splitter->setChildrenCollapsible(false);
-    m_panel_splitter->setStretchFactor(0, 1);
-    m_panel_splitter->setStretchFactor(1, 0);
-    m_panel_splitter->setStretchFactor(2, 0);
-    m_panel_splitter->setStretchFactor(3, 1);
 
     m_vbl_main = new QVBoxLayout(this);
     m_vbl_main->addWidget(m_panel_splitter);
 
-    m_panel_splitter->setStyleSheet("QSplitter::handle { background: transparent; }");
+    // m_panel_splitter->setStyleSheet("QSplitter::handle { background: transparent; }");
 
     this->setLayout(m_vbl_main);
+
+    m_panel_splitter->setContentsMargins(0, 0, 0, 0);
+    m_vbl_main->setContentsMargins(0, 0, 0, 0);
+    this->setContentsMargins(0, 0, 0, 0);
 }
 
 SidePanel::~SidePanel() { }
@@ -79,8 +85,8 @@ void SidePanel::updateCoverScale() {
         Qt::KeepAspectRatio,
         Qt::SmoothTransformation
     );
-    m_lb_cover->setMinimumSize(0, 0);
-    m_lb_cover->setMaximumSize(base_width, base_width);
+    m_lb_cover->setFixedHeight(base_width);
+    m_lb_cover->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     m_lb_cover->setPixmap(scaled);
 }
 
