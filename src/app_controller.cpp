@@ -8,9 +8,11 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <QKeySequence>
+#include <QFileInfo>
 
 #include "core/types.h"
 #include "core/utils/AudioUtils.h"
+#include "core/utils/path_utils.h"
 
 #include "model/ShortcutsViewModel/shortcuts_types.hpp"
 #include "view/MainWindow.h"
@@ -248,61 +250,7 @@ void AppController::initializeCoreConnections()
     connect(libraryPanel, &LibraryWidget::sgnRemovePlaylist, playlistController, &PlaylistController::removePlaylist);
     connect(libraryPanel, &LibraryWidget::sgnSavePlaylist, playlistController, &PlaylistController::savePlaylist);
     connect(libraryPanel, &LibraryWidget::sgnCopyPlaylist, playlistController, &PlaylistController::copyPlaylist);
-    connect(libraryPanel, &LibraryWidget::sgnTrackPropertyRequested,
-        this, [this](trackId tid, const QString&, TrackMetaData meta){
-            if (m_tag_edit_widget) {
-                m_tag_edit_widget.clear();
-            }
-            m_tag_edit_widget = new TagEditWidget(meta, tid);
-
-            connect(m_tag_edit_widget, &TagEditWidget::sgnSaveTags, this,
-                [this](QMap<QString, QStringList> tags, trackId changedTid) {
-                    auto curr_id = m_playlist_controller->currentTrackId();
-                    qint64 curr_pos_ms = m_playback_controller->position();
-                    Player::State old_state = m_playback_controller->currentState();;
-                    if (curr_id == changedTid) {
-                        if (old_state == Player::State::PLAYING || old_state == Player::State::PAUSED) {
-                            m_playback_controller->stop();
-                        }
-                    }
-
-                    QString target_filepath;
-                    auto playlist = m_playlist_controller->findPlaylistById(m_playlist_controller->currentPlaylist());
-                    if (playlist) {
-                        Track* track = playlist->findTrackByID(changedTid);
-                        if (track) {
-                            target_filepath = track->filepath;
-                        }
-                    }
-
-                    if (target_filepath.isEmpty()) {
-                        target_filepath = m_playlist_controller->currentMetadata().filepath;
-                    }
-
-                    if (!AudioUtils::taglib_writeback(target_filepath.toStdString(), tags)) {
-                        qDebug() << "Failed to write tag info!";
-                    }
-
-                    if (curr_id == changedTid) {
-                        auto* model = m_playlist_controller->viewModel();
-                        if (!model)
-                            return;
-                        int queue_index = model->playbackQueue().indexOf(changedTid);
-                        if (queue_index >= 0)
-                            m_playlist_controller->play(queue_index);
-                        if (old_state != Player::State::PLAYING)
-                            m_playback_controller->pause();
-
-                        m_playback_controller->setPosition(curr_pos_ms);
-                    }
-                }
-            );
-
-            m_tag_edit_widget->setAttribute(Qt::WA_DeleteOnClose);
-            m_tag_edit_widget->show();
-
-        }
-    );
+    connect(libraryPanel, &LibraryWidget::sgnTrackPropertyRequested, this, &AppController::handleTrackPropertyRequested);
 
     connect(libraryPanel, &LibraryWidget::sgnPlayTrackByModelIndex,
         this, [playlistController](const QModelIndex& index) {
@@ -399,6 +347,110 @@ void AppController::handleShowDesktopLyricsRequested()
         configureDesktopLyricsWindowRelation();
         desktopLyrics->show();
     }
+}
+
+void AppController::handleTrackPropertyRequested(trackId tid, QString filepath, TrackMetaData meta) {
+    Q_UNUSED(filepath);
+
+    if (m_tag_edit_widget) {
+        m_tag_edit_widget.clear();
+    }
+    m_tag_edit_widget = new TagEditWidget(meta, tid);
+
+    connect(m_tag_edit_widget, &TagEditWidget::sgnSaveTags, this,
+        [this](QMap<QString, QStringList> tags, trackId changedTid) {
+            auto curr_id = m_playlist_controller->currentTrackId();
+            qint64 curr_pos_ms = m_playback_controller->position();
+            Player::State old_state = m_playback_controller->currentState();;
+            if (curr_id == changedTid) {
+                if (old_state == Player::State::PLAYING || old_state == Player::State::PAUSED) {
+                    m_playback_controller->stop();
+                }
+            }
+
+            QString target_filepath;
+            auto playlist = m_playlist_controller->findPlaylistById(m_playlist_controller->currentPlaylist());
+            if (playlist) {
+                Track* track = playlist->findTrackByID(changedTid);
+                if (track) {
+                    target_filepath = track->filepath;
+                }
+            }
+
+            if (target_filepath.isEmpty()) {
+                target_filepath = m_playlist_controller->currentMetadata().filepath;
+            }
+
+            if (!AudioUtils::taglib_writeback(target_filepath.toStdString(), tags)) {
+                qDebug() << "Failed to write tag info!";
+            } else {
+                // rebuild local cache & view data
+                TrackMetaData refreshed = AudioUtils::parse_to_local_meta(target_filepath.toStdString());
+                refreshed = AudioUtils::format(refreshed);
+
+                const QString target_normalized = PathUtils::normalize_path(target_filepath);
+                int updated_tracks = 0;
+
+                const auto all_playlists = m_playlist_controller->playlists();
+
+                // collect to update tracks
+                for (const auto& playlist : all_playlists) {
+                    if (!playlist) {
+                        continue;
+                    }
+
+                    bool playlist_changed = false;
+                    QVector<trackId> to_update;
+                    const auto& tracks = playlist->getTracks();
+                    for (const auto& track : tracks) {
+                        if (PathUtils::normalize_path(track.filepath) == target_normalized) {
+                            to_update.push_back(track.tid);
+                        }
+                    }
+
+                    for (const auto& tid : to_update) {
+                        if (playlist->updateTrackMeta(tid, refreshed)) {
+                            playlist_changed = true;
+                            ++updated_tracks;
+                        }
+                    }
+
+                    if (playlist_changed && m_playlist_manager && m_playlist_manager->m_repo) {
+                        m_playlist_manager->m_repo->saveListToCache(playlist);
+                    }
+                }
+
+                auto* model = m_playlist_controller->viewModel();
+                if (model && updated_tracks > 0) {
+                    model->rebuildAsync();
+                }
+
+                if (curr_id == changedTid) {
+                    auto* sidePanel = m_main_window ? m_main_window->sidePanel() : nullptr;
+                    if (sidePanel) {
+                        sidePanel->loadLyrics(refreshed);
+                        sidePanel->loadMetaData(refreshed);
+                    }
+                }
+            }
+
+            if (curr_id == changedTid) {
+                auto* model = m_playlist_controller->viewModel();
+                if (!model)
+                    return;
+                int queue_index = model->playbackQueue().indexOf(changedTid);
+                if (queue_index >= 0)
+                    m_playlist_controller->play(queue_index);
+                if (old_state != Player::State::PLAYING)
+                    m_playback_controller->pause();
+
+                m_playback_controller->setPosition(curr_pos_ms);
+            }
+        }, Qt::SingleShotConnection
+    );
+
+    m_tag_edit_widget->setAttribute(Qt::WA_DeleteOnClose);
+    m_tag_edit_widget->show();
 }
 
 void AppController::configureDesktopLyricsWindowRelation()

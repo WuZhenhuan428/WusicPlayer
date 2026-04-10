@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "playlist.h"
 #include "core/types.h"
 
 #include <QObject>

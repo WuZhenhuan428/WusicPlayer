@@ -7,6 +7,8 @@
 #include <QByteArray>
 #include <QMetaObject>
 
+#include "core/types.h"
+
 class QListWidgetItem;
 class PlaylistSearchPanel;
 class SettingsPanel;
@@ -60,6 +62,7 @@ private:
     void handleRemoveColumnRequested();
     void handleShowAboutMessagebox();
     void handleShowDesktopLyricsRequested();
+    void handleTrackPropertyRequested(trackId tid, QString filepath, TrackMetaData meta);
     void configureDesktopLyricsWindowRelation();
     void refreshPlaylistView();
     void ensureSettingsPanel();

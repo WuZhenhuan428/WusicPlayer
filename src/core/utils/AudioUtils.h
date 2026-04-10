@@ -451,7 +451,7 @@ public:
         meta.genre = normalizeMultiProps("GENRE");
         meta.track_number = parseLeadingInt(normalizeMultiProps("TRACKNUMBER"));
         meta.year = parseLeadingInt(normalizeMultiProps("DATE"));
-        meta.duration_s = parseLeadingInt(normalizeMultiProps("LENGTH"));
+        meta.duration_s = parseLeadingInt(normalizeMultiProps("LENGTH")) / 1000.0;
         meta.album_artist = normalizeMultiProps("ALBUMARTIST");
         meta.lyrics = normalizeMultiProps("LYRICS");
 
