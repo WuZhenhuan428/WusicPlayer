@@ -251,6 +251,16 @@ void AppController::initializeCoreConnections()
     connect(libraryPanel, &LibraryWidget::sgnSavePlaylist, playlistController, &PlaylistController::savePlaylist);
     connect(libraryPanel, &LibraryWidget::sgnCopyPlaylist, playlistController, &PlaylistController::copyPlaylist);
     connect(libraryPanel, &LibraryWidget::sgnTrackPropertyRequested, this, &AppController::handleTrackPropertyRequested);
+    connect(libraryPanel, &LibraryWidget::sgnRemoveTrackRequested,
+            this, [playlistController, playbackController](const trackId& tid) {
+        if (tid.isNull()) {
+            return;
+        }
+        if (playlistController->currentTrackId() == tid) {
+            playbackController->stop();
+        }
+        playlistController->removeTrack(tid);
+    });
 
     connect(libraryPanel, &LibraryWidget::sgnPlayTrackByModelIndex,
         this, [playlistController](const QModelIndex& index) {

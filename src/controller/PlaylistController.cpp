@@ -157,6 +157,23 @@ void PlaylistController::copyPlaylist(const playlistId& id) {
     }
 }
 
+void PlaylistController::removeTrack(const trackId& id) {
+    if (!m_manager || id.isNull()) {
+        return;
+    }
+
+    auto btn = QMessageBox::question(
+        m_dialogParent,
+        tr("Confirm Remove"),
+        tr("Do you really want to remove this track?"),
+        QMessageBox::Yes | QMessageBox::No
+    );
+
+    if (btn == QMessageBox::Yes) {
+        m_manager->removeTrack(id);
+    }
+}
+
 auto PlaylistController::viewModel() const -> decltype(std::declval<PlaylistManager*>()->getViewModel()) {
     return m_manager->getViewModel();
 }

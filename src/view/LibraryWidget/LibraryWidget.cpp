@@ -91,6 +91,8 @@ void LibraryWidget::callSongContextMenu(const QPoint &pos) {
 
     QMenu menu(this);
     QAction* actPlay = menu.addAction("Play");
+    QAction* actRemove = menu.addAction("Remove");
+    menu.addSeparator();
     QAction* actProp = menu.addAction("Property");
 
     connect(actPlay, &QAction::triggered, this, [this, index](){
@@ -99,6 +101,10 @@ void LibraryWidget::callSongContextMenu(const QPoint &pos) {
 
     connect(actProp, &QAction::triggered, this, [this, tid, meta, path]{
         emit sgnTrackPropertyRequested(tid, path, meta);
+    });
+
+    connect(actRemove, &QAction::triggered, this, [this, tid](){
+        emit sgnRemoveTrackRequested(tid);
     });
 
     menu.exec(m_song_tree_view->viewport()->mapToGlobal(pos));

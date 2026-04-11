@@ -82,8 +82,13 @@ add_library(wusic_view STATIC
     dialogs/font_select_dialog.cpp
     dialogs/font_select_dialog.h
 
+    dialogs/text_editor_dialog.cpp
+    dialogs/text_editor_dialog.h
+
     tag_edit_widget/tag_edit_widget.cpp
     tag_edit_widget/tag_edit_widget.h
+    tag_edit_widget/new_tag_item_dialog.cpp
+    tag_edit_widget/new_tag_item_dialog.h
 )
 
 target_link_libraries(wusic_view

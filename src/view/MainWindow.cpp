@@ -121,8 +121,8 @@ void MainWindow::buildMenuBar() {
     m_act_load_playlist = new QAction("&Load playlist", m_menu_file);
     m_act_copy_playlist = new QAction("Copy playlist", m_menu_file);
     m_act_rename_playlist = new QAction("&Rename playlist", m_menu_file);
-    m_act_remove_playlist = new QAction("&Save current playlist", m_menu_file);
-    m_act_save_playlist = new QAction("Remove current palylist", m_menu_file);
+    m_act_remove_playlist = new QAction("Remove current playlist", m_menu_file);
+    m_act_save_playlist = new QAction("Save current playlist", m_menu_file);
     m_act_exit = new QAction("&Exit", m_menu_file);
     m_menu_file->addAction(m_act_open_file);
     m_menu_file->addSeparator();
@@ -196,6 +196,9 @@ void MainWindow::buildCentralArea() {
     setCentralWidget(m_center_widget);
 
     // desktop lrc panel
+    /**
+     * WARN: to use on wayland, here does not set parent object, and may cause mem leak
+     */
     m_desktop_lyrics_widget = new DesktopLyricsWidget();
 }
 

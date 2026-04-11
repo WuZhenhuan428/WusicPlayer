@@ -35,8 +35,14 @@ private:    // methods
     void initTableModel(TrackMetaData meta);
 
     void handleSaveTags();
+    void handleShowMenu(const QPoint& pos);
 
     QString keyToName(const QString& key);
+    QString nameToKey(const QString& name);
+
+    void handleEditItem(QModelIndex index);
+    void handleDeleteItem(QModelIndex index);
+    void handleAddNewFiled();
 
 signals:
     void sgnSaveTags(QMap<QString, QStringList> tags, trackId tid);
@@ -55,6 +61,7 @@ private:    // ui widgets
 
     QTableView* m_table_metadata;
     QHBoxLayout* m_hbl_buttons;
+    QPushButton* m_btn_help;
     QPushButton* m_btn_ok;
     QPushButton* m_btn_cancel;
 };

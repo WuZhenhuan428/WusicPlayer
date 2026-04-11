@@ -50,6 +50,7 @@ public slots:
     
     void addTrack(const playlistId& pid, const QString& filepath);
     void addFolder(const playlistId& pid, const QString& directory);
+    void removeTrack(const trackId& tid);
 
     QString nextTrack(PlayMode mode);
     QString prevTrack(PlayMode mode);

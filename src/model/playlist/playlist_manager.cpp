@@ -82,6 +82,35 @@ void PlaylistManager::addTrack(const playlistId& pid, const QString& filepath) {
     m_repo->addTrackToPlaylist(pid, filepath);
 }
 
+void PlaylistManager::removeTrack(const trackId& tid) {
+    if (tid.isNull() || !m_repo || !m_context) {
+        return;
+    }
+
+    auto playlist = m_repo->findPlaylistById(m_context->getPlaylistId());
+    if (!playlist) {
+        return;
+    }
+
+    Track* track = playlist->findTrackByID(tid);
+    if (!track) {
+        return;
+    }
+
+    playlist->removeTrack(tid);
+    m_repo->saveListToCache(playlist);
+
+    if (m_context->getPlayTrackId() == tid) {
+        m_context->setPlayTrack(trackId());
+    }
+
+    if (m_view) {
+        m_view->rebuildAsync();
+    }
+
+    emit playlistChanged();
+}
+
 // a wrap of this->addTrack
 void PlaylistManager::addFolder(const playlistId& pid, const QString& directory) {
     playlistId curr_pid = pid;

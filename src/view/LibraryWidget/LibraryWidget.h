@@ -40,6 +40,7 @@ signals:
 
     void sgnPlayTrackByModelIndex(const QModelIndex &index);
     void sgnTrackPropertyRequested(trackId tid, QString filepath, TrackMetaData meta);
+    void sgnRemoveTrackRequested(trackId tid);
     void sgnRenamePlaylist(playlistId id);
     void sgnCopyPlaylist(playlistId id);
     void sgnRemovePlaylist(playlistId id);
