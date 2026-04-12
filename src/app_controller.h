@@ -56,6 +56,7 @@ public:
 
 private:
     void initializeCoreConnections();
+    void locateCurrentTrackInView();
     void handlePlayTrackRequest(const QString& filepath);
     void handleSetSortRuleRequested();
     void handleInsertColumnRequested();
@@ -114,5 +115,6 @@ private:
     bool m_shortcuts_registered = false;
     bool m_desktop_lyrics_visible_cache = false;
     bool m_has_saved_config_on_exit = false;
+    bool m_locate_on_next_play_request = false;
     QMetaObject::Connection m_lyrics_follow_conn;
 };

@@ -9,6 +9,8 @@
 #include <QTimer>
 #include <QKeySequence>
 #include <QFileInfo>
+#include <QShortcut>
+#include <QThread>
 
 #include "core/types.h"
 #include "core/utils/AudioUtils.h"
@@ -214,6 +216,7 @@ void AppController::initializeCoreConnections()
     connect(controlBar, &WControlBar::sgnBtnNextClicked, this, [this, playlistController, playbackController]() {
         QString nextTrack = playlistController->nextTrack(playbackController->playMode());
         if (!nextTrack.isEmpty()) {
+            m_locate_on_next_play_request = true;
             m_main_window->playTrackInUi(nextTrack);
         }
     });
@@ -221,6 +224,7 @@ void AppController::initializeCoreConnections()
     connect(controlBar, &WControlBar::sgnBtnPrevClicked, this, [this, playlistController, playbackController]() {
         QString prevTrack = playlistController->prevTrack(playbackController->playMode());
         if (!prevTrack.isEmpty()) {
+            m_locate_on_next_play_request = true;
             m_main_window->playTrackInUi(prevTrack);
         }
     });
@@ -230,6 +234,7 @@ void AppController::initializeCoreConnections()
         if (status == QMediaPlayer::MediaStatus::EndOfMedia) {
             QString nextTrack = playlistController->nextTrack(playbackController->playMode());
             if (!nextTrack.isEmpty()) {
+                m_locate_on_next_play_request = true;
                 m_main_window->playTrackInUi(nextTrack);
             }
         }
@@ -273,26 +278,55 @@ void AppController::initializeCoreConnections()
             playlistController->play(queueIndex);
         }
     });
+
+    auto* locateShortcut = new QShortcut(QKeySequence(Qt::Key_Tab), libraryPanel->songTreeView());
+    locateShortcut->setContext(Qt::WidgetShortcut);
+    connect(locateShortcut, &QShortcut::activated, this, [this]() {
+        locateCurrentTrackInView();
+    });
+}
+
+void AppController::locateCurrentTrackInView()
+{
+    auto* playlistController = m_playlist_controller.get();
+    auto* libraryPanel = m_main_window ? m_main_window->libraryPanel() : nullptr;
+    if (!playlistController || !libraryPanel) {
+        return;
+    }
+
+    auto* view = libraryPanel->songTreeView();
+    auto* model = playlistController->viewModel();
+    if (!view || !model) {
+        return;
+    }
+
+    const QModelIndex index = model->getCurrentTrackIndex();
+    if (!index.isValid()) {
+        return;
+    }
+
+    view->scrollTo(index.siblingAtColumn(1), QAbstractItemView::PositionAtCenter);
+    view->setCurrentIndex(index.siblingAtColumn(1));
 }
 
 void AppController::handlePlayTrackRequest(const QString& filepath)
 {
     if (filepath.isEmpty()) {
+        m_locate_on_next_play_request = false;
         return;
     }
 
     auto* playlistController = m_playlist_controller.get();
-    auto* libraryPanel = m_main_window->libraryPanel();
     auto* sidePanel = m_main_window->sidePanel();
     auto* playbackController = m_playback_controller;
 
     playbackController->read(filepath);
     sidePanel->loadCover(filepath);
 
-    QModelIndex index = playlistController->viewModel()->getCurrentTrackIndex();
-    if (index.isValid()) {
-        libraryPanel->songTreeView()->scrollTo(index.siblingAtColumn(1), QAbstractItemView::PositionAtCenter);
+    if (m_locate_on_next_play_request) {
+        locateCurrentTrackInView();
     }
+    m_locate_on_next_play_request = false;
 
     TrackMetaData meta = playlistController->currentMetadata();
     sidePanel->loadLyrics(meta);
@@ -371,13 +405,14 @@ void AppController::handleTrackPropertyRequested(trackId tid, QString filepath, 
         [this](QMap<QString, QStringList> tags, trackId changedTid) {
             auto curr_id = m_playlist_controller->currentTrackId();
             qint64 curr_pos_ms = m_playback_controller->position();
-            Player::State old_state = m_playback_controller->currentState();;
+            Player::State old_state = m_playback_controller->currentState();
             if (curr_id == changedTid) {
                 if (old_state == Player::State::PLAYING || old_state == Player::State::PAUSED) {
                     m_playback_controller->stop();
                 }
             }
 
+            // confirm filepath
             QString target_filepath;
             auto playlist = m_playlist_controller->findPlaylistById(m_playlist_controller->currentPlaylist());
             if (playlist) {
@@ -391,72 +426,89 @@ void AppController::handleTrackPropertyRequested(trackId tid, QString filepath, 
                 target_filepath = m_playlist_controller->currentMetadata().filepath;
             }
 
-            if (!AudioUtils::taglib_writeback(target_filepath.toStdString(), tags)) {
-                qDebug() << "Failed to write tag info!";
-            } else {
-                // rebuild local cache & view data
-                TrackMetaData refreshed = AudioUtils::parse_to_local_meta(target_filepath.toStdString());
-                refreshed = AudioUtils::format(refreshed);
+            QPointer<AppController> self(this);
+            QThread* worker = QThread::create([self, tags, changedTid, curr_id, curr_pos_ms, old_state, target_filepath]() {
+                const bool write_ok = AudioUtils::taglib_writeback(target_filepath.toStdString(), tags);
+                TrackMetaData refreshed;
+                if (write_ok) {
+                    refreshed = AudioUtils::parse_to_local_meta(target_filepath.toStdString());
+                    refreshed = AudioUtils::format(refreshed);
+                }
 
-                const QString target_normalized = PathUtils::normalize_path(target_filepath);
-                int updated_tracks = 0;
-
-                const auto all_playlists = m_playlist_controller->playlists();
-
-                // collect to update tracks
-                for (const auto& playlist : all_playlists) {
-                    if (!playlist) {
-                        continue;
+                QMetaObject::invokeMethod(self, [self, write_ok, refreshed, target_filepath, changedTid, curr_id, curr_pos_ms, old_state]() {
+                    if (!self) {
+                        return;
                     }
 
-                    bool playlist_changed = false;
-                    QVector<trackId> to_update;
-                    const auto& tracks = playlist->getTracks();
-                    for (const auto& track : tracks) {
-                        if (PathUtils::normalize_path(track.filepath) == target_normalized) {
-                            to_update.push_back(track.tid);
+                    if (!write_ok) {
+                        qDebug() << "Failed to write tag info!";
+                    } else {
+                        const QString target_normalized = PathUtils::normalize_path(target_filepath);
+                        int updated_tracks = 0;
+
+                        const auto all_playlists = self->m_playlist_controller->playlists();
+                        for (const auto& playlist : all_playlists) {
+                            if (!playlist) {
+                                continue;
+                            }
+
+                            bool playlist_changed = false;
+                            QVector<trackId> to_update;
+                            const auto& tracks = playlist->getTracks();
+                            for (const auto& track : tracks) {
+                                if (PathUtils::normalize_path(track.filepath) == target_normalized) {
+                                    to_update.push_back(track.tid);
+                                }
+                            }
+
+                            for (const auto& tid : to_update) {
+                                if (playlist->updateTrackMeta(tid, refreshed)) {
+                                    playlist_changed = true;
+                                    ++updated_tracks;
+                                }
+                            }
+
+                            if (playlist_changed && self->m_playlist_manager && self->m_playlist_manager->m_repo) {
+                                self->m_playlist_manager->m_repo->saveListToCache(playlist);
+                            }
+                        }
+
+                        auto* model = self->m_playlist_controller->viewModel();
+                        if (model && updated_tracks > 0) {
+                            model->rebuildAsync();
+                        }
+
+                        if (curr_id == changedTid) {
+                            auto* sidePanel = self->m_main_window ? self->m_main_window->sidePanel() : nullptr;
+                            if (sidePanel) {
+                                sidePanel->loadLyrics(refreshed);
+                                sidePanel->loadMetaData(refreshed);
+                            }
                         }
                     }
 
-                    for (const auto& tid : to_update) {
-                        if (playlist->updateTrackMeta(tid, refreshed)) {
-                            playlist_changed = true;
-                            ++updated_tracks;
+                    if (curr_id == changedTid) {
+                        auto* model = self->m_playlist_controller->viewModel();
+                        if (!model) {
+                            return;
                         }
+
+                        int queue_index = model->playbackQueue().indexOf(changedTid);
+                        if (queue_index >= 0) {
+                            self->m_playlist_controller->play(queue_index);
+                        }
+                        if (old_state != Player::State::PLAYING) {
+                            self->m_playback_controller->pause();
+                        }
+
+                        self->m_playback_controller->setPosition(curr_pos_ms);
                     }
+                }, Qt::QueuedConnection);
+            });
 
-                    if (playlist_changed && m_playlist_manager && m_playlist_manager->m_repo) {
-                        m_playlist_manager->m_repo->saveListToCache(playlist);
-                    }
-                }
-
-                auto* model = m_playlist_controller->viewModel();
-                if (model && updated_tracks > 0) {
-                    model->rebuildAsync();
-                }
-
-                if (curr_id == changedTid) {
-                    auto* sidePanel = m_main_window ? m_main_window->sidePanel() : nullptr;
-                    if (sidePanel) {
-                        sidePanel->loadLyrics(refreshed);
-                        sidePanel->loadMetaData(refreshed);
-                    }
-                }
-            }
-
-            if (curr_id == changedTid) {
-                auto* model = m_playlist_controller->viewModel();
-                if (!model)
-                    return;
-                int queue_index = model->playbackQueue().indexOf(changedTid);
-                if (queue_index >= 0)
-                    m_playlist_controller->play(queue_index);
-                if (old_state != Player::State::PLAYING)
-                    m_playback_controller->pause();
-
-                m_playback_controller->setPosition(curr_pos_ms);
-            }
-        }, Qt::SingleShotConnection
+            connect(worker, &QThread::finished, worker, &QObject::deleteLater);
+            worker->start();
+        }, static_cast<Qt::ConnectionType>(Qt::QueuedConnection | Qt::SingleShotConnection)
     );
 
     m_tag_edit_widget->setAttribute(Qt::WA_DeleteOnClose);
@@ -824,6 +876,7 @@ void AppController::ensureSearchPanel() {
 
         int queueIndex = model->playbackQueue().indexOf(id);
         if (queueIndex >= 0) {
+            m_locate_on_next_play_request = true;
             m_playlist_controller->play(queueIndex);
         }
     });

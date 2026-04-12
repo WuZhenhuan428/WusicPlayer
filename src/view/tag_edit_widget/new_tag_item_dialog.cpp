@@ -110,10 +110,7 @@ bool NewTagItemDialog::checkRepetition() {
             return false;
         }
     }
-
-    if (m_le_value->text().trimmed().isEmpty()) {
-        return false;
-    }
+    // allow key-only prop, so remove value check
 
     return true;
 }
