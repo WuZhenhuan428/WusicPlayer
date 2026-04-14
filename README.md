@@ -60,8 +60,17 @@ This project is under active refactoring and feature iteration.
 ---
 
 ## Screenshots
+Main window:
+![Main Window](docs/screenshots/main_window.png)
 
-![Main Window](docs/screenshots/main.png)
+Network lyrics search:
+![NetWork Lyrics Search](docs/screenshots/lyrics_search.png)
+
+Search in playlist:
+![Search in playlist](docs/screenshots/search_window.png)
+
+Tag view and lyrics editor:
+![tag viewer and lyrics editor](docs/screenshots/tag_viewer_and_lyrics_editor.png)
 
 ---
 
@@ -155,9 +164,9 @@ ctest --preset test-local-qt
 
 - [x] Complete controller-layer migration and stabilize interfaces
 - [x] Improve audio device switching behavior
-- [ ] Replace the current search proxy model with an independent one
+- [x] Replace the current search proxy model with an independent one
 - [x] Binding shortcut keys
-- [ ] Polish UI/UX and visual theme consistency
+- [x] Search lyrics from network platforms (netease cloud music only)
 - [ ] Expand unit test coverage
 - [ ] Evaluate distribution formats (AppImage / Flatpak / package repos)
 - [ ] ...
@@ -187,5 +196,5 @@ See the `LICENSE` file for details.
 
 - Qt
 - [TagLib](https://github.com/taglib/taglib)
-- UX inspiration from [Foobar2000](https://www.foobar2000.org) / [foobox](https://github.com/dream7180/foobox-en) (no official affiliation)
+- UX inspiration from [Foobar2000](https://www.foobar2000.org) / [foobox](https://github.com/dream7180/foobox-en) v6 (no official affiliation)
 - [lrc-parser](https://github.com/WuZhenhuan428/lrc-parser)
