@@ -17,6 +17,8 @@ public:
     void ScrollByPosition(qint64 position_ms);
     bool setRawLyrics(const QString& raw_data);
     bool setLocalLrc(const QString& filepath);
+    bool setLrcFilePath(const QString& lrc_path);
+    QString rawLyricsText() const;
     void setDefaultInfo(const TrackMetaData& meta);
 private:
     WLyricsModel* m_lrc_model;

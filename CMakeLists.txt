@@ -35,9 +35,11 @@ if (WUSIC_ENABLE_GPROF)
     endif ()
 endif ()
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Multimedia)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Multimedia Network)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(PkgConfig REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(ZLIB REQUIRED)
 pkg_check_modules(TAGLIB REQUIRED IMPORTED_TARGET taglib)
 
 qt_standard_project_setup()

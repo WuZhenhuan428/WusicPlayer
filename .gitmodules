@@ -1,3 +1,0 @@
-[submodule "thirdparty/lrc-parser"]
-	path = thirdparty/lrc-parser
-	url = git@github.com:WuZhenhuan428/lrc-parser.git

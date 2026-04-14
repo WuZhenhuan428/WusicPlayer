@@ -8,11 +8,20 @@ add_library(wusic_core STATIC
     utils/path_utils.h
     ConfigManager/ConfigManager.h
     ConfigManager/ConfigManager.cpp
+
+    LyricsFetcher/lyrics_manager.h
+    LyricsFetcher/lyrics_manager.cpp
+
+    LyricsFetcher/netease_qt6.h
+    LyricsFetcher/netease_qt6.cpp
 )
 
 target_link_libraries(wusic_core
     PUBLIC
         Qt6::Core
+        Qt6::Network
+        OpenSSL::Crypto
+        ZLIB::ZLIB
         wusic_headers
         magic_enum::magic_enum
 )

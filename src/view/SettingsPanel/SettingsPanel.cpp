@@ -43,6 +43,21 @@ void SettingsPanel::registerWidget(QListWidgetItem* title, QWidget* widget) {
     m_stacked_widget->addWidget(widget);
 }
 
+void SettingsPanel::switchToPageByTitle(const QString& title) {
+    if (title.isEmpty()) {
+        return;
+    }
+
+    for (int i = 0; i < m_list_widget->count(); ++i) {
+        QListWidgetItem* item = m_list_widget->item(i);
+        if (item && item->text() == title) {
+            m_list_widget->setCurrentRow(i);
+            m_stacked_widget->setCurrentIndex(i);
+            return;
+        }
+    }
+}
+
 void SettingsPanel::emitStateSnapshot() {
     QByteArray geometry = saveGeometry();
     emit sgnStateSnapshot(geometry);

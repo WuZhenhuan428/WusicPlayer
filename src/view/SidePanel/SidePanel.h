@@ -11,7 +11,10 @@
 #include <QPixmap>
 #include <QSplitter>
 #include <QVBoxLayout>
+#include <QPoint>
+#include <QPointer>
 
+class LyricsSearchWidget;
 
 class SidePanel : public QWidget
 {
@@ -24,6 +27,12 @@ public:
     void loadMetaData(const TrackMetaData& meta);
     WLyricsPanel* getLyricsPanel() const;
     bool loadLyrics(const TrackMetaData& meta);
+
+signals:
+    void sgnDesktopLyricsConfigRequested();
+
+private slots:
+    void showLyricsContextMenu(const QPoint& pos);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -38,5 +47,8 @@ private:
     ElidedLabel* m_lb_album;
 
     QVBoxLayout* m_vbl_main;
+    TrackMetaData m_last_lyrics_meta;
+    bool m_has_last_lyrics_meta = false;
+    QPointer<LyricsSearchWidget> m_lyrics_search_widget;
     void updateCoverScale();
 };

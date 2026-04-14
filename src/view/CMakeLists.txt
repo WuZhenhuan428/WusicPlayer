@@ -15,6 +15,8 @@ add_library(wusic_view STATIC
     SidePanel/ElidedLabel.h
     SidePanel/SidePanel.cpp
     SidePanel/SidePanel.h
+    SidePanel/LyricsSearchWidget.cpp
+    SidePanel/LyricsSearchWidget.h
     SidePanel/WLyricsModel.cpp
     SidePanel/WLyricsModel.h
     SidePanel/WLyricsPanel.cpp

@@ -18,6 +18,7 @@ public:
     ~SettingsPanel();
 
     void registerWidget(QListWidgetItem* title, QWidget* widget);
+    void switchToPageByTitle(const QString& title);
     void emitStateSnapshot();
 
 protected:

@@ -25,8 +25,10 @@ public:
 
     void setDefaultInfo(const TrackMetaData& meta);
     bool setLocalLrc(const QString& filepath);
+    bool setLrcFilePath(const QString& lrc_path);
     bool setRawLyrics(const QString& raw_data);
     int getRowByPosition(qint64 pos_ms);
+    QString rawLyricsText() const;
     void setCurrentPosition(qint64 pos_ms);
     int currentRow() const;
     QString prevLineText() const;
@@ -46,5 +48,7 @@ signals:
 
 private:
     LrcParser m_parser;
+    LrcParser::LrcFile m_lrc_file;
+    QString m_raw_lyrics_text;
     int m_current_row = -1;
 };

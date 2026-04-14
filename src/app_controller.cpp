@@ -174,6 +174,12 @@ void AppController::initializeCoreConnections()
 
     auto* lyricsModel = dynamic_cast<WLyricsModel*>(sidePanel->getLyricsPanel()->model());
     connect(playbackController, &PlaybackController::sgnPositionChanged, sidePanel->getLyricsPanel(), &WLyricsPanel::ScrollByPosition);
+    connect(sidePanel, &SidePanel::sgnDesktopLyricsConfigRequested, this, [this]() {
+        onOpenSettingsPanelRequested();
+        if (m_settings_panel) {
+            m_settings_panel->switchToPageByTitle("Lyrics");
+        }
+    });
 
     if (lyricsModel) {
         m_lyrics_follow_conn = connect(playbackController, &PlaybackController::sgnPositionChanged,
