@@ -1,6 +1,4 @@
 add_library(wusic_model STATIC
-    player/player.h
-    player/player.cpp
     playlist/playlist_context.cpp
     playlist/playlist_context.h
     playlist/playlist.cpp
@@ -25,7 +23,7 @@ add_library(wusic_model STATIC
 target_link_libraries(wusic_model
     PUBLIC
         Qt6::Core
-        Qt6::Multimedia
+        Qt6::Gui
         wusic_core
         wusic_headers
         lrc_parser

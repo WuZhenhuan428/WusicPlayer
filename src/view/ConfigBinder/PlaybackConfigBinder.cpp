@@ -43,7 +43,7 @@ void PlaybackConfigBinder::collect(MainWindowConfigContext& ctx) {
         ctx.playbackSec->last_playlist_id = last_pid;
         ctx.playbackSec->last_track_id = last_tid;
         ctx.playbackSec->last_position_ms
-            = ctx.playbackController->getMediaPlayer()->hasAudio() 
+            = ctx.playbackController->state() != PlayingState::STOP
             ? ctx.playbackController->position() 
             : 0;
     } while (0);

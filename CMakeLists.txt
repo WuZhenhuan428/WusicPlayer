@@ -40,7 +40,18 @@ find_package(magic_enum CONFIG REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
-pkg_check_modules(TAGLIB REQUIRED IMPORTED_TARGET taglib)
+find_package(Threads REQUIRED)
+
+pkg_check_modules(TAGLIB REQUIRED IMPORTED_TARGET
+    taglib
+)
+
+pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET
+    libavcodec
+    libavformat
+    libavutil
+    libavfilter
+)
 
 qt_standard_project_setup()
 

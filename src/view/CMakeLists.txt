@@ -1,5 +1,4 @@
 add_library(wusic_view STATIC
-    
     MainWindow.cpp
     MainWindow.h
 

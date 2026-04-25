@@ -1,7 +1,6 @@
 #pragma once
 #include <QObject>
 #include <QTimer>
-#include <QMediaPlayer>
 #include <QDebug>
 
 #include "core/types.h"
@@ -60,23 +59,17 @@ private:
     void seekWhenMediaReady(int retry) {
         if (retry > 30 || m_pending_pos_ms <= 0) return;
 
-        QMediaPlayer* media_player = const_cast<QMediaPlayer*>(m_playback_controller->getMediaPlayer());
-        if (!media_player) {
+        if (!m_playback_controller) {
             return;
         }
 
-        const auto status = media_player->mediaStatus();
-        const bool can_seek = (
-            status == QMediaPlayer::LoadedMedia ||
-            status == QMediaPlayer::BufferedMedia ||
-            status == QMediaPlayer::BufferingMedia)
-            && (media_player->duration() > 0
-        );
-        if (can_seek) {
+        const PlayingState curr_state = m_playback_controller->state();
+        if (curr_state == PlayingState::PLAYING || curr_state == PlayingState::PAUSE) {
             m_playback_controller->setPosition(m_pending_pos_ms);
             m_playback_controller->pause();
             return;
         }
+
         if (++retry > 30) {    // 1.5s timeout
             return;
         }

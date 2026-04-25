@@ -151,7 +151,15 @@ void AppController::initializeCoreConnections()
     connect(playbackController, &PlaybackController::sgnDevicesChanged, controlBar, &WControlBar::setDevice);
     connect(controlBar, &WControlBar::sgnSelectDeviceId, playbackController, &PlaybackController::setDeviceById);
     connect(playbackController, &PlaybackController::sgnPositionChanged, controlBar, &WControlBar::updatePosition);
-    connect(playbackController, &PlaybackController::sgnPlaybackStateChanged, controlBar, &WControlBar::onPlayerStateChanged);
+    connect(playbackController, &PlaybackController::sgnPlaybackStateChanged, this, [controlBar](PlayingState state) {
+        QMediaPlayer::PlaybackState ui_state = QMediaPlayer::PlaybackState::StoppedState;
+        if (state == PlayingState::PLAYING) {
+            ui_state = QMediaPlayer::PlaybackState::PlayingState;
+        } else if (state == PlayingState::PAUSE) {
+            ui_state = QMediaPlayer::PlaybackState::PausedState;
+        }
+        controlBar->onPlayerStateChanged(ui_state);
+    });
     connect(playbackController, &PlaybackController::sgnDurationChanged, controlBar, &WControlBar::updateDuration);
     connect(playbackController, &PlaybackController::sgnPlayModeChanged, this, [controlBar](PlayMode mode) {
         controlBar->setPlayMode(mode);
@@ -235,14 +243,12 @@ void AppController::initializeCoreConnections()
         }
     });
 
-    connect(playbackController, &PlaybackController::sgnMediaStateChanged,
-            this, [this, playlistController, playbackController](QMediaPlayer::MediaStatus status) {
-        if (status == QMediaPlayer::MediaStatus::EndOfMedia) {
-            QString nextTrack = playlistController->nextTrack(playbackController->playMode());
-            if (!nextTrack.isEmpty()) {
-                m_locate_on_next_play_request = true;
-                m_main_window->playTrackInUi(nextTrack);
-            }
+    connect(playbackController, &PlaybackController::sgnPlaybackFinished,
+            this, [this, playlistController, playbackController]() {
+        QString nextTrack = playlistController->nextTrack(playbackController->playMode());
+        if (!nextTrack.isEmpty()) {
+            m_locate_on_next_play_request = true;
+            m_main_window->playTrackInUi(nextTrack);
         }
     });
 
@@ -411,9 +417,9 @@ void AppController::handleTrackPropertyRequested(trackId tid, QString filepath, 
         [this](QMap<QString, QStringList> tags, trackId changedTid) {
             auto curr_id = m_playlist_controller->currentTrackId();
             qint64 curr_pos_ms = m_playback_controller->position();
-            Player::State old_state = m_playback_controller->currentState();
+            PlayingState old_state = m_playback_controller->state();
             if (curr_id == changedTid) {
-                if (old_state == Player::State::PLAYING || old_state == Player::State::PAUSED) {
+                if (old_state == PlayingState::PLAYING || old_state == PlayingState::PAUSE) {
                     m_playback_controller->stop();
                 }
             }
@@ -503,7 +509,7 @@ void AppController::handleTrackPropertyRequested(trackId tid, QString filepath, 
                         if (queue_index >= 0) {
                             self->m_playlist_controller->play(queue_index);
                         }
-                        if (old_state != Player::State::PLAYING) {
+                        if (old_state != PlayingState::PLAYING) {
                             self->m_playback_controller->pause();
                         }
 
@@ -773,8 +779,7 @@ void AppController::registerDefaultShortcuts()
         ShortcutScope::Application,
         QKeySequence(Qt::Key_Space),
         [this]() {
-            const QMediaPlayer* player = m_playback_controller->getMediaPlayer();
-            if (player && player->playbackState() == QMediaPlayer::PlayingState) {
+            if (m_playback_controller->state() == PlayingState::PLAYING) {
                 m_playback_controller->pause();
             } else {
                 m_playback_controller->play();
