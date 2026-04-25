@@ -27,7 +27,6 @@
 
 1. Build a usable, modern local music player for Linux desktop workflows.
 2. Provide a Linux-side alternative experience inspired by **Foobar2000 + foobox (v6) theme**, without aiming for heavy professional audio features.
-    > if you need, please use DeadBeef
 
 This project is under active refactoring and feature iteration.
 
@@ -41,21 +40,25 @@ This project is under active refactoring and feature iteration.
 - Architecture is being migrated toward a clearer `view` / `controller` / `model` / `core` split.
 - Packaging is **not provided yet**. (such as `.deb` / `.rpm` / `.exe`)
 - Bugs are possible; feedback is welcome.
-- Some features are not available on wayland, they are basically available on x11 and very easy to implement on Windows.
-```
-凸(>皿<)凸
-```
+- Some functions are difficult to implement on wayland, although they are common on x11 and windows.
 
 ---
 
 ## Features (Current)
 
+- Cover and lyrics panel
+- Custom playback banckend
+- Desktop lyrics (incomplete)
+- Library view
 - Local audio playback
-- Playlist management (create, rename, copy, remove, import, save)
-- Playback controls (play/pause/stop, next/previous, seek, volume, mute)
 - Multiple play modes
-- Library view + search panel
-- Cover and lyrics panel (ongoing improvements)
+- Play device switching
+- Playback controls (play/pause/stop, next/previous, seek, volume, mute)
+- Playlist management (create, rename, copy, remove, import, save)
+- Search panel
+- Shortcut key binding
+- Lyrics editor (if in tag)
+- Lyrics search (netease cloud music only)
 
 ---
 
@@ -99,10 +102,12 @@ src/
 
 - Qt 6 (recommended >= 6.5)
 - CMake >= 3.21
-- C++ compiler with C++17/20 support
+- C++ compiler with C++17 support
 - TagLib
 - magic-enum
 - pkg-config
+- libavcodec / libavformat / libavfilter / libavutil
+- miniaudio (include in the source file)
 
 ### VS Code + CMake Tools
 
@@ -163,10 +168,12 @@ ctest --preset test-local-qt
 ## TODO
 
 - [x] Complete controller-layer migration and stabilize interfaces
+- [x] Custom playback backend
 - [x] Improve audio device switching behavior
 - [x] Replace the current search proxy model with an independent one
 - [x] Binding shortcut keys
 - [x] Search lyrics from network platforms (netease cloud music only)
+- [ ] EQ with GUI
 - [ ] Expand unit test coverage
 - [ ] Evaluate distribution formats (AppImage / Flatpak / package repos)
 - [ ] ...
@@ -175,7 +182,7 @@ ctest --preset test-local-qt
 
 ## Contributing
 
-Issues and PRs are welcome.
+Issues and PRs are welcome:)
 
 Suggested workflow:
 
@@ -197,4 +204,7 @@ See the `LICENSE` file for details.
 - Qt
 - [TagLib](https://github.com/taglib/taglib)
 - UX inspiration from [Foobar2000](https://www.foobar2000.org) / [foobox](https://github.com/dream7180/foobox-en) v6 (no official affiliation)
+- [miniaudio](https://miniaud.io)
+- [ffmpeg](https://ffmpeg.org)
 - [lrc-parser](https://github.com/WuZhenhuan428/lrc-parser)
+- [audio-player-core](https://github.com/WuZhenhuan428/audio-player-core) (not sync with this proj)
