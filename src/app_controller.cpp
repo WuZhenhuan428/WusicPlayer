@@ -46,11 +46,13 @@
 #include "view/ConfigBinder/SettingsPanelBinder.hpp"
 #include "view/ConfigBinder/ShortcutsSection.hpp"
 #include "view/ConfigBinder/ShortcutsBinder.hpp"
-#include "view/PlaybackRestoreCoordinator.hpp"
+#include "service/playback_restore_service.h"
 
 #include "view/SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.h"
 
 #include "view/tag_edit_widget/tag_edit_widget.h"
+
+#include "service/playback_service.h"
 
 AppController::AppController(PlaybackController* playbackController, QObject* parent)
     : QObject(parent),
@@ -73,8 +75,10 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
       m_window_config_binder(std::make_unique<WindowConfigBinder>()),
       m_settings_sanel_binder(std::make_unique<SettingsPanelBinder>()),
       m_shortcuts_binder(std::make_unique<ShortcutsBinder>()),
-      m_playback_restore_coordinator(std::make_unique<PlaybackRestoreCoordinator>(
-                    m_playback_config_section.get(), m_playlist_controller.get(), m_playback_controller, this))
+      m_playback_service(std::make_unique<PlaybackService>(m_main_window.get(), m_playback_controller, m_playlist_controller.get(), this)),
+      m_playback_restore_service(std::make_unique<PlaybackRestoreService>(
+          m_playlist_controller.get(), m_playback_controller, m_playback_config_section.get(), this
+      ))
 {
     initializeConfig();
     ensureShortcutsController();
@@ -109,60 +113,18 @@ void AppController::initializeCoreConnections()
 {
     PlaylistController* playlistController = m_playlist_controller.get();
     PlaybackController* playbackController = m_playback_controller;
-    WControlBar* controlBar = m_main_window->controlBarWidget();
     LibraryWidget* libraryPanel = m_main_window->libraryPanel();
     SidePanel* sidePanel = m_main_window->sidePanel();
     DesktopLyricsWidget* desktopLyrics = m_main_window->desktopLyricsWidget();
 
-    connect(m_main_window.get(), &MainWindow::sgnPlayTrackRequested,
-        this, &AppController::handlePlayTrackRequest);
+    m_playback_service->bind();
+    connect(m_playback_service.get(), &PlaybackService::sgnLocateCurrentTrack, this, &AppController::locateCurrentTrackInView);
+
     connect(desktopLyrics, &DesktopLyricsWidget::sgnVisibilityChanged, this, [this](bool visible) {
         m_desktop_lyrics_visible_cache = visible;
         if (m_desktop_lyrics_section) {
             m_desktop_lyrics_section->is_visible = visible;
         }
-    });
-
-    connect(controlBar, &WControlBar::sgnBtnPlayClicked, playbackController, &PlaybackController::play);
-    connect(controlBar, &WControlBar::sgnBtnPauseClicked, playbackController, &PlaybackController::pause);
-    connect(controlBar, &WControlBar::sgnBtnStopClicked, playbackController, &PlaybackController::stop);
-    connect(controlBar, &WControlBar::sgnBtnMuteClicked, playbackController, &PlaybackController::flipMute);
-
-    connect(controlBar, &WControlBar::sgnInOrder, this, [playbackController]() {
-        playbackController->setPlayMode(PlayMode::in_order);
-    });
-    connect(controlBar, &WControlBar::sgnLoop, this, [playbackController]() {
-        playbackController->setPlayMode(PlayMode::loop);
-    });
-    connect(controlBar, &WControlBar::sgnShuffle, this, [playbackController]() {
-        playbackController->setPlayMode(PlayMode::shuffle);
-    });
-    connect(controlBar, &WControlBar::sgnOutOfOrderTrack, this, [playbackController]() {
-        playbackController->setPlayMode(PlayMode::out_of_order_track);
-    });
-    connect(controlBar, &WControlBar::sgnOutOfOrderGroup, this, [playbackController]() {
-        playbackController->setPlayMode(PlayMode::out_of_order_group);
-    });
-    connect(controlBar, &WControlBar::sgnSliderPositionReleased, this, [playbackController](int percent) {
-        playbackController->setPosition(percent * 1000);
-    });
-    connect(controlBar, &WControlBar::sgnSliderVolumeReleased, playbackController, &PlaybackController::setVolume);
-    connect(controlBar, &WControlBar::sgnSliderVolumeMoved, playbackController, &PlaybackController::setVolume);
-    connect(playbackController, &PlaybackController::sgnDevicesChanged, controlBar, &WControlBar::setDevice);
-    connect(controlBar, &WControlBar::sgnSelectDeviceId, playbackController, &PlaybackController::setDeviceById);
-    connect(playbackController, &PlaybackController::sgnPositionChanged, controlBar, &WControlBar::updatePosition);
-    connect(playbackController, &PlaybackController::sgnPlaybackStateChanged, this, [controlBar](PlayingState state) {
-        QMediaPlayer::PlaybackState ui_state = QMediaPlayer::PlaybackState::StoppedState;
-        if (state == PlayingState::PLAYING) {
-            ui_state = QMediaPlayer::PlaybackState::PlayingState;
-        } else if (state == PlayingState::PAUSE) {
-            ui_state = QMediaPlayer::PlaybackState::PausedState;
-        }
-        controlBar->onPlayerStateChanged(ui_state);
-    });
-    connect(playbackController, &PlaybackController::sgnDurationChanged, controlBar, &WControlBar::updateDuration);
-    connect(playbackController, &PlaybackController::sgnPlayModeChanged, this, [controlBar](PlayMode mode) {
-        controlBar->setPlayMode(mode);
     });
 
     connect(playlistController->viewModel(), &QAbstractItemModel::modelReset, this, [libraryPanel]() {
@@ -180,7 +142,7 @@ void AppController::initializeCoreConnections()
         }
     });
 
-    auto* lyricsModel = dynamic_cast<WLyricsModel*>(sidePanel->getLyricsPanel()->model());
+    auto* lyricsModel = qobject_cast<WLyricsModel*>(sidePanel->getLyricsPanel()->model());
     connect(playbackController, &PlaybackController::sgnPositionChanged, sidePanel->getLyricsPanel(), &WLyricsPanel::ScrollByPosition);
     connect(sidePanel, &SidePanel::sgnDesktopLyricsConfigRequested, this, [this]() {
         onOpenSettingsPanelRequested();
@@ -227,35 +189,7 @@ void AppController::initializeCoreConnections()
     connect(m_main_window.get(), &MainWindow::sgnRemoveColumnRequested, this, &AppController::handleRemoveColumnRequested);
     connect(m_main_window.get(), &MainWindow::sgnShowAboutMessagebox, this, &AppController::handleShowAboutMessagebox);
 
-    connect(controlBar, &WControlBar::sgnBtnNextClicked, this, [this, playlistController, playbackController]() {
-        QString nextTrack = playlistController->nextTrack(playbackController->playMode());
-        if (!nextTrack.isEmpty()) {
-            m_locate_on_next_play_request = true;
-            m_main_window->playTrackInUi(nextTrack);
-        }
-    });
-
-    connect(controlBar, &WControlBar::sgnBtnPrevClicked, this, [this, playlistController, playbackController]() {
-        QString prevTrack = playlistController->prevTrack(playbackController->playMode());
-        if (!prevTrack.isEmpty()) {
-            m_locate_on_next_play_request = true;
-            m_main_window->playTrackInUi(prevTrack);
-        }
-    });
-
-    connect(playbackController, &PlaybackController::sgnPlaybackFinished,
-            this, [this, playlistController, playbackController]() {
-        QString nextTrack = playlistController->nextTrack(playbackController->playMode());
-        if (!nextTrack.isEmpty()) {
-            m_locate_on_next_play_request = true;
-            m_main_window->playTrackInUi(nextTrack);
-        }
-    });
-
-    connect(playlistController, &PlaylistController::requestPlay,
-            this, [this](const QString& filepath) {
-        m_main_window->playTrackInUi(filepath);
-    });
+    
 
     connect(playlistController, &PlaylistController::playlistChanged,
             this, &AppController::refreshPlaylistView);
@@ -321,29 +255,6 @@ void AppController::locateCurrentTrackInView()
     view->setCurrentIndex(index.siblingAtColumn(1));
 }
 
-void AppController::handlePlayTrackRequest(const QString& filepath)
-{
-    if (filepath.isEmpty()) {
-        m_locate_on_next_play_request = false;
-        return;
-    }
-
-    auto* playlistController = m_playlist_controller.get();
-    auto* sidePanel = m_main_window->sidePanel();
-    auto* playbackController = m_playback_controller;
-
-    playbackController->read(filepath);
-    sidePanel->loadCover(filepath);
-
-    if (m_locate_on_next_play_request) {
-        locateCurrentTrackInView();
-    }
-    m_locate_on_next_play_request = false;
-
-    TrackMetaData meta = playlistController->currentMetadata();
-    sidePanel->loadLyrics(meta);
-    sidePanel->loadMetaData(meta);
-}
 
 void AppController::handleSetSortRuleRequested()
 {
@@ -603,7 +514,7 @@ void AppController::applyConfig() {
             b->apply(ctx);
         }
     }
-    m_playback_restore_coordinator->restorePlaybackState();
+    m_playback_restore_service->restore();
 }
 
 void AppController::saveConfig() {

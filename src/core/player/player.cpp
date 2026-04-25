@@ -8,7 +8,7 @@
 Player::Player(QObject *parent)
     : QObject(parent),
       core(std::make_unique<PlayerEngine>()),
-    m_media_devices(new QMediaDevices(this)),
+            m_media_devices(new QMediaDevices(this)),
       m_min_db(-50.0)
 {
     if (!core->startDevice()) {
@@ -17,6 +17,11 @@ Player::Player(QObject *parent)
 
     core->setPlaybackFinishedCallback([this]() {
         QMetaObject::invokeMethod(this, [this]() {
+            if (m_suppress_next_finished_signal) {
+                qInfo() << "[AUDIO] suppress playbackFinished emitted by manual stop";
+                m_suppress_next_finished_signal = false;
+                return;
+            }
             emit stateChanged(core->state());
             emit playbackFinished();
         }, Qt::QueuedConnection);
@@ -99,6 +104,9 @@ void Player::read(const QString& filepath)
         return;
     }
 
+    m_loaded_track_path = filepath;
+    m_suppress_next_finished_signal = false;
+
     core->setUrl(filepath.toStdString());
     core->resume();
     const auto meta = core->metadata();
@@ -115,6 +123,25 @@ void Player::play()
     if (!core) {
         return;
     }
+
+    m_suppress_next_finished_signal = false;
+
+    if (core->state() == PlayingState::STOP) {
+        if (m_loaded_track_path.isEmpty()) {
+            qInfo() << "[AUDIO] play ignored: no loaded track while in STOP state.";
+            emit stateChanged(core->state());
+            emit positionChanged(0);
+            return;
+        }
+
+        core->setUrl(m_loaded_track_path.toStdString());
+        const auto meta = core->metadata();
+        auto duration_it = meta.find("DURATION_MS");
+        if (duration_it != meta.end()) {
+            emit durationChanged(QString::fromStdString(duration_it->second).toLongLong());
+        }
+    }
+
     core->resume();
     emit stateChanged(core->state());
 }
@@ -133,9 +160,19 @@ void Player::stop()
     if (!core) {
         return;
     }
+
+    const PlayingState prev_state = core->state();
+    if (prev_state == PlayingState::STOP) {
+        m_suppress_next_finished_signal = false;
+        emit stateChanged(PlayingState::STOP);
+        emit positionChanged(0);
+        return;
+    }
+
+    m_suppress_next_finished_signal = true;
     core->stop();
-    emit stateChanged(core->state());
-    emit positionChanged(this->position());
+    emit stateChanged(PlayingState::STOP);
+    emit positionChanged(0);
 }
 
 void Player::seek(qint64 pos_ms)
@@ -203,6 +240,11 @@ qint64 Player::position()
     if (!core) {
         return 0;
     }
+
+    if (core->state() == PlayingState::STOP) {
+        return 0;
+    }
+
     return (qint64)(core->position());
 }
 

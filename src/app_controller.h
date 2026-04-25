@@ -44,6 +44,10 @@ class MainWindowConfigContext;
 class LyricsSettingPanel;
 class TagEditWidget;
 
+
+class PlaybackService;
+class PlaybackRestoreService;
+
 class AppController : public QObject
 {
     Q_OBJECT
@@ -57,7 +61,6 @@ public:
 private:
     void initializeCoreConnections();
     void locateCurrentTrackInView();
-    void handlePlayTrackRequest(const QString& filepath);
     void handleSetSortRuleRequested();
     void handleInsertColumnRequested();
     void handleRemoveColumnRequested();
@@ -104,7 +107,9 @@ private:
     std::unique_ptr<SettingsPanelBinder> m_settings_sanel_binder;
     std::unique_ptr<ShortcutsBinder> m_shortcuts_binder;
 
-    std::unique_ptr<PlaybackRestoreCoordinator> m_playback_restore_coordinator;
+    std::unique_ptr<PlaybackService> m_playback_service;
+    std::unique_ptr<PlaybackRestoreService> m_playback_restore_service;
+
 
     QPointer<SettingsPanel> m_settings_panel;
     QPointer<ShortcutsPanel> m_shortcuts_panel;

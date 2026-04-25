@@ -8,6 +8,7 @@
 #include <QMediaDevices>
 #include <QByteArray>
 #include <QList>
+#include <QString>
 #include <memory>
 
 using PlayingState = PlayerEngine::PlayingState;
@@ -47,7 +48,9 @@ private:
     QList<QAudioDevice> m_audio_devices;
     QByteArray m_current_output_id;
     QByteArray m_preferred_output_id;
+    QString m_loaded_track_path;
     QTimer* m_position_timer = nullptr;
+    bool m_suppress_next_finished_signal = false;
     bool m_is_mute = false;
     float m_old_volume = 1.0f;
 

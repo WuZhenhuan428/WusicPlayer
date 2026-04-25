@@ -30,6 +30,7 @@ public:
         m_pending_pid = m_playback_config_section->last_playlist_id;
         m_pending_tid = m_playback_config_section->last_track_id;
         m_pending_pos_ms = m_playback_config_section->last_position_ms;
+        m_pending_should_resume = m_playback_config_section->last_was_playing;
 
         if (m_pending_pid.isNull()) {
             return;
@@ -46,6 +47,7 @@ private:
     playlistId m_pending_pid;
     trackId m_pending_tid;
     int m_pending_pos_ms = 0;
+    bool m_pending_should_resume = false;
 
 private:
     int findQueueIndexByTrackId(const trackId& tid) {
@@ -56,8 +58,10 @@ private:
         return queue.indexOf(tid);
     }
 
-    void seekWhenMediaReady(int retry) {
-        if (retry > 30 || m_pending_pos_ms <= 0) return;
+    void finalizeRestoreWhenReady(int retry) {
+        if (retry > 30) {
+            return;
+        }
 
         if (!m_playback_controller) {
             return;
@@ -65,16 +69,16 @@ private:
 
         const PlayingState curr_state = m_playback_controller->state();
         if (curr_state == PlayingState::PLAYING || curr_state == PlayingState::PAUSE) {
-            m_playback_controller->setPosition(m_pending_pos_ms);
-            m_playback_controller->pause();
-            return;
-        }
-
-        if (++retry > 30) {    // 1.5s timeout
+            if (m_pending_pos_ms > 0) {
+                m_playback_controller->setPosition(m_pending_pos_ms);
+            }
+            if (!m_pending_should_resume) {
+                m_playback_controller->pause();
+            }
             return;
         }
         QTimer::singleShot(50, this, [this, retry]() {
-            seekWhenMediaReady(retry + 1);
+            finalizeRestoreWhenReady(retry + 1);
         });
     }
 
@@ -95,6 +99,6 @@ private slots:
         const int queue_index = findQueueIndexByTrackId(m_pending_tid);
         if (queue_index < 0) return;
         m_playlist_controller->play(queue_index);
-        QTimer::singleShot(0, this, [this]() { seekWhenMediaReady(0); });
+        QTimer::singleShot(0, this, [this]() { finalizeRestoreWhenReady(0); });
     }
 };

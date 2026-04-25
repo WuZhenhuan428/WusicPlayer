@@ -29,8 +29,6 @@ add_library(wusic_view STATIC
     DesktopLyricsWidget/DesktopLyricsWidget.cpp
     DesktopLyricsWidget/DesktopLyricsWidget.h
 
-    PlaybackRestoreCoordinator.hpp
-
     ConfigBinder/MainWindowConfigContext.hpp
 
     ConfigBinder/IConfigSection.hpp

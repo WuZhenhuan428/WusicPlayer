@@ -35,6 +35,7 @@ void PlaybackConfigBinder::collect(MainWindowConfigContext& ctx) {
     ctx.playbackSec->muted = ctx.playbackController->getMute();
     ctx.playbackSec->play_mode = ctx.playbackController->playMode();
     ctx.playbackSec->last_device = ctx.playbackController->currentDeviceId();
+    ctx.playbackSec->last_was_playing = (ctx.playbackController->state() == PlayingState::PLAYING);
 
     do {
         const playlistId last_pid = ctx.playlistController->currentPlaylist();

@@ -175,10 +175,11 @@ void LibraryWidget::initUI() {
 
     m_main_layout = new QHBoxLayout;
     m_main_layout->addWidget(m_main_splitter);
+    
+    m_main_splitter->setContentsMargins(0, 0, 0, 0);
+    m_main_layout->setContentsMargins(0, 0, 0, 0);
 
     this->setLayout(m_main_layout);
-
-    m_main_splitter->setContentsMargins(0, 0, 0, 0);
 }
 
 void LibraryWidget::setSongTreeModel(QAbstractItemModel* model) {

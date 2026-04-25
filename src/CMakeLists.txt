@@ -6,6 +6,7 @@ add_subdirectory(model)
 add_subdirectory(view)
 add_subdirectory(controller)
 add_subdirectory(static)
+add_subdirectory(service)
 
 qt_add_executable(WusicPlayer
     main.cpp
@@ -22,4 +23,5 @@ target_link_libraries(WusicPlayer
         wusic_model
         wusic_core
         wusic_headers
+        wusic_service
 )

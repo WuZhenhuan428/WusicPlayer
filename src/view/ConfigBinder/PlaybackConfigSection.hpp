@@ -15,6 +15,7 @@ public:
     playlistId last_playlist_id = playlistId();
     trackId last_track_id = trackId();
     int last_position_ms = 0;
+    bool last_was_playing = false;
     QByteArray last_device = QByteArray();  // QAudioDevice::id()
 
     QString key() const override {
@@ -29,6 +30,7 @@ public:
         last_playlist_id = playlistId(obj.value("last_playlist_id").toString());
         last_track_id = trackId(obj.value("last_track_id").toString());
         last_position_ms = obj.value("last_position_ms").toInt();
+        last_was_playing = obj.value("last_was_playing").toBool(false);
         last_device = QByteArray::fromBase64(obj.value("last_device").toString().toUtf8());
     }
 
@@ -41,6 +43,7 @@ public:
         obj["last_playlist_id"] = last_playlist_id.toString(QUuid::WithoutBraces);
         obj["last_track_id"] = last_track_id.toString(QUuid::WithoutBraces);
         obj["last_position_ms"] = last_position_ms;
+        obj["last_was_playing"] = last_was_playing;
         obj["last_device"] = QString::fromUtf8(last_device.toBase64());
         return obj;
     }
