@@ -23,6 +23,11 @@ public:
         PAUSE,
         PLAYING
     };
+    enum class StopReason
+    {
+        NATURAL_EOF,
+        MANUAL_STOP
+    };
     using PlayingState = PlayerEngine::PlayingState;
 
 public:
@@ -45,7 +50,7 @@ public:
     std::unordered_map<std::string, std::string> metadata();
     float volume();
     int64_t position();
-    void setPlaybackFinishedCallback(std::function<void()> func);
+    void setPlaybackFinishedCallback(std::function<void(StopReason)> func);
     size_t get_recent_audio_frames(F32StereoFrame* out_buffer, size_t count);
     std::vector<std::string> outputDevices() const;
     std::string currentOutputDeviceName() const;
@@ -59,7 +64,7 @@ private:
     std::atomic_bool m_decode_finished{false};
     std::atomic_bool m_abort_watchdog{false};
     
-    std::function<void()> m_playback_callback;
+    std::function<void(StopReason)> m_playback_callback;
     std::thread m_watchdog;
 
     std::atomic<PlayingState> m_state;

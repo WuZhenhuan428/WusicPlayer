@@ -53,12 +53,12 @@ void PlayerEngine::setWatcdog()
             // If decoder exists, completed reading, AND buffer drained completely:
             if (m_decoder && m_decode_finished.load(std::memory_order_acquire) && m_buffer->empty()) {
                 if (!has_notified) {
-                    m_state.store(PlayingState::STOP, std::memory_order_release); // 自动完成后切为完全停止状态
-                    printf("[Playback finished autonomously]\n");
-                    if (m_playback_callback) {
-                        m_playback_callback();
-                    } else {
-                        printf("Watch dog need a callback function\n");
+                    PlayingState curr_state = m_state.exchange(PlayingState::STOP, std::memory_order_acq_rel);
+                    if (curr_state != PlayingState::STOP) {
+                        printf("[Playback finished autonomously]\n");
+                        if (m_playback_callback) {
+                            m_playback_callback(StopReason::NATURAL_EOF);
+                        }
                     }
                     has_notified = true;
                 }
@@ -124,6 +124,8 @@ void PlayerEngine::pause()
 
 void PlayerEngine::stop()
 {
+    // 1. 抢占并锁住 STOP，阻断看门狗对自然结束的判断
+    PlayingState old_state = m_state.exchange(PlayingState::STOP, std::memory_order_acq_rel);
     if (m_decoder) {
         m_decoder->stop();
     }
@@ -131,9 +133,14 @@ void PlayerEngine::stop()
         m_device->pause();
     }
     if (m_buffer) {
-        m_buffer->clear(); // 清理残余底噪，实现秒停
+        m_buffer->clear();
     }
-    m_state.store(PlayingState::STOP, std::memory_order_release);
+
+    // 2. 重置解码完成标志
+    m_decode_finished.store(false, std::memory_order_release);
+    if (old_state != PlayingState::STOP && m_playback_callback) {
+        m_playback_callback(StopReason::MANUAL_STOP);
+    }
 }
 
 void PlayerEngine::setVolume(float volume)
@@ -170,7 +177,7 @@ void PlayerEngine::seek(int64_t pos_ms)
 }
 
 
-void PlayerEngine::setPlaybackFinishedCallback(std::function<void()> func)
+void PlayerEngine::setPlaybackFinishedCallback(std::function<void(StopReason)> func)
 {
     m_playback_callback = func;
 }

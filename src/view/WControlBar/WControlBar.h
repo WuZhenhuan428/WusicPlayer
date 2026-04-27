@@ -11,10 +11,11 @@
 #include <QAction>
 #include <QMenu>
 #include <QHBoxLayout>
-#include <QMediaPlayer>
 #include <QActionGroup>
 #include <QAudioDevice>
 #include <QList>
+
+#include "core/player/player.h"
 
 class WControlBar : public QWidget
 {
@@ -28,7 +29,7 @@ public:
     QSlider* getVolumeSlider() const;
 
 public slots:
-    void onPlayerStateChanged(QMediaPlayer::PlaybackState newState);
+    void updateButtonStatus(PlayerEngine::PlayingState new_state);
     void updateDuration(qint64 duration_ms);
     void updatePosition(qint64 position_ms);
 

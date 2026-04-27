@@ -396,7 +396,7 @@ playlistId PlaylistRepo::loadListBatched(const QString& filepath, int batch_size
         while (!in.atEnd()) {
             QString line = in.readLine().trimmed();
             if (!line.isEmpty()) {
-                entries.push_back({playlistId(), line});
+                entries.push_back({playlistId{}, line, false, TrackMetaData{} });
             }
         }
     }

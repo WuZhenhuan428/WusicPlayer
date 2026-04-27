@@ -1,0 +1,35 @@
+#pragma once
+
+#include <QObject>
+#include <core/types.h>
+
+class LibraryWidget;
+class PlaybackController;
+class PlaylistController;
+
+class LibraryInteractionService : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit LibraryInteractionService(LibraryWidget* library_widget,
+                                       PlaybackController* playback_ctl,
+                                       PlaylistController* playlist_ctl,
+                                       QObject* parent);
+    ~LibraryInteractionService();
+
+    void bind();
+
+signals:
+    void sgnTrackPropertyRequested(trackId tid, QString filepath, TrackMetaData meta);
+
+private:
+    void refreshPlaylistView();
+
+private:
+    LibraryWidget* m_library_widget;
+    PlaybackController* m_playback_ctl;
+    PlaylistController* m_playlist_ctl;
+
+    bool m_bound = false;
+};

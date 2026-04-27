@@ -14,7 +14,7 @@ PlaybackRestoreService::PlaybackRestoreService(
     m_playback_ctl(playback_ctl),
     m_playback_cfg_sec(playback_cfg_sec)
 {
-    assert(m_playlist_ctl || m_playback_ctl || m_playback_cfg_sec);
+    assert(m_playlist_ctl && m_playback_ctl && m_playback_cfg_sec);
 }
 
 PlaybackRestoreService::~PlaybackRestoreService() {}

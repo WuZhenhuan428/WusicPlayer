@@ -6,10 +6,10 @@ add_library(wusic_service STATIC
     playback_restore_service.h
 
     # TODO
-    # library_interaction_service.cpp
-    # library_interaction_service.h
-    # tag_write_back.cpp
-    # tag_write_back.h
+    library_interaction_service.cpp
+    library_interaction_service.h
+    tag_writeback_service.cpp
+    tag_writeback_service.h
     # setting.cpp
     # setting.h
     # search_service.cpp

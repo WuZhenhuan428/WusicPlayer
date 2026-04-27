@@ -15,15 +15,12 @@ Player::Player(QObject *parent)
         return;
     }
 
-    core->setPlaybackFinishedCallback([this]() {
-        QMetaObject::invokeMethod(this, [this]() {
-            if (m_suppress_next_finished_signal) {
-                qInfo() << "[AUDIO] suppress playbackFinished emitted by manual stop";
-                m_suppress_next_finished_signal = false;
-                return;
-            }
-            emit stateChanged(core->state());
-            emit playbackFinished();
+    core->setPlaybackFinishedCallback([this](PlayerEngine::StopReason reason) {
+        QMetaObject::invokeMethod(this, [this, reason]() {
+            if (reason == PlayerEngine::StopReason::NATURAL_EOF) {
+                emit stateChanged(core->state());
+                emit sgnPlaybackNatualEnd();
+            } /*else ...  */
         }, Qt::QueuedConnection);
     });
     core->setWatcdog();
@@ -105,7 +102,6 @@ void Player::read(const QString& filepath)
     }
 
     m_loaded_track_path = filepath;
-    m_suppress_next_finished_signal = false;
 
     core->setUrl(filepath.toStdString());
     core->resume();
@@ -123,8 +119,6 @@ void Player::play()
     if (!core) {
         return;
     }
-
-    m_suppress_next_finished_signal = false;
 
     if (core->state() == PlayingState::STOP) {
         if (m_loaded_track_path.isEmpty()) {
@@ -155,24 +149,21 @@ void Player::pause()
     emit stateChanged(core->state());
 }
 
+// stateChanged & positionChanged仅用于改变控制栏按键状态
 void Player::stop()
 {
     if (!core) {
         return;
     }
 
-    const PlayingState prev_state = core->state();
-    if (prev_state == PlayingState::STOP) {
-        m_suppress_next_finished_signal = false;
-        emit stateChanged(PlayingState::STOP);
-        emit positionChanged(0);
-        return;
-    }
-
-    m_suppress_next_finished_signal = true;
-    core->stop();
     emit stateChanged(PlayingState::STOP);
     emit positionChanged(0);
+
+    const PlayingState prev_state = core->state();
+    if (prev_state == PlayingState::STOP) {
+        return;
+    }
+    core->stop();
 }
 
 void Player::seek(qint64 pos_ms)

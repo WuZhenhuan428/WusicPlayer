@@ -13,8 +13,6 @@
 #include <QThread>
 
 #include "core/types.h"
-#include "core/utils/AudioUtils.h"
-#include "core/utils/path_utils.h"
 
 #include "model/ShortcutsViewModel/shortcuts_types.hpp"
 #include "view/MainWindow.h"
@@ -50,9 +48,10 @@
 
 #include "view/SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.h"
 
-#include "view/tag_edit_widget/tag_edit_widget.h"
-
 #include "service/playback_service.h"
+#include "service/playback_restore_service.h"
+#include "service/library_interaction_service.h"
+#include "service/tag_writeback_service.h"
 
 AppController::AppController(PlaybackController* playbackController, QObject* parent)
     : QObject(parent),
@@ -78,7 +77,12 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
       m_playback_service(std::make_unique<PlaybackService>(m_main_window.get(), m_playback_controller, m_playlist_controller.get(), this)),
       m_playback_restore_service(std::make_unique<PlaybackRestoreService>(
           m_playlist_controller.get(), m_playback_controller, m_playback_config_section.get(), this
-      ))
+      )),
+      m_library_interaction_serivce(std::make_unique<LibraryInteractionService>(
+          m_main_window->libraryPanel(), m_playback_controller, m_playlist_controller.get(), this
+      )),
+      m_tag_writeback_service(std::make_unique<TagWritebackService>(
+          m_playlist_controller.get(), m_playback_controller, m_playlist_manager.get(), m_main_window.get(), this))
 {
     initializeConfig();
     ensureShortcutsController();
@@ -120,6 +124,9 @@ void AppController::initializeCoreConnections()
     m_playback_service->bind();
     connect(m_playback_service.get(), &PlaybackService::sgnLocateCurrentTrack, this, &AppController::locateCurrentTrackInView);
 
+    m_library_interaction_serivce->bind();
+    connect(libraryPanel, &LibraryWidget::sgnTrackPropertyRequested, m_tag_writeback_service.get(), &TagWritebackService::requestTrackProperty);
+
     connect(desktopLyrics, &DesktopLyricsWidget::sgnVisibilityChanged, this, [this](bool visible) {
         m_desktop_lyrics_visible_cache = visible;
         if (m_desktop_lyrics_section) {
@@ -127,20 +134,6 @@ void AppController::initializeCoreConnections()
         }
     });
 
-    connect(playlistController->viewModel(), &QAbstractItemModel::modelReset, this, [libraryPanel]() {
-        QTreeView* view = libraryPanel->songTreeView();
-        if (!view || !view->model()) {
-            return;
-        }
-        QAbstractItemModel* model = view->model();
-        for (int i = 0; i < model->rowCount(); ++i) {
-            QModelIndex idx = model->index(i, 0);
-            if (model->hasChildren(idx)) {
-                view->setFirstColumnSpanned(i, QModelIndex(), true);
-                view->setExpanded(idx, true);
-            }
-        }
-    });
 
     auto* lyricsModel = qobject_cast<WLyricsModel*>(sidePanel->getLyricsPanel()->model());
     connect(playbackController, &PlaybackController::sgnPositionChanged, sidePanel->getLyricsPanel(), &WLyricsPanel::ScrollByPosition);
@@ -189,41 +182,6 @@ void AppController::initializeCoreConnections()
     connect(m_main_window.get(), &MainWindow::sgnRemoveColumnRequested, this, &AppController::handleRemoveColumnRequested);
     connect(m_main_window.get(), &MainWindow::sgnShowAboutMessagebox, this, &AppController::handleShowAboutMessagebox);
 
-    
-
-    connect(playlistController, &PlaylistController::playlistChanged,
-            this, &AppController::refreshPlaylistView);
-
-    connect(libraryPanel, &LibraryWidget::sgnImportFiles, playlistController, &PlaylistController::importFiles);
-    connect(libraryPanel, &LibraryWidget::sgnImportDir, playlistController, &PlaylistController::importDir);
-    connect(libraryPanel, &LibraryWidget::sgnSwitchPlaylist, playlistController, &PlaylistController::switchToPlaylist);
-    connect(libraryPanel, &LibraryWidget::sgnRenamePlaylist, playlistController, &PlaylistController::renamePlaylist);
-    connect(libraryPanel, &LibraryWidget::sgnRemovePlaylist, playlistController, &PlaylistController::removePlaylist);
-    connect(libraryPanel, &LibraryWidget::sgnSavePlaylist, playlistController, &PlaylistController::savePlaylist);
-    connect(libraryPanel, &LibraryWidget::sgnCopyPlaylist, playlistController, &PlaylistController::copyPlaylist);
-    connect(libraryPanel, &LibraryWidget::sgnTrackPropertyRequested, this, &AppController::handleTrackPropertyRequested);
-    connect(libraryPanel, &LibraryWidget::sgnRemoveTrackRequested,
-            this, [playlistController, playbackController](const trackId& tid) {
-        if (tid.isNull()) {
-            return;
-        }
-        if (playlistController->currentTrackId() == tid) {
-            playbackController->stop();
-        }
-        playlistController->removeTrack(tid);
-    });
-
-    connect(libraryPanel, &LibraryWidget::sgnPlayTrackByModelIndex,
-        this, [playlistController](const QModelIndex& index) {
-        auto* model = playlistController->viewModel();
-        if (!model) return;
-        trackId id = model->trackAt(index);
-        if (id.isNull()) return;
-        int queueIndex = model->playbackQueue().indexOf(id);
-        if (queueIndex >= 0) {
-            playlistController->play(queueIndex);
-        }
-    });
 
     auto* locateShortcut = new QShortcut(QKeySequence(Qt::Key_Tab), libraryPanel->songTreeView());
     locateShortcut->setContext(Qt::WidgetShortcut);
@@ -316,127 +274,6 @@ void AppController::handleShowDesktopLyricsRequested()
     }
 }
 
-void AppController::handleTrackPropertyRequested(trackId tid, QString filepath, TrackMetaData meta) {
-    Q_UNUSED(filepath);
-
-    if (m_tag_edit_widget) {
-        m_tag_edit_widget.clear();
-    }
-    m_tag_edit_widget = new TagEditWidget(meta, tid);
-
-    connect(m_tag_edit_widget, &TagEditWidget::sgnSaveTags, this,
-        [this](QMap<QString, QStringList> tags, trackId changedTid) {
-            auto curr_id = m_playlist_controller->currentTrackId();
-            qint64 curr_pos_ms = m_playback_controller->position();
-            PlayingState old_state = m_playback_controller->state();
-            if (curr_id == changedTid) {
-                if (old_state == PlayingState::PLAYING || old_state == PlayingState::PAUSE) {
-                    m_playback_controller->stop();
-                }
-            }
-
-            // confirm filepath
-            QString target_filepath;
-            auto playlist = m_playlist_controller->findPlaylistById(m_playlist_controller->currentPlaylist());
-            if (playlist) {
-                Track* track = playlist->findTrackByID(changedTid);
-                if (track) {
-                    target_filepath = track->filepath;
-                }
-            }
-
-            if (target_filepath.isEmpty()) {
-                target_filepath = m_playlist_controller->currentMetadata().filepath;
-            }
-
-            QPointer<AppController> self(this);
-            QThread* worker = QThread::create([self, tags, changedTid, curr_id, curr_pos_ms, old_state, target_filepath]() {
-                const bool write_ok = AudioUtils::taglib_writeback(target_filepath.toStdString(), tags);
-                TrackMetaData refreshed;
-                if (write_ok) {
-                    refreshed = AudioUtils::parse_to_local_meta(target_filepath.toStdString());
-                    refreshed = AudioUtils::format(refreshed);
-                }
-
-                QMetaObject::invokeMethod(self, [self, write_ok, refreshed, target_filepath, changedTid, curr_id, curr_pos_ms, old_state]() {
-                    if (!self) {
-                        return;
-                    }
-
-                    if (!write_ok) {
-                        qDebug() << "Failed to write tag info!";
-                    } else {
-                        const QString target_normalized = PathUtils::normalize_path(target_filepath);
-                        int updated_tracks = 0;
-
-                        const auto all_playlists = self->m_playlist_controller->playlists();
-                        for (const auto& playlist : all_playlists) {
-                            if (!playlist) {
-                                continue;
-                            }
-
-                            bool playlist_changed = false;
-                            QVector<trackId> to_update;
-                            const auto& tracks = playlist->getTracks();
-                            for (const auto& track : tracks) {
-                                if (PathUtils::normalize_path(track.filepath) == target_normalized) {
-                                    to_update.push_back(track.tid);
-                                }
-                            }
-
-                            for (const auto& tid : to_update) {
-                                if (playlist->updateTrackMeta(tid, refreshed)) {
-                                    playlist_changed = true;
-                                    ++updated_tracks;
-                                }
-                            }
-
-                            if (playlist_changed && self->m_playlist_manager && self->m_playlist_manager->m_repo) {
-                                self->m_playlist_manager->m_repo->saveListToCache(playlist);
-                            }
-                        }
-
-                        auto* model = self->m_playlist_controller->viewModel();
-                        if (model && updated_tracks > 0) {
-                            model->rebuildAsync();
-                        }
-
-                        if (curr_id == changedTid) {
-                            auto* sidePanel = self->m_main_window ? self->m_main_window->sidePanel() : nullptr;
-                            if (sidePanel) {
-                                sidePanel->loadLyrics(refreshed);
-                                sidePanel->loadMetaData(refreshed);
-                            }
-                        }
-                    }
-
-                    if (curr_id == changedTid) {
-                        auto* model = self->m_playlist_controller->viewModel();
-                        if (!model) {
-                            return;
-                        }
-
-                        int queue_index = model->playbackQueue().indexOf(changedTid);
-                        if (queue_index >= 0) {
-                            self->m_playlist_controller->play(queue_index);
-                        }
-                        if (old_state != PlayingState::PLAYING) {
-                            self->m_playback_controller->pause();
-                        }
-
-                        self->m_playback_controller->setPosition(curr_pos_ms);
-                    }
-                }, Qt::QueuedConnection);
-            });
-
-            connect(worker, &QThread::finished, worker, &QObject::deleteLater);
-            worker->start();
-        }, static_cast<Qt::ConnectionType>(Qt::QueuedConnection | Qt::SingleShotConnection)
-    );
-
-    m_tag_edit_widget->setAttribute(Qt::WA_DeleteOnClose);
-    m_tag_edit_widget->show();
-}
 
 void AppController::configureDesktopLyricsWindowRelation()
 {
@@ -448,20 +285,6 @@ void AppController::configureDesktopLyricsWindowRelation()
     if (desktopLyrics->parentWidget() != nullptr) {
         desktopLyrics->setParent(nullptr);
     }
-}
-
-void AppController::refreshPlaylistView()
-{
-    auto* playlistController = m_playlist_controller.get();
-    auto* libraryPanel = m_main_window->libraryPanel();
-
-    QVector<QPair<playlistId, QString>> items;
-    const auto& lists = playlistController->playlists();
-    items.reserve(static_cast<int>(lists.size()));
-    for (const auto& list : lists) {
-        items.push_back({list->id(), list->name()});
-    }
-    libraryPanel->setPlaylists(items);
 }
 
 void AppController::initializeConfig() {

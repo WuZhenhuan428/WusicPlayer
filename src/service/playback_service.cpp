@@ -48,15 +48,7 @@ void PlaybackService::bind()
 
     connect(m_playback_ctl, &PlaybackController::sgnDevicesChanged, m_control_bar, &WControlBar::setDevice);
     connect(m_playback_ctl, &PlaybackController::sgnPositionChanged, m_control_bar, &WControlBar::updatePosition);
-    connect(m_playback_ctl, &PlaybackController::sgnPlaybackStateChanged, this, [this](PlayingState state) {
-        QMediaPlayer::PlaybackState ui_state = QMediaPlayer::PlaybackState::StoppedState;
-        if (state == PlayingState::PLAYING) {
-            ui_state = QMediaPlayer::PlaybackState::PlayingState;
-        } else if (state == PlayingState::PAUSE) {
-            ui_state = QMediaPlayer::PlaybackState::PausedState;
-        }
-        m_control_bar->onPlayerStateChanged(ui_state);
-    });
+    connect(m_playback_ctl, &PlaybackController::sgnPlaybackStateChanged, m_control_bar, &WControlBar::updateButtonStatus);
     connect(m_playback_ctl, &PlaybackController::sgnDurationChanged, m_control_bar, &WControlBar::updateDuration);
     connect(m_playback_ctl, &PlaybackController::sgnPlayModeChanged, this, [this](PlayMode mode) {
         m_control_bar->setPlayMode(mode);
@@ -78,8 +70,7 @@ void PlaybackService::bind()
         }
     });
 
-    connect(m_playback_ctl, &PlaybackController::sgnPlaybackFinished,
-            this, [this]() {
+    connect(m_playback_ctl, &PlaybackController::sgnPlaybackNatualEnd, this, [this]() {
         QString nextTrack = m_playlist_ctl->nextTrack(m_playback_ctl->playMode());
         if (!nextTrack.isEmpty()) {
             m_locate_on_next_play_request = true;

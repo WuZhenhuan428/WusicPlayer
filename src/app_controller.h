@@ -7,8 +7,6 @@
 #include <QByteArray>
 #include <QMetaObject>
 
-#include "core/types.h"
-
 class QListWidgetItem;
 class PlaylistSearchPanel;
 class SettingsPanel;
@@ -47,6 +45,8 @@ class TagEditWidget;
 
 class PlaybackService;
 class PlaybackRestoreService;
+class LibraryInteractionService;
+class TagWritebackService;
 
 class AppController : public QObject
 {
@@ -66,9 +66,7 @@ private:
     void handleRemoveColumnRequested();
     void handleShowAboutMessagebox();
     void handleShowDesktopLyricsRequested();
-    void handleTrackPropertyRequested(trackId tid, QString filepath, TrackMetaData meta);
     void configureDesktopLyricsWindowRelation();
-    void refreshPlaylistView();
     void ensureSettingsPanel();
     void ensureShortcutsController();
     void ensureShortcutsPage();
@@ -109,6 +107,8 @@ private:
 
     std::unique_ptr<PlaybackService> m_playback_service;
     std::unique_ptr<PlaybackRestoreService> m_playback_restore_service;
+    std::unique_ptr<LibraryInteractionService> m_library_interaction_serivce;
+    std::unique_ptr<TagWritebackService> m_tag_writeback_service;
 
 
     QPointer<SettingsPanel> m_settings_panel;

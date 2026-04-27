@@ -98,9 +98,9 @@ WControlBar::WControlBar(QWidget* parent)
 
 WControlBar::~WControlBar() {}
 
-void WControlBar::onPlayerStateChanged(QMediaPlayer::PlaybackState newState) {
-    m_btn_play->setEnabled( newState != QMediaPlayer::PlaybackState::PlayingState );
-    m_btn_pause->setEnabled( newState != QMediaPlayer::PlaybackState::PausedState );
+void WControlBar::updateButtonStatus(PlayerEngine::PlayingState new_state) {
+    m_btn_play->setEnabled( new_state != PlayerEngine::PlayingState::PLAYING );
+    m_btn_pause->setEnabled( new_state != PlayerEngine::PlayingState::PAUSE );
 }
 
 void WControlBar::updateDuration(qint64 duration_ms) {

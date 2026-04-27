@@ -17,6 +17,12 @@ class Player : public QObject
 {
     Q_OBJECT
 public:
+    enum class PlayerActions {
+        ERROR = -1, // err or ignore
+        NATURE_END,
+        MANUAL_STOP
+    };
+
     explicit Player(QObject *parent = nullptr);
     ~Player();
 
@@ -40,7 +46,7 @@ signals:
     void stateChanged(PlayingState state);
     void positionChanged(qint64 ms);
     void durationChanged(qint64 ms);
-    void playbackFinished();
+    void sgnPlaybackNatualEnd();
     void deviceChanged(QAudioDevice device);
 private:
     std::unique_ptr<PlayerEngine> core = nullptr;
@@ -50,7 +56,6 @@ private:
     QByteArray m_preferred_output_id;
     QString m_loaded_track_path;
     QTimer* m_position_timer = nullptr;
-    bool m_suppress_next_finished_signal = false;
     bool m_is_mute = false;
     float m_old_volume = 1.0f;
 

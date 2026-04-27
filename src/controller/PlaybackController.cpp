@@ -19,8 +19,8 @@ PlaybackController::PlaybackController(Player* player, QObject* parent)
     connect(m_player, &Player::stateChanged, this, [this](PlayingState state) {
         emit sgnPlaybackStateChanged(state);
     });
-    connect(m_player, &Player::playbackFinished, this, [this]() {
-        emit sgnPlaybackFinished();
+    connect(m_player, &Player::sgnPlaybackNatualEnd, this, [this]() {
+        emit sgnPlaybackNatualEnd();
     });
     connect(m_player, &Player::deviceChanged, this, [this](QAudioDevice device) {
         emit sgnDevicesChanged(this->availableDevices(), device.id());

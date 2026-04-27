@@ -39,7 +39,7 @@ signals:
     void sgnPositionChanged(qint64 pos_ms);
     void sgnDurationChanged(qint64 dur_ms);
     void sgnPlaybackStateChanged(PlayingState state);
-    void sgnPlaybackFinished();
+    void sgnPlaybackNatualEnd();
     void sgnPlayModeChanged(PlayMode mode);
     void sgnDevicesChanged(QList<QAudioDevice> devs, QByteArray id);
 
