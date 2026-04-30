@@ -5,7 +5,6 @@
 #include <QVector>
 #include <QString>
 #include <QUuid>
-#include "core/types.h"
 #include "view/ConfigBinder/IConfigSection.hpp"
 
 namespace {

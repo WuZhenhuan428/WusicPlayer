@@ -623,6 +623,8 @@ void AppController::ensureSearchPanel() {
         if (queueIndex >= 0) {
             m_locate_on_next_play_request = true;
             m_playlist_controller->play(queueIndex);
+
+            this->locateCurrentTrackInView();
         }
     });
 

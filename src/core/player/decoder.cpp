@@ -25,8 +25,15 @@ Decoder::~Decoder()
 
 bool Decoder::init_decoder()
 {
-    avformat_open_input(&m_fmt_ctx, m_filepath.c_str(), nullptr, nullptr);
-    avformat_find_stream_info(m_fmt_ctx, nullptr);
+    if (avformat_open_input(&m_fmt_ctx, m_filepath.c_str(), nullptr, nullptr) != 0) {
+        fprintf(stderr, "[DECODER] Error: could not open file %s\n", m_filepath.c_str());
+        return false;
+    }
+    
+    if (avformat_find_stream_info(m_fmt_ctx, nullptr) < 0) {
+        fprintf(stderr, "[DECODER] Error: could not find stream info\n");
+        return false;
+    }
 
     // find audio stream
     m_audio_stream_index = -1;
@@ -98,17 +105,15 @@ void Decoder::decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffe
 
     if (ret < 0) {
         fprintf(stderr, "[DECODER] Error submitting the packet to the decoder\n");
-        exit(1);
+        return;
     }
     while (ret >= 0) {
         ret = avcodec_receive_frame(m_codec_ctx, m_frame);
-        if (ret == AVERROR(EAGAIN)) {
-            return;
-        } else if (ret == AVERROR_EOF) {
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
             return;
         } else if (ret < 0) {
-            fprintf(stderr, "[DECODER] Error during decoding\n");
-            exit(1);
+            fprintf(stderr, "[DECODER] Error during decoding: code=%d\n", ret);
+            return;
         }
 
         if (m_frame->best_effort_timestamp != AV_NOPTS_VALUE) {
