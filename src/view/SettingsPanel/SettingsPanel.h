@@ -10,16 +10,23 @@
 #include <QCloseEvent>
 #include <QHideEvent>
 
+class QJsonObject;
+class ConfigManager;
+
 class SettingsPanel : public QWidget
 {
     Q_OBJECT
 public:
-    explicit SettingsPanel(QWidget *parent = nullptr);
+    explicit SettingsPanel(ConfigManager* cfg_mgr, QWidget *parent = nullptr);
     ~SettingsPanel();
 
     void registerWidget(QListWidgetItem* title, QWidget* widget);
     void switchToPageByTitle(const QString& title);
     void emitStateSnapshot();
+
+    void loadFromJson(const QJsonObject &json);
+    QJsonObject saveToJson();
+    QString configSubKey() const;
 
 protected:
     void closeEvent(QCloseEvent* event) override;
@@ -36,4 +43,6 @@ private:
     QHBoxLayout* m_hbl_bottom;
     QVBoxLayout* m_vbl_main;
     QPushButton* m_btn_close;
+
+    ConfigManager* m_cfg_mgr;
 };

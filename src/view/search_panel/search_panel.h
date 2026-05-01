@@ -15,18 +15,25 @@
 #include <QPoint>
 
 #include "core/types.h"
+class ConfigManager;
 
-class PlaylistSearchPanel : public QWidget
+class QJsonObject;
+
+class SearchPanel : public QWidget
 {
     Q_OBJECT
 public:
-    explicit PlaylistSearchPanel(QWidget *parent = nullptr);
-    ~PlaylistSearchPanel();
+    explicit SearchPanel(ConfigManager* cfg_mgr, QWidget *parent = nullptr);
+    ~SearchPanel();
 
     void setSearchBackend(class ISearchBackend* backend);
     QTreeView* getView() const;
     void applyHeaderStateDeferred(const QByteArray& state);
-    void emitStateSnapshot();
+
+    // config S/L, temporary
+    void loadFromJson(const QJsonObject &json);
+    QJsonObject saveToJson();
+    QString configSubKey() const;
 
 signals:
     void sgnRequestPlayTrack(const trackId& track_id);
@@ -51,4 +58,6 @@ private:
     class SearchModel* m_search_model;
 
     QTimer* m_tim_input = nullptr;
+
+    ConfigManager* m_cfg_mgr;
 };

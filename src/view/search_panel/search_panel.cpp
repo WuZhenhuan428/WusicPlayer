@@ -1,4 +1,4 @@
-#include "playlist_search_panel.h"
+#include "search_panel.h"
 #include "model/search_model/search_model.h"
 
 #include "controller/search_backend/i_search_backend.h"
@@ -10,8 +10,12 @@
 
 #include "core/search_types.h"
 
-PlaylistSearchPanel::PlaylistSearchPanel(QWidget *parent)
-    :QWidget(parent)
+#include <QJsonObject>
+#include "core/ConfigManager/ConfigManager.h"
+
+SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget *parent)
+    : QWidget(parent),
+      m_cfg_mgr(cfg_mgr)
 {
     setWindowTitle("Search");
     m_le_keyword = new QLineEdit;
@@ -45,6 +49,10 @@ PlaylistSearchPanel::PlaylistSearchPanel(QWidget *parent)
     m_tim_input = new QTimer(this);
     m_tim_input->setSingleShot(true);
     m_tim_input->setInterval(150);
+
+    // load configurations
+    QJsonObject config_obj = m_cfg_mgr->readSubConfig(this->configSubKey());
+    this->loadFromJson(config_obj);
 
     connect(m_le_keyword, &QLineEdit::textChanged, this, [this](const QString& keyword){
         Q_UNUSED(keyword);
@@ -83,24 +91,24 @@ PlaylistSearchPanel::PlaylistSearchPanel(QWidget *parent)
 
     if (m_search_result_tree_view->header()) {
         connect(m_search_result_tree_view->header(), &QHeaderView::customContextMenuRequested,
-                this, &PlaylistSearchPanel::showHeaderContextMenu);
+                this, &SearchPanel::showHeaderContextMenu);
     }
 }
 
-PlaylistSearchPanel::~PlaylistSearchPanel() {}
+SearchPanel::~SearchPanel() {}
 
-void PlaylistSearchPanel::setSearchBackend(ISearchBackend* backend) {
+void SearchPanel::setSearchBackend(ISearchBackend* backend) {
     if (!m_search_model) {
         return;
     }
     m_search_model->setBackend(backend);
 }
 
-QTreeView* PlaylistSearchPanel::getView() const {
+QTreeView* SearchPanel::getView() const {
     return this->m_search_result_tree_view;
 }
 
-void PlaylistSearchPanel::applyHeaderStateDeferred(const QByteArray& state) {
+void SearchPanel::applyHeaderStateDeferred(const QByteArray& state) {
     if (state.isEmpty()) return;
 
     QTimer::singleShot(0, this, [this, state](){
@@ -110,26 +118,16 @@ void PlaylistSearchPanel::applyHeaderStateDeferred(const QByteArray& state) {
     });
 }
 
-void PlaylistSearchPanel::emitStateSnapshot() {
-    QByteArray geo = saveGeometry();
-    QByteArray header;
-    if (m_search_result_tree_view && m_search_result_tree_view->header()) {
-        header = m_search_result_tree_view->header()->saveState();
-    }
-    emit sgnStateSnapshot(geo, header);
-}
-
-void PlaylistSearchPanel::closeEvent(QCloseEvent* event) {
-    emitStateSnapshot();
+void SearchPanel::closeEvent(QCloseEvent* event) {
+    m_cfg_mgr->writeSubConfig(this->configSubKey(), this->saveToJson());
     QWidget::closeEvent(event);
 }
 
-void PlaylistSearchPanel::hideEvent(QHideEvent* event) {
-    emitStateSnapshot();
+void SearchPanel::hideEvent(QHideEvent* event) {
     QWidget::hideEvent(event);
 }
 
-void PlaylistSearchPanel::keyPressEvent(QKeyEvent* event) {
+void SearchPanel::keyPressEvent(QKeyEvent* event) {
     if (event->key() == Qt::Key_Escape) {
         this->close();
     } else {
@@ -137,7 +135,7 @@ void PlaylistSearchPanel::keyPressEvent(QKeyEvent* event) {
     }
 }
 
-void PlaylistSearchPanel::showHeaderContextMenu(const QPoint& pos) {
+void SearchPanel::showHeaderContextMenu(const QPoint& pos) {
     if (!m_search_result_tree_view || !m_search_result_tree_view->header() || !m_search_model) {
         return;
     }
@@ -169,14 +167,13 @@ void PlaylistSearchPanel::showHeaderContextMenu(const QPoint& pos) {
             }
 
             local_header->setSectionHidden(logical_index, !checked);
-            emitStateSnapshot();
         });
     }
 
     menu.exec(header->mapToGlobal(pos));
 }
 
-bool PlaylistSearchPanel::hasOtherVisibleColumns(int column_to_hide) const {
+bool SearchPanel::hasOtherVisibleColumns(int column_to_hide) const {
     if (!m_search_result_tree_view || !m_search_result_tree_view->header() || !m_search_model) {
         return false;
     }
@@ -192,4 +189,31 @@ bool PlaylistSearchPanel::hasOtherVisibleColumns(int column_to_hide) const {
         }
     }
     return false;
+}
+
+void SearchPanel::loadFromJson(const QJsonObject &json)
+{
+    const QByteArray geometry = QByteArray::fromBase64(json.value("geometry").toString().toUtf8());
+    if (!geometry.isEmpty()) {
+        restoreGeometry(geometry);
+    }
+    if (m_search_result_tree_view && m_search_result_tree_view->header()) {
+        const QByteArray header_state = QByteArray::fromBase64(json.value("header_state").toString().toUtf8());
+        if (!header_state.isEmpty()) {
+            m_search_result_tree_view->header()->restoreState(header_state);
+        }
+    }
+}
+
+QJsonObject SearchPanel::saveToJson()
+{
+    QJsonObject obj;
+    obj["geometry"] = QString::fromUtf8(this->saveGeometry().toBase64());
+    obj["header_state"] = QString::fromUtf8(this->m_search_result_tree_view->header()->saveState().toBase64());
+    return obj;
+}
+
+QString SearchPanel::configSubKey() const
+{
+    return "search_panel";
 }

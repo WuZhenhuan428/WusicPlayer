@@ -226,7 +226,7 @@ double Player::mapSliderToVolume(double value, double min_db)
     return qPow(10.0, db/20.0);
 }
 
-qint64 Player::position()
+qint64 Player::position() const
 {
     if (!m_player_engine) {
         return 0;
@@ -335,4 +335,9 @@ void Player::refreshDeviceCache()
 void Player::setEQ(gains_t gains)
 {
     m_player_engine->setEQ(gains);
+}
+
+float Player::volume() const
+{
+    return m_player_engine->volume();
 }

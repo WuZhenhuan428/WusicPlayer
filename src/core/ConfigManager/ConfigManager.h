@@ -5,7 +5,8 @@
 #include <QVector>
 #include <QString>
 #include <QUuid>
-#include "view/ConfigBinder/IConfigSection.hpp"
+#include <QJsonObject>
+#include "./IConfigurable.h"
 
 namespace {
     const int kConfigVersion = 1;  // use after officially release
@@ -20,9 +21,12 @@ public:
 
     static ConfigManager& getInstance();
 
-    void registerSection(IConfigSection* s);
+    void registerModule(IConfigurable* module);
     void loadAll();
     QJsonObject saveAll() const;
+
+    QJsonObject readSubConfig(const QString& key) const;
+    void writeSubConfig(const QString& key, const QJsonObject &sub_obj);
 
     int m_version;
     QString m_filename;
@@ -33,5 +37,5 @@ private:
     QString getConfigPath() const;
     QString getConfigFilepath() const;
 
-    QVector<IConfigSection*> m_sections;
+    QVector<IConfigurable*> m_modules;
 };

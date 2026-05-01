@@ -5,7 +5,6 @@
 
 class PlaybackController;
 class PlaylistController;
-class PlaybackConfigSection;
 
 class PlaybackRestoreService : public QObject
 {
@@ -14,7 +13,6 @@ class PlaybackRestoreService : public QObject
 public:
     explicit PlaybackRestoreService(PlaylistController* playlist_ctl,
                                     PlaybackController* playback_ctl,
-                                    PlaybackConfigSection* playback_cfg_sec,
                                     QObject* parent);
     ~PlaybackRestoreService();
 
@@ -23,7 +21,6 @@ public:
 private:
     PlaylistController* m_playlist_ctl = nullptr;
     PlaybackController* m_playback_ctl = nullptr;
-    PlaybackConfigSection* m_playback_cfg_sec = nullptr;
 
 private:
     int findQueueIndexByTrackId(const trackId& tid);

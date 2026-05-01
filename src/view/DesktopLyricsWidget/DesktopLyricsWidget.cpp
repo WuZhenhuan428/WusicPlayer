@@ -7,6 +7,9 @@
 #include <QMargins>
 #include <QWindow>
 
+#include <QJsonObject>
+#include <QTimer>
+
 DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent)
     : QWidget(parent),
       m_is_locked(false),
@@ -188,11 +191,13 @@ void DesktopLyricsWidget::mousePressEvent(QMouseEvent* event) {
 
 void DesktopLyricsWidget::showEvent(QShowEvent* event) {
     QWidget::showEvent(event);
+    m_is_visible = true;
     emit sgnVisibilityChanged(true);
 }
 
 void DesktopLyricsWidget::hideEvent(QHideEvent* event) {
     QWidget::hideEvent(event);
+    m_is_visible = false;
     emit sgnVisibilityChanged(false);
 }
 
@@ -254,4 +259,42 @@ void DesktopLyricsWidget::setGeometry(const QByteArray& geo) {
     if (!screen->availableGeometry().contains(this->rect())) {
         move(screen->availableGeometry().center() - rect().center());
     }
+}
+
+
+void DesktopLyricsWidget::loadFromJson(const QJsonObject &json)
+{
+    QJsonObject obj = json.value(this->configSubKey()).toObject();
+    this->restoreGeometry(QByteArray::fromBase64(obj.value("geometry").toString().toUtf8()));
+    m_is_visible = obj.value("is_visible").toBool(true);
+    m_rgb_active.r = obj.value("rgb_active_r").toInt();
+    m_rgb_active.g = obj.value("rgb_active_g").toInt();
+    m_rgb_active.b = obj.value("rgb_active_b").toInt();
+    m_rgb_inactive.r = obj.value("rgb_inactive_r").toInt();
+    m_rgb_inactive.g = obj.value("rgb_inactive_g").toInt();
+    m_rgb_inactive.b = obj.value("rgb_inactive_b").toInt();
+    m_font.fromString(obj.value("font_string").toString());
+
+    m_is_visible ? QTimer::singleShot(20, [this](){this->show();}) : this->hide();
+}
+
+QJsonObject DesktopLyricsWidget::saveToJson()
+{
+    QJsonObject obj;
+    obj["geometry"] = QString::fromUtf8(this->getGeometry().toBase64());
+    obj["is_visible"] = m_is_visible;
+    obj["rgb_active_r"] = m_rgb_active.r;
+    obj["rgb_active_g"] = m_rgb_active.g;
+    obj["rgb_active_b"] = m_rgb_active.b;
+    obj["rgb_inactive_r"] = m_rgb_inactive.r;
+    obj["rgb_inactive_g"] = m_rgb_inactive.g;
+    obj["rgb_inactive_b"] = m_rgb_inactive.b;
+    obj["font_string"] = m_font.family();
+
+    return obj;
+}
+
+QString DesktopLyricsWidget::configSubKey() const
+{
+    return "desktop_lyrics";
 }

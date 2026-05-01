@@ -17,7 +17,11 @@
 #include "core/types.h"
 #include "core/hsv_types.h"
 
-class DesktopLyricsWidget : public QWidget
+#include "core/ConfigManager/IConfigurable.h"
+
+class QJsonObject;
+
+class DesktopLyricsWidget : public QWidget, public IConfigurable
 {
     Q_OBJECT
 public:
@@ -38,6 +42,11 @@ public:
     void setInactiveLineColor(rgb_t rgb_inactive);
     rgb_t getActiveLineColor();
     rgb_t getInactiveLineColor();
+
+    // config S/L interface
+    void loadFromJson(const QJsonObject &json) override;
+    QJsonObject saveToJson() override;
+    QString configSubKey() const override;
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
@@ -72,4 +81,6 @@ private:
 
     rgb_t m_rgb_active;
     rgb_t m_rgb_inactive;
+
+    bool m_is_visible = false;  // TODO: better way to set visibility?
 };

@@ -11,6 +11,8 @@ WLyricsPanel::WLyricsPanel(QWidget* parent)
     this->setFocusPolicy(Qt::NoFocus);
     this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    // Prevent word-wrap-based minimum width from constraining the SidePanel.
+    setMinimumWidth(0);
 }
 
 WLyricsPanel::~WLyricsPanel() {}

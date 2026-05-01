@@ -4,6 +4,8 @@
 #include <QMenu>
 #include <QInputDialog>
 
+#include <QJsonObject>
+
 LibraryWidget::LibraryWidget(QAbstractItemModel* song_model, QWidget *parent)
     : QWidget(parent)
 {
@@ -195,35 +197,6 @@ void LibraryWidget::setPlaylists(const QVector<QPair<playlistId, QString>>& play
     }
 }
 
-QByteArray LibraryWidget::songTreeHeaderState() const {
-    return this->m_song_tree_view_header->saveState();
-}
-
-void LibraryWidget::setSongTreeHeaderState(QByteArray state) {
-    // Block signals to prevent sortIndicatorChanged from triggering
-    // PlaylistViewModel::sort(), which would override the configured sort rules
-    m_song_tree_view_header->blockSignals(true);
-    m_song_tree_view_header->restoreState(state);
-    m_song_tree_view_header->blockSignals(false);
-}
-
-QByteArray LibraryWidget::splitterState() const {
-    return this->m_main_splitter->saveState();
-}
-
-void LibraryWidget::setSplitterState(QByteArray state) {
-    this->m_main_splitter->restoreState(state);
-}
-
-Qt::Orientation LibraryWidget::splitterOrientation() const {
-    return this->m_main_splitter->orientation();
-}
-
-void LibraryWidget::setSplitterOrientation(Qt::Orientation orient) {
-    this->m_main_splitter->setOrientation(orient);
-}
-
-
 void LibraryWidget::updateSongView() {
     QAbstractItemModel* model = m_song_tree_view->model();
     if (!model) return;
@@ -242,4 +215,29 @@ QTreeView* LibraryWidget::songTreeView() const {
 
 QHeaderView* LibraryWidget::songTreeHeader() const {
     return m_song_tree_view_header;
+}
+
+void LibraryWidget::loadFromJson(const QJsonObject &json)
+{
+    QJsonObject obj = json.value(this->configSubKey()).toObject();
+    
+    m_song_tree_view_header->blockSignals(true);
+    m_song_tree_view_header->restoreState(QByteArray::fromBase64(obj.value("song_tree_view_state").toString().toUtf8()));
+    m_song_tree_view_header->blockSignals(false);
+    m_main_splitter->restoreState(QByteArray::fromBase64(obj.value("splitter_state").toString().toUtf8()));
+    m_main_splitter->setOrientation(static_cast<Qt::Orientation>(obj.value("splitter_orientation").toInt()));
+}
+
+QJsonObject LibraryWidget::saveToJson()
+{
+    QJsonObject obj;
+    obj["song_tree_view_state"] = QString::fromUtf8(m_song_tree_view_header->saveState().toBase64());
+    obj["splitter_state"] = QString::fromUtf8(m_main_splitter->saveState().toBase64());
+    obj["splitter_orientation"] = static_cast<int>(m_main_splitter->orientation());
+    return obj;
+}
+
+QString LibraryWidget::configSubKey() const
+{
+    return "library_window";
 }

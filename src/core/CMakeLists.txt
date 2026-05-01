@@ -8,6 +8,7 @@ add_library(wusic_core STATIC
     utils/path_utils.h
     ConfigManager/ConfigManager.h
     ConfigManager/ConfigManager.cpp
+    ConfigManager/IConfigurable.h
 
     LyricsFetcher/lyrics_manager.h
     LyricsFetcher/lyrics_manager.cpp

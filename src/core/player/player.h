@@ -37,8 +37,12 @@ public:
     void seek(qint64 pos_ms);
     void setMute(bool mute);
     void setVolume(float vol);
+    float volume() const;
     void setEQ(gains_t gains);
-    qint64 position();
+
+    // return millisecond
+    qint64 position() const;
+
     void setOutputDevice(const QAudioDevice& device);
     void setOutputDeviceById(const QByteArray& id);
     QList<QAudioDevice> devices() const;

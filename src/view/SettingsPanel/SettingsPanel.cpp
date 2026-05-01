@@ -1,7 +1,11 @@
-#include "SettingsPanel.hpp"
+#include "SettingsPanel.h"
 
-SettingsPanel::SettingsPanel(QWidget *parent)
-    : QWidget(parent)
+#include <QJsonObject>
+#include "core/ConfigManager/ConfigManager.h"
+
+SettingsPanel::SettingsPanel(ConfigManager* cfg_mgr, QWidget *parent)
+    : QWidget(parent),
+      m_cfg_mgr(cfg_mgr)
 {
     m_list_widget = new QListWidget(this);
     m_stacked_widget = new QStackedWidget(this);
@@ -28,6 +32,8 @@ SettingsPanel::SettingsPanel(QWidget *parent)
     m_list_widget->setMinimumWidth(120);
     m_list_widget->setMaximumWidth(120);
 
+    QJsonObject config_obj = m_cfg_mgr->readSubConfig(this->configSubKey());
+    this->loadFromJson(config_obj);
 
     connect(m_list_widget, &QListWidget::doubleClicked, this, [this](const QModelIndex &index){
         m_stacked_widget->setCurrentIndex(index.row());
@@ -58,17 +64,31 @@ void SettingsPanel::switchToPageByTitle(const QString& title) {
     }
 }
 
-void SettingsPanel::emitStateSnapshot() {
-    QByteArray geometry = saveGeometry();
-    emit sgnStateSnapshot(geometry);
-}
-
 void SettingsPanel::closeEvent(QCloseEvent* event) {
-    emitStateSnapshot();
+    m_cfg_mgr->writeSubConfig(this->configSubKey(), this->saveToJson());
     QWidget::closeEvent(event);
 }
 
 void SettingsPanel::hideEvent(QHideEvent* event) {
-    emitStateSnapshot();
     QWidget::hideEvent(event);
+}
+
+void SettingsPanel::loadFromJson(const QJsonObject &json)
+{
+    const QByteArray geometry = QByteArray::fromBase64(json.value("geometry").toString().toUtf8());
+    if (!geometry.isEmpty()) {
+        restoreGeometry(geometry);
+    }
+}
+
+QJsonObject SettingsPanel::saveToJson()
+{
+    QJsonObject obj;
+    obj["geometry"] = QString::fromUtf8(this->saveGeometry().toBase64());
+    return obj;
+}
+
+QString SettingsPanel::configSubKey() const
+{
+    return "settings_panel";
 }

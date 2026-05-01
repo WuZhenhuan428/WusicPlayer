@@ -2,7 +2,6 @@
 #include "SidePanel.h"
 #include "LyricsSearchWidget.h"
 #include <QDebug>
-#include <QTimer>
 #include <QMenu>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -54,6 +53,14 @@ SidePanel::SidePanel(QWidget *parent)
     m_panel_splitter->setContentsMargins(0, 0, 0, 0);
     m_vbl_main->setContentsMargins(0, 0, 0, 0);
     this->setContentsMargins(0, 0, 0, 0);
+
+    // Debounce timer: avoids calling updateCoverScale() on every
+    // intermediate resize event during window drag.  The cover is
+    // updated only after the user pauses (or the drag ends).
+    m_resize_timer = new QTimer(this);
+    m_resize_timer->setSingleShot(true);
+    m_resize_timer->setInterval(10);
+    connect(m_resize_timer, &QTimer::timeout, this, &SidePanel::updateCoverScale);
 }
 
 SidePanel::~SidePanel() { }
@@ -86,7 +93,12 @@ void SidePanel::updateCoverScale() {
     if (!m_original_cover || m_original_cover.isNull()) {
         return;
     }
-    int base_width = this->parentWidget()->width() / 4.5;
+    // Use SidePanel's own width instead of parent width to avoid
+    // locking the minimum width during asynchronous resize updates.
+    int base_width = this->width();
+    if (base_width <= 0) {
+        return;
+    }
     QPixmap scaled = m_original_cover.scaled(
         base_width,
         base_width,
@@ -96,6 +108,15 @@ void SidePanel::updateCoverScale() {
     m_lb_cover->setFixedHeight(base_width);
     m_lb_cover->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     m_lb_cover->setPixmap(scaled);
+}
+
+QSize SidePanel::minimumSizeHint() const {
+    // The cover QLabel's pixmap-based minimumSizeHint() propagates up
+    // through QSplitter -> QVBoxLayout -> SidePanel, blocking the
+    // MainWindow QHBoxLayout from shrinking this panel.  We pin the
+    // horizontal minimum to 0 so the stretch-based layout can always
+    // contract freely.
+    return QSize(0, QWidget::minimumSizeHint().height());
 }
 
 WLyricsPanel* SidePanel::getLyricsPanel() const {
@@ -122,9 +143,10 @@ bool SidePanel::loadLyrics(const TrackMetaData& meta) {
 }
 
 void SidePanel::resizeEvent(QResizeEvent *event) {
-    QTimer::singleShot(1, [this](){
-        updateCoverScale();
-    });
+    // Restart the debounce timer on every resize so that the cover
+    // pixmap is only re-scaled once the user stops dragging.
+    m_resize_timer->start();
+
     for (int i = 0; i < m_panel_splitter->count(); ++i) {
         QSplitterHandle* handle = m_panel_splitter->handle(i);
         if (handle) {

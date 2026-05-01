@@ -5,21 +5,31 @@
 #include <QLineEdit>
 #include <QTableView>
 #include <QPushButton>
-
 #include <QHBoxLayout>
-
 #include <QListWidgetItem>
+
+#include <QCloseEvent>
+
+class QJsonObject;
+class ConfigManager;
 
 class ShortcutsPanel : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ShortcutsPanel(QWidget* parent = nullptr);
+    explicit ShortcutsPanel(ConfigManager* cfg_mgr, QWidget* parent = nullptr);
     ~ShortcutsPanel();
 
     void setViewModel(QAbstractTableModel* model);
 
     QListWidgetItem* getListItem();
+
+    void loadFromJson(const QJsonObject &json);
+    QJsonObject saveToJson();
+    QString configSubKey() const;
+
+protected:
+    void closeEvent(QCloseEvent* event) override;
 
 signals:
     void sgnApplyConfig();
@@ -38,4 +48,6 @@ private:
     QVBoxLayout* m_vbl_main;
 
     QListWidgetItem* m_list_item = nullptr;
+
+    ConfigManager* m_cfg_mgr;
 };

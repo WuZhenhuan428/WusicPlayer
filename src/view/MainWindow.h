@@ -30,7 +30,7 @@
 #include <QListView>
 #include <QHBoxLayout>
 
-#include "view/search_panel/playlist_search_panel.h"
+#include "core/ConfigManager/IConfigurable.h"
 #include "view/WControlBar/WControlBar.h"
 #include "view/SidePanel/SidePanel.h"
 
@@ -40,7 +40,7 @@
 #include "controller/PlaybackController.h"
 #include "view/DesktopLyricsWidget/DesktopLyricsWidget.h"
 
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow, public IConfigurable
 {
     Q_OBJECT
 
@@ -54,13 +54,11 @@ public:
     SidePanel* sidePanel() const;
     WControlBar* controlBarWidget() const;
     DesktopLyricsWidget* desktopLyricsWidget() const;
-    PlaylistSearchPanel* searchPanelWidget() const;
-    
     void playTrackInUi(const QString& filepath);
-    void setSearchPanel(PlaylistSearchPanel* panel);
-    QByteArray searchPanelHeaderStateCache() const;
-    QByteArray searchPanelGeometryCache() const;
-    void setSearchPanelStateCache(const QByteArray& geometry, const QByteArray& header);
+
+    void loadFromJson(const QJsonObject &json) override;
+    QJsonObject saveToJson() override;
+    QString configSubKey() const override;
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -129,12 +127,7 @@ private:
     QWidget* m_center_widget;
     QHBoxLayout* m_hbl_main;
 
-    PlaylistSearchPanel* m_search_panel = nullptr;
     DesktopLyricsWidget* m_desktop_lyrics_widget = nullptr;
-
-public:
-    QByteArray m_search_panel_header_state_cache;
-    QByteArray m_search_panel_geo_cache;
     
 signals:
     void sgnLoadPlaylist();

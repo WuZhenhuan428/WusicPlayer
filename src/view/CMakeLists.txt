@@ -8,8 +8,8 @@ add_library(wusic_view STATIC
     playlist/playlist_widgets.cpp
     playlist/playlist_widgets.h
 
-    search_panel/playlist_search_panel.cpp
-    search_panel/playlist_search_panel.h
+    search_panel/search_panel.cpp
+    search_panel/search_panel.h
 
     SidePanel/ElidedLabel.h
     SidePanel/SidePanel.cpp
@@ -29,38 +29,11 @@ add_library(wusic_view STATIC
     DesktopLyricsWidget/DesktopLyricsWidget.cpp
     DesktopLyricsWidget/DesktopLyricsWidget.h
 
-    ConfigBinder/MainWindowConfigContext.hpp
-
-    ConfigBinder/IConfigSection.hpp
-    ConfigBinder/LibraryViewSection.hpp
-    ConfigBinder/PlaybackConfigSection.hpp
-    ConfigBinder/SearchPanelSection.hpp
-    ConfigBinder/WindowConfigSection.hpp
-    ConfigBinder/DesktopLyricsSection.hpp
-    ConfigBinder/SettingsPanelSection.hpp
-    ConfigBinder/ShortcutsSection.hpp
-    
-    ConfigBinder/IConfigBinder.hpp
-    ConfigBinder/LibraryViewBinder.hpp
-    ConfigBinder/LibraryViewBinder.cpp
-    ConfigBinder/PlaybackConfigBinder.hpp
-    ConfigBinder/PlaybackConfigBinder.cpp
-    ConfigBinder/SearchPanelBinder.hpp
-    ConfigBinder/SearchPanelBinder.cpp
-    ConfigBinder/WindowConfigBinder.hpp
-    ConfigBinder/WindowConfigBinder.cpp
-    ConfigBinder/DesktopLyricsBinder.hpp
-    ConfigBinder/DesktopLyricsBinder.cpp
-    ConfigBinder/SettingsPanelBinder.hpp
-    ConfigBinder/SettingsPanelBinder.cpp
-    ConfigBinder/ShortcutsBinder.hpp
-    ConfigBinder/ShortcutsBinder.cpp
-
     SettingsPanel/SettingsPanel.cpp
-    SettingsPanel/SettingsPanel.hpp
+    SettingsPanel/SettingsPanel.h
 
     SettingsPanel/ShortcutsPanel/ShortcutsPanel.cpp
-    SettingsPanel/ShortcutsPanel/ShortcutsPanel.hpp
+    SettingsPanel/ShortcutsPanel/ShortcutsPanel.h
 
     SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.cpp
     SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.h

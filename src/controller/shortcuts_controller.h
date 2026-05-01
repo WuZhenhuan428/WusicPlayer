@@ -2,6 +2,7 @@
 
 #include "model/ShortcutsViewModel/shortcuts_types.hpp"
 #include "model/ShortcutsViewModel/shortcuts_view_model.hpp"
+#include "core/ConfigManager/IConfigurable.h"
 #include <QObject>
 #include <QVector>
 #include <QHash>
@@ -11,7 +12,7 @@
 
 #include <functional>
 
-class ShortcutsController : public QObject
+class ShortcutsController : public QObject, public IConfigurable
 {
     Q_OBJECT
 public:
@@ -39,6 +40,10 @@ public:
     void applyBindings(const QVector<ShortcutBinding>& bindings);
     
     ShortcutsViewModel* viewModel() const;
+
+    void loadFromJson(const QJsonObject &json) override;
+    QJsonObject saveToJson() override;
+    QString configSubKey() const override;
 
 signals:
     void sgnShortcutUpdated(ShortcutActionId action_id, const QKeySequence& seq);

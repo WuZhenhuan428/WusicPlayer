@@ -2,37 +2,33 @@
 
 #include "controller/PlaybackController.h"
 #include "controller/PlaylistController.h"
-#include "view/ConfigBinder/PlaybackConfigSection.hpp"
 
 PlaybackRestoreService::PlaybackRestoreService(
     PlaylistController* playlist_ctl,
     PlaybackController* playback_ctl,
-    PlaybackConfigSection* playback_cfg_sec,
     QObject* parent
 ) : QObject(parent),
     m_playlist_ctl(playlist_ctl),
-    m_playback_ctl(playback_ctl),
-    m_playback_cfg_sec(playback_cfg_sec)
+    m_playback_ctl(playback_ctl)
 {
-    assert(m_playlist_ctl && m_playback_ctl && m_playback_cfg_sec);
+    assert(m_playlist_ctl && m_playback_ctl);
 }
 
 PlaybackRestoreService::~PlaybackRestoreService() {}
 
 void PlaybackRestoreService::restore()
 {
-    if (!m_playlist_ctl || !m_playback_ctl || !m_playback_cfg_sec) {
-        qFatal() << "[PlaybackRestoreService] !m_playlist_ctl ||"
-                    " !m_playback_ctl || !m_playback_cfg_sec";
+    if (!m_playlist_ctl || !m_playback_ctl) {
+        qFatal() << "[PlaybackRestoreService] !m_playlist_ctl || !m_playback_ctl";
         return;
     }
 
     if (m_restored == true) return;
 
-    m_pending_pid = m_playback_cfg_sec->last_playlist_id;
-    m_pending_tid = m_playback_cfg_sec->last_track_id;
-    m_pending_pos_ms = m_playback_cfg_sec->last_position_ms;
-    m_pending_should_resume = m_playback_cfg_sec->last_was_playing;
+    m_pending_pid = m_playlist_ctl->lastPlaylistId();
+    m_pending_tid = m_playlist_ctl->lastTrackId();
+    m_pending_pos_ms = m_playback_ctl->lastPositionMs();
+    m_pending_should_resume = m_playback_ctl->lastWasPlaying();
 
     if (m_pending_pid.isNull()) return;
 

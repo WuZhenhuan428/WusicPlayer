@@ -2,6 +2,7 @@
 #include <QHeaderView>
 #include <QTimer>
 #include <QPointer>
+#include <QJsonObject>
 
 
 MainWindow::MainWindow(PlaybackController* playback_controller, PlaylistController* playlist_controller, QWidget *parent)
@@ -40,29 +41,8 @@ DesktopLyricsWidget* MainWindow::desktopLyricsWidget() const {
     return m_desktop_lyrics_widget;
 }
 
-PlaylistSearchPanel* MainWindow::searchPanelWidget() const {
-    return m_search_panel;
-}
-
 void MainWindow::playTrackInUi(const QString& filepath) {
     emit sgnPlayTrackRequested(filepath);
-}
-
-void MainWindow::setSearchPanel(PlaylistSearchPanel* panel) {
-    m_search_panel = panel;
-}
-
-QByteArray MainWindow::searchPanelHeaderStateCache() const {
-    return m_search_panel_header_state_cache;
-}
-
-QByteArray MainWindow::searchPanelGeometryCache() const {
-    return m_search_panel_geo_cache;
-}
-
-void MainWindow::setSearchPanelStateCache(const QByteArray& geometry, const QByteArray& header) {
-    m_search_panel_geo_cache = geometry;
-    m_search_panel_header_state_cache = header;
 }
 
 void MainWindow::showEvent(QShowEvent *event) {
@@ -197,16 +177,42 @@ void MainWindow::buildCentralArea() {
     m_hbl_main = new QHBoxLayout(m_center_widget);
     m_hbl_main->setContentsMargins(0, 0, 0, 0);
     m_hbl_main->setSpacing(0);
-    m_hbl_main->addWidget(m_library_panel, 3);
-    m_hbl_main->addWidget(m_side_panel, 1);
+    m_hbl_main->addWidget(m_library_panel, 7);
+    m_hbl_main->addWidget(m_side_panel, 2);
     m_hbl_main->setContentsMargins(0, 0, 0, 0);
     setCentralWidget(m_center_widget);
 
     // desktop lrc panel
     /**
-     * WARN: to use on wayland, here does not set parent object, and may cause mem leak
+     * WARN: to use on wayland, here can not set parent object, but may cause memory leak
      */
     m_desktop_lyrics_widget = new DesktopLyricsWidget();
+}
+
+void MainWindow::loadFromJson(const QJsonObject &json)
+{
+    const QJsonObject obj = json.value(this->configSubKey()).toObject();
+    const QByteArray geometry = QByteArray::fromBase64(obj.value("geometry").toString().toUtf8());
+    if (!geometry.isEmpty()) {
+        restoreGeometry(geometry);
+    }
+    const QByteArray state = QByteArray::fromBase64(obj.value("state").toString().toUtf8());
+    if (!state.isEmpty()) {
+        restoreState(state);
+    }
+}
+
+QJsonObject MainWindow::saveToJson()
+{
+    QJsonObject obj;
+    obj["geometry"] = QString::fromUtf8(saveGeometry().toBase64());
+    obj["state"] = QString::fromUtf8(saveState().toBase64());
+    return obj;
+}
+
+QString MainWindow::configSubKey() const
+{
+    return "window";
 }
 
 void MainWindow::onOpenFile() {

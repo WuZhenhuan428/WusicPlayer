@@ -5,7 +5,11 @@
 #include "model/playlist/playlist_manager.h"
 #include "core/types.h"
 
-class PlaylistController : public QObject
+#include "core/ConfigManager/IConfigurable.h"
+
+class QJsonObject;
+
+class PlaylistController : public QObject, public IConfigurable
 {
     Q_OBJECT
 public:
@@ -41,6 +45,14 @@ public:
     const QVector<SortRule> groupRules() const;
     const QVector<SortRule> sortRules() const;
 
+    // config S/L interface
+    void loadFromJson(const QJsonObject &json) override;
+    QJsonObject saveToJson() override;
+    QString configSubKey() const override;
+
+    playlistId lastPlaylistId() const;
+    trackId lastTrackId() const;
+
 signals:
     void playlistChanged();
     void requestPlay(const QString& path);
@@ -52,4 +64,6 @@ public slots:
 private:
     PlaylistManager* m_manager = nullptr;
     QWidget* m_dialogParent = nullptr;
+    playlistId m_last_playlist_id;
+    trackId m_last_track_id;
 };

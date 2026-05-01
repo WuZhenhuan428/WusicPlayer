@@ -10,7 +10,9 @@
 #include <QList>
 #include <QAudioDevice>
 
-class PlaybackController : public QObject
+#include "core/ConfigManager/IConfigurable.h"
+
+class PlaybackController : public QObject, public IConfigurable
 {
     Q_OBJECT
 public:
@@ -35,7 +37,15 @@ public:
     void setDevice(QAudioDevice dev);
     void setDeviceById(QByteArray id);
     QList<QAudioDevice> availableDevices();
-    QByteArray currentDeviceId(); 
+    QByteArray currentDeviceId();
+
+    int lastPositionMs() const;
+    bool lastWasPlaying() const;
+
+    // config S/L interface implement
+    void loadFromJson(const QJsonObject &json) override;
+    QJsonObject saveToJson() override;
+    QString configSubKey() const override;
 
 signals:
     void sgnPositionChanged(qint64 pos_ms);
@@ -50,4 +60,6 @@ private:
     PlayMode m_playMode;
 
     bool m_is_muted;
+    int m_last_position_ms = 0;
+    bool m_last_was_playing = false;
 };

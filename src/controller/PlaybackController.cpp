@@ -1,5 +1,7 @@
 #include "PlaybackController.h"
 
+#include <QJsonObject>
+
 PlaybackController::PlaybackController(Player* player, QObject* parent)
     : QObject(parent),
       m_player(player),
@@ -151,4 +153,55 @@ QByteArray PlaybackController::currentDeviceId() {
         return {};
     }
     return m_player->currentOutputDevice().id();
+}
+
+
+void PlaybackController::loadFromJson(const QJsonObject &json)
+{
+    QJsonObject obj = json.value(this->configSubKey()).toObject();
+    this->setVolume(obj.value("volume").toInt(100));
+    this->setMute(obj.value("muted").toBool());
+    m_playMode = static_cast<PlayMode>(obj.value("play_mode").toInt());
+    this->setDeviceById(QByteArray::fromBase64(obj.value("last_device").toString().toUtf8()));
+
+    m_last_position_ms = obj.value("last_position_ms").toInt();
+    m_last_was_playing = obj.value("last_was_playing").toBool(false);
+
+    // TODO: consider about time sequence
+    if (m_player) {
+        m_player->seek(m_last_position_ms);
+    }
+}
+
+QJsonObject PlaybackController::saveToJson()
+{
+    QJsonObject obj;
+
+    m_last_was_playing = this->state() == PlayingState::PLAYING;
+    m_last_position_ms = this->state() != PlayingState::STOP
+                            ? m_player->position()
+                            : 0;
+
+    obj["volume"] = m_player->volume();
+    obj["muted"] = m_is_muted;
+    obj["play_mode"] = static_cast<int>(m_playMode);
+    obj["last_device"] = QString::fromUtf8(this->currentDeviceId().toBase64());
+    obj["last_was_playing"] = m_last_was_playing;
+    obj["last_position_ms"] = m_last_position_ms;
+    return obj;
+}
+
+QString PlaybackController::configSubKey() const
+{
+    return "playback";
+}
+
+int PlaybackController::lastPositionMs() const
+{
+    return m_last_position_ms;
+}
+
+bool PlaybackController::lastWasPlaying() const
+{
+    return m_last_was_playing;
 }

@@ -13,8 +13,9 @@
 #include <QPair>
 
 #include "core/types.h"
+#include "core/ConfigManager/IConfigurable.h"
 
-class LibraryWidget : public QWidget
+class LibraryWidget : public QWidget, public IConfigurable
 {
     Q_OBJECT
 public:
@@ -24,15 +25,13 @@ public:
     void setSongTreeModel(QAbstractItemModel* model);
     void setPlaylists(const QVector<QPair<playlistId, QString>>& playlists);
 
-    QByteArray songTreeHeaderState() const;
-    void setSongTreeHeaderState(QByteArray state);
-    QByteArray splitterState() const;
-    void setSplitterState(QByteArray state);
-    Qt::Orientation splitterOrientation() const;
-    void setSplitterOrientation(Qt::Orientation orient);
-
     QTreeView* songTreeView() const;
     QHeaderView* songTreeHeader() const;
+
+    // config S/L interface
+    void loadFromJson(const QJsonObject &json) override;
+    QJsonObject saveToJson() override;
+    QString configSubKey() const override;
 
 signals:
     void sgnImportFiles(const playlistId& pid = playlistId());

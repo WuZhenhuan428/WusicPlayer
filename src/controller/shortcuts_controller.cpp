@@ -1,6 +1,8 @@
 #include "shortcuts_controller.h"
 
 #include <QApplication>
+#include <QJsonArray>
+#include <QJsonObject>
 
 ShortcutsController::ShortcutsController(QObject* parent)
     : QObject(parent),
@@ -215,4 +217,55 @@ QWidget* ShortcutsController::resolveScopeHost(ShortcutScope scope, QObject* own
     }
 
     return QApplication::activeWindow();
+}
+
+void ShortcutsController::loadFromJson(const QJsonObject &json)
+{
+    QJsonObject obj = json.value(this->configSubKey()).toObject();
+    const QJsonArray arr = obj.value("bindings").toArray();
+    QVector<ShortcutBinding> parsed;
+    parsed.reserve(arr.size());
+
+    for (const QJsonValue& value : arr) {
+        if (!value.isObject()) {
+            continue;
+        }
+        const QJsonObject item = value.toObject();
+        ShortcutActionId actionId = ShortcutActionId::play_pause;
+        if (!shortcutActionIdFromString(item.value("action_id").toString(), actionId)) {
+            continue;
+        }
+
+        ShortcutBinding binding;
+        binding.action_id = actionId;
+        binding.current_key = QKeySequence::fromString(
+            item.value("key").toString(),
+            QKeySequence::PortableText
+        );
+        binding.enabled = item.value("enabled").toBool(true);
+        parsed.push_back(binding);
+    }
+
+    applyBindings(parsed);
+}
+
+QJsonObject ShortcutsController::saveToJson()
+{
+    QJsonArray arr;
+    for (const ShortcutBinding& binding : bindings()) {
+        QJsonObject item;
+        item["action_id"] = shortcutActionIdToString(binding.action_id);
+        item["key"] = binding.current_key.toString(QKeySequence::PortableText);
+        item["enabled"] = binding.enabled;
+        arr.append(item);
+    }
+
+    QJsonObject obj;
+    obj["bindings"] = arr;
+    return obj;
+}
+
+QString ShortcutsController::configSubKey() const
+{
+    return "shortcuts";
 }

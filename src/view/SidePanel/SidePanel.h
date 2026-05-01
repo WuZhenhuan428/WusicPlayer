@@ -13,6 +13,7 @@
 #include <QVBoxLayout>
 #include <QPoint>
 #include <QPointer>
+#include <QTimer>
 
 class LyricsSearchWidget;
 
@@ -27,6 +28,8 @@ public:
     void loadMetaData(const TrackMetaData& meta);
     WLyricsPanel* getLyricsPanel() const;
     bool loadLyrics(const TrackMetaData& meta);
+
+    QSize minimumSizeHint() const override;
 
 signals:
     void sgnDesktopLyricsConfigRequested();
@@ -47,6 +50,7 @@ private:
     ElidedLabel* m_lb_album;
 
     QVBoxLayout* m_vbl_main;
+    QTimer* m_resize_timer;
     TrackMetaData m_last_lyrics_meta;
     bool m_has_last_lyrics_meta = false;
     QPointer<LyricsSearchWidget> m_lyrics_search_widget;
