@@ -187,7 +187,7 @@ PlayerEngine::PlayingState PlayerEngine::state()
     return m_state;
 }
 
-void PlayerEngine::setEQ(struct gains_t gains)
+void PlayerEngine::setEQ(gains_t gains)
 {
     m_decoder->set_eq_gain(gains);
 }

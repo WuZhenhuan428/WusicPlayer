@@ -4,7 +4,7 @@
     (void)(x); \
 } while(0)
 
-struct gains_t
+typedef struct
 {
     float _31;
     float _63;
@@ -16,4 +16,4 @@ struct gains_t
     float _4k;
     float _8k;
     float _16k;
-};
+} gains_t;

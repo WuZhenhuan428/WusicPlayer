@@ -403,7 +403,7 @@ int Decoder::process_frame_with_eq(AVFrame* frame)
     return 0;
 }
 
-void Decoder::set_eq_gain(struct gains_t gains)
+void Decoder::set_eq_gain(gains_t gains)
 {
     // save value first
     m_gains.store(gains, std::memory_order_release);
@@ -415,7 +415,7 @@ void Decoder::eq_check_and_update()
     if (m_has_eq_changed.load(std::memory_order_acquire) == true) {
         m_has_eq_changed.store(false, std::memory_order_release);
         // compare
-        struct gains_t new_gains = m_gains.load(std::memory_order_acquire);
+        gains_t new_gains = m_gains.load(std::memory_order_acquire);
         char gain_buf[32];
         std::string gain_str;   // auto trim
 

@@ -10,7 +10,7 @@ extern "C" {
 #include <libavfilter/buffersrc.h>
 }
 
-#include "types.h"
+#include "../player_types.h"
 #include "config.h"
 #include "ring_buffer.hpp"
 
@@ -30,7 +30,7 @@ public:
     void stop();
     void seek(int64_t position_ms);
     const std::unordered_map<std::string, std::string> metadata();
-    void set_eq_gain(struct gains_t gains);
+    void set_eq_gain(gains_t gains);
     int64_t position();
 
 private:
@@ -74,10 +74,10 @@ private:
     AVFilterContext* m_eq_ctx_8k = nullptr;
     AVFilterContext* m_eq_ctx_16k = nullptr;
 
-    std::atomic<struct gains_t> m_gains;
+    std::atomic<gains_t> m_gains;
     // ^ m_gains is not lock free, but it doesn't matter QAQ
     std::atomic_bool m_has_eq_changed{false};
-    struct gains_t m_gains_old{};
+    gains_t m_gains_old{};
 
     std::atomic<int64_t> m_pos_ms{0};
 };

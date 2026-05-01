@@ -20,6 +20,7 @@
 #include "view/search_panel/playlist_search_panel.h"
 #include "view/SettingsPanel/SettingsPanel.hpp"
 #include "view/SettingsPanel/ShortcutsPanel/ShortcutsPanel.hpp"
+#include "view/eq_widget/eq_widget.h"
 
 #include "controller/PlaybackController.h"
 #include "controller/shortcuts_controller.h"
@@ -181,6 +182,7 @@ void AppController::initializeCoreConnections()
     connect(m_main_window.get(), &MainWindow::sgnInsertColumnRequested, this, &AppController::handleInsertColumnRequested);
     connect(m_main_window.get(), &MainWindow::sgnRemoveColumnRequested, this, &AppController::handleRemoveColumnRequested);
     connect(m_main_window.get(), &MainWindow::sgnShowAboutMessagebox, this, &AppController::handleShowAboutMessagebox);
+    connect(m_main_window.get(), &MainWindow::sgnOpenEQWidgetRequested, this, &AppController::handleOpenEQRequested);
 
 
     auto* locateShortcut = new QShortcut(QKeySequence(Qt::Key_Tab), libraryPanel->songTreeView());
@@ -361,6 +363,21 @@ void AppController::saveConfig() {
         }
     }
     ConfigManager::getInstance().saveAll();
+}
+
+void AppController::handleOpenEQRequested()
+{
+    if (!m_eq_widget) {
+        m_eq_widget = new EQWidget({}, true, false);
+    }
+
+    connect(m_eq_widget, &EQWidget::sgnGainChanged, this, [this](gains_t gains){
+        m_playback_controller->setGains(gains);
+    });
+
+    m_eq_widget->show();
+    m_eq_widget->raise();
+    m_eq_widget->activateWindow();
 }
 
 void AppController::onOpenSettingsPanelRequested() {

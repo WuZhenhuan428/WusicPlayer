@@ -109,6 +109,10 @@ private:
     QAction* m_act_remove_column;
     QAction* m_act_search_panel;
     QAction* m_act_show_desktop_lyrics;
+
+    // menu playback
+    QMenu* m_menu_playback;
+    QAction* m_act_open_eq;
     
     // menu Help
     QMenu* m_menu_help;
@@ -151,4 +155,5 @@ signals:
     void sgnRemoveColumnRequested();
     void sgnShowAboutMessagebox();
     void sgnShowDesktopLyricsRequested();
+    void sgnOpenEQWidgetRequested();
 };

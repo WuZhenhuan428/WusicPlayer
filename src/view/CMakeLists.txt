@@ -88,6 +88,9 @@ add_library(wusic_view STATIC
     tag_edit_widget/tag_edit_widget.h
     tag_edit_widget/new_tag_item_dialog.cpp
     tag_edit_widget/new_tag_item_dialog.h
+
+    eq_widget/eq_widget.cpp
+    eq_widget/eq_widget.h
 )
 
 target_link_libraries(wusic_view

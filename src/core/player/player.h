@@ -1,6 +1,7 @@
 #pragma once
 
 #include "player_engine.h"
+#include "../player_types.h"
 
 #include <QObject>
 #include <QTimer>
@@ -36,6 +37,7 @@ public:
     void seek(qint64 pos_ms);
     void setMute(bool mute);
     void setVolume(float vol);
+    void setEQ(gains_t gains);
     qint64 position();
     void setOutputDevice(const QAudioDevice& device);
     void setOutputDeviceById(const QByteArray& id);
@@ -49,7 +51,7 @@ signals:
     void sgnPlaybackNatualEnd();
     void deviceChanged(QAudioDevice device);
 private:
-    std::unique_ptr<PlayerEngine> core = nullptr;
+    std::unique_ptr<PlayerEngine> m_player_engine = nullptr;
     QMediaDevices* m_media_devices = nullptr;
     QList<QAudioDevice> m_audio_devices;
     QByteArray m_current_output_id;

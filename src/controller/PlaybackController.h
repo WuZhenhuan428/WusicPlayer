@@ -2,6 +2,7 @@
 
 #include "core/types.h"
 #include "core/player/player.h"
+#include "core/player_types.h"
 
 #include <QObject>
 #include <QString>
@@ -25,6 +26,7 @@ public:
     void setPosition(qint64 pos_ms);
     qint64 position();
     void setVolume(int percent);
+    void setGains(gains_t gains);
     void setMute(bool mute_on);
     bool getMute();
     void flipMute();

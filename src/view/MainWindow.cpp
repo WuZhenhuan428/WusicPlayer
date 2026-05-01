@@ -95,6 +95,8 @@ void MainWindow::initMenuConnections() {
     connect(m_act_insert_column, &QAction::triggered, this, &MainWindow::sgnInsertColumnRequested);
     connect(m_act_remove_column, &QAction::triggered, this, &MainWindow::sgnRemoveColumnRequested);
 
+    connect(m_act_open_eq, &QAction::triggered, this, &MainWindow::sgnOpenEQWidgetRequested);
+
     connect(m_act_settings, &QAction::triggered, this, &MainWindow::sgnOpenSettingsPanelRequested);
 
     connect(m_act_search_panel, &QAction::triggered, this, &MainWindow::sgnOpenSearchPanelRequested);
@@ -151,6 +153,11 @@ void MainWindow::buildMenuBar() {
     m_menu_view->addAction(m_act_search_panel);
     m_menu_view->addAction(m_act_show_desktop_lyrics);
     m_menubar_main->addMenu(m_menu_view);
+
+    m_menu_playback = new QMenu("&Playback", m_menubar_main);
+    m_act_open_eq = new QAction("&Open EQ", m_menu_playback);
+    m_menu_playback->addAction(m_act_open_eq);
+    m_menubar_main->addMenu(m_menu_playback);
 
     m_menu_settings = new QMenu("&Settings", m_menubar_main);
     m_act_settings = new QAction("&Settings", m_menu_settings);

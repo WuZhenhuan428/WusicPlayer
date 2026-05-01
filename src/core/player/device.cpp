@@ -2,7 +2,7 @@
 
 #include <cstdio>
 #include <cstring>
-#include "types.h"
+#include "../player_types.h"
 
 namespace {
 std::vector<std::string> enum_playback_names()

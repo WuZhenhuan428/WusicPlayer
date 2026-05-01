@@ -2,6 +2,7 @@ add_library(wusic_core STATIC
     types.h
     hsv_types.h
     search_types.h
+    player_types.h
     
     utils/AudioUtils.h
     utils/path_utils.h
@@ -26,8 +27,6 @@ add_library(wusic_core STATIC
     player/player_engine.h
     player/player.h
     player/ring_buffer.hpp
-    player/types.h
-
 )
 
 target_link_libraries(wusic_core

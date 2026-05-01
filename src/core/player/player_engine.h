@@ -1,7 +1,7 @@
 #pragma once
 
 #include "config.h"
-#include "types.h"
+#include "../player_types.h"
 
 #include "device.h"
 #include "decoder.h"
@@ -46,7 +46,7 @@ public:
     PlayerEngine::PlayingState state();
     void seek(int64_t pos_ms);
     void setVolume(float volume);
-    void setEQ(struct gains_t gains);
+    void setEQ(gains_t gains);
     std::unordered_map<std::string, std::string> metadata();
     float volume();
     int64_t position();

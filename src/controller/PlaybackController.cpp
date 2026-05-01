@@ -90,6 +90,13 @@ void PlaybackController::setVolume(int percent) {
     m_player->setVolume(percent);
 }
 
+void PlaybackController::setGains(gains_t gains){
+    if (!m_player) {
+        return;
+    }
+    m_player->setEQ(gains);
+}
+
 void PlaybackController::read(QString filepath) {
     if (!m_player) {
         return;
