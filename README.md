@@ -37,7 +37,7 @@ This project is under active refactoring and feature iteration.
 > **Work in Progress**
 
 - Core playback and playlist features are available.
-- Architecture is being migrated toward a clearer `view` / `controller` / `model` / `core` split.
+- Architecture is being migrated toward a clearer `view` / `controller` / `service` / `model` / `core` split.
 - Packaging is **not provided yet**. (such as `.deb` / `.rpm` / `.exe`)
 - Bugs are possible; feedback is welcome.
 - Some functions are difficult to implement on wayland, although they are common on x11 and windows.
@@ -59,6 +59,7 @@ This project is under active refactoring and feature iteration.
 - Shortcut key binding
 - Lyrics editor (if in tag)
 - Lyrics search (netease cloud music only)
+- Ten-band equalizer
 
 ---
 
@@ -75,6 +76,9 @@ Search in playlist:
 Tag view and lyrics editor:
 ![tag viewer and lyrics editor](docs/screenshots/tag_viewer_and_lyrics_editor.png)
 
+Equalizer and custom icons:
+![qqualizer and custom icons](docs/screenshots/eq.png)
+
 ---
 
 ## Architecture
@@ -85,6 +89,7 @@ src/
 ├── core
 ├── model
 ├── view
+├── service
 └── static
 ```
 
@@ -93,6 +98,7 @@ src/
 - **model**: player, playlist, and domain logic  
 - **core**: shared types, config, and utilities
 - **static**: qt static resources
+- **service**: complex functions, depends on controllers
 
 ---
 
@@ -173,7 +179,8 @@ ctest --preset test-local-qt
 - [x] Replace the current search proxy model with an independent one
 - [x] Binding shortcut keys
 - [x] Search lyrics from network platforms (netease cloud music only)
-- [ ] EQ with GUI
+- [x] EQ with GUI
+- [ ] Visualized spectrum
 - [ ] Expand unit test coverage
 - [ ] Evaluate distribution formats (AppImage / Flatpak / package repos)
 - [ ] ...

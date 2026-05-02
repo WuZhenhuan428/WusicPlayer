@@ -15,7 +15,7 @@
 #include <QAudioDevice>
 #include <QList>
 
-#include "core/player/player.h"
+#include "core/player/player_engine.h"
 
 class WControlBar : public QWidget
 {
