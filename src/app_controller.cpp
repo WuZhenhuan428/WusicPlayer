@@ -90,7 +90,7 @@ void AppController::initializeCoreConnections()
     PlaybackController* playbackController = m_playback_controller;
     LibraryWidget* libraryPanel = m_main_window->libraryPanel();
     SidePanel* sidePanel = m_main_window->sidePanel();
-    DesktopLyricsWidget* desktopLyrics = m_main_window->desktopLyricsWidget();
+    // DesktopLyricsWidget* desktopLyrics = m_main_window->desktopLyricsWidget();
 
     m_playback_service->bind();
     connect(m_playback_service.get(), &PlaybackService::sgnLocateCurrentTrack, this, &AppController::locateCurrentTrackInView);
@@ -251,23 +251,35 @@ void AppController::initializeConfig() {
     ConfigManager& cm = ConfigManager::getInstance();
     if (m_playback_controller) {
         cm.registerModule(m_playback_controller);
+        qDebug() << "[CONFIG] register playback controller";
     }
     if (m_playlist_controller) {
         cm.registerModule(m_playlist_controller.get());
+        qDebug() << "[CONFIG] register playlist controller";
     }
     if (m_main_window) {
         cm.registerModule(m_main_window.get());
+        qDebug() << "[CONFIG] register main window";
         if (m_main_window->libraryPanel()) {
             cm.registerModule(m_main_window->libraryPanel());
+            qDebug() << "[CONFIG] register library panel";
         }
         if (m_main_window->desktopLyricsWidget()) {
             cm.registerModule(m_main_window->desktopLyricsWidget());
+            qDebug() << "[CONFIG] register desktop lyrics widget";
         }
     }
     if (m_shortcuts_controller) {
         cm.registerModule(m_shortcuts_controller);
+        qDebug() << "[CONFIG] register shortcuts controller";
     }
     cm.loadAll();
+
+    // misc: dependent data from other module,
+    // but not sufficient to create interfaces seprately
+    // current:
+    //      WControlBar -> m_btn_mode->icon
+    m_main_window.get()->controlBarWidget()->setPlayMode(m_playlist_controller->playMode());
 }
 
 void AppController::saveConfig() {

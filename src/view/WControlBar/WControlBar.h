@@ -32,10 +32,11 @@ public slots:
     void updateButtonStatus(PlayerEngine::PlayingState new_state);
     void updateDuration(qint64 duration_ms);
     void updatePosition(qint64 position_ms);
+    void updateVolumeSlider(int percent);
+    void updateMuteButton(bool muted);
 
 signals:
-    void sgnBtnPlayClicked();
-    void sgnBtnPauseClicked();
+    void sgnBtnPlayPauseClicked(bool is_request_play);
     void sgnBtnStopClicked();
     void sgnBtnNextClicked();
     void sgnBtnPrevClicked();
@@ -51,8 +52,11 @@ signals:
     void sgnSelectDeviceId(QByteArray id);
 
 private:
-    QPushButton* m_btn_play;
-    QPushButton* m_btn_pause;
+    void updateVolumeSliderIcon(int volume_by_percent);
+    void updateModeIcon(QString icon_url);
+
+private:
+    QPushButton* m_btn_play_pause;
     QPushButton* m_btn_stop;
     QPushButton* m_btn_next;
     QPushButton* m_btn_prev;
@@ -76,4 +80,6 @@ private:
 
     QMenu* m_menu_devices;
     QList<QAudioDevice> m_devices;
+
+    bool m_is_playing = false;
 };

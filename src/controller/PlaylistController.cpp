@@ -55,6 +55,8 @@ PlaylistController::PlaylistController(PlaylistManager* manager, QWidget* dialog
     connect(m_manager, &PlaylistManager::playlistChanged, this, &PlaylistController::playlistChanged);
     connect(m_manager, &PlaylistManager::requestPlay, this, &PlaylistController::requestPlay);
     connect(m_manager, &PlaylistManager::cacheLoadFinished, this, &PlaylistController::cacheLoadFinished);
+    connect(m_manager->m_context, &PlaylistContext::changedCurrentPlayMode,
+            this, &PlaylistController::playModeChanged);
 }
 
 PlaylistController::~PlaylistController() {}
@@ -219,10 +221,19 @@ auto PlaylistController::viewModel() const -> decltype(std::declval<PlaylistMana
     return m_manager->getViewModel();
 }
 
-QString PlaylistController::nextTrack(PlayMode mode) const { return m_manager->nextTrack(mode); }
-QString PlaylistController::prevTrack(PlayMode mode) const { return m_manager->prevTrack(mode); }
+QString PlaylistController::nextTrack() const { return m_manager->nextTrack(m_manager->m_context->getPlayMode()); }
+QString PlaylistController::prevTrack() const { return m_manager->prevTrack(m_manager->m_context->getPlayMode()); }
 void PlaylistController::play(int queueIndex) { m_manager->play(queueIndex); }
 void PlaylistController::switchToPlaylist(const playlistId& id) { m_manager->switchToPlaylist(id); }
+
+void PlaylistController::setPlayMode(PlayMode mode) {
+    if (!m_manager) return;
+    m_manager->m_context->setPlayMode(mode);
+}
+
+PlayMode PlaylistController::playMode() const {
+    return m_manager ? m_manager->m_context->getPlayMode() : PlayMode::in_order;
+}
 
 const QVector<std::shared_ptr<Playlist>> PlaylistController::playlists() const {
     return m_manager->getPlaylists();
@@ -288,6 +299,9 @@ void PlaylistController::loadFromJson(const QJsonObject &json)
     }
     this->setSortRules(sort_rules);
 
+    PlayMode mode = static_cast<PlayMode>(obj.value("play_mode").toInt(static_cast<int>(PlayMode::in_order)));
+    this->setPlayMode(mode);
+
     m_last_playlist_id = playlistId(obj.value("last_playlist_id").toString());
     m_last_track_id = trackId(obj.value("last_track_id").toString());
 
@@ -317,6 +331,8 @@ QJsonObject PlaylistController::saveToJson()
         sort_array.append(ruleToJson(rule));
     }
     obj["sort_rules"] = sort_array;
+
+    obj["play_mode"] = static_cast<int>(this->playMode());
 
     m_last_playlist_id = this->currentPlaylist();
     m_last_track_id = this->currentTrackId();

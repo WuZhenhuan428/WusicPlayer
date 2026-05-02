@@ -1,27 +1,69 @@
 #include "WControlBar.h"
 
+#include <QIcon>
+#include <magic_enum/magic_enum.hpp>
+
 #define SLIDER_VOLUME_MIN_WIDTH 100
 #define SLIDER_VOLUME_MAX_WIDTH 100
+
+#define ICON_SIZE 25
+#define BTN_SIZE 25
 
 WControlBar::WControlBar(QWidget* parent)
     : QWidget(parent)
 {
-    m_btn_play = new QPushButton(">", this);
-    m_btn_pause = new QPushButton("||", this);
-    m_btn_stop = new QPushButton(">|", this);
-    m_btn_prev = new QPushButton("<<", this);
-    m_btn_next = new QPushButton(">>", this);
-    m_btn_mode = new QPushButton("M", this);
-    m_btn_mute = new QPushButton("V", this);
-    m_btn_devices = new QPushButton("D", this);
-    m_btn_play->setFixedSize(25, 25);
-    m_btn_pause->setFixedSize(25, 25);
-    m_btn_stop->setFixedSize(25, 25);
-    m_btn_prev->setFixedSize(25, 25);
-    m_btn_next->setFixedSize(25, 25);
-    m_btn_mode->setFixedSize(25, 25);
-    m_btn_mute->setFixedSize(25, 25);
-    m_btn_devices->setFixedSize(25, 25);
+    m_btn_play_pause = new QPushButton(this);
+    QIcon icon_play(":/icons/light/play.svg");
+    m_btn_play_pause->setIcon(icon_play);
+    
+    m_btn_stop = new QPushButton(this);
+    QIcon icon_stop(":/icons/light/stop.svg");
+    m_btn_stop->setIcon(icon_stop);
+    
+    m_btn_prev = new QPushButton(this);
+    QIcon icon_prev(":/icons/light/prev.svg");
+    m_btn_prev->setIcon(icon_prev);
+    
+    m_btn_next = new QPushButton(this);
+    QIcon icon_next(":/icons/light/next.svg");
+    m_btn_next->setIcon(icon_next);
+    
+    m_btn_devices = new QPushButton(this);
+    QIcon icon_devices(":/icons/light/device.svg");
+    m_btn_devices->setIcon(icon_devices);
+    
+    // TODO: load correct icons when restore config status
+    m_btn_mode = new QPushButton(this);
+    QIcon icon_order(":/icons/light/in_order.svg");
+    m_btn_mode->setIcon(icon_order);
+    
+    m_btn_mute = new QPushButton(this);
+    QIcon icon_mute(":/icons/light/volume_3.svg");
+    m_btn_mute->setIcon(icon_mute);
+    
+    m_btn_devices->setFixedSize(BTN_SIZE, BTN_SIZE);
+    m_btn_play_pause->setFixedSize(BTN_SIZE, BTN_SIZE);
+    m_btn_stop->setFixedSize(BTN_SIZE, BTN_SIZE);
+    m_btn_prev->setFixedSize(BTN_SIZE, BTN_SIZE);
+    m_btn_next->setFixedSize(BTN_SIZE, BTN_SIZE);
+    m_btn_mode->setFixedSize(BTN_SIZE, BTN_SIZE);
+    m_btn_mute->setFixedSize(BTN_SIZE, BTN_SIZE);
+
+    m_btn_play_pause->setIconSize(QSize(ICON_SIZE, ICON_SIZE));
+    m_btn_stop->setIconSize(QSize(ICON_SIZE, ICON_SIZE));
+    m_btn_prev->setIconSize(QSize(ICON_SIZE, ICON_SIZE));
+    m_btn_next->setIconSize(QSize(ICON_SIZE, ICON_SIZE));
+    m_btn_devices->setIconSize(QSize(ICON_SIZE, ICON_SIZE));
+    m_btn_mode->setIconSize(QSize(ICON_SIZE, ICON_SIZE));
+    m_btn_mute->setIconSize(QSize(ICON_SIZE, ICON_SIZE));
+
+    m_btn_play_pause->setFlat(true);
+    m_btn_stop->setFlat(true);
+    m_btn_prev->setFlat(true);
+    m_btn_next->setFlat(true);
+    m_btn_devices->setFlat(true);
+    m_btn_mode->setFlat(true);
+    m_btn_mute->setFlat(true);
 
     m_menu_mode = new QMenu(this);
     m_act_in_order = new QAction("In order", m_menu_mode);
@@ -47,8 +89,7 @@ WControlBar::WControlBar(QWidget* parent)
     m_slider_volume->setMaximumWidth(SLIDER_VOLUME_MAX_WIDTH);
 
     m_hbl_main = new QHBoxLayout(this);
-    m_hbl_main->addWidget(m_btn_play);
-    m_hbl_main->addWidget(m_btn_pause);
+    m_hbl_main->addWidget(m_btn_play_pause);
     m_hbl_main->addWidget(m_btn_stop);
     m_hbl_main->addWidget(m_btn_prev);
     m_hbl_main->addWidget(m_btn_next);
@@ -67,8 +108,12 @@ WControlBar::WControlBar(QWidget* parent)
     
     this->setLayout(m_hbl_main);
 
-    connect(m_btn_play, &QPushButton::clicked, this, [this](){emit sgnBtnPlayClicked();});
-    connect(m_btn_pause, &QPushButton::clicked, this, [this](){emit sgnBtnPauseClicked();});
+    connect(m_btn_play_pause, &QPushButton::clicked, this, [this](){
+        if (m_is_playing)
+            emit sgnBtnPlayPauseClicked(false);
+        else
+            emit sgnBtnPlayPauseClicked(true);
+    });
     connect(m_btn_stop, &QPushButton::clicked, this, [this](){emit sgnBtnStopClicked();});
     connect(m_btn_next, &QPushButton::clicked, this, [this](){emit sgnBtnNextClicked();});
     connect(m_btn_prev, &QPushButton::clicked, this, [this](){emit sgnBtnPrevClicked();});
@@ -84,9 +129,11 @@ WControlBar::WControlBar(QWidget* parent)
     connect(m_act_out_of_order_track, &QAction::triggered, this, [this](){emit sgnOutOfOrderTrack();});
     connect(m_act_out_of_order_group, &QAction::triggered, this, [this](){emit sgnOutOfOrderGroup();});
 
+    connect(m_slider_volume, &QSlider::valueChanged, this, [this](int value){
+        emit sgnSliderVolumeReleased(value);
+        this->updateVolumeSliderIcon(value);
+    });
     connect(m_slider_position, &QSlider::sliderReleased, this, [this](){emit sgnSliderPositionReleased(m_slider_position->value());});
-    connect(m_slider_volume, &QSlider::sliderReleased, this, [this](){emit sgnSliderVolumeReleased(m_slider_volume->value());});
-    connect(m_slider_volume, &QSlider::sliderMoved, this, [this](){emit sgnSliderVolumeMoved(m_slider_volume->value());});
     connect(m_slider_position, &QSlider::sliderMoved, this, [this](int value){
         m_time_progress->setCurrentTime(value);
     });
@@ -99,8 +146,17 @@ WControlBar::WControlBar(QWidget* parent)
 WControlBar::~WControlBar() {}
 
 void WControlBar::updateButtonStatus(PlayerEngine::PlayingState new_state) {
-    m_btn_play->setEnabled( new_state != PlayerEngine::PlayingState::PLAYING );
-    m_btn_pause->setEnabled( new_state != PlayerEngine::PlayingState::PAUSE );
+    // set icon here
+    qDebug() << "[ControlBar] update new state: " << magic_enum::enum_name(new_state);
+    if (new_state != PlayerEngine::PlayingState::PLAYING) {
+        m_is_playing = false;
+        QIcon icon_play(":/icons/light/play.svg");
+        m_btn_play_pause->setIcon(icon_play);
+    } else {
+        m_is_playing = true;
+        QIcon icon_pause(":/icons/light/pause.svg");
+        m_btn_play_pause->setIcon(icon_pause);
+    }
 }
 
 void WControlBar::updateDuration(qint64 duration_ms) {
@@ -117,6 +173,21 @@ void WControlBar::updatePosition(qint64 position_ms) {
     }
 }
 
+void WControlBar::updateVolumeSlider(int percent) {
+    if (!m_slider_volume->isSliderDown()) {
+        m_slider_volume->setValue(percent);
+    }
+}
+
+void WControlBar::updateMuteButton(bool muted) {
+    if (muted) {
+        QIcon icon_muted(":/icons/light/volume_x.svg");
+        m_btn_mute->setIcon(icon_muted);
+    } else {
+        this->updateVolumeSliderIcon(m_slider_volume->value());
+    }
+}
+
 void WControlBar::setPlayMode(PlayMode mode) {
     for (QAction* action : {m_act_in_order, m_act_loop, m_act_shuffle, m_act_out_of_order_track, m_act_out_of_order_group}) {
         action->setCheckable(true);
@@ -124,14 +195,19 @@ void WControlBar::setPlayMode(PlayMode mode) {
     }
     if (mode == PlayMode::in_order) {
         m_act_in_order->setChecked(true);
+        this->updateModeIcon(":/icons/light/in_order.svg");
     } else if (mode == PlayMode::loop) {
         m_act_loop->setChecked(true);
+        this->updateModeIcon(":/icons/light/loop.svg");
     } else if (mode == PlayMode::shuffle)  {
         m_act_shuffle->setChecked(true);
+        this->updateModeIcon(":/icons/light/shuffle.svg");
     } else if (mode == PlayMode::out_of_order_group) {
         m_act_out_of_order_group->setChecked(true);
+        this->updateModeIcon(":/icons/light/out_of_order_group.svg");
     } else if (mode == PlayMode::out_of_order_track) {
         m_act_out_of_order_track->setChecked(true);
+        this->updateModeIcon(":/icons/light/out_of_order_track.svg");
     }
 }
 
@@ -161,3 +237,27 @@ QSlider* WControlBar::getProgressSlider() const {
 QSlider* WControlBar::getVolumeSlider() const {
     return m_slider_volume;
 };
+
+/* in player, setMute == setVolume(0), so when update slider, the mute
+   status will be covered, and there is NO NEED to save mute status */
+void WControlBar::updateVolumeSliderIcon(int volume_by_percent) {
+    if (volume_by_percent > 66) {
+        QIcon icon(":/icons/light/volume_3.svg");
+        m_btn_mute->setIcon(icon);
+    } else if (volume_by_percent > 33) {
+        QIcon icon(":/icons/light/volume_2.svg");
+        m_btn_mute->setIcon(icon);
+    } else if (volume_by_percent > 0) {
+        QIcon icon(":/icons/light/volume_1.svg");
+        m_btn_mute->setIcon(icon);
+    } else {
+        QIcon icon(":/icons/light/volume_0.svg");
+        m_btn_mute->setIcon(icon);
+    }
+}
+
+void WControlBar::updateModeIcon(QString icon_url)
+{
+    QIcon icon(icon_url);
+    m_btn_mode->setIcon(icon);
+}

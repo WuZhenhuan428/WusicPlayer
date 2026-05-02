@@ -28,10 +28,13 @@ public:
     void removeTrack(const trackId& id);
 
     auto viewModel() const -> decltype(std::declval<PlaylistManager*>()->getViewModel());
-    QString nextTrack(PlayMode mode) const;
-    QString prevTrack(PlayMode mode) const;
+    QString nextTrack() const;
+    QString prevTrack() const;
     void play(int queueIndex);
     void switchToPlaylist(const playlistId& id);
+
+    void setPlayMode(PlayMode mode);
+    PlayMode playMode() const;
 
     const QVector<std::shared_ptr<Playlist>> playlists() const;
     playlistId currentPlaylist() const;
@@ -57,6 +60,7 @@ signals:
     void playlistChanged();
     void requestPlay(const QString& path);
     void cacheLoadFinished(int code);
+    void playModeChanged(PlayMode mode);
 
 public slots:
     void loadCacheAfterShown();

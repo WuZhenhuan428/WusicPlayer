@@ -25,10 +25,6 @@ DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent)
     this->setAttribute(Qt::WA_TranslucentBackground);
     this->setAttribute(Qt::WA_TransparentForMouseEvents);
 
-    QFont font_test;
-    font_test.setFamily("JetBrains Maple Mono");
-    font_test.setPixelSize(30);
-    setLrcFont(font_test);
     applyConfig();
 
     this->initConnect();
@@ -274,6 +270,7 @@ void DesktopLyricsWidget::loadFromJson(const QJsonObject &json)
     m_rgb_inactive.g = obj.value("rgb_inactive_g").toInt();
     m_rgb_inactive.b = obj.value("rgb_inactive_b").toInt();
     m_font.fromString(obj.value("font_string").toString());
+    this->setLrcFont(m_font);
 
     m_is_visible ? QTimer::singleShot(20, [this](){this->show();}) : this->hide();
 }
@@ -289,7 +286,7 @@ QJsonObject DesktopLyricsWidget::saveToJson()
     obj["rgb_inactive_r"] = m_rgb_inactive.r;
     obj["rgb_inactive_g"] = m_rgb_inactive.g;
     obj["rgb_inactive_b"] = m_rgb_inactive.b;
-    obj["font_string"] = m_font.family();
+    obj["font_string"] = m_font.toString();
 
     return obj;
 }

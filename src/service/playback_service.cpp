@@ -20,24 +20,29 @@ void PlaybackService::bind()
         return;
     }
     connect(m_main_window, &MainWindow::sgnPlayTrackRequested, this, &PlaybackService::handlePlayTrackRequest);
-    connect(m_control_bar, &WControlBar::sgnBtnPlayClicked, m_playback_ctl, &PlaybackController::play);
-    connect(m_control_bar, &WControlBar::sgnBtnPauseClicked, m_playback_ctl, &PlaybackController::pause);
+    connect(m_control_bar, &WControlBar::sgnBtnPlayPauseClicked, m_playback_ctl, [this](bool is_request_play){
+        if (is_request_play) {
+            m_playback_ctl->play();
+        } else {
+            m_playback_ctl->pause();
+        }
+    });
     connect(m_control_bar, &WControlBar::sgnBtnStopClicked, m_playback_ctl, &PlaybackController::stop);
     connect(m_control_bar, &WControlBar::sgnBtnMuteClicked, m_playback_ctl, &PlaybackController::flipMute);
     connect(m_control_bar, &WControlBar::sgnInOrder, this, [this]() {
-        m_playback_ctl->setPlayMode(PlayMode::in_order);
+        m_playlist_ctl->setPlayMode(PlayMode::in_order);
     });
     connect(m_control_bar, &WControlBar::sgnLoop, this, [this]() {
-        m_playback_ctl->setPlayMode(PlayMode::loop);
+        m_playlist_ctl->setPlayMode(PlayMode::loop);
     });
     connect(m_control_bar, &WControlBar::sgnShuffle, this, [this]() {
-        m_playback_ctl->setPlayMode(PlayMode::shuffle);
+        m_playlist_ctl->setPlayMode(PlayMode::shuffle);
     });
     connect(m_control_bar, &WControlBar::sgnOutOfOrderTrack, this, [this]() {
-        m_playback_ctl->setPlayMode(PlayMode::out_of_order_track);
+        m_playlist_ctl->setPlayMode(PlayMode::out_of_order_track);
     });
     connect(m_control_bar, &WControlBar::sgnOutOfOrderGroup, this, [this]() {
-        m_playback_ctl->setPlayMode(PlayMode::out_of_order_group);
+        m_playlist_ctl->setPlayMode(PlayMode::out_of_order_group);
     });
     connect(m_control_bar, &WControlBar::sgnSliderPositionReleased, this, [this](int percent) {
         m_playback_ctl->setPosition(percent * 1000);
@@ -50,12 +55,14 @@ void PlaybackService::bind()
     connect(m_playback_ctl, &PlaybackController::sgnPositionChanged, m_control_bar, &WControlBar::updatePosition);
     connect(m_playback_ctl, &PlaybackController::sgnPlaybackStateChanged, m_control_bar, &WControlBar::updateButtonStatus);
     connect(m_playback_ctl, &PlaybackController::sgnDurationChanged, m_control_bar, &WControlBar::updateDuration);
-    connect(m_playback_ctl, &PlaybackController::sgnPlayModeChanged, this, [this](PlayMode mode) {
+    connect(m_playlist_ctl, &PlaylistController::playModeChanged, this, [this](PlayMode mode) {
         m_control_bar->setPlayMode(mode);
     });
+    connect(m_playback_ctl, &PlaybackController::sgnVolumeChanged, m_control_bar, &WControlBar::updateVolumeSlider);
+    connect(m_playback_ctl, &PlaybackController::sgnMuteChanged, m_control_bar, &WControlBar::updateMuteButton);
 
     connect(m_control_bar, &WControlBar::sgnBtnNextClicked, this, [this]() {
-        QString nextTrack = m_playlist_ctl->nextTrack(m_playback_ctl->playMode());
+        QString nextTrack = m_playlist_ctl->nextTrack();
         if (!nextTrack.isEmpty()) {
             m_locate_on_next_play_request = true;
             m_main_window->playTrackInUi(nextTrack);
@@ -63,7 +70,7 @@ void PlaybackService::bind()
     });
 
     connect(m_control_bar, &WControlBar::sgnBtnPrevClicked, this, [this]() {
-        QString prevTrack = m_playlist_ctl->prevTrack(m_playback_ctl->playMode());
+        QString prevTrack = m_playlist_ctl->prevTrack();
         if (!prevTrack.isEmpty()) {
             m_locate_on_next_play_request = true;
             m_main_window->playTrackInUi(prevTrack);
@@ -71,7 +78,7 @@ void PlaybackService::bind()
     });
 
     connect(m_playback_ctl, &PlaybackController::sgnPlaybackNatualEnd, this, [this]() {
-        QString nextTrack = m_playlist_ctl->nextTrack(m_playback_ctl->playMode());
+        QString nextTrack = m_playlist_ctl->nextTrack();
         if (!nextTrack.isEmpty()) {
             m_locate_on_next_play_request = true;
             m_main_window->playTrackInUi(nextTrack);

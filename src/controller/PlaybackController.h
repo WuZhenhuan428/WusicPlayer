@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/types.h"
 #include "core/player/player.h"
 #include "core/player_types.h"
 
@@ -19,8 +18,6 @@ public:
     explicit PlaybackController(Player* player, QObject* parent = nullptr);
     ~PlaybackController();
 
-    void setPlayMode(PlayMode mode);
-    PlayMode playMode();
     void play();
     void pause();
     void stop();
@@ -52,12 +49,12 @@ signals:
     void sgnDurationChanged(qint64 dur_ms);
     void sgnPlaybackStateChanged(PlayingState state);
     void sgnPlaybackNatualEnd();
-    void sgnPlayModeChanged(PlayMode mode);
     void sgnDevicesChanged(QList<QAudioDevice> devs, QByteArray id);
+    void sgnVolumeChanged(int percent);
+    void sgnMuteChanged(bool muted);
 
 private:
     Player* m_player;
-    PlayMode m_playMode;
 
     bool m_is_muted;
     int m_last_position_ms = 0;
