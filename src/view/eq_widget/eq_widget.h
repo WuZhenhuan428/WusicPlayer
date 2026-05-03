@@ -24,6 +24,7 @@ public:
 
 signals:
     void sgnGainChanged(gains_t gains);
+    void sgnEqEnabledChanged(bool enabled);
 
 private:
     void init_ui();

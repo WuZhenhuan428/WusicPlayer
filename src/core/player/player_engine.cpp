@@ -89,6 +89,7 @@ void PlayerEngine::setUrl(const std::string& url)
     m_decode_finished.store(false, std::memory_order_release);
 
     m_decoder = std::make_unique<Decoder>(url);
+    m_decoder->set_eq_gain(m_pending_gains);  // apply cached EQ config
     m_decoder->work(m_buffer.get(), &m_decode_finished);
 
     // pre-filling 100ms buffer
@@ -189,7 +190,10 @@ PlayerEngine::PlayingState PlayerEngine::state()
 
 void PlayerEngine::setEQ(gains_t gains)
 {
-    m_decoder->set_eq_gain(gains);
+    m_pending_gains = gains;
+    if (m_decoder) {
+        m_decoder->set_eq_gain(gains);
+    }
 }
 
 size_t PlayerEngine::get_recent_audio_frames(F32StereoFrame* out_buffer, size_t count)
@@ -247,4 +251,12 @@ int64_t PlayerEngine::position()
         return 0;
     }
     return m_decoder->position();
+}
+
+const gains_t PlayerEngine::gains() const
+{
+    if (!m_decoder) {
+        return m_pending_gains;
+    }
+    return m_decoder->gains();
 }

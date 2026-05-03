@@ -26,6 +26,9 @@ public:
     qint64 position();
     void setVolume(int percent);
     void setGains(gains_t gains);
+    void setEqEnabled(bool enabled);
+    const gains_t gains() const;
+    bool isEqEnabled() const;
     void setMute(bool mute_on);
     bool getMute();
     void flipMute();
@@ -59,4 +62,7 @@ private:
     bool m_is_muted;
     int m_last_position_ms = 0;
     bool m_last_was_playing = false;
+
+    gains_t m_gains_cache = {};
+    bool m_eq_enabled = false;
 };

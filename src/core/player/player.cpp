@@ -341,3 +341,8 @@ float Player::volume() const
 {
     return m_player_engine->volume();
 }
+
+const gains_t Player::gains() const
+{
+    return m_player_engine->gains();
+}

@@ -478,3 +478,8 @@ int64_t Decoder::position()
 {
     return m_pos_ms.load(std::memory_order_acquire);
 }
+
+const gains_t Decoder::gains() const {
+    gains_t gains = m_gains.load(std::memory_order_acquire);
+    return gains;
+}

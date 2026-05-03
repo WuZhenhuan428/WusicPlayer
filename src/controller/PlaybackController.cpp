@@ -87,7 +87,21 @@ void PlaybackController::setGains(gains_t gains){
     if (!m_player) {
         return;
     }
+    m_gains_cache = gains;
     m_player->setEQ(gains);
+}
+
+void PlaybackController::setEqEnabled(bool enabled) {
+    m_eq_enabled = enabled;
+    if (enabled) {
+        m_player->setEQ(m_gains_cache);
+    } else {
+        m_player->setEQ(gains_t{});
+    }
+}
+
+bool PlaybackController::isEqEnabled() const {
+    return m_eq_enabled;
 }
 
 void PlaybackController::read(QString filepath) {
@@ -159,6 +173,25 @@ void PlaybackController::loadFromJson(const QJsonObject &json)
     m_last_position_ms = obj.value("last_position_ms").toInt();
     m_last_was_playing = obj.value("last_was_playing").toBool(false);
 
+    // Restore EQ state
+    m_eq_enabled = obj.value("eq_enabled").toBool(false);
+    QJsonObject eq_gains = obj.value("eq_gains").toObject();
+    if (!eq_gains.isEmpty()) {
+        m_gains_cache._31  = static_cast<float>(eq_gains.value("_31").toDouble());
+        m_gains_cache._63  = static_cast<float>(eq_gains.value("_63").toDouble());
+        m_gains_cache._125 = static_cast<float>(eq_gains.value("_125").toDouble());
+        m_gains_cache._250 = static_cast<float>(eq_gains.value("_250").toDouble());
+        m_gains_cache._500 = static_cast<float>(eq_gains.value("_500").toDouble());
+        m_gains_cache._1k  = static_cast<float>(eq_gains.value("_1k").toDouble());
+        m_gains_cache._2k  = static_cast<float>(eq_gains.value("_2k").toDouble());
+        m_gains_cache._4k  = static_cast<float>(eq_gains.value("_4k").toDouble());
+        m_gains_cache._8k  = static_cast<float>(eq_gains.value("_8k").toDouble());
+        m_gains_cache._16k = static_cast<float>(eq_gains.value("_16k").toDouble());
+    }
+    if (m_eq_enabled && m_player) {
+        m_player->setEQ(m_gains_cache);
+    }
+
     // TODO: consider about time sequence
     if (m_player) {
         m_player->seek(m_last_position_ms);
@@ -179,6 +212,21 @@ QJsonObject PlaybackController::saveToJson()
     obj["last_device"] = QString::fromUtf8(this->currentDeviceId().toBase64());
     obj["last_was_playing"] = m_last_was_playing;
     obj["last_position_ms"] = m_last_position_ms;
+
+    obj["eq_enabled"] = m_eq_enabled;
+    QJsonObject eq_gains;
+    eq_gains["_31"]  = m_gains_cache._31;
+    eq_gains["_63"]  = m_gains_cache._63;
+    eq_gains["_125"] = m_gains_cache._125;
+    eq_gains["_250"] = m_gains_cache._250;
+    eq_gains["_500"] = m_gains_cache._500;
+    eq_gains["_1k"]  = m_gains_cache._1k;
+    eq_gains["_2k"]  = m_gains_cache._2k;
+    eq_gains["_4k"]  = m_gains_cache._4k;
+    eq_gains["_8k"]  = m_gains_cache._8k;
+    eq_gains["_16k"] = m_gains_cache._16k;
+    obj["eq_gains"] = eq_gains;
+
     return obj;
 }
 
@@ -195,4 +243,10 @@ int PlaybackController::lastPositionMs() const
 bool PlaybackController::lastWasPlaying() const
 {
     return m_last_was_playing;
+}
+
+
+const gains_t PlaybackController::gains() const
+{
+    return m_player->gains();
 }

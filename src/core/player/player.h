@@ -39,6 +39,7 @@ public:
     void setVolume(float vol);
     float volume() const;
     void setEQ(gains_t gains);
+    const gains_t gains() const;
 
     // return millisecond
     qint64 position() const;

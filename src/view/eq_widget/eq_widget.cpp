@@ -113,6 +113,7 @@ void EQWidget::init_connections()
 {
     connect(m_cb_enable_eq, &QCheckBox::toggled, this, [this](bool checked){
         m_enable_eq = checked;
+        emit sgnEqEnabledChanged(checked);
         if (checked) {
             emit sgnGainChanged(array_to_gaint_t(m_gains));
         } else {

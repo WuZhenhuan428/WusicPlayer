@@ -47,6 +47,7 @@ public:
     void seek(int64_t pos_ms);
     void setVolume(float volume);
     void setEQ(gains_t gains);
+    const gains_t gains() const;
     std::unordered_map<std::string, std::string> metadata();
     float volume();
     int64_t position();
@@ -68,4 +69,8 @@ private:
     std::thread m_watchdog;
 
     std::atomic<PlayingState> m_state;
+
+    // Cached EQ gains — applied to Decoder when it is created (setUrl),
+    // so EQ config loaded before any audio file can still take effect.
+    gains_t m_pending_gains = {};
 };

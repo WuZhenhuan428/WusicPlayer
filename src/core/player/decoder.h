@@ -31,6 +31,7 @@ public:
     void seek(int64_t position_ms);
     const std::unordered_map<std::string, std::string> metadata();
     void set_eq_gain(gains_t gains);
+    const gains_t gains() const;
     int64_t position();
 
 private:

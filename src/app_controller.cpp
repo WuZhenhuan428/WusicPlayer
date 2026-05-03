@@ -308,12 +308,24 @@ void AppController::saveConfig() {
 void AppController::handleOpenEQRequested()
 {
     if (!m_eq_widget) {
-        m_eq_widget = new EQWidget({}, true, false);
-    }
+        m_eq_widget = new EQWidget(
+            m_playback_controller->gains(),
+            m_playback_controller->isEqEnabled(),
+            false,
+            nullptr  // no parent — WA_DeleteOnClose will clean up
+        );
+        m_eq_widget->setWindowFlag(Qt::Window, true);
+        m_eq_widget->setAttribute(Qt::WA_DeleteOnClose);
 
-    connect(m_eq_widget, &EQWidget::sgnGainChanged, this, [this](gains_t gains){
-        m_playback_controller->setGains(gains);
-    });
+        connect(m_eq_widget, &EQWidget::sgnGainChanged,
+                m_playback_controller, &PlaybackController::setGains);
+        connect(m_eq_widget, &EQWidget::sgnEqEnabledChanged,
+                m_playback_controller, &PlaybackController::setEqEnabled);
+
+        connect(m_eq_widget, &QObject::destroyed, this, [this]() {
+            // QPointer auto-nulls; config is saved on app close via saveConfig().
+        });
+    }
 
     m_eq_widget->show();
     m_eq_widget->raise();
