@@ -323,6 +323,7 @@ void AppController::handleOpenEQRequested()
                 m_playback_controller, &PlaybackController::setEqEnabled);
 
         connect(m_eq_widget, &QObject::destroyed, this, [this]() {
+            Q_UNUSED(this);
             // QPointer auto-nulls; config is saved on app close via saveConfig().
         });
     }

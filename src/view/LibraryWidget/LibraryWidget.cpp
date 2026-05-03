@@ -5,6 +5,9 @@
 #include <QInputDialog>
 
 #include <QJsonObject>
+#include <QFileInfo>
+#include <QDesktopServices>
+#include <QUrl>
 
 LibraryWidget::LibraryWidget(QAbstractItemModel* song_model, QWidget *parent)
     : QWidget(parent)
@@ -92,9 +95,10 @@ void LibraryWidget::callSongContextMenu(const QPoint &pos) {
     const QString path = meta.filepath;
 
     QMenu menu(this);
-    QAction* actPlay = menu.addAction("Play");
-    QAction* actRemove = menu.addAction("Remove");
+    QAction* actPlay = menu.addAction("&Play");
+    QAction* actRemove = menu.addAction("&Remove");
     menu.addSeparator();
+    QAction* actOpen = menu.addAction("&Open in file explorer");
     QAction* actProp = menu.addAction("Property");
 
     connect(actPlay, &QAction::triggered, this, [this, index](){
@@ -103,6 +107,15 @@ void LibraryWidget::callSongContextMenu(const QPoint &pos) {
 
     connect(actProp, &QAction::triggered, this, [this, tid, meta, path]{
         emit sgnTrackPropertyRequested(tid, path, meta);
+    });
+
+    connect(actOpen, &QAction::triggered, this, [path](){
+        QFileInfo file_info(path);
+        QString dir_path = file_info.absolutePath();
+        QUrl url = QUrl::fromLocalFile(dir_path);
+        if (!QDesktopServices::openUrl(url)) {
+            qDebug() << "Failed to open folder: " << dir_path;
+        }
     });
 
     connect(actRemove, &QAction::triggered, this, [this, tid](){
