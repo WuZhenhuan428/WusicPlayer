@@ -9,21 +9,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(WUSIC_BUILD_TESTS "Build unit tests" ON)
-option(WUSIC_USE_LOCAL_QT "Prefer local Qt installation over system Qt" ON)
 option(WUSIC_ENABLE_GPROF "Enable gprof instrumentation (-pg)" OFF)
 
-set(WUSIC_LOCAL_QT_PATH "$ENV{HOME}/Qt/6.10.2/gcc_64" CACHE PATH "Local Qt installation prefix")
-
-if (WUSIC_USE_LOCAL_QT)
-    if (EXISTS "${WUSIC_LOCAL_QT_PATH}/lib/cmake/Qt6/Qt6Config.cmake")
-        list(PREPEND CMAKE_PREFIX_PATH "${WUSIC_LOCAL_QT_PATH}")
-        message(STATUS "Using local Qt from: ${WUSIC_LOCAL_QT_PATH}")
-    else ()
-        message(WARNING "WUSIC_USE_LOCAL_QT is ON but Qt6Config.cmake was not found in ${WUSIC_LOCAL_QT_PATH}")
-    endif ()
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-Wall -Wextra)
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    add_compile_options(/W4)
 endif ()
-
-add_compile_options(-Wall -Wextra)
 
 if (WUSIC_ENABLE_GPROF)
     if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -35,23 +27,39 @@ if (WUSIC_ENABLE_GPROF)
     endif ()
 endif ()
 
+# Custom find modules (cmake/FindFFmpeg.cmake etc.)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Multimedia Network Svg)
-find_package(magic_enum CONFIG REQUIRED)
-find_package(PkgConfig REQUIRED)
+find_package(FFmpeg REQUIRED)       # cmake/FindFFmpeg.cmake
+find_package(Taglib REQUIRED)       # CMake built-in module (uses pkg-config internally)
+# Normalize target name — some distros' CMake configs don't create a target at all
+if(NOT TARGET Taglib::Taglib)
+    if(TARGET Taglib::taglib)
+        add_library(Taglib::Taglib ALIAS Taglib::taglib)
+    elseif(TARGET taglib)
+        add_library(Taglib::Taglib ALIAS taglib)
+    else()
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(TAGLIB_PC REQUIRED IMPORTED_TARGET taglib)
+        add_library(Taglib::Taglib ALIAS PkgConfig::TAGLIB_PC)
+        message(STATUS "Taglib: using pkg-config (no CMake target provided)")
+    endif()
+endif()
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Threads REQUIRED)
 
-pkg_check_modules(TAGLIB REQUIRED IMPORTED_TARGET
-    taglib
-)
-
-pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET
-    libavcodec
-    libavformat
-    libavutil
-    libavfilter
-)
+# magic_enum: header-only, vendored as git submodule
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/magic_enum/CMakeLists.txt")
+    add_subdirectory(thirdparty/magic_enum)
+else()
+    message(FATAL_ERROR
+        "thirdparty/magic_enum/ not found.\n"
+        "Run:  git submodule update --init --recursive\n"
+        "Or:   git submodule add https://github.com/Neargye/magic_enum.git thirdparty/magic_enum"
+    )
+endif()
 
 qt_standard_project_setup()
 

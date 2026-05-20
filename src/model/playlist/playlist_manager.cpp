@@ -125,7 +125,7 @@ void PlaylistManager::addFolder(const playlistId& pid, const QString& directory)
 
     for(const auto& file : files) {
         if (AudioUtils::isAudioFile(file)) {
-            tracks_to_add.append(QString::fromStdString(file));
+            tracks_to_add.append(QString::fromStdString(file.string()));
         }
     }
 

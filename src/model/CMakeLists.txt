@@ -27,5 +27,5 @@ target_link_libraries(wusic_model
         wusic_core
         wusic_headers
         lrc_parser
-        PkgConfig::TAGLIB
+        Taglib::Taglib
 )

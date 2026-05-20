@@ -50,6 +50,9 @@ public:
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
+    void paintEvent(QPaintEvent* event) override;
     void showEvent(QShowEvent* event) override;
     void hideEvent(QHideEvent* event) override;
 
@@ -61,6 +64,8 @@ private:
     void initConnect();
 
     bool m_is_locked;
+    bool m_is_dragging = false;
+    QPoint m_drag_offset;
     QFont m_font;
 
     DisplayMode m_display_mode;

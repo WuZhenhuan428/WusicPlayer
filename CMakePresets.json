@@ -7,10 +7,10 @@
   },
   "configurePresets": [
     {
-      "name": "base",
-      "hidden": true,
+      "name": "debug",
+      "displayName": "Debug",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
+      "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
@@ -18,61 +18,26 @@
       }
     },
     {
-      "name": "dev-local-qt",
-      "displayName": "Dev (Local Qt)",
-      "inherits": "base",
+      "name": "release",
+      "displayName": "Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
-        "WUSIC_USE_LOCAL_QT": "ON",
-        "WUSIC_LOCAL_QT_PATH": "$env{HOME}/Qt/6.10.2/gcc_64"
-      }
-    },
-    {
-      "name": "dev-system-qt",
-      "displayName": "Dev (System Qt)",
-      "inherits": "base",
-      "cacheVariables": {
-        "WUSIC_USE_LOCAL_QT": "OFF"
-      }
-    },
-    {
-      "name": "dev-local-gprof",
-      "displayName": "Dev gprof (Local Qt)",
-      "inherits": "base",
-      "cacheVariables": {
-        "WUSIC_USE_LOCAL_QT": "ON",
-        "WUSIC_LOCAL_QT_PATH": "$env{HOME}/Qt/6.10.2/gcc_64",
-        "WUSIC_ENABLE_GPROF": "ON"
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     }
   ],
   "buildPresets": [
-    {
-      "name": "build-local-qt",
-      "configurePreset": "dev-local-qt"
-    },
-    {
-      "name": "build-system-qt",
-      "configurePreset": "dev-system-qt"
-    },
-    {
-      "name": "build-local-gprof",
-      "configurePreset": "dev-local-gprof"
-    }
+    { "name": "debug",   "configurePreset": "debug" },
+    { "name": "release", "configurePreset": "release" }
   ],
   "testPresets": [
     {
-      "name": "test-local-qt",
-      "configurePreset": "dev-local-qt",
-      "output": {
-        "outputOnFailure": true
-      }
-    },
-    {
-      "name": "test-local-gprof",
-      "configurePreset": "dev-local-gprof",
-      "output": {
-        "outputOnFailure": true
-      }
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": { "outputOnFailure": true }
     }
   ]
 }
+

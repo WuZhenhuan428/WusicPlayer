@@ -7,9 +7,11 @@
 
 int main(int argc, char *argv[])
 {
+#ifdef Q_OS_LINUX
     // if use wayland. use xcb plugin to enable custom title bar
     qputenv("QT_QPA_PLATFORM", "xcb");
     qputenv("QT_IM_MODULE", "fcitx");
+#endif
 
     QApplication a(argc, argv);
 

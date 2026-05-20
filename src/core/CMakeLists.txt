@@ -39,7 +39,7 @@ target_link_libraries(wusic_core
         ZLIB::ZLIB
         wusic_headers
         magic_enum::magic_enum
-        PkgConfig::FFMPEG
+        FFMPEG::FFMPEG
         Threads::Threads
-        atomic
+        $<$<CXX_COMPILER_ID:GNU>:atomic>
 )

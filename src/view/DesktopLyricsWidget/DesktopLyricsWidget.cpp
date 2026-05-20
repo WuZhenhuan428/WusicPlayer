@@ -9,6 +9,7 @@
 
 #include <QJsonObject>
 #include <QTimer>
+#include <QPainter>
 
 DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent)
     : QWidget(parent),
@@ -20,10 +21,14 @@ DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent)
 {
     this->initUI();
     this->setFixedSize(700, 120);
-    
+
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::Window | Qt::WindowStaysOnTopHint);
     this->setAttribute(Qt::WA_TranslucentBackground);
+#ifdef Q_OS_LINUX
+    // Wayland: prevent the floating window from stealing mouse focus
+    // from the main window. Not needed (and harmful) on Windows/macOS.
     this->setAttribute(Qt::WA_TransparentForMouseEvents);
+#endif
 
     applyConfig();
 
@@ -179,10 +184,34 @@ void DesktopLyricsWidget::mousePressEvent(QMouseEvent* event) {
         return;
     }
     if (event->button() == Qt::LeftButton) {
-        if (windowHandle()) {
-            windowHandle()->startSystemMove();
-        }
+        m_drag_offset = event->globalPosition().toPoint() - pos();
+        m_is_dragging = true;
+        event->accept();
     }
+}
+
+void DesktopLyricsWidget::mouseMoveEvent(QMouseEvent* event) {
+    if (m_is_dragging && !m_is_locked) {
+        move(event->globalPosition().toPoint() - m_drag_offset);
+        event->accept();
+    }
+}
+
+void DesktopLyricsWidget::mouseReleaseEvent(QMouseEvent* event) {
+    if (event->button() == Qt::LeftButton) {
+        m_is_dragging = false;
+    }
+}
+
+void DesktopLyricsWidget::paintEvent(QPaintEvent* event) {
+    if (!m_is_locked) {
+        QPainter painter(this);
+        // Fill with alpha=1 so Qt treats the entire area as "painted"
+        // and delivers mouse events to the whole widget, not just text strokes.
+        // When locked: skip this — empty areas become transparent, only buttons receive clicks.
+        painter.fillRect(rect(), QColor(0, 0, 0, 1));
+    }
+    QWidget::paintEvent(event);
 }
 
 void DesktopLyricsWidget::showEvent(QShowEvent* event) {
