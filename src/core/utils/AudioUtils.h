@@ -37,10 +37,42 @@ namespace fs = std::filesystem;
 
 class AudioUtils {
 public:
+    // --- helpers: fs::path <-> QString (encoding-safe across platforms) ---
+    // On Windows with MSVC, std::filesystem uses wide chars internally;
+    // with MinGW it uses UTF-8 narrow chars. These helpers unify the two.
+    static fs::path toFsPath(const QString& s) {
+#ifdef Q_OS_WIN
+        return fs::path(s.toStdWString());
+#else
+        return fs::path(s.toStdString());
+#endif
+    }
+    static QString fromFsPath(const fs::path& p) {
+#ifdef Q_OS_WIN
+        return QString::fromStdWString(p.wstring());
+#else
+        return QString::fromStdString(p.string());
+#endif
+    }
+
+    // TagLib file path helper.
+    // On Windows outside MSYS2, the C runtime's fopen() uses the system
+    // ANSI code page (e.g. GBK), so UTF-8 paths fail.  TagLib supports
+    // wide-char constructors — use them to bypass encoding issues entirely.
+    static TagLib::FileName toTaglibFileName(const QString& path) {
+#ifdef Q_OS_WIN
+        const std::wstring wstr = path.toStdWString();
+        return TagLib::FileName(wstr.c_str());
+#else
+        return TagLib::FileName(path.toUtf8().toStdString().c_str());
+#endif
+    }
+
     // 扫描并返回所有音频文件和播放列表的路径
-    static std::vector<fs::path> findAll(const std::string& rootDir) {
+    static std::vector<fs::path> findAll(const QString& rootDir) {
         std::vector<fs::path> results;
-        
+        const fs::path rootPath = toFsPath(rootDir);
+
         auto scanDir = [](const fs::path& dir, std::vector<fs::path>& results) {
         try {
             for (const auto& entry : fs::recursive_directory_iterator(dir)) {
@@ -54,7 +86,7 @@ public:
             // 忽略访问错误
         }
     };
-        scanDir(fs::path(rootDir), results);
+        scanDir(rootPath, results);
         return results;
     }
     
@@ -186,8 +218,9 @@ public:
         return pix;
     }
 
-    static QPixmap parse_cover_to_qpixmap(const std::string& filepath) {
-        fs::path path(filepath);
+    static QPixmap parse_cover_to_qpixmap(const QString& filepath) {
+        const TagLib::FileName fname = toTaglibFileName(filepath);
+        fs::path path = toFsPath(filepath);
         std::string ext = path.extension().string();
         std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return std::tolower(c); });
 
@@ -236,18 +269,18 @@ public:
         QPixmap extracted_pixmap;
 
         if (ext == ".mp3") {
-            TagLib::MPEG::File file(filepath.c_str());
+            TagLib::MPEG::File file(fname);
             if (file.isValid() && file.hasID3v2Tag()) {
                 extracted_pixmap =  pickId3v2Cover(file.ID3v2Tag());
             }
         } else if (ext == ".flac") {
-            TagLib::FLAC::File file(filepath.c_str());
+            TagLib::FLAC::File file(fname);
             const auto& pictures = file.pictureList();
             if (!pictures.isEmpty()) {
                 extracted_pixmap =  loadFromPicture(pictures.front()->data());
             }
         } else if (ext == ".ogg" || ext == ".oga") {
-            TagLib::Ogg::Vorbis::File file(filepath.c_str());
+            TagLib::Ogg::Vorbis::File file(fname);
             if (file.isValid() && file.tag()) {
                 const auto& pictures = file.tag()->pictureList();
                 if (!pictures.isEmpty()) {
@@ -255,7 +288,7 @@ public:
                 }
             }
         } else if (ext == ".opus") {
-            TagLib::Ogg::Opus::File file(filepath.c_str());
+            TagLib::Ogg::Opus::File file(fname);
             if (file.isValid() && file.tag()) {
                 const auto& pictures = file.tag()->pictureList();
                 if (!pictures.isEmpty()) {
@@ -263,7 +296,7 @@ public:
                 }
             }
         } else if (ext == ".oga" || ext == ".ogx") {
-            TagLib::Ogg::FLAC::File file(filepath.c_str());
+            TagLib::Ogg::FLAC::File file(fname);
             if (file.isValid() && file.tag()) {
                 const auto& pictures = file.tag()->pictureList();
                 if (!pictures.isEmpty()) {
@@ -271,7 +304,7 @@ public:
                 }
             }
         } else if (ext == ".m4a" || ext == ".mp4" || ext == ".aac") {
-            TagLib::MP4::File file(filepath.c_str());
+            TagLib::MP4::File file(fname);
             if (file.isValid() && file.tag()) {
                 TagLib::MP4::ItemMap items = file.tag()->itemMap();
                 if (items.contains("covr")) {
@@ -282,7 +315,7 @@ public:
                 }
             }
         } else if (ext == ".wma") {
-            TagLib::ASF::File file(filepath.c_str());
+            TagLib::ASF::File file(fname);
             if (file.isValid() && file.tag()) {
                 const auto& attrs = file.tag()->attributeListMap()["WM/Picture"];
                 if (!attrs.isEmpty()) {
@@ -296,12 +329,12 @@ public:
             return extracted_pixmap;
         }
 
-        return AudioUtils::find_cover_at_folder(QString::fromStdString(filepath));
+        return AudioUtils::find_cover_at_folder(filepath);
     }
 
 
-    static bool taglib_writeback(const std::string& filepath, const QMap<QString, QStringList>& tags) {
-        TagLib::FileRef f(filepath.c_str());
+    static bool taglib_writeback(const QString& filepath, const QMap<QString, QStringList>& tags) {
+        TagLib::FileRef f(toTaglibFileName(filepath));
         if (f.isNull() || !f.file()) {
             return false;
         }
@@ -355,7 +388,7 @@ public:
         return f.file()->save();
     }
 
-    static QMap<QString, QStringList> parse_meta_to_map(const std::string& filepath) {
+    static QMap<QString, QStringList> parse_meta_to_map(const QString& filepath) {
         QMap<QString, QStringList> result;
 
         auto normalizeKey = [](const QString& key) -> QString {
@@ -371,7 +404,8 @@ public:
             return normalized;
         };
 
-        TagLib::FileRef f(filepath.c_str());
+        const TagLib::FileName fname = toTaglibFileName(filepath);
+        TagLib::FileRef f(fname);
         if (f.isNull() || !f.tag()) {
             return {};
         }
@@ -379,11 +413,14 @@ public:
         TagLib::PropertyMap props = f.file()->properties();
         
         for (auto it = props.begin(); it != props.end(); ++it) {
-            QString key = QString::fromStdString(it->first.to8Bit(true));
+            // toCString(true) returns a null-terminated UTF-8 string.
+            // QString::fromUtf8() decodes correctly on all platforms
+            // (unlike fromStdString, which uses the local ANSI code page on Windows).
+            QString key = QString::fromUtf8(it->first.toCString(true));
             QStringList values;
 
             for (const auto& v : it->second) {
-                values << QString::fromStdString(v.to8Bit(true));
+                values << QString::fromUtf8(v.toCString(true));
             }
 
             // Keep both original key and normalized key for compatibility.
@@ -394,12 +431,13 @@ public:
     }
 
 
-    static TrackMetaData parse_to_local_meta(const std::string& filepath) {
+    static TrackMetaData parse_to_local_meta(const QString& filepath) {
         TrackMetaData meta;
+        const TagLib::FileName fname = toTaglibFileName(filepath);
 
         const auto map = parse_meta_to_map(filepath);
-        QFileInfo ff(QString::fromStdString(filepath));
-        meta.filepath = QString::fromStdString(filepath);
+        QFileInfo ff(filepath);
+        meta.filepath = filepath;
         meta.filename = ff.fileName();
 
         auto normalizeMultiProps = [&](QString key) -> QString {
@@ -462,7 +500,7 @@ public:
 
         // Fallback duration from audio properties when metadata map has no length.
         if (meta.duration_s <= 0) {
-            TagLib::FileRef f(filepath.c_str());
+            TagLib::FileRef f(fname);
             if (!f.isNull() && f.audioProperties()) {
                 meta.duration_s = f.audioProperties()->lengthInSeconds();
             }

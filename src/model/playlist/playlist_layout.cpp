@@ -49,7 +49,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist) {
                 node->meta.filename = QFileInfo(t.filepath).fileName();
             }
         } else {
-            node->meta = AudioUtils::parse_to_local_meta(t.filepath.toStdString());
+            node->meta = AudioUtils::parse_to_local_meta(t.filepath);
             node->meta.filepath = t.filepath;
             if (!node->meta.isValid) {
                 node->meta.title = QFileInfo(t.filepath).fileName();

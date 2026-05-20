@@ -264,7 +264,7 @@ void TagEditWidget::handleAddNewFiled() {
 void TagEditWidget::initTableModel(TrackMetaData meta) {
 
     m_meta_buffer.clear();
-    m_meta_buffer = AudioUtils::parse_meta_to_map(meta.filepath.toStdString());
+    m_meta_buffer = AudioUtils::parse_meta_to_map(meta.filepath);
 
     auto firstValue = [&](std::initializer_list<QString> keys) -> QString {
         for (const QString& key : keys) {

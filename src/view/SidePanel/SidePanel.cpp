@@ -66,7 +66,7 @@ SidePanel::SidePanel(QWidget *parent)
 SidePanel::~SidePanel() { }
 
 void SidePanel::loadCover(const QString& filepath) {
-    QPixmap pix = AudioUtils::parse_cover_to_qpixmap(filepath.toStdString());
+    QPixmap pix = AudioUtils::parse_cover_to_qpixmap(filepath);
     if (!pix.isNull()) {
         m_original_cover = pix;
     } else {
@@ -239,7 +239,7 @@ void SidePanel::showLyricsContextMenu(const QPoint& pos) {
 
         QMap<QString, QStringList> tags;
         tags.insert("LYRICS", QStringList{getCurrentLyricsText()});
-        const bool ok = AudioUtils::taglib_writeback(m_last_lyrics_meta.filepath.toStdString(), tags);
+        const bool ok = AudioUtils::taglib_writeback(m_last_lyrics_meta.filepath, tags);
         if (!ok) {
             QMessageBox::warning(this, tr("Save Failed"), tr("Unable to save lyrics into tags."));
         }

@@ -68,10 +68,10 @@ void TagWritebackService::requestTrackProperty(trackId tid, QString filepath, Tr
             // work: 
             QPointer<TagWritebackService> self(this);
             QThread* worker = QThread::create([self, tags, changedTid, curr_id, curr_pos_ms, old_state, target_filepath]() {
-                const bool write_ok = AudioUtils::taglib_writeback(target_filepath.toStdString(), tags);
+                const bool write_ok = AudioUtils::taglib_writeback(target_filepath, tags);
                 TrackMetaData refreshed;
                 if (write_ok) {
-                    refreshed = AudioUtils::parse_to_local_meta(target_filepath.toStdString());
+                    refreshed = AudioUtils::parse_to_local_meta(target_filepath);
                     refreshed = AudioUtils::format(refreshed);
                 }
 
