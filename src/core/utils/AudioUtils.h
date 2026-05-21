@@ -55,18 +55,38 @@ public:
 #endif
     }
 
-    // TagLib file path helper.
+    // TagLib file path holder.
+    // TagLib::FileName is a raw pointer (const char* or const wchar_t*),
+    // so the string data must outlive all TagLib operations on the file.
+    // This holder owns the converted string and implicitly converts to
+    // TagLib::FileName for seamless use with TagLib constructors.
+    //
     // On Windows outside MSYS2, the C runtime's fopen() uses the system
     // ANSI code page (e.g. GBK), so UTF-8 paths fail.  TagLib supports
     // wide-char constructors — use them to bypass encoding issues entirely.
-    static TagLib::FileName toTaglibFileName(const QString& path) {
+    struct TagLibFileNameHolder {
 #ifdef Q_OS_WIN
-        const std::wstring wstr = path.toStdWString();
-        return TagLib::FileName(wstr.c_str());
+        std::wstring storage;
 #else
-        return TagLib::FileName(path.toUtf8().toStdString().c_str());
+        std::string storage;
 #endif
-    }
+
+        explicit TagLibFileNameHolder(const QString& path) {
+#ifdef Q_OS_WIN
+            storage = path.toStdWString();
+#else
+            storage = path.toUtf8().toStdString();
+#endif
+        }
+
+        operator TagLib::FileName() const {
+#ifdef Q_OS_WIN
+            return storage.c_str();
+#else
+            return storage.c_str();
+#endif
+        }
+    };
 
     // 扫描并返回所有音频文件和播放列表的路径
     static std::vector<fs::path> findAll(const QString& rootDir) {
@@ -219,7 +239,7 @@ public:
     }
 
     static QPixmap parse_cover_to_qpixmap(const QString& filepath) {
-        const TagLib::FileName fname = toTaglibFileName(filepath);
+        TagLibFileNameHolder fname(filepath);
         fs::path path = toFsPath(filepath);
         std::string ext = path.extension().string();
         std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return std::tolower(c); });
@@ -334,7 +354,8 @@ public:
 
 
     static bool taglib_writeback(const QString& filepath, const QMap<QString, QStringList>& tags) {
-        TagLib::FileRef f(toTaglibFileName(filepath));
+        TagLibFileNameHolder fname(filepath);
+        TagLib::FileRef f(fname);
         if (f.isNull() || !f.file()) {
             return false;
         }
@@ -404,7 +425,7 @@ public:
             return normalized;
         };
 
-        const TagLib::FileName fname = toTaglibFileName(filepath);
+        TagLibFileNameHolder fname(filepath);
         TagLib::FileRef f(fname);
         if (f.isNull() || !f.tag()) {
             return {};
@@ -433,7 +454,7 @@ public:
 
     static TrackMetaData parse_to_local_meta(const QString& filepath) {
         TrackMetaData meta;
-        const TagLib::FileName fname = toTaglibFileName(filepath);
+        TagLibFileNameHolder fname(filepath);
 
         const auto map = parse_meta_to_map(filepath);
         QFileInfo ff(filepath);
