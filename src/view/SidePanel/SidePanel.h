@@ -33,6 +33,8 @@ public:
 
 signals:
     void sgnDesktopLyricsConfigRequested();
+    void sgnToggleDesktopLyrics();
+    void sgnToggleDesktopLyricsLock();
 
 private slots:
     void showLyricsContextMenu(const QPoint& pos);

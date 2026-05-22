@@ -80,7 +80,15 @@ void MainWindow::initMenuConnections() {
     connect(m_act_settings, &QAction::triggered, this, &MainWindow::sgnOpenSettingsPanelRequested);
 
     connect(m_act_search_panel, &QAction::triggered, this, &MainWindow::sgnOpenSearchPanelRequested);
-    connect(m_act_show_desktop_lyrics, &QAction::triggered, this, &MainWindow::sgnShowDesktopLyricsRequested);
+    connect(m_act_show_desktop_lyrics, &QAction::toggled, this, [this](bool checked) {
+        if (m_desktop_lyrics_widget)
+            m_desktop_lyrics_widget->setVisible(checked);
+    });
+    connect(m_act_lock_desktop_lyrics, &QAction::triggered, this, [this]() {
+        if (m_desktop_lyrics_widget) {
+            m_desktop_lyrics_widget->setLocked(!m_desktop_lyrics_widget->isLocked());
+        }
+    });
 }
 
 void MainWindow::initUI() {
@@ -126,12 +134,17 @@ void MainWindow::buildMenuBar() {
     m_act_insert_column = new QAction("Insert a column (&I)", m_menu_view);
     m_act_remove_column = new QAction("Remove a column (&R)", m_menu_view);
     m_act_search_panel = new QAction("Open search panel (&S)", m_menu_view);
-    m_act_show_desktop_lyrics = new QAction("Show Desktop Lyrics (&D)", m_menu_view);
     m_menu_view->addAction(m_act_set_sort_rule);
     m_menu_view->addAction(m_act_insert_column);
     m_menu_view->addAction(m_act_remove_column);
     m_menu_view->addAction(m_act_search_panel);
+    m_menu_view->addSeparator();
+    m_act_show_desktop_lyrics = new QAction("Show Desktop Lyrics (&D)", m_menu_view);
+    m_act_show_desktop_lyrics->setCheckable(true);
+    m_act_lock_desktop_lyrics = new QAction("Lock Desktop Lyrics", m_menu_view);
+    m_act_lock_desktop_lyrics->setCheckable(true);
     m_menu_view->addAction(m_act_show_desktop_lyrics);
+    m_menu_view->addAction(m_act_lock_desktop_lyrics);
     m_menubar_main->addMenu(m_menu_view);
 
     m_menu_playback = new QMenu("&Playback", m_menubar_main);
@@ -174,6 +187,12 @@ void MainWindow::buildCentralArea() {
     m_center_widget = new QWidget(this);
     m_library_panel = new LibraryWidget(m_playlist_controller->viewModel(), m_center_widget);
     m_side_panel = new SidePanel(m_center_widget);
+    connect(m_side_panel, &SidePanel::sgnToggleDesktopLyrics, this, [this]() {
+        if (m_desktop_lyrics_widget) m_desktop_lyrics_widget->setVisible(!m_desktop_lyrics_widget->isVisible());
+    });
+    connect(m_side_panel, &SidePanel::sgnToggleDesktopLyricsLock, this, [this]() {
+        if (m_desktop_lyrics_widget) m_desktop_lyrics_widget->setLocked(!m_desktop_lyrics_widget->isLocked());
+    });
     m_hbl_main = new QHBoxLayout(m_center_widget);
     m_hbl_main->setContentsMargins(0, 0, 0, 0);
     m_hbl_main->setSpacing(0);
@@ -187,6 +206,11 @@ void MainWindow::buildCentralArea() {
      * WARN: to use on wayland, here can not set parent object, but may cause memory leak
      */
     m_desktop_lyrics_widget = new DesktopLyricsWidget();
+    // Keep View menu check state in sync with widget
+    connect(m_desktop_lyrics_widget, &DesktopLyricsWidget::sgnVisibilityChanged,
+            m_act_show_desktop_lyrics, &QAction::setChecked);
+    connect(m_desktop_lyrics_widget, &DesktopLyricsWidget::sgnLockChanged,
+            m_act_lock_desktop_lyrics, &QAction::setChecked);
 }
 
 void MainWindow::loadFromJson(const QJsonObject &json)

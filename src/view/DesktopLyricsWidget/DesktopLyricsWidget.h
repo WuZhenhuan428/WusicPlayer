@@ -12,14 +12,13 @@
 #include <QShowEvent>
 #include <QHideEvent>
 #include <QPoint>
-#include <QVector>
 #include <QByteArray>
 #include "core/types.h"
 #include "core/hsv_types.h"
 
 #include "core/ConfigManager/IConfigurable.h"
 
-class QJsonObject;
+#include <QJsonObject>
 
 class DesktopLyricsWidget : public QWidget, public IConfigurable
 {
@@ -42,11 +41,19 @@ public:
     void setInactiveLineColor(rgb_t rgb_inactive);
     rgb_t getActiveLineColor();
     rgb_t getInactiveLineColor();
+    bool isLocked() const { return m_is_locked; }
+
+public slots:
+    void setLocked(bool locked);
 
     // config S/L interface
     void loadFromJson(const QJsonObject &json) override;
     QJsonObject saveToJson() override;
     QString configSubKey() const override;
+
+signals:
+    void sgnVisibilityChanged(bool visible);
+    void sgnLockChanged(bool locked);
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
@@ -57,14 +64,12 @@ protected:
     void hideEvent(QHideEvent* event) override;
     void changeEvent(QEvent* event) override;
 
-signals:
-    void sgnVisibilityChanged(bool visible);
 private:
-
     void initUI();
     void initConnect();
+    void applyClickThrough(bool clickThrough);
 
-    bool m_is_locked;
+    bool m_is_locked = false;
     bool m_is_dragging = false;
     QPoint m_drag_offset;
     QFont m_font;
@@ -73,7 +78,6 @@ private:
     AlignMode m_line_up_mode;
     AlignMode m_line_down_mode;
     bool m_has_up_line_changed;
-
 
     QPushButton* m_btn_lock = nullptr;
     QPushButton* m_btn_shut_down = nullptr;
@@ -88,5 +92,5 @@ private:
     rgb_t m_rgb_active;
     rgb_t m_rgb_inactive;
 
-    bool m_is_visible = false;  // TODO: better way to set visibility?
+    bool m_is_visible = false;
 };

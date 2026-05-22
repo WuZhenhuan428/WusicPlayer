@@ -158,7 +158,6 @@ void SidePanel::resizeEvent(QResizeEvent *event) {
 
 void SidePanel::showLyricsContextMenu(const QPoint& pos) {
     QMenu menu(this);
-    QAction* actDesktopConfig = menu.addAction(tr("Desktop Lyrics Config"));
     QAction* actLoadLyrics = menu.addAction(tr("Load Lyrics"));
     QAction* actReloadLyrics = menu.addAction(tr("Reload Lyrics"));
     QAction* actSearchLyrics = menu.addAction(tr("Lyrics Search"));
@@ -166,6 +165,11 @@ void SidePanel::showLyricsContextMenu(const QPoint& pos) {
     QAction* actSaveToTag = subSave->addAction(tr("Save To Tag"));
     QAction* actSaveToSource = subSave->addAction(tr("Save To Source Location"));
     QAction* actSaveAs = subSave->addAction(tr("Save As"));
+    
+    menu.addSeparator();
+    QAction* actDesktopConfig = menu.addAction(tr("Desktop Lyrics Config"));
+    QAction* actToggleLyrics = menu.addAction(tr("Show/Hide Desktop Lyrics"));
+    QAction* actToggleLock   = menu.addAction(tr("Lock/Unlock Desktop Lyrics"));
 
     auto getCurrentLyricsText = [this]() -> QString {
         return m_lyrics_panel ? m_lyrics_panel->rawLyricsText().trimmed() : QString();
@@ -200,6 +204,13 @@ void SidePanel::showLyricsContextMenu(const QPoint& pos) {
 
     connect(actDesktopConfig, &QAction::triggered, this, [this]() {
         emit sgnDesktopLyricsConfigRequested();
+    });
+
+    connect(actToggleLyrics, &QAction::triggered, this, [this]() {
+        emit sgnToggleDesktopLyrics();
+    });
+    connect(actToggleLock, &QAction::triggered, this, [this]() {
+        emit sgnToggleDesktopLyricsLock();
     });
 
     connect(actLoadLyrics, &QAction::triggered, this, [this]() {

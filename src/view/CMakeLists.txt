@@ -80,4 +80,5 @@ target_link_libraries(wusic_view
         wusic_model
         wusic_core
         wusic_headers
+        $<$<PLATFORM_ID:Windows>:dwmapi>
 )
