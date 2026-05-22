@@ -18,6 +18,9 @@ add_library(wusic_model STATIC
 
     search_model/search_model.cpp
     search_model/search_model.h
+
+    theme_settings_model.h
+    theme_settings_model.cpp
 )
 
 target_link_libraries(wusic_model

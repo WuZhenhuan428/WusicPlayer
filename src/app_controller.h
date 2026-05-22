@@ -27,6 +27,8 @@ class PlaybackService;
 class PlaybackRestoreService;
 class LibraryInteractionService;
 class TagWritebackService;
+class ThemeService;
+class ThemeSettingsPage;
 
 class AppController : public QObject
 {
@@ -36,6 +38,9 @@ public:
     ~AppController() override;
 
     void showMainWindow();
+
+protected:
+    bool eventFilter(QObject* obj, QEvent* event) override;
 
 private:
     void initializeCoreConnections();
@@ -71,6 +76,7 @@ private:
     std::unique_ptr<PlaybackRestoreService> m_playback_restore_service;
     std::unique_ptr<LibraryInteractionService> m_library_interaction_serivce;
     std::unique_ptr<TagWritebackService> m_tag_writeback_service;
+    std::unique_ptr<ThemeService> m_theme_service;
 
 
     QPointer<SettingsPanel> m_settings_panel;
@@ -78,6 +84,7 @@ private:
     QPointer<ShortcutsController> m_shortcuts_controller;
     QPointer<SearchPanel> m_search_panel;
     QPointer<LyricsSettingPanel> m_lyrics_settings_panel;
+    QPointer<ThemeSettingsPage> m_theme_settings_page;
     QPointer<TagEditWidget> m_tag_edit_widget;
     QPointer<EQWidget> m_eq_widget;
     bool m_shortcuts_registered = false;

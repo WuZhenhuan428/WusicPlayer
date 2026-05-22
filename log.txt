@@ -1,0 +1,1323 @@
+qt.core.library: "pipewire-0.3" loaded library
+qt.core.plugin.factoryloader: checking directory path "/usr/lib/x86_64-linux-gnu/qt6/plugins/platforms" ...
+qt.core.plugin.factoryloader: looking at "libqvkkhrdisplay.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platforms/libqvkkhrdisplay.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPA.QPlatformIntegrationFactoryInterface.5.3",
+    "MetaData": {
+        "Keys": [
+            "vkkhrdisplay"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QVkKhrDisplayIntegrationPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("vkkhrdisplay")
+qt.core.plugin.factoryloader: looking at "libqminimal.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platforms/libqminimal.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPA.QPlatformIntegrationFactoryInterface.5.3",
+    "MetaData": {
+        "Keys": [
+            "minimal"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QMinimalIntegrationPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("minimal")
+qt.core.plugin.factoryloader: looking at "libqeglfs.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platforms/libqeglfs.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPA.QPlatformIntegrationFactoryInterface.5.3",
+    "MetaData": {
+        "Keys": [
+            "eglfs"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QEglFSIntegrationPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("eglfs")
+qt.core.plugin.factoryloader: looking at "libqvnc.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platforms/libqvnc.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPA.QPlatformIntegrationFactoryInterface.5.3",
+    "MetaData": {
+        "Keys": [
+            "vnc"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QVncIntegrationPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("vnc")
+qt.core.plugin.factoryloader: looking at "libqwayland.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platforms/libqwayland.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPA.QPlatformIntegrationFactoryInterface.5.3",
+    "MetaData": {
+        "Keys": [
+            "wayland",
+            "wayland-egl",
+            "wayland-brcm"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QWaylandIntegrationPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("wayland", "wayland-egl", "wayland-brcm")
+qt.core.plugin.factoryloader: looking at "libqxcb.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platforms/libqxcb.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPA.QPlatformIntegrationFactoryInterface.5.3",
+    "MetaData": {
+        "Keys": [
+            "xcb"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QXcbIntegrationPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("xcb")
+qt.core.plugin.factoryloader: looking at "libqminimalegl.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platforms/libqminimalegl.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPA.QPlatformIntegrationFactoryInterface.5.3",
+    "MetaData": {
+        "Keys": [
+            "minimalegl"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QMinimalEglIntegrationPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("minimalegl")
+qt.core.plugin.factoryloader: looking at "libqoffscreen.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platforms/libqoffscreen.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPA.QPlatformIntegrationFactoryInterface.5.3",
+    "MetaData": {
+        "Keys": [
+            "offscreen"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QOffscreenIntegrationPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("offscreen")
+qt.core.plugin.factoryloader: looking at "libqlinuxfb.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platforms/libqlinuxfb.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPA.QPlatformIntegrationFactoryInterface.5.3",
+    "MetaData": {
+        "Keys": [
+            "linuxfb"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QLinuxFbIntegrationPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("linuxfb")
+qt.core.plugin.factoryloader: checking directory path "/home/wuzhenhuan/documents/qt_project/WusicPlayer/build/debug/src/platforms" ...
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/platforms/libqxcb.so" loaded library
+qt.core.plugin.factoryloader: checking directory path "/usr/lib/x86_64-linux-gnu/qt6/plugins/platformthemes" ...
+qt.core.plugin.factoryloader: looking at "KDEPlasmaPlatformTheme6.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platformthemes/KDEPlasmaPlatformTheme6.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPA.QPlatformThemeFactoryInterface.5.1",
+    "MetaData": {
+        "Keys": [
+            "kde"
+        ]
+    },
+    "archlevel": 1,
+    "className": "KdePlatformThemePlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("kde")
+qt.core.plugin.factoryloader: looking at "libqgtk3.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platformthemes/libqgtk3.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPA.QPlatformThemeFactoryInterface.5.1",
+    "MetaData": {
+        "Keys": [
+            "gtk3"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QGtk3ThemePlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("gtk3")
+qt.core.plugin.factoryloader: checking directory path "/home/wuzhenhuan/documents/qt_project/WusicPlayer/build/debug/src/platformthemes" ...
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/platformthemes/KDEPlasmaPlatformTheme6.so" loaded library
+qt.core.plugin.factoryloader: checking directory path "/usr/lib/x86_64-linux-gnu/qt6/plugins/platforminputcontexts" ...
+qt.core.plugin.factoryloader: looking at "libfcitx5platforminputcontextplugin.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platforminputcontexts/libfcitx5platforminputcontextplugin.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPlatformInputContextFactoryInterface.5.1",
+    "MetaData": {
+        "Keys": [
+            "fcitx",
+            "fcitx5"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QFcitx5PlatformInputContextPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("fcitx", "fcitx5")
+qt.core.plugin.factoryloader: looking at "libcomposeplatforminputcontextplugin.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platforminputcontexts/libcomposeplatforminputcontextplugin.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPlatformInputContextFactoryInterface.5.1",
+    "MetaData": {
+        "Keys": [
+            "compose",
+            "xim"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QComposePlatformInputContextPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("compose", "xim")
+qt.core.plugin.factoryloader: looking at "libibusplatforminputcontextplugin.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platforminputcontexts/libibusplatforminputcontextplugin.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPlatformInputContextFactoryInterface.5.1",
+    "MetaData": {
+        "Keys": [
+            "ibus"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QIbusPlatformInputContextPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("ibus")
+qt.core.plugin.factoryloader: looking at "libqtvirtualkeyboardplugin.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/platforminputcontexts/libqtvirtualkeyboardplugin.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPlatformInputContextFactoryInterface.5.1",
+    "MetaData": {
+        "Keys": [
+            "qtvirtualkeyboard"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QVirtualKeyboardPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("qtvirtualkeyboard")
+qt.core.plugin.factoryloader: checking directory path "/home/wuzhenhuan/documents/qt_project/WusicPlayer/build/debug/src/platforminputcontexts" ...
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/platforminputcontexts/libfcitx5platforminputcontextplugin.so" loaded library
+qt.core.plugin.factoryloader: checking directory path "/usr/lib/x86_64-linux-gnu/qt6/plugins/xcbglintegrations" ...
+qt.core.plugin.factoryloader: looking at "libqxcb-egl-integration.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/xcbglintegrations/libqxcb-egl-integration.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPA.Xcb.QXcbGlIntegrationFactoryInterface.5.5",
+    "MetaData": {
+        "Keys": [
+            "xcb_egl"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QXcbEglIntegrationPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("xcb_egl")
+qt.core.plugin.factoryloader: looking at "libqxcb-glx-integration.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/xcbglintegrations/libqxcb-glx-integration.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPA.Xcb.QXcbGlIntegrationFactoryInterface.5.5",
+    "MetaData": {
+        "Keys": [
+            "xcb_glx"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QXcbGlxIntegrationPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("xcb_glx")
+qt.core.plugin.factoryloader: checking directory path "/home/wuzhenhuan/documents/qt_project/WusicPlayer/build/debug/src/xcbglintegrations" ...
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/xcbglintegrations/libqxcb-glx-integration.so" loaded library
+qt.core.plugin.factoryloader: checking directory path "/usr/lib/x86_64-linux-gnu/qt6/plugins/iconengines" ...
+qt.core.plugin.factoryloader: looking at "libqsvgicon.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/iconengines/libqsvgicon.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QIconEngineFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "svg",
+            "svgz",
+            "svg.gz"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QSvgIconPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("svg", "svgz", "svg.gz")
+qt.core.plugin.factoryloader: checking directory path "/home/wuzhenhuan/documents/qt_project/WusicPlayer/build/debug/src/iconengines" ...
+qt.core.plugin.factoryloader: checking directory path "/usr/lib/x86_64-linux-gnu/qt6/plugins/styles" ...
+qt.core.plugin.factoryloader: looking at "darkly6.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/styles/darkly6.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QStyleFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "Darkly"
+        ]
+    },
+    "archlevel": 1,
+    "className": "StylePlugin",
+    "debug": false,
+    "version": 395520
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("darkly")
+qt.core.plugin.factoryloader: looking at "breeze6.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/styles/breeze6.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QStyleFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "Breeze"
+        ]
+    },
+    "archlevel": 1,
+    "className": "StylePlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("breeze")
+qt.core.plugin.factoryloader: looking at "libkvantum.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/styles/libkvantum.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QStyleFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "kvantum",
+            "kvantum-dark"
+        ]
+    },
+    "archlevel": 1,
+    "className": "KvantumPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("kvantum", "kvantum-dark")
+qt.core.plugin.factoryloader: checking directory path "/home/wuzhenhuan/documents/qt_project/WusicPlayer/build/debug/src/styles" ...
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/styles/darkly6.so" loaded library
+qt.core.plugin.factoryloader: checking directory path "/usr/lib/x86_64-linux-gnu/qt6/plugins/multimedia" ...
+qt.core.plugin.factoryloader: looking at "libffmpegmediaplugin.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/multimedia/libffmpegmediaplugin.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QPlatformMediaPlugin",
+    "MetaData": {
+        "Keys": [
+            "ffmpeg"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QFFmpegMediaPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("ffmpeg")
+qt.core.plugin.factoryloader: checking directory path "/home/wuzhenhuan/documents/qt_project/WusicPlayer/build/debug/src/multimedia" ...
+qt.core.library: "va" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/multimedia/libffmpegmediaplugin.so" loaded library
+qt.multimedia.ffmpeg: Using Qt multimedia with FFmpeg version 8.1-3+b1 GPL version 2 or later
+qt.core.library: "libnvcuvid.so" cannot load: Cannot load library libnvcuvid.so: libnvcuvid.so: cannot open shared object file: No such file or directory
+spaVisitChoice: parse error "Object: size 144, type Spa:Pod:Object:Param:Format (262147), id Spa:Enum:ParamId:EnumFormat (3)" "  Prop: key Spa:Pod:Object:Param:Format:mediaType (1), flags 00000000" "    Id 1        (Spa:Enum:MediaType:audio)" "  Prop: key Spa:Pod:Object:Param:Format:mediaSubtype (2), flags 00000000" "    Id 3        (Spa:Enum:MediaSubtype:iec958)" "  Prop: key Spa:Pod:Object:Param:Format:Audio:iec958Codec (65542), flags 00000000" "    Choice: type Spa:Enum:Choice:Enum, flags 00000000 24 4" "      Id 1        (Spa:Enum:AudioIEC958Codec:PCM)" "      Id 1        (Spa:Enum:AudioIEC958Codec:PCM)" "  Prop: key Spa:Pod:Object:Param:Format:Audio:rate (65539), flags 00000000" "    Choice: type Spa:Enum:Choice:Range, flags 00000000 28 4" "      Int 48000" "      Int 32000" "      Int 192000"
+[AUDIO] active backend device mapped to Qt device: "Raptor Lake High Definition Audio Controller Headphones"
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/iconengines/libqsvgicon.so" loaded library
+qt.core.plugin.factoryloader: checking directory path "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats" ...
+qt.core.plugin.factoryloader: looking at "kimg_psd.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_psd.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "psd",
+            "psb",
+            "pdd",
+            "psdt"
+        ],
+        "MimeTypes": [
+            "image/vnd.adobe.photoshop",
+            "image/vnd.adobe.photoshop",
+            "image/vnd.adobe.photoshop",
+            "image/vnd.adobe.photoshop"
+        ]
+    },
+    "archlevel": 1,
+    "className": "PSDPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("psd", "psb", "pdd", "psdt")
+qt.core.plugin.factoryloader: looking at "kimg_ani.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_ani.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "ani"
+        ],
+        "MimeTypes": [
+            "application/x-navi-animation"
+        ]
+    },
+    "archlevel": 1,
+    "className": "ANIPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("ani")
+qt.core.plugin.factoryloader: looking at "kimg_sct.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_sct.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "sct"
+        ],
+        "MimeTypes": [
+            "image/x-sct"
+        ]
+    },
+    "archlevel": 1,
+    "className": "ScitexPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("sct")
+qt.core.plugin.factoryloader: looking at "kimg_pic.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_pic.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "pic"
+        ],
+        "MimeTypes": [
+            "image/x-pic"
+        ]
+    },
+    "archlevel": 1,
+    "className": "SoftimagePICPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("pic")
+qt.core.plugin.factoryloader: looking at "kimg_eps.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_eps.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "eps",
+            "epsi",
+            "epsf"
+        ],
+        "MimeTypes": [
+            "image/x-eps",
+            "image/x-eps",
+            "image/x-eps"
+        ]
+    },
+    "archlevel": 1,
+    "className": "EPSPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("eps", "epsi", "epsf")
+qt.core.plugin.factoryloader: looking at "libqicns.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqicns.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "icns"
+        ],
+        "MimeTypes": [
+            "image/x-icns"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QICNSPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("icns")
+qt.core.plugin.factoryloader: looking at "libqwebp.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqwebp.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "webp"
+        ],
+        "MimeTypes": [
+            "image/webp"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QWebpPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("webp")
+qt.core.plugin.factoryloader: looking at "kimg_exr.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_exr.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "exr"
+        ],
+        "MimeTypes": [
+            "image/x-exr"
+        ]
+    },
+    "archlevel": 1,
+    "className": "EXRPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("exr")
+qt.core.plugin.factoryloader: looking at "kimg_pcx.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_pcx.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "pcx"
+        ],
+        "MimeTypes": [
+            "image/vnd.zbrush.pcx"
+        ]
+    },
+    "archlevel": 1,
+    "className": "PCXPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("pcx")
+qt.core.plugin.factoryloader: looking at "kimg_raw.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_raw.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "3fr",
+            "arw",
+            "crw",
+            "cr2",
+            "cr3",
+            "dcr",
+            "dng",
+            "erf",
+            "fff",
+            "iiq",
+            "k25",
+            "kdc",
+            "mdc",
+            "mef",
+            "mos",
+            "mrw",
+            "nef",
+            "nrw",
+            "orf",
+            "pef",
+            "raf",
+            "raw",
+            "rwl",
+            "rw2",
+            "sr2",
+            "srf",
+            "srw",
+            "sti",
+            "x3f"
+        ],
+        "MimeTypes": [
+            "image/x-hasselblad-3fr",
+            "image/x-sony-arw",
+            "image/x-canon-crw",
+            "image/x-canon-cr2",
+            "image/x-canon-cr3",
+            "image/x-kodak-dcr",
+            "image/x-adobe-dng",
+            "image/x-epson-erf",
+            "image/x-hasselblad-fff",
+            "image/x-phaseone-iiq",
+            "image/x-kodak-k25",
+            "image/x-kodak-kdc",
+            "image/x-minolta-mdc",
+            "image/x-mamiya-mef",
+            "image/x-leaf-mos",
+            "image/x-minolta-mrw",
+            "image/x-nikon-nef",
+            "image/x-nikon-nrw",
+            "image/x-olympus-orf",
+            "image/x-pentax-pef",
+            "image/x-fuji-raf",
+            "image/x-panasonic-raw",
+            "image/x-panasonic-rw2",
+            "image/x-panasonic-rw2",
+            "image/x-sony-sr2",
+            "image/x-sony-srf",
+            "image/x-samsung-srw",
+            "image/x-sinar-sti",
+            "image/x-sigma-x3f"
+        ]
+    },
+    "archlevel": 1,
+    "className": "RAWPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("3fr", "arw", "crw", "cr2", "cr3", "dcr", "dng", "erf", "fff", "iiq", "k25", "kdc", "mdc", "mef", "mos", "mrw", "nef", "nrw", "orf", "pef", "raf", "raw", "rwl", "rw2", "sr2", "srf", "srw", "sti", "x3f")
+qt.core.plugin.factoryloader: looking at "kimg_xcf.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_xcf.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "xcf"
+        ],
+        "MimeTypes": [
+            "image/x-xcf"
+        ]
+    },
+    "archlevel": 1,
+    "className": "XCFPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("xcf")
+qt.core.plugin.factoryloader: looking at "libqico.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqico.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "ico",
+            "cur"
+        ],
+        "MimeTypes": [
+            "image/vnd.microsoft.icon",
+            "image/vnd.microsoft.icon"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QICOPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("ico", "cur")
+qt.core.plugin.factoryloader: looking at "kimg_ras.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_ras.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "im1",
+            "im8",
+            "im24",
+            "im32",
+            "ras",
+            "sun"
+        ],
+        "MimeTypes": [
+            "image/x-sun-raster",
+            "image/x-sun-raster",
+            "image/x-sun-raster",
+            "image/x-sun-raster",
+            "image/x-sun-raster",
+            "image/x-sun-raster"
+        ]
+    },
+    "archlevel": 1,
+    "className": "RASPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("im1", "im8", "im24", "im32", "ras", "sun")
+qt.core.plugin.factoryloader: looking at "kimg_kra.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_kra.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "kra"
+        ],
+        "MimeTypes": [
+            "application/x-krita"
+        ]
+    },
+    "archlevel": 1,
+    "className": "KraPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("kra")
+qt.core.plugin.factoryloader: looking at "kimg_dds.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_dds.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "dds"
+        ],
+        "MimeTypes": [
+            "image/x-dds"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QDDSPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("dds")
+qt.core.plugin.factoryloader: looking at "libqgif.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqgif.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "gif"
+        ],
+        "MimeTypes": [
+            "image/gif"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QGifPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("gif")
+qt.core.plugin.factoryloader: looking at "kimg_pxr.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_pxr.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "pxr"
+        ],
+        "MimeTypes": [
+            "image/x-pxr"
+        ]
+    },
+    "archlevel": 1,
+    "className": "PXRPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("pxr")
+qt.core.plugin.factoryloader: looking at "kimg_heif.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_heif.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "heif",
+            "heic",
+            "hej2",
+            "avci"
+        ],
+        "MimeTypes": [
+            "image/heif",
+            "image/heif",
+            "image/hej2k",
+            "image/avci"
+        ]
+    },
+    "archlevel": 1,
+    "className": "HEIFPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("heif", "heic", "hej2", "avci")
+qt.core.plugin.factoryloader: looking at "libqsvg.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqsvg.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "svg",
+            "svgz"
+        ],
+        "MimeTypes": [
+            "image/svg+xml",
+            "image/svg+xml-compressed"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QSvgPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("svg", "svgz")
+qt.core.plugin.factoryloader: looking at "kimg_qoi.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_qoi.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "qoi"
+        ],
+        "MimeTypes": [
+            "image/qoi"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QOIPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("qoi")
+qt.core.plugin.factoryloader: looking at "kimg_rgb.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_rgb.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "rgb",
+            "rgba",
+            "bw",
+            "sgi"
+        ],
+        "MimeTypes": [
+            "image/x-rgb",
+            "image/x-rgb",
+            "image/x-rgb",
+            "image/x-rgb"
+        ]
+    },
+    "archlevel": 1,
+    "className": "RGBPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("rgb", "rgba", "bw", "sgi")
+qt.core.plugin.factoryloader: looking at "kimg_pfm.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_pfm.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "pfm",
+            "phm"
+        ],
+        "MimeTypes": [
+            "image/x-pfm",
+            "image/x-phm"
+        ]
+    },
+    "archlevel": 1,
+    "className": "PFMPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("pfm", "phm")
+qt.core.plugin.factoryloader: looking at "libqtiff.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqtiff.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "tiff",
+            "tif"
+        ],
+        "MimeTypes": [
+            "image/tiff",
+            "image/tiff"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QTiffPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("tiff", "tif")
+qt.core.plugin.factoryloader: looking at "kimg_jp2.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_jp2.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "jp2",
+            "j2k",
+            "jpf"
+        ],
+        "MimeTypes": [
+            "image/jp2",
+            "image/x-jp2-codestream",
+            "image/jpx"
+        ]
+    },
+    "archlevel": 1,
+    "className": "JP2Plugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("jp2", "j2k", "jpf")
+qt.core.plugin.factoryloader: looking at "kimg_tga.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_tga.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "tga"
+        ],
+        "MimeTypes": [
+            "image/x-tga"
+        ]
+    },
+    "archlevel": 1,
+    "className": "TGAPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("tga")
+qt.core.plugin.factoryloader: looking at "kimg_jxl.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_jxl.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "jxl"
+        ],
+        "MimeTypes": [
+            "image/jxl"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QJpegXLPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("jxl")
+qt.core.plugin.factoryloader: looking at "libqmng.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqmng.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "mng"
+        ],
+        "MimeTypes": [
+            "video/x-mng"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QMngPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("mng")
+qt.core.plugin.factoryloader: looking at "libqjpeg.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqjpeg.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "jpg",
+            "jpeg",
+            "jfif"
+        ],
+        "MimeTypes": [
+            "image/jpeg",
+            "image/jpeg",
+            "image/jpeg"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QJpegPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("jpg", "jpeg", "jfif")
+qt.core.plugin.factoryloader: looking at "libqtga.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqtga.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "tga"
+        ],
+        "MimeTypes": [
+            "image/x-tga"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QTgaPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("tga")
+qt.core.plugin.factoryloader: looking at "kimg_iff.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_iff.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "iff",
+            "iff",
+            "lbm",
+            "ilbm"
+        ],
+        "MimeTypes": [
+            "application/x-iff",
+            "image/x-ilbm",
+            "image/x-ilbm",
+            "image/x-ilbm"
+        ]
+    },
+    "archlevel": 1,
+    "className": "IFFPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("iff", "iff", "lbm", "ilbm")
+qt.core.plugin.factoryloader: looking at "kimg_hdr.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_hdr.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "hdr",
+            "hdr"
+        ],
+        "MimeTypes": [
+            "image/x-hdr",
+            "image/vnd.radiance"
+        ]
+    },
+    "archlevel": 1,
+    "className": "HDRPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("hdr", "hdr")
+qt.core.plugin.factoryloader: looking at "libqwbmp.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqwbmp.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "wbmp"
+        ],
+        "MimeTypes": [
+            "image/vnd.wap.wbmp"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QWbmpPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("wbmp")
+qt.core.plugin.factoryloader: looking at "kimg_avif.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_avif.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "avif",
+            "avifs"
+        ],
+        "MimeTypes": [
+            "image/avif",
+            "image/avif"
+        ]
+    },
+    "archlevel": 1,
+    "className": "QAVIFPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("avif", "avifs")
+qt.core.plugin.factoryloader: looking at "kimg_ora.so"
+qt.core.plugin.loader: Found metadata in lib /usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_ora.so, metadata=
+{
+    "IID": "org.qt-project.Qt.QImageIOHandlerFactoryInterface",
+    "MetaData": {
+        "Keys": [
+            "ora"
+        ],
+        "MimeTypes": [
+            "image/openraster"
+        ]
+    },
+    "archlevel": 1,
+    "className": "OraPlugin",
+    "debug": false,
+    "version": 395776
+}
+
+
+qt.core.plugin.factoryloader: Got keys from plugin meta data QList("ora")
+qt.core.plugin.factoryloader: checking directory path "/home/wuzhenhuan/documents/qt_project/WusicPlayer/build/debug/src/imageformats" ...
+qt.core.plugin.factoryloader: checking directory path "/usr/lib/x86_64-linux-gnu/qt6/plugins/accessible" ...
+qt.core.plugin.factoryloader: checking directory path "/home/wuzhenhuan/documents/qt_project/WusicPlayer/build/debug/src/accessible" ...
+[CONFIG] register playback controller
+[CONFIG] register playlist controller
+[CONFIG] register main window
+[CONFIG] register library panel
+[CONFIG] register desktop lyrics widget
+[CONFIG] register shortcuts controller
+[AUDIO] request switch by id= "alsa_output.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__Headphones__sink"
+[AUDIO] switching output device to "Raptor Lake High Definition Audio Controller Headphones" id= "alsa_output.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__Headphones__sink"
+[AUDIO] active backend device mapped to Qt device: "Raptor Lake High Definition Audio Controller Headphones"
+[AUDIO] output switch applied. active= "Raptor Lake High Definition Audio Controller Headphones" id= "alsa_output.pci-0000_00_1f.3-platform-skl_hda_dsp_generic.HiFi__Headphones__sink"
+[WARNING] Playlist does not exist, UUID= "{9b85d76f-e828-48d1-a737-6f59ce525dbe}"
+playlist "{9b85d76f-e828-48d1-a737-6f59ce525dbe}" does not exist!
+qt.core.plugin.factoryloader: checking directory path "/usr/lib/x86_64-linux-gnu/qt6/plugins/accessiblebridge" ...
+qt.core.plugin.factoryloader: checking directory path "/home/wuzhenhuan/documents/qt_project/WusicPlayer/build/debug/src/accessiblebridge" ...
+qt.core.qfuture.continuations: Parent future has 2 result(s), but only the first result will be handled in the continuation.
+[INFO] Create playlist uuid:  "{41be6b44-c298-477f-936b-c8eac289888c}"
+[INFO] Remove playlist uuid:  "{9b85d76f-e828-48d1-a737-6f59ce525dbe}"
+[INFO] (re)build m_single_shuffle_queue
+[INFO] (re)build m_group_shuffle_queue
+[ControlBar] update new state:  "PLAYING"
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_psd.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_ani.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_sct.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_pic.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_eps.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqicns.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqwebp.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_exr.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_pcx.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_raw.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_xcf.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqico.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_ras.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_kra.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_dds.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqgif.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_pxr.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_heif.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqsvg.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_qoi.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_rgb.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_pfm.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqtiff.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_jp2.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_tga.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_jxl.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqmng.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqjpeg.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_iff.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_hdr.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqwbmp.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_avif.so" loaded library
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_ora.so" loaded library
+[LRC] Use default info
+[ControlBar] update new state:  "PAUSE"
+[INFO] Remove playlist uuid:  "{9b85d76f-e828-48d1-a737-6f59ce525dbe}"
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_psd.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_ani.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_sct.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_pic.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_eps.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqicns.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqwebp.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_exr.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_pcx.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_raw.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_xcf.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqico.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_ras.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_kra.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_dds.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqgif.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_pxr.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_heif.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqsvg.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_qoi.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_rgb.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_pfm.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqtiff.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_jp2.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_tga.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_jxl.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqmng.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqjpeg.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_iff.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_hdr.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/libqwbmp.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_avif.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/imageformats/kimg_ora.so" unloaded library 
+[AUDIO][Device] init requested. selected=''
+[AUDIO][Device] init success. active='Raptor Lake High Definition Audio Controller Headphones'
+[AUDIO][Device] started. active='Raptor Lake High Definition Audio Controller Headphones'
+[AUDIO][Device] switch request from 'Raptor Lake High Definition Audio Controller Headphones' to 'Raptor Lake High Definition Audio Controller Headphones', start_after_switch=0
+[AUDIO][Device] old device uninitialized
+[AUDIO][Device] init requested. selected='Raptor Lake High Definition Audio Controller Headphones'
+[AUDIO][Device] using explicit playback device: Raptor Lake High Definition Audio Controller Headphones
+[AUDIO][Device] init success. active='Raptor Lake High Definition Audio Controller Headphones'
+[AUDIO][Device] restored volume=1.000
+[AUDIO][Device] switch result active='Raptor Lake High Definition Audio Controller Headphones' (not started)
+[seek] Error: device or decoder does not exist
+[DECODER] codec type: 1
+[DECODER] Initialization completed...
+[DECODER] thread start work
+[AUDIO][Device] started. active='Raptor Lake High Definition Audio Controller Headphones'
+[AUDIO][Device] paused/stopped. active='Raptor Lake High Definition Audio Controller Headphones'
+[AUDIO][Device] started. active='Raptor Lake High Definition Audio Controller Headphones'
+[AUDIO][Device] paused/stopped. active='Raptor Lake High Definition Audio Controller Headphones'
+[DECODER] thread join
+qt.core.library: "va" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/multimedia/libffmpegmediaplugin.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/styles/darkly6.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/iconengines/libqsvgicon.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/xcbglintegrations/libqxcb-glx-integration.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/platforminputcontexts/libfcitx5platforminputcontextplugin.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/platformthemes/KDEPlasmaPlatformTheme6.so" unloaded library 
+qt.core.library: "/usr/lib/x86_64-linux-gnu/qt6/plugins/platforms/libqxcb.so" unloaded library 
+qt.core.library: "pipewire-0.3" unloaded library 

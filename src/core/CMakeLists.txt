@@ -10,6 +10,15 @@ add_library(wusic_core STATIC
     ConfigManager/ConfigManager.cpp
     ConfigManager/IConfigurable.h
 
+    theme/ThemePalette.h
+    theme/WusicProxyStyle.h
+    theme/WusicProxyStyle.cpp
+    theme/ThemeManager.h
+    theme/ThemeManager.cpp
+    theme/builtin/WusicDarkPalette.h
+    theme/builtin/WusicLightPalette.h
+    theme/plugin/IThemePlugin.h
+
     LyricsFetcher/lyrics_manager.h
     LyricsFetcher/lyrics_manager.cpp
 
@@ -33,6 +42,7 @@ add_library(wusic_core STATIC
 target_link_libraries(wusic_core
     PUBLIC
         Qt6::Core
+        Qt6::Widgets
         Qt6::Multimedia
         Qt6::Network
         OpenSSL::Crypto

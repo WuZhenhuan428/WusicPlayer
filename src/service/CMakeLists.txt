@@ -10,10 +10,9 @@ add_library(wusic_service STATIC
     library_interaction_service.h
     tag_writeback_service.cpp
     tag_writeback_service.h
-    # setting.cpp
-    # setting.h
-    # search_service.cpp
-    # search_service.h
+
+    theme_service.cpp
+    theme_service.h
 )
 
 target_link_libraries(wusic_service

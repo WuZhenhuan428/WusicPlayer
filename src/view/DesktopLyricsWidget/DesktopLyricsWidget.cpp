@@ -118,6 +118,14 @@ void DesktopLyricsWidget::setInactiveLineColor(rgb_t rgb_inactive) {
     this->updateLineColor();
 }
 
+void DesktopLyricsWidget::changeEvent(QEvent* event) {
+    QWidget::changeEvent(event);
+    // 主题切换（setStyle/setPalette）时 QPalette 被全局覆盖，重新应用歌词颜色
+    if (event->type() == QEvent::PaletteChange || event->type() == QEvent::StyleChange) {
+        updateLineColor();
+    }
+}
+
 rgb_t DesktopLyricsWidget::getActiveLineColor() {
     return m_rgb_active;
 }

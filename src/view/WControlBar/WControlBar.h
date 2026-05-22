@@ -34,6 +34,7 @@ public slots:
     void updatePosition(qint64 position_ms);
     void updateVolumeSlider(int percent);
     void updateMuteButton(bool muted);
+    void refreshAllIcons();  // 图标模式切换后刷新所有图标
 
 signals:
     void sgnBtnPlayPauseClicked(bool is_request_play);
@@ -82,4 +83,7 @@ private:
     QList<QAudioDevice> m_devices;
 
     bool m_is_playing = false;
+    QString m_current_mode_icon = QStringLiteral("in_order");  // 当前播放模式图标名
+    int m_current_volume_pct = 100;   // 当前音量百分比，用于刷新音量图标
+    bool m_is_muted = false;          // 当前静音状态
 };

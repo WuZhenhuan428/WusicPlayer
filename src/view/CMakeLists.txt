@@ -38,6 +38,9 @@ add_library(wusic_view STATIC
     SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.cpp
     SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.h
 
+    SettingsPanel/ThemeSettingsPage/ThemeSettingsPage.cpp
+    SettingsPanel/ThemeSettingsPage/ThemeSettingsPage.h
+
     dialogs/hsv_dialog/basic_colors_item.cpp
     dialogs/hsv_dialog/basic_colors_item.h
     dialogs/hsv_dialog/color_preview_item.cpp

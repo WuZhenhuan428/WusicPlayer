@@ -3,7 +3,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include "core/ConfigManager/ConfigManager.h"
-#include "model/ShortcutsViewModel/shortcuts_types.hpp"
+
+#include <QHeaderView>
 
 ShortcutsPanel::ShortcutsPanel(ConfigManager* cfg_mgr, QWidget* parent)
     : QWidget(parent),
@@ -18,6 +19,8 @@ ShortcutsPanel::ShortcutsPanel(ConfigManager* cfg_mgr, QWidget* parent)
 
     m_table_view_shortcuts = new QTableView(this);
     m_table_view_shortcuts->setEditTriggers(QAbstractItemView::DoubleClicked | QAbstractItemView::SelectedClicked | QAbstractItemView::EditKeyPressed);
+    m_table_view_shortcuts->verticalHeader()->setVisible(false);
+    m_table_view_shortcuts->horizontalHeader()->setStretchLastSection(true);
 
     m_btn_apply = new QPushButton("Apply", this);
     m_btn_restore = new QPushButton("Restore", this);

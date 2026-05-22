@@ -68,6 +68,7 @@ void LyricsSettingPanel::init_UI() {
     m_mode_group->addButton(m_rb_oneline);
     m_mode_group->addButton(m_rb_twoline);
     m_mode_group->setExclusive(true);
+    m_rb_oneline->setChecked(true);
 
     // color
     m_lb_color = new QLabel("Color: ",this);

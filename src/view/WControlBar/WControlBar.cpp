@@ -2,6 +2,7 @@
 
 #include <QIcon>
 #include <magic_enum/magic_enum.hpp>
+#include "core/theme/ThemeManager.h"
 
 #define SLIDER_VOLUME_MIN_WIDTH 100
 #define SLIDER_VOLUME_MAX_WIDTH 100
@@ -9,37 +10,36 @@
 #define ICON_SIZE 25
 #define BTN_SIZE 25
 
+/// 根据当前主题的明暗 + 用户图标模式偏好返回正确的图标路径前缀
+static QString iconPath(const QString& name) {
+    bool dark = ThemeManager::instance().effectiveIconIsDark();
+    return QString(":/icons/%1/%2.svg").arg(dark ? "dark" : "light", name);
+}
+
 WControlBar::WControlBar(QWidget* parent)
     : QWidget(parent)
 {
     m_btn_play_pause = new QPushButton(this);
-    QIcon icon_play(":/icons/light/play.svg");
-    m_btn_play_pause->setIcon(icon_play);
+    m_btn_play_pause->setIcon(QIcon(iconPath("play")));
     
     m_btn_stop = new QPushButton(this);
-    QIcon icon_stop(":/icons/light/stop.svg");
-    m_btn_stop->setIcon(icon_stop);
+    m_btn_stop->setIcon(QIcon(iconPath("stop")));
     
     m_btn_prev = new QPushButton(this);
-    QIcon icon_prev(":/icons/light/prev.svg");
-    m_btn_prev->setIcon(icon_prev);
+    m_btn_prev->setIcon(QIcon(iconPath("prev")));
     
     m_btn_next = new QPushButton(this);
-    QIcon icon_next(":/icons/light/next.svg");
-    m_btn_next->setIcon(icon_next);
+    m_btn_next->setIcon(QIcon(iconPath("next")));
     
     m_btn_devices = new QPushButton(this);
-    QIcon icon_devices(":/icons/light/device.svg");
-    m_btn_devices->setIcon(icon_devices);
+    m_btn_devices->setIcon(QIcon(iconPath("device")));
     
     // TODO: load correct icons when restore config status
     m_btn_mode = new QPushButton(this);
-    QIcon icon_order(":/icons/light/in_order.svg");
-    m_btn_mode->setIcon(icon_order);
+    m_btn_mode->setIcon(QIcon(iconPath("in_order")));
     
     m_btn_mute = new QPushButton(this);
-    QIcon icon_mute(":/icons/light/volume_3.svg");
-    m_btn_mute->setIcon(icon_mute);
+    m_btn_mute->setIcon(QIcon(iconPath("volume_3")));
     
     m_btn_devices->setFixedSize(BTN_SIZE, BTN_SIZE);
     m_btn_play_pause->setFixedSize(BTN_SIZE, BTN_SIZE);
@@ -141,21 +141,37 @@ WControlBar::WControlBar(QWidget* parent)
         QPoint pos = m_btn_devices->mapToGlobal(QPoint(0, m_btn_devices->height()));
         m_menu_devices->exec(pos);
     });
+
+    // 图标模式切换后立即刷新所有图标
+    connect(&ThemeManager::instance(), &ThemeManager::themeChanged,
+            this, &WControlBar::refreshAllIcons);
 }
 
 WControlBar::~WControlBar() {}
+
+void WControlBar::refreshAllIcons() {
+    m_btn_stop->setIcon(QIcon(iconPath("stop")));
+    m_btn_prev->setIcon(QIcon(iconPath("prev")));
+    m_btn_next->setIcon(QIcon(iconPath("next")));
+    m_btn_devices->setIcon(QIcon(iconPath("device")));
+    m_btn_play_pause->setIcon(QIcon(iconPath(m_is_playing ? "pause" : "play")));
+    m_btn_mode->setIcon(QIcon(iconPath(m_current_mode_icon)));
+    if (m_is_muted) {
+        m_btn_mute->setIcon(QIcon(iconPath("volume_x")));
+    } else {
+        updateVolumeSliderIcon(m_current_volume_pct);
+    }
+}
 
 void WControlBar::updateButtonStatus(PlayerEngine::PlayingState new_state) {
     // set icon here
     qDebug() << "[ControlBar] update new state: " << magic_enum::enum_name(new_state);
     if (new_state != PlayerEngine::PlayingState::PLAYING) {
         m_is_playing = false;
-        QIcon icon_play(":/icons/light/play.svg");
-        m_btn_play_pause->setIcon(icon_play);
+        m_btn_play_pause->setIcon(QIcon(iconPath("play")));
     } else {
         m_is_playing = true;
-        QIcon icon_pause(":/icons/light/pause.svg");
-        m_btn_play_pause->setIcon(icon_pause);
+        m_btn_play_pause->setIcon(QIcon(iconPath("pause")));
     }
 }
 
@@ -180,9 +196,9 @@ void WControlBar::updateVolumeSlider(int percent) {
 }
 
 void WControlBar::updateMuteButton(bool muted) {
+    m_is_muted = muted;
     if (muted) {
-        QIcon icon_muted(":/icons/light/volume_x.svg");
-        m_btn_mute->setIcon(icon_muted);
+        m_btn_mute->setIcon(QIcon(iconPath("volume_x")));
     } else {
         this->updateVolumeSliderIcon(m_slider_volume->value());
     }
@@ -195,19 +211,24 @@ void WControlBar::setPlayMode(PlayMode mode) {
     }
     if (mode == PlayMode::in_order) {
         m_act_in_order->setChecked(true);
-        this->updateModeIcon(":/icons/light/in_order.svg");
+        m_current_mode_icon = QStringLiteral("in_order");
+        this->updateModeIcon(iconPath("in_order"));
     } else if (mode == PlayMode::loop) {
         m_act_loop->setChecked(true);
-        this->updateModeIcon(":/icons/light/loop.svg");
+        m_current_mode_icon = QStringLiteral("loop");
+        this->updateModeIcon(iconPath("loop"));
     } else if (mode == PlayMode::shuffle)  {
         m_act_shuffle->setChecked(true);
-        this->updateModeIcon(":/icons/light/shuffle.svg");
+        m_current_mode_icon = QStringLiteral("shuffle");
+        this->updateModeIcon(iconPath("shuffle"));
     } else if (mode == PlayMode::out_of_order_group) {
         m_act_out_of_order_group->setChecked(true);
-        this->updateModeIcon(":/icons/light/out_of_order_group.svg");
+        m_current_mode_icon = QStringLiteral("out_of_order_group");
+        this->updateModeIcon(iconPath("out_of_order_group"));
     } else if (mode == PlayMode::out_of_order_track) {
         m_act_out_of_order_track->setChecked(true);
-        this->updateModeIcon(":/icons/light/out_of_order_track.svg");
+        m_current_mode_icon = QStringLiteral("out_of_order_track");
+        this->updateModeIcon(iconPath("out_of_order_track"));
     }
 }
 
@@ -241,18 +262,15 @@ QSlider* WControlBar::getVolumeSlider() const {
 /* in player, setMute == setVolume(0), so when update slider, the mute
    status will be covered, and there is NO NEED to save mute status */
 void WControlBar::updateVolumeSliderIcon(int volume_by_percent) {
+    m_current_volume_pct = volume_by_percent;
     if (volume_by_percent > 66) {
-        QIcon icon(":/icons/light/volume_3.svg");
-        m_btn_mute->setIcon(icon);
+        m_btn_mute->setIcon(QIcon(iconPath("volume_3")));
     } else if (volume_by_percent > 33) {
-        QIcon icon(":/icons/light/volume_2.svg");
-        m_btn_mute->setIcon(icon);
+        m_btn_mute->setIcon(QIcon(iconPath("volume_2")));
     } else if (volume_by_percent > 0) {
-        QIcon icon(":/icons/light/volume_1.svg");
-        m_btn_mute->setIcon(icon);
+        m_btn_mute->setIcon(QIcon(iconPath("volume_1")));
     } else {
-        QIcon icon(":/icons/light/volume_0.svg");
-        m_btn_mute->setIcon(icon);
+        m_btn_mute->setIcon(QIcon(iconPath("volume_0")));
     }
 }
 

@@ -5,6 +5,10 @@
 #include <QDebug>
 #include <qtenvironmentvariables.h>
 
+#include "core/theme/ThemeManager.h"
+#include "core/theme/builtin/WusicDarkPalette.h"
+#include "core/theme/builtin/WusicLightPalette.h"
+
 int main(int argc, char *argv[])
 {
 #ifdef Q_OS_LINUX
@@ -16,9 +20,19 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     QCoreApplication::setApplicationName("WusicPlayer");
+
+    // ---- 主题系统初始化 ----
+    auto& themeMgr = ThemeManager::instance();
+    themeMgr.registerBuiltinPalette(darkPalette());
+    themeMgr.registerBuiltinPalette(lightPalette());
+
     Player player;
     PlaybackController playbackController(&player);
     ConfigManager::getInstance();
+
+    // 在 ConfigManager::loadAll() 中恢复上次使用的主题
+    ConfigManager::getInstance().registerModule(&themeMgr);
+    ConfigManager::getInstance().loadAll();
 
     AppController appController(&playbackController);
     appController.showMainWindow();

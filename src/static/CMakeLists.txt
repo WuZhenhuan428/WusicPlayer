@@ -25,6 +25,23 @@ function(wusic_add_static_resources target_name)
         "${_static_root}/icons/light/volume_3.svg"
         "${_static_root}/icons/light/volume_x.svg"
 
+        "${_static_root}/icons/dark/device.svg"
+        "${_static_root}/icons/dark/in_order.svg"
+        "${_static_root}/icons/dark/loop.svg"
+        "${_static_root}/icons/dark/next.svg"
+        "${_static_root}/icons/dark/out_of_order_group.svg"
+        "${_static_root}/icons/dark/out_of_order_track.svg"
+        "${_static_root}/icons/dark/pause.svg"
+        "${_static_root}/icons/dark/play.svg"
+        "${_static_root}/icons/dark/prev.svg"
+        "${_static_root}/icons/dark/shuffle.svg"
+        "${_static_root}/icons/dark/stop.svg"
+        "${_static_root}/icons/dark/volume_0.svg"
+        "${_static_root}/icons/dark/volume_1.svg"
+        "${_static_root}/icons/dark/volume_2.svg"
+        "${_static_root}/icons/dark/volume_3.svg"
+        "${_static_root}/icons/dark/volume_x.svg"
+
     )
 
     qt_add_resources(${target_name} "wusic_assets"

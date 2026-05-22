@@ -34,10 +34,12 @@
 #include "service/playback_restore_service.h"
 
 #include "view/SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.h"
+#include "view/SettingsPanel/ThemeSettingsPage/ThemeSettingsPage.h"
 
 #include "service/playback_service.h"
 #include "service/library_interaction_service.h"
 #include "service/tag_writeback_service.h"
+#include "service/theme_service.h"
 
 AppController::AppController(PlaybackController* playbackController, QObject* parent)
     : QObject(parent),
@@ -54,7 +56,8 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
           m_main_window->libraryPanel(), m_playback_controller, m_playlist_controller.get(), this
       )),
       m_tag_writeback_service(std::make_unique<TagWritebackService>(
-          m_playlist_controller.get(), m_playback_controller, m_playlist_manager.get(), m_main_window.get(), this))
+          m_playlist_controller.get(), m_playback_controller, m_playlist_manager.get(), m_main_window.get(), this)),
+      m_theme_service(std::make_unique<ThemeService>(this))
 {
     ensureShortcutsController();
     initializeConfig();
@@ -342,19 +345,26 @@ void AppController::onOpenSettingsPanelRequested() {
             m_main_window->desktopLyricsWidget()->getActiveLineColor(),
             m_main_window->desktopLyricsWidget()->getInactiveLineColor());
         m_lyrics_settings_panel->setLineEditText(m_main_window->desktopLyricsWidget()->getFont());
-    }
-    connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnActiveColorChanged, this, [this](rgb_t rgb){
-        m_main_window->desktopLyricsWidget()->setActiveLineColor(rgb);
-    });
-    connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnInactiveColorChanged, this, [this](rgb_t rgb){
-        m_main_window->desktopLyricsWidget()->setInactiveLineColor(rgb);
-    });
-    connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnDisplayModeChanged, this, [this](bool is_two_line){
-        m_main_window->desktopLyricsWidget()->setDisplayMode( is_two_line ? DisplayMode::TwoLine : DisplayMode::OneLine );
-    });
-    connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnFontChanged, m_main_window->desktopLyricsWidget(), &DesktopLyricsWidget::setLrcFont);
 
-    m_settings_panel->registerWidget(m_lyrics_settings_panel->getTitleItem(), m_lyrics_settings_panel);
+        connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnActiveColorChanged, this, [this](rgb_t rgb){
+            m_main_window->desktopLyricsWidget()->setActiveLineColor(rgb);
+        });
+        connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnInactiveColorChanged, this, [this](rgb_t rgb){
+            m_main_window->desktopLyricsWidget()->setInactiveLineColor(rgb);
+        });
+        connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnDisplayModeChanged, this, [this](bool is_two_line){
+            m_main_window->desktopLyricsWidget()->setDisplayMode( is_two_line ? DisplayMode::TwoLine : DisplayMode::OneLine );
+        });
+        connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnFontChanged, m_main_window->desktopLyricsWidget(), &DesktopLyricsWidget::setLrcFont);
+
+        m_settings_panel->registerWidget(m_lyrics_settings_panel->getTitleItem(), m_lyrics_settings_panel);
+    }
+
+    // 主题设置页
+    if (!m_theme_settings_page) {
+        m_theme_settings_page = new ThemeSettingsPage(m_theme_service.get(), m_settings_panel);
+        m_settings_panel->registerWidget(m_theme_settings_page->getTitleItem(), m_theme_settings_page);
+    }
 
     m_settings_panel->show();
     m_settings_panel->raise();
@@ -376,12 +386,10 @@ void AppController::ensureSettingsPanel() {
 
     m_settings_panel = new SettingsPanel(&ConfigManager::getInstance());
     m_settings_panel->setWindowFlag(Qt::Window, true);
-    m_settings_panel->setAttribute(Qt::WA_DeleteOnClose, true);
+    // 不使用 WA_DeleteOnClose：改为 hide/show 复用，避免销毁/重建循环中的状态不一致
 
-    connect(m_settings_panel, &QObject::destroyed, this, [this]() {
-        m_settings_panel = nullptr;
-        m_shortcuts_panel = nullptr;
-    });
+    // 面板隐藏后激活主窗口，防止菜单栏焦点丢失导致不响应点击
+    m_settings_panel->installEventFilter(this);
 }
 
 void AppController::ensureShortcutsPage() {
@@ -410,9 +418,9 @@ void AppController::ensureShortcutsPage() {
         connect(m_shortcuts_panel, &ShortcutsPanel::sgnApplyConfig, this, []() {
             ConfigManager::getInstance().saveAll();
         });
-    }
 
-    m_settings_panel->registerWidget(m_shortcuts_panel->getListItem(), m_shortcuts_panel);
+        m_settings_panel->registerWidget(m_shortcuts_panel->getListItem(), m_shortcuts_panel);
+    }
 }
 
 void AppController::ensureShortcutsController()
@@ -585,4 +593,15 @@ void AppController::ensureSearchPanel() {
     connect(m_search_panel, &QObject::destroyed, this, [this]() {
         m_search_panel = nullptr;
     });
+}
+
+bool AppController::eventFilter(QObject* obj, QEvent* event) {
+    if (obj == m_settings_panel && event->type() == QEvent::Hide) {
+        // 设置面板关闭后激活主窗口，防止菜单栏焦点丢失
+        if (m_main_window) {
+            m_main_window->activateWindow();
+            m_main_window->raise();
+        }
+    }
+    return QObject::eventFilter(obj, event);
 }
