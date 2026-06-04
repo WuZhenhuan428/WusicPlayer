@@ -4,7 +4,6 @@
 #include <QPointer>
 #include <QJsonObject>
 
-
 MainWindow::MainWindow(PlaybackController* playback_controller, PlaylistController* playlist_controller, QWidget *parent)
     : QMainWindow(parent),
       m_playback_controller(playback_controller),

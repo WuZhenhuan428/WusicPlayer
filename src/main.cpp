@@ -9,6 +9,8 @@
 #include "core/theme/builtin/WusicDarkPalette.h"
 #include "core/theme/builtin/WusicLightPalette.h"
 
+#include <QIcon>
+
 int main(int argc, char *argv[])
 {
 #ifdef Q_OS_LINUX
@@ -20,6 +22,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     QCoreApplication::setApplicationName("WusicPlayer");
+    a.setWindowIcon(QIcon(":icons/main.ico"));
 
     // ---- 主题系统初始化 ----
     auto& themeMgr = ThemeManager::instance();
