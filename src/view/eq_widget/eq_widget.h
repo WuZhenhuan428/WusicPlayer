@@ -1,15 +1,14 @@
 #pragma once
 
-#include <QWidget>
-#include <QObject>
+#include "core/player_types.h"
 
-#include <array>
-#include <QPushButton>
 #include <QCheckBox>
 #include <QHBoxLayout>
+#include <QObject>
+#include <QPushButton>
 #include <QVBoxLayout>
-
-#include "core/player_types.h"
+#include <QWidget>
+#include <array>
 
 class QSlider;
 class QLabel;
@@ -50,7 +49,7 @@ private:
 
     std::array<float, 10> m_gains;
 
-    bool m_enable_eq = false;
+    bool m_enable_eq     = false;
     bool m_instant_apply = false;
-    bool m_timer_hold = false;
+    bool m_timer_hold    = false;
 };

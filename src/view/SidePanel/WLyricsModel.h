@@ -1,21 +1,20 @@
 #pragma once
 
-#include <QString>
-#include <QVector>
-#include <QAbstractListModel>
-#include <QVariant>
-#include <QPainter>
-
-#include "lrc_parser.h"
 #include "core/types.h"
+#include "lrc_parser.h"
 
+#include <QAbstractListModel>
+#include <QPainter>
+#include <QString>
+#include <QVariant>
+#include <QVector>
 
 class WLyricsModel : public QAbstractListModel
 {
     Q_OBJECT
 public:
-
-    enum UserDefineRole {
+    enum UserDefineRole
+    {
         CurrentLine = Qt::UserRole + 1,
         CurrentTime
     };
@@ -35,13 +34,13 @@ public:
     QString currentLineText() const;
     QString nextLineText() const;
 
-    
     // QAbstractListModel interface
-    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-    
+    QModelIndex index(int row, int column,
+                      const QModelIndex& parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+
 signals:
     void currentLineChanged(const QString& curr_text, const QString& next_text);
     void sgnUseTimelineFollow(bool enable);

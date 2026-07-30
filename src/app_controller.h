@@ -1,11 +1,11 @@
 #pragma once
 
-#include <QObject>
-#include <memory>
-#include <QPointer>
-#include <QVector>
 #include <QByteArray>
 #include <QMetaObject>
+#include <QObject>
+#include <QPointer>
+#include <QVector>
+#include <memory>
 
 class QListWidgetItem;
 class SearchPanel;
@@ -78,7 +78,6 @@ private:
     std::unique_ptr<TagWritebackService> m_tag_writeback_service;
     std::unique_ptr<ThemeService> m_theme_service;
 
-
     QPointer<SettingsPanel> m_settings_panel;
     QPointer<ShortcutsPanel> m_shortcuts_panel;
     QPointer<ShortcutsController> m_shortcuts_controller;
@@ -87,8 +86,8 @@ private:
     QPointer<ThemeSettingsPage> m_theme_settings_page;
     QPointer<TagEditWidget> m_tag_edit_widget;
     QPointer<EQWidget> m_eq_widget;
-    bool m_shortcuts_registered = false;
-    bool m_has_saved_config_on_exit = false;
+    bool m_shortcuts_registered        = false;
+    bool m_has_saved_config_on_exit    = false;
     bool m_locate_on_next_play_request = false;
     QMetaObject::Connection m_lyrics_follow_conn;
 };

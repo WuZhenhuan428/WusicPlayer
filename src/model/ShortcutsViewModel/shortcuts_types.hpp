@@ -1,13 +1,13 @@
 #pragma once
 
-#include <QString>
 #include <QKeySequence>
+#include <QString>
 #include <QVector>
 #include <magic_enum/magic_enum.hpp>
 
 enum class ShortcutScope
 {
-    Application,    // global
+    Application, // global
     MainWindow,
     PlaylistView,
     SearchPanel,
@@ -64,8 +64,6 @@ struct ShortcutBinding
     QKeySequence current_key;
     bool enabled = true;
 };
-
-
 
 struct ShortcutItem
 {

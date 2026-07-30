@@ -1,16 +1,15 @@
 #include "LibraryWidget.h"
+
 #include "model/playlist/playlist_view_model.h"
 #include "view/playlist/playlist_widgets.h"
-#include <QMenu>
-#include <QInputDialog>
-
-#include <QJsonObject>
-#include <QFileInfo>
 #include <QDesktopServices>
+#include <QFileInfo>
+#include <QInputDialog>
+#include <QJsonObject>
+#include <QMenu>
 #include <QUrl>
 
-LibraryWidget::LibraryWidget(QAbstractItemModel* song_model, QWidget *parent)
-    : QWidget(parent)
+LibraryWidget::LibraryWidget(QAbstractItemModel* song_model, QWidget* parent) : QWidget(parent)
 {
     this->initUI();
     this->initConnections();
@@ -19,65 +18,69 @@ LibraryWidget::LibraryWidget(QAbstractItemModel* song_model, QWidget *parent)
 
 LibraryWidget::~LibraryWidget() {}
 
-void LibraryWidget::initConnections() {
-    connect(m_playlist_tree, &QTreeWidget::customContextMenuRequested,
-            this, &LibraryWidget::callTreeContextMenu);
-    
-    connect(m_song_tree_view, &QTreeView::customContextMenuRequested,
-            this, &LibraryWidget::callSongContextMenu);
+void LibraryWidget::initConnections()
+{
+    connect(m_playlist_tree, &QTreeWidget::customContextMenuRequested, this,
+            &LibraryWidget::callTreeContextMenu);
 
-    connect(m_song_tree_view, &QTreeView::doubleClicked, this, [this](const QModelIndex &index) {
-        emit sgnPlayTrackByModelIndex(index);
-    });
+    connect(m_song_tree_view, &QTreeView::customContextMenuRequested, this,
+            &LibraryWidget::callSongContextMenu);
 
-    connect(m_playlist_tree, &QTreeWidget::itemDoubleClicked, this,
-        [this](QTreeWidgetItem *item){
-            WPlayListWidgetItem* temp = dynamic_cast<WPlayListWidgetItem*>(item);
-            if(temp) {
-                emit sgnSwitchPlaylist(temp->id());
-            }
+    connect(m_song_tree_view, &QTreeView::doubleClicked, this,
+            [this](const QModelIndex& index) { emit sgnPlayTrackByModelIndex(index); });
+
+    connect(m_playlist_tree, &QTreeWidget::itemDoubleClicked, this, [this](QTreeWidgetItem* item) {
+        WPlayListWidgetItem* temp = dynamic_cast<WPlayListWidgetItem*>(item);
+        if (temp) {
+            emit sgnSwitchPlaylist(temp->id());
         }
-    );
-
-    connect(m_song_tree_view_header, &QHeaderView::customContextMenuRequested, this, [this](const QPoint& pos){
-        int logical_index = m_song_tree_view_header->logicalIndexAt(pos);
-        QMenu menu(this);
-        QAction* actInsert = menu.addAction("Insert Column Here");
-        QAction* actRemove = menu.addAction("Remove This Column");
-
-        connect(actInsert, &QAction::triggered, [this, logical_index](){
-            PlaylistViewModel* my_model = dynamic_cast<PlaylistViewModel*>(m_song_tree_view->model());
-            if (!my_model) return;
-            WInsertColumnDialog dialog;
-            int maxIndex = my_model->getColumns().size();
-            dialog.setMaxIndex(maxIndex);
-            dialog.setIndex(logical_index);
-            if (dialog.exec() == QDialog::Accepted) {
-                TableColumn column = dialog.getRule();
-                my_model->insertColumn(dialog.index(), column);
-            }
-        });
-        connect(actRemove, &QAction::triggered, [this, logical_index](){
-            PlaylistViewModel* my_model = dynamic_cast<PlaylistViewModel*>(m_song_tree_view->model());
-            WColumnIndexDialog dialog(tr("Remove column"), tr("Input the column index except 0"), this);
-            int maxIndex = my_model->getColumns().size() - 1;
-            dialog.setMaxIndex(maxIndex);
-            dialog.setIndex(logical_index);
-            if (dialog.exec() == QDialog::Accepted) {
-                my_model->removeColumn(dialog.index());
-            }
-        });
-        menu.exec(m_song_tree_view_header->mapToGlobal(pos));
     });
+
+    connect(m_song_tree_view_header, &QHeaderView::customContextMenuRequested, this,
+            [this](const QPoint& pos) {
+                int logical_index = m_song_tree_view_header->logicalIndexAt(pos);
+                QMenu menu(this);
+                QAction* actInsert = menu.addAction("Insert Column Here");
+                QAction* actRemove = menu.addAction("Remove This Column");
+
+                connect(actInsert, &QAction::triggered, [this, logical_index]() {
+                    PlaylistViewModel* my_model =
+                        dynamic_cast<PlaylistViewModel*>(m_song_tree_view->model());
+                    if (!my_model)
+                        return;
+                    WInsertColumnDialog dialog;
+                    int maxIndex = my_model->getColumns().size();
+                    dialog.setMaxIndex(maxIndex);
+                    dialog.setIndex(logical_index);
+                    if (dialog.exec() == QDialog::Accepted) {
+                        TableColumn column = dialog.getRule();
+                        my_model->insertColumn(dialog.index(), column);
+                    }
+                });
+                connect(actRemove, &QAction::triggered, [this, logical_index]() {
+                    PlaylistViewModel* my_model =
+                        dynamic_cast<PlaylistViewModel*>(m_song_tree_view->model());
+                    WColumnIndexDialog dialog(tr("Remove column"),
+                                              tr("Input the column index except 0"), this);
+                    int maxIndex = my_model->getColumns().size() - 1;
+                    dialog.setMaxIndex(maxIndex);
+                    dialog.setIndex(logical_index);
+                    if (dialog.exec() == QDialog::Accepted) {
+                        my_model->removeColumn(dialog.index());
+                    }
+                });
+                menu.exec(m_song_tree_view_header->mapToGlobal(pos));
+            });
 }
 
-void LibraryWidget::callSongContextMenu(const QPoint &pos) {
+void LibraryWidget::callSongContextMenu(const QPoint& pos)
+{
     /* or create new Qt::Role in model to get track info */
     QModelIndex index = m_song_tree_view->indexAt(pos);
     if (!index.isValid())
         return;
 
-    index = index.sibling(index.row(), 0);
+    index       = index.sibling(index.row(), 0);
 
     auto* model = qobject_cast<PlaylistViewModel*>(m_song_tree_view->model());
     if (!model)
@@ -92,70 +95,71 @@ void LibraryWidget::callSongContextMenu(const QPoint &pos) {
         return;
 
     const TrackMetaData meta = node->meta;
-    const QString path = meta.filepath;
+    const QString path       = meta.filepath;
 
     QMenu menu(this);
-    QAction* actPlay = menu.addAction("&Play");
+    QAction* actPlay   = menu.addAction("&Play");
     QAction* actRemove = menu.addAction("&Remove");
     menu.addSeparator();
     QAction* actOpen = menu.addAction("&Open in file explorer");
     QAction* actProp = menu.addAction("Property");
 
-    connect(actPlay, &QAction::triggered, this, [this, index](){
-        emit sgnPlayTrackByModelIndex(index);
-    });
+    connect(actPlay, &QAction::triggered, this,
+            [this, index]() { emit sgnPlayTrackByModelIndex(index); });
 
-    connect(actProp, &QAction::triggered, this, [this, tid, meta, path]{
-        emit sgnTrackPropertyRequested(tid, path, meta);
-    });
+    connect(actProp, &QAction::triggered, this,
+            [this, tid, meta, path] { emit sgnTrackPropertyRequested(tid, path, meta); });
 
-    connect(actOpen, &QAction::triggered, this, [path](){
+    connect(actOpen, &QAction::triggered, this, [path]() {
         QFileInfo file_info(path);
         QString dir_path = file_info.absolutePath();
-        QUrl url = QUrl::fromLocalFile(dir_path);
+        QUrl url         = QUrl::fromLocalFile(dir_path);
         if (!QDesktopServices::openUrl(url)) {
             qDebug() << "Failed to open folder: " << dir_path;
         }
     });
 
-    connect(actRemove, &QAction::triggered, this, [this, tid](){
-        emit sgnRemoveTrackRequested(tid);
-    });
+    connect(actRemove, &QAction::triggered, this,
+            [this, tid]() { emit sgnRemoveTrackRequested(tid); });
 
     menu.exec(m_song_tree_view->viewport()->mapToGlobal(pos));
 }
 
 // old: onTreeContextMenuRequested
-void LibraryWidget::callTreeContextMenu(const QPoint &pos) {
+void LibraryWidget::callTreeContextMenu(const QPoint& pos)
+{
     QTreeWidgetItem* item = m_playlist_tree->itemAt(pos);
-    if (!item) return;
+    if (!item)
+        return;
 
     WPlayListWidgetItem* playlist_item = dynamic_cast<WPlayListWidgetItem*>(item);
-    if (!playlist_item) return;
+    if (!playlist_item)
+        return;
 
     playlistId pid = playlist_item->id();
     QMenu menu(this);
-    QAction* actAddTrack = menu.addAction("Add track");
+    QAction* actAddTrack  = menu.addAction("Add track");
     QAction* actAddFolder = menu.addAction("Add folder");
-    QAction* actSave = menu.addAction("Save as");
-    QAction* actRename = menu.addAction("Rename");
-    QAction* actCopy = menu.addAction("Copy");
-    QAction* actRemove = menu.addAction("Remove");
+    QAction* actSave      = menu.addAction("Save as");
+    QAction* actRename    = menu.addAction("Rename");
+    QAction* actCopy      = menu.addAction("Copy");
+    QAction* actRemove    = menu.addAction("Remove");
 
-    connect(actAddTrack, &QAction::triggered, this, [this, pid](){ emit sgnImportFiles(pid); });
-    connect(actAddFolder, &QAction::triggered, this, [this, pid](){ emit sgnImportDir(pid); });
-    connect(actSave, &QAction::triggered, this, [this, pid](){ emit sgnSavePlaylist(pid); });
+    connect(actAddTrack, &QAction::triggered, this, [this, pid]() { emit sgnImportFiles(pid); });
+    connect(actAddFolder, &QAction::triggered, this, [this, pid]() { emit sgnImportDir(pid); });
+    connect(actSave, &QAction::triggered, this, [this, pid]() { emit sgnSavePlaylist(pid); });
 
-    connect(actRename, &QAction::triggered, this, [this, pid](){ emit sgnRenamePlaylist(pid); });
+    connect(actRename, &QAction::triggered, this, [this, pid]() { emit sgnRenamePlaylist(pid); });
 
-    connect(actCopy, &QAction::triggered, this, [this, pid](){ emit sgnCopyPlaylist(pid); });
+    connect(actCopy, &QAction::triggered, this, [this, pid]() { emit sgnCopyPlaylist(pid); });
 
-    connect(actRemove, &QAction::triggered, this, [this, pid](){ emit sgnRemovePlaylist(pid); });
+    connect(actRemove, &QAction::triggered, this, [this, pid]() { emit sgnRemovePlaylist(pid); });
 
     menu.exec(m_playlist_tree->mapToGlobal(pos));
 }
 
-void LibraryWidget::initUI() {
+void LibraryWidget::initUI()
+{
     m_playlist_tree = new QTreeWidget;
     m_playlist_tree->setHeaderLabel("Playlist");
     m_playlist_tree->setMinimumWidth(120);
@@ -190,29 +194,35 @@ void LibraryWidget::initUI() {
 
     m_main_layout = new QHBoxLayout;
     m_main_layout->addWidget(m_main_splitter);
-    
+
     m_main_splitter->setContentsMargins(0, 0, 0, 0);
     m_main_layout->setContentsMargins(0, 0, 0, 0);
 
     this->setLayout(m_main_layout);
 }
 
-void LibraryWidget::setSongTreeModel(QAbstractItemModel* model) {
+void LibraryWidget::setSongTreeModel(QAbstractItemModel* model)
+{
     m_song_tree_view->setModel(model);
-    if (!model) return;
-    connect(model, &QAbstractItemModel::modelReset, this, &LibraryWidget::updateSongView, Qt::UniqueConnection);
+    if (!model)
+        return;
+    connect(model, &QAbstractItemModel::modelReset, this, &LibraryWidget::updateSongView,
+            Qt::UniqueConnection);
 }
 
-void LibraryWidget::setPlaylists(const QVector<QPair<playlistId, QString>>& playlists) {
+void LibraryWidget::setPlaylists(const QVector<QPair<playlistId, QString>>& playlists)
+{
     this->m_playlist_tree->clear();
     for (const auto& list : playlists) {
         new WPlayListWidgetItem(this->m_playlist_tree, list.second, list.first);
     }
 }
 
-void LibraryWidget::updateSongView() {
+void LibraryWidget::updateSongView()
+{
     QAbstractItemModel* model = m_song_tree_view->model();
-    if (!model) return;
+    if (!model)
+        return;
     for (int i = 0; i < model->rowCount(); ++i) {
         QModelIndex idx = model->index(i, 0);
         if (model->hasChildren(idx)) {
@@ -222,30 +232,36 @@ void LibraryWidget::updateSongView() {
     }
 }
 
-QTreeView* LibraryWidget::songTreeView() const {
+QTreeView* LibraryWidget::songTreeView() const
+{
     return m_song_tree_view;
 }
 
-QHeaderView* LibraryWidget::songTreeHeader() const {
+QHeaderView* LibraryWidget::songTreeHeader() const
+{
     return m_song_tree_view_header;
 }
 
-void LibraryWidget::loadFromJson(const QJsonObject &json)
+void LibraryWidget::loadFromJson(const QJsonObject& json)
 {
     QJsonObject obj = json.value(this->configSubKey()).toObject();
-    
+
     m_song_tree_view_header->blockSignals(true);
-    m_song_tree_view_header->restoreState(QByteArray::fromBase64(obj.value("song_tree_view_state").toString().toUtf8()));
+    m_song_tree_view_header->restoreState(
+        QByteArray::fromBase64(obj.value("song_tree_view_state").toString().toUtf8()));
     m_song_tree_view_header->blockSignals(false);
-    m_main_splitter->restoreState(QByteArray::fromBase64(obj.value("splitter_state").toString().toUtf8()));
-    m_main_splitter->setOrientation(static_cast<Qt::Orientation>(obj.value("splitter_orientation").toInt()));
+    m_main_splitter->restoreState(
+        QByteArray::fromBase64(obj.value("splitter_state").toString().toUtf8()));
+    m_main_splitter->setOrientation(
+        static_cast<Qt::Orientation>(obj.value("splitter_orientation").toInt()));
 }
 
 QJsonObject LibraryWidget::saveToJson()
 {
     QJsonObject obj;
-    obj["song_tree_view_state"] = QString::fromUtf8(m_song_tree_view_header->saveState().toBase64());
-    obj["splitter_state"] = QString::fromUtf8(m_main_splitter->saveState().toBase64());
+    obj["song_tree_view_state"] =
+        QString::fromUtf8(m_song_tree_view_header->saveState().toBase64());
+    obj["splitter_state"]       = QString::fromUtf8(m_main_splitter->saveState().toBase64());
     obj["splitter_orientation"] = static_cast<int>(m_main_splitter->orientation());
     return obj;
 }

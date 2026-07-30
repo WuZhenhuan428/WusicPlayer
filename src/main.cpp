@@ -1,17 +1,17 @@
-#include <QApplication>
-#include "core/ConfigManager/ConfigManager.h"
-#include "controller/PlaybackController.h"
 #include "app_controller.h"
-#include <QDebug>
-#include <qtenvironmentvariables.h>
 
+#include "controller/PlaybackController.h"
+#include "core/ConfigManager/ConfigManager.h"
 #include "core/theme/ThemeManager.h"
 #include "core/theme/builtin/WusicDarkPalette.h"
 #include "core/theme/builtin/WusicLightPalette.h"
 
+#include <QApplication>
+#include <QDebug>
 #include <QIcon>
+#include <qtenvironmentvariables.h>
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
 #ifdef Q_OS_LINUX
     // if use wayland. use xcb plugin to enable custom title bar

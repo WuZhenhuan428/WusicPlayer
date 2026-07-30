@@ -1,23 +1,21 @@
 #pragma once
 
-#include <QDialog>
-#include <QLineEdit>
-#include <QLabel>
-#include <QSlider>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QPushButton>
-#include <QMessageBox>
-#include <QString>
+#include "core/types.h"
+
 #include <QComboBox>
+#include <QDialog>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QSlider>
+#include <QString>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QUuid>
-#include <QString>
-
+#include <QVBoxLayout>
 #include <QVector>
-
-#include "core/types.h"
 
 /* usage:
     WSortTypeSetter dialog(this);
@@ -29,10 +27,14 @@
 class WSortTypeSetDialog : public QDialog
 {
 public:
-    explicit WSortTypeSetDialog(QDialog *parent = nullptr);
+    explicit WSortTypeSetDialog(QDialog* parent = nullptr);
     ~WSortTypeSetDialog();
 
-    QString getText() const {return txtExpression->text();}
+    QString getText() const
+    {
+        return txtExpression->text();
+    }
+
 private:
     QLabel* lbPrompt;
     QLineEdit* txtExpression;
@@ -48,15 +50,18 @@ private:
     QVBoxLayout* vbMain;
 };
 
-
 class WPlayListWidgetItem : public QTreeWidgetItem
 {
 public:
-    WPlayListWidgetItem(QTreeWidget* parent, const QString& name, const playlistId& pid)
-        : QTreeWidgetItem(parent, QStringList() << name), m_pid(pid)
-        {}
-    
-    playlistId id() const { return m_pid; }
+    WPlayListWidgetItem(QTreeWidget* parent, const QString& name, const playlistId& pid) :
+        QTreeWidgetItem(parent, QStringList() << name), m_pid(pid)
+    {}
+
+    playlistId id() const
+    {
+        return m_pid;
+    }
+
 private:
     playlistId m_pid;
 };
@@ -70,6 +75,7 @@ public:
     void setIndex(int index);
     void setMaxIndex(int index);
     int index() const;
+
 private:
     QLabel* lbIndex;
     QLineEdit* txtIndex;
@@ -94,7 +100,8 @@ private:
 class WColumnIndexDialog : public QDialog
 {
 public:
-    explicit WColumnIndexDialog(const QString& title, const QString& prompt, QWidget* parent = nullptr);
+    explicit WColumnIndexDialog(const QString& title, const QString& prompt,
+                                QWidget* parent = nullptr);
     ~WColumnIndexDialog();
     void setIndex(int index);
     void setMaxIndex(int index);

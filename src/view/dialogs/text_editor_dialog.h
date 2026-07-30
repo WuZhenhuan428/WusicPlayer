@@ -1,18 +1,15 @@
 #pragma once
 
-#include <QWidget>
-#include <QObject>
-
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-
-#include <QLabel>
-#include <QPushButton>
-#include <QTextEdit>
 #include <QFontComboBox>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QObject>
+#include <QPushButton>
 #include <QSpinBox>
-
 #include <QString>
+#include <QTextEdit>
+#include <QVBoxLayout>
+#include <QWidget>
 
 // no line number yet!
 /*

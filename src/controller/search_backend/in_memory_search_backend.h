@@ -34,7 +34,8 @@ private:
 
     static QString normalize(const QString& text);
     static bool fuzzyMatch(const QString& text, const QString& pattern);
-    int scoreTrack(const IndexedTrack& track, const SearchQuery& query, const QString& keyword_norm) const;
+    int scoreTrack(const IndexedTrack& track, const SearchQuery& query,
+                   const QString& keyword_norm) const;
 
 private:
     PlaylistController* m_playlist_controller = nullptr;

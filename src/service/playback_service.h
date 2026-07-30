@@ -1,12 +1,12 @@
 #pragma once
 
-#include <QObject>
-#include <QWidget>
-
-#include "view/MainWindow.h"
 #include "controller/PlaybackController.h"
 #include "controller/PlaylistController.h"
+#include "view/MainWindow.h"
 #include "view/WControlBar/WControlBar.h"
+
+#include <QObject>
+#include <QWidget>
 
 class PlaybackService : public QObject
 {
@@ -14,7 +14,7 @@ class PlaybackService : public QObject
 
 public:
     explicit PlaybackService(MainWindow* main_window, PlaybackController* playback_ctl,
-                             PlaylistController* playlist_ctl, QObject *parent);
+                             PlaylistController* playlist_ctl, QObject* parent);
     ~PlaybackService();
 
     /**
@@ -31,15 +31,15 @@ signals:
     void sgnLocateCurrentTrack();
 
 private:
-    void handlePlayTrackRequest(const QString &filepath);
+    void handlePlayTrackRequest(const QString& filepath);
 
 private:
     // just "borrow" a "pointer_view", so use raw pointer is safe
-    MainWindow* m_main_window = nullptr;
+    MainWindow* m_main_window          = nullptr;
     PlaybackController* m_playback_ctl = nullptr;
     PlaylistController* m_playlist_ctl = nullptr;
-    WControlBar* m_control_bar = nullptr;
+    WControlBar* m_control_bar         = nullptr;
 
     bool m_locate_on_next_play_request = false;
-    bool m_bound = false;
+    bool m_bound                       = false;
 };

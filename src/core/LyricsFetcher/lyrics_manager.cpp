@@ -2,35 +2,42 @@
 
 #include "netease_qt6.h"
 
-namespace lyrics_fetcher {
+namespace lyrics_fetcher
+{
 
-namespace {
-class CollectSink final : public LyricsSink {
+namespace
+{
+class CollectSink final : public LyricsSink
+{
 public:
-    LyricMeta createLyric() override {
+    LyricMeta createLyric() override
+    {
         return LyricMeta{};
     }
 
-    void addLyric(const LyricMeta& meta) override {
+    void addLyric(const LyricMeta& meta) override
+    {
         m_items.push_back(meta);
     }
 
-    QVector<LyricMeta> take() {
+    QVector<LyricMeta> take()
+    {
         return std::move(m_items);
     }
 
 private:
     QVector<LyricMeta> m_items;
 };
-}
+} // namespace
 
-LyricsManager::LyricsManager() {
+LyricsManager::LyricsManager()
+{
     m_entries.push_back({Platform::Netease, &netease_qt6::getLyrics});
 }
 
-QVector<LyricMeta> LyricsManager::fetch(const TrackMeta& meta,
-                                        QNetworkAccessManager* nam,
-                                        const QVector<Platform>& platforms) const {
+QVector<LyricMeta> LyricsManager::fetch(const TrackMeta& meta, QNetworkAccessManager* nam,
+                                        const QVector<Platform>& platforms) const
+{
     QVector<LyricMeta> all;
     if (!nam) {
         return all;

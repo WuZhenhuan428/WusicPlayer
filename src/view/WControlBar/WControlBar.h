@@ -1,21 +1,19 @@
 #pragma once
 
-#include <QWidget>
-
+#include "core/player/player_engine.h"
 #include "core/types.h"
-
 #include "wtimeprogress.h"
+
+#include <QAction>
+#include <QActionGroup>
+#include <QAudioDevice>
+#include <QHBoxLayout>
+#include <QList>
+#include <QMenu>
 #include <QPushButton>
 #include <QSlider>
 #include <QString>
-#include <QAction>
-#include <QMenu>
-#include <QHBoxLayout>
-#include <QActionGroup>
-#include <QAudioDevice>
-#include <QList>
-
-#include "core/player/player_engine.h"
+#include <QWidget>
 
 class WControlBar : public QWidget
 {
@@ -34,7 +32,7 @@ public slots:
     void updatePosition(qint64 position_ms);
     void updateVolumeSlider(int percent);
     void updateMuteButton(bool muted);
-    void refreshAllIcons();  // 图标模式切换后刷新所有图标
+    void refreshAllIcons(); // 图标模式切换后刷新所有图标
 
 signals:
     void sgnBtnPlayPauseClicked(bool is_request_play);
@@ -65,12 +63,12 @@ private:
     QPushButton* m_btn_mode;
     QPushButton* m_btn_devices;
     QMenu* m_menu_mode;
-    QAction* m_act_in_order;    // 顺序播放
-    QAction* m_act_loop;       // 循环播放
-    QAction* m_act_shuffle;    // 随机播放 - 不停止
+    QAction* m_act_in_order;           // 顺序播放
+    QAction* m_act_loop;               // 循环播放
+    QAction* m_act_shuffle;            // 随机播放 - 不停止
     QAction* m_act_out_of_order_track; // 乱序播放 - 有最后一首
-    QAction* m_act_out_of_order_group;// 组间乱序 / 组内顺序
-    QActionGroup* m_act_group;     // exclusive group -> show available icon
+    QAction* m_act_out_of_order_group; // 组间乱序 / 组内顺序
+    QActionGroup* m_act_group;         // exclusive group -> show available icon
 
     /// Progress Bar: Position/Duration
     QSlider* m_slider_position;
@@ -82,8 +80,8 @@ private:
     QMenu* m_menu_devices;
     QList<QAudioDevice> m_devices;
 
-    bool m_is_playing = false;
-    QString m_current_mode_icon = QStringLiteral("in_order");  // 当前播放模式图标名
-    int m_current_volume_pct = 100;   // 当前音量百分比，用于刷新音量图标
-    bool m_is_muted = false;          // 当前静音状态
+    bool m_is_playing           = false;
+    QString m_current_mode_icon = QStringLiteral("in_order"); // 当前播放模式图标名
+    int m_current_volume_pct    = 100;                        // 当前音量百分比，用于刷新音量图标
+    bool m_is_muted             = false;                      // 当前静音状态
 };

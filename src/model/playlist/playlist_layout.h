@@ -1,20 +1,22 @@
 #pragma once
 
-#include <QUuid>
+#include "core/types.h"
+#include "playlist.h"
+
 #include <QString>
+#include <QUuid>
 #include <QVector>
 
-#include "playlist.h"
-#include "core/types.h"
-
-struct Node {
+struct Node
+{
     trackId id; // Track UUID. If null, it's a group node.
     TrackMetaData meta;
     QString group_name;
     Node* parent = nullptr;
     QVector<Node*> children;
 
-    int row() const {
+    int row() const
+    {
         if (parent) {
             return parent->children.indexOf(const_cast<Node*>(this));
         }
@@ -22,7 +24,10 @@ struct Node {
     }
 
     explicit Node(Node* p = nullptr) : parent(p) {}
-    ~Node() { qDeleteAll(children); }
+    ~Node()
+    {
+        qDeleteAll(children);
+    }
 };
 
 struct TrackEntry
@@ -48,8 +53,6 @@ struct LayoutResult
     QVector<trackId> playback_queue;
     QVector<TrackEntry> updated_meta;
 };
-
-
 
 class PlaylistLayoutBuilder
 {

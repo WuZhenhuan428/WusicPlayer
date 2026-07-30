@@ -1,7 +1,7 @@
 #pragma once
 
-#include "miniaudio.h"
 #include "config.h"
+#include "miniaudio.h"
 #include "ring_buffer.hpp"
 
 #include <atomic>
@@ -27,14 +27,15 @@ public:
 
 private:
     bool init(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer);
-    static void data_callback(ma_device* device, void* output, const void* input, ma_uint32 frame_count);
+    static void data_callback(ma_device* device, void* output, const void* input,
+                              ma_uint32 frame_count);
 
 private:
     ma_device_config m_device_config;
     ma_device m_device;
-    bool m_initialized = false;
-    bool m_started = false;
-    
+    bool m_initialized                                             = false;
+    bool m_started                                                 = false;
+
     // Store the buffer here so the callback can access it through the Device instance
     SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* m_buffer = nullptr;
     std::string m_selected_device_name;

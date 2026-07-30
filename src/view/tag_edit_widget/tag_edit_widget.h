@@ -2,19 +2,16 @@
 
 #include "core/types.h"
 
-#include <QWidget>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QMap>
+#include <QPushButton>
+#include <QStandardItemModel>
+#include <QString>
 #include <QTableView>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QPushButton>
-
-#include <QMap>
-#include <QString>
-
-#include <QStandardItemModel>
-
+#include <QWidget>
 
 class TagEditWidget : public QWidget
 {
@@ -22,13 +19,13 @@ class TagEditWidget : public QWidget
 
 public:
     /**  TrackMetaData只包含播放器需要的项目，作为tag编辑工具需要解析所有的元数据
-      *  meta: 主要使用filepath
-      *  tid: 用于写回时定位
-      */
+     *  meta: 主要使用filepath
+     *  tid: 用于写回时定位
+     */
     explicit TagEditWidget(TrackMetaData meta, trackId tid, QWidget* parent = nullptr);
     ~TagEditWidget();
 
-private:    // methods
+private: // methods
     void initUI();
     void initUIProperties(const QString& filepath);
     void initConnections();
@@ -47,12 +44,12 @@ private:    // methods
 signals:
     void sgnSaveTags(QMap<QString, QStringList> tags, trackId tid);
 
-private:    // data structure
+private: // data structure
     QStandardItemModel* m_table_model = nullptr;
     QMap<QString, QStringList> m_meta_buffer;
     trackId m_tid;
 
-private:    // ui widgets
+private: // ui widgets
     QVBoxLayout* m_vbl_main;
 
     QHBoxLayout* m_hbl_filepath;

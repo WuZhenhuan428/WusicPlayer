@@ -1,32 +1,29 @@
 #include "eq_widget.h"
+
 #include "core/player/config.h"
 
-#include <QSlider>
 #include <QLabel>
+#include <QSlider>
 #include <QString>
 #include <QTimer>
 
 namespace
 {
-    const int SLIDER_NUMBER = 10;
+const int SLIDER_NUMBER = 10;
 } // namespace
 
-EQWidget::EQWidget(gains_t old_gains, bool enabled, bool instant, QWidget* parent)
-    : QWidget(parent)
+EQWidget::EQWidget(gains_t old_gains, bool enabled, bool instant, QWidget* parent) : QWidget(parent)
 {
-    m_enable_eq = enabled;
+    m_enable_eq     = enabled;
     m_instant_apply = instant;
-    m_gains = {old_gains._31, old_gains._63, old_gains._125, old_gains._250,
-               old_gains._500, old_gains._1k, old_gains._2k, old_gains._4k,
-               old_gains._8k, old_gains._16k};
+    m_gains         = {old_gains._31, old_gains._63, old_gains._125, old_gains._250, old_gains._500,
+                       old_gains._1k, old_gains._2k, old_gains._4k,  old_gains._8k,  old_gains._16k};
 
     this->init_ui();
     this->init_connections();
 }
 
-EQWidget::~EQWidget()
-{
-}
+EQWidget::~EQWidget() {}
 
 /**
  * set slider range with [-1200, 1200], map to [-12, 12]
@@ -37,10 +34,10 @@ void EQWidget::init_ui()
     m_hbl_sliders = new QHBoxLayout;
 
     for (int i = 0; i < SLIDER_NUMBER; ++i) {
-        m_sliders[i] = nullptr;
-        m_lb_values[i] = nullptr;
+        m_sliders[i]    = nullptr;
+        m_lb_values[i]  = nullptr;
         m_vbl_slider[i] = nullptr;
-        m_lb_freq[i] = nullptr;
+        m_lb_freq[i]    = nullptr;
     }
 
     m_lb_freq[0] = new QLabel("31Hz", this);
@@ -63,7 +60,7 @@ void EQWidget::init_ui()
         m_sliders[i]->setValue((int)(m_gains[i] * 100));
         m_sliders[i]->setTracking(true);
 
-        m_lb_values[i] = new QLabel(QString::number(m_gains[i], 'f', 2), this);
+        m_lb_values[i]  = new QLabel(QString::number(m_gains[i], 'f', 2), this);
         m_vbl_slider[i] = new QVBoxLayout;
 
         m_vbl_slider[i]->addWidget(m_lb_values[i], 0, Qt::AlignHCenter);
@@ -72,25 +69,23 @@ void EQWidget::init_ui()
 
         m_hbl_sliders->addLayout(m_vbl_slider[i]);
 
-        connect(m_sliders[i], &QSlider::valueChanged, this, [this, i](int value){
+        connect(m_sliders[i], &QSlider::valueChanged, this, [this, i](int value) {
             m_gains[i] = value / 100.0;
             m_lb_values[i]->setText(QString::number(m_gains[i], 'f', 2));
             if (m_instant_apply && m_enable_eq && !m_timer_hold) {
                 emit this->sgnGainChanged(array_to_gaint_t(m_gains));
                 m_timer_hold = true;
-                QTimer::singleShot(30, [this](){
-                    m_timer_hold = false;
-                });
+                QTimer::singleShot(30, [this]() { m_timer_hold = false; });
             }
         });
     }
 
-    m_cb_enable_eq = new QCheckBox("Enable EQ", this);
+    m_cb_enable_eq     = new QCheckBox("Enable EQ", this);
     m_cb_instant_apply = new QCheckBox("Instant apply", this);
-    m_btn_reset = new QPushButton("Reset", this);
-    m_btn_apply = new QPushButton("Apply", this);
-    m_btn_close = new QPushButton("Close", this);
-    m_hbl_control_bar = new QHBoxLayout;
+    m_btn_reset        = new QPushButton("Reset", this);
+    m_btn_apply        = new QPushButton("Apply", this);
+    m_btn_close        = new QPushButton("Close", this);
+    m_hbl_control_bar  = new QHBoxLayout;
 
     m_cb_enable_eq->setChecked(m_enable_eq);
     m_cb_instant_apply->setChecked(m_instant_apply);
@@ -111,7 +106,7 @@ void EQWidget::init_ui()
 
 void EQWidget::init_connections()
 {
-    connect(m_cb_enable_eq, &QCheckBox::toggled, this, [this](bool checked){
+    connect(m_cb_enable_eq, &QCheckBox::toggled, this, [this](bool checked) {
         m_enable_eq = checked;
         emit sgnEqEnabledChanged(checked);
         if (checked) {
@@ -120,10 +115,9 @@ void EQWidget::init_connections()
             emit sgnGainChanged(gains_t{});
         }
     });
-    connect(m_cb_instant_apply, &QCheckBox::toggled, this, [this](bool checked){
-        m_instant_apply = checked;
-    });
-    connect(m_btn_reset, &QPushButton::clicked, this, [this](){
+    connect(m_cb_instant_apply, &QCheckBox::toggled, this,
+            [this](bool checked) { m_instant_apply = checked; });
+    connect(m_btn_reset, &QPushButton::clicked, this, [this]() {
         for (int i = 0; i < SLIDER_NUMBER; i++) {
             m_sliders[i]->setValue(0);
             m_gains[i] = 0.0f;
@@ -131,21 +125,18 @@ void EQWidget::init_connections()
         }
         emit sgnGainChanged(array_to_gaint_t(m_gains));
     });
-    connect(m_btn_apply, &QPushButton::clicked, this, [this](){
+    connect(m_btn_apply, &QPushButton::clicked, this, [this]() {
         for (int i = 0; i < SLIDER_NUMBER; ++i) {
             m_gains[i] = m_sliders[i]->value() / 100.0f;
         }
         emit sgnGainChanged(array_to_gaint_t(m_gains));
     });
-    connect(m_btn_close, &QPushButton::clicked, this, [this](){
-        this->close();
-    });
+    connect(m_btn_close, &QPushButton::clicked, this, [this]() { this->close(); });
 }
 
 gains_t EQWidget::array_to_gaint_t(std::array<float, 10> gains)
 {
-    gains_t gain = {gains[0], gains[1], gains[2],
-                    gains[3], gains[4], gains[5],
-                    gains[6], gains[7], gains[8], gains[9]};
+    gains_t gain = {gains[0], gains[1], gains[2], gains[3], gains[4],
+                    gains[5], gains[6], gains[7], gains[8], gains[9]};
     return gain;
 }

@@ -1,12 +1,13 @@
 #include "search_model.h"
 
 #include "controller/search_backend/i_search_backend.h"
-
 #include <utility>
 
-namespace {
+namespace
+{
 
-QString formatDuration(int total_seconds) {
+QString formatDuration(int total_seconds)
+{
     if (total_seconds < 0) {
         return QStringLiteral("00:00");
     }
@@ -19,16 +20,16 @@ QString formatDuration(int total_seconds) {
         .arg(seconds, 2, 10, QLatin1Char('0'));
 }
 
-}
+} // namespace
 
-SearchModel::SearchModel(ISearchBackend* backend, QObject* parent)
-    : QAbstractTableModel(parent), m_backend(backend)
-{
-}
+SearchModel::SearchModel(ISearchBackend* backend, QObject* parent) :
+    QAbstractTableModel(parent), m_backend(backend)
+{}
 
 SearchModel::~SearchModel() {}
 
-void SearchModel::searchRequest(SearchQuery query) {
+void SearchModel::searchRequest(SearchQuery query)
+{
     m_last_query = std::move(query);
 
     if (m_last_query.keyword.trimmed().isEmpty()) {
@@ -45,45 +46,53 @@ void SearchModel::searchRequest(SearchQuery query) {
     setResults(results);
 }
 
-void SearchModel::setResults(const QVector<SearchHint>& results) {
+void SearchModel::setResults(const QVector<SearchHint>& results)
+{
     beginResetModel();
     m_search_hint = results;
     endResetModel();
 }
 
-void SearchModel::setBackend(ISearchBackend* backend) {
+void SearchModel::setBackend(ISearchBackend* backend)
+{
     m_backend = backend;
 }
 
-void SearchModel::clearResults() {
+void SearchModel::clearResults()
+{
     beginResetModel();
     m_search_hint.clear();
     endResetModel();
 }
 
-trackId SearchModel::trackIdAt(int row) const {
+trackId SearchModel::trackIdAt(int row) const
+{
     if (row < 0 || row >= m_search_hint.size()) {
         return trackId{};
     }
     return m_search_hint[row].track_id;
 }
 
-SearchHint SearchModel::hintAt(int row) const {
+SearchHint SearchModel::hintAt(int row) const
+{
     if (row < 0 || row >= m_search_hint.size()) {
         return SearchHint{};
     }
     return m_search_hint[row];
 }
 
-int SearchModel::totalHits() const {
+int SearchModel::totalHits() const
+{
     return m_search_hint.size();
 }
 
-const SearchQuery& SearchModel::lastQuery() const {
+const SearchQuery& SearchModel::lastQuery() const
+{
     return m_last_query;
 }
 
-QModelIndex SearchModel::index(int row, int column, const QModelIndex &parent) const {
+QModelIndex SearchModel::index(int row, int column, const QModelIndex& parent) const
+{
     if (parent.isValid()) {
         return QModelIndex{};
     }
@@ -93,26 +102,30 @@ QModelIndex SearchModel::index(int row, int column, const QModelIndex &parent) c
     return createIndex(row, column);
 }
 
-QModelIndex SearchModel::parent(const QModelIndex &child) const {
+QModelIndex SearchModel::parent(const QModelIndex& child) const
+{
     Q_UNUSED(child);
     return QModelIndex{};
 }
 
-int SearchModel::rowCount(const QModelIndex &parent) const {
+int SearchModel::rowCount(const QModelIndex& parent) const
+{
     if (parent.isValid()) {
         return 0;
     }
     return m_search_hint.size();
 }
 
-int SearchModel::columnCount(const QModelIndex &parent) const {
+int SearchModel::columnCount(const QModelIndex& parent) const
+{
     if (parent.isValid()) {
         return 0;
     }
     return static_cast<int>(Column::Count);
 }
 
-QVariant SearchModel::data(const QModelIndex &index, int role) const {
+QVariant SearchModel::data(const QModelIndex& index, int role) const
+{
     if (!index.isValid()) {
         return QVariant{};
     }
@@ -126,8 +139,8 @@ QVariant SearchModel::data(const QModelIndex &index, int role) const {
     const SearchHint& hint = m_search_hint[index.row()];
 
     if (role == Qt::TextAlignmentRole) {
-        if (index.column() == static_cast<int>(Column::Duration)
-            || index.column() == static_cast<int>(Column::Score)) {
+        if (index.column() == static_cast<int>(Column::Duration) ||
+            index.column() == static_cast<int>(Column::Score)) {
             return int(Qt::AlignRight | Qt::AlignVCenter);
         }
         return int(Qt::AlignLeft | Qt::AlignVCenter);
@@ -155,7 +168,8 @@ QVariant SearchModel::data(const QModelIndex &index, int role) const {
     return QVariant{};
 }
 
-QVariant SearchModel::headerData(int section, Qt::Orientation orientation, int role) const {
+QVariant SearchModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
     if (role != Qt::DisplayRole) {
         return QVariant{};
     }

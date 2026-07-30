@@ -1,23 +1,22 @@
 #pragma once
 
+#include "playlist.h"
+
+#include <QDebug>
 #include <QObject>
 #include <QString>
-#include <QVector>
-#include <QDebug>
 #include <QUuid>
-
+#include <QVector>
 #include <memory>
-
-#include "playlist.h"
 
 class PlaylistRepo : public QObject
 {
     Q_OBJECT
 public:
-    explicit PlaylistRepo(QObject *parent = nullptr);
+    explicit PlaylistRepo(QObject* parent = nullptr);
     ~PlaylistRepo();
 
-// Playlist management
+    // Playlist management
 public:
     void clearList();
     playlistId createList();
@@ -49,10 +48,11 @@ private:
     QString cacheFilePath(const playlistId& pid) const;
     void loadCacheFromDisk();
     QVector<std::shared_ptr<Playlist>> loadCacheFromDiskToVector() const;
-    bool loadJsonPlaylist(const QByteArray& data, const QString& fallbackName, std::shared_ptr<Playlist>& out_playlist) const;
+    bool loadJsonPlaylist(const QByteArray& data, const QString& fallbackName,
+                          std::shared_ptr<Playlist>& out_playlist) const;
     bool writeJsonPlaylist(QIODevice& device, const std::shared_ptr<Playlist>& playlist) const;
 
     QVector<std::shared_ptr<Playlist>> m_list;
-    QString m_cache_dir;     // <standard app data dir>/playlists
+    QString m_cache_dir; // <standard app data dir>/playlists
     static constexpr int kSchemaVersion = 1;
 };

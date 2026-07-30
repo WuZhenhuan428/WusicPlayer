@@ -1,11 +1,11 @@
 #pragma once
 
-#include <QWidget>
-#include <QPainter>
+#include "hsv_to_rgb.h"
+
 #include <QImage>
 #include <QPaintEvent>
-
-#include "hsv_to_rgb.h"
+#include <QPainter>
+#include <QWidget>
 
 class ColorPreviewItem : public QWidget
 {

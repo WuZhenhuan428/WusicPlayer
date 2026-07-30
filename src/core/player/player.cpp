@@ -1,27 +1,28 @@
 #include "player.h"
 
-#include <qmath.h>
-#include <QMetaObject>
 #include <QDebug>
+#include <QMetaObject>
 #include <algorithm>
+#include <qmath.h>
 
-Player::Player(QObject *parent)
-    : QObject(parent),
-      m_player_engine(std::make_unique<PlayerEngine>()),
-            m_media_devices(new QMediaDevices(this)),
-      m_min_db(-50.0)
+Player::Player(QObject* parent) :
+    QObject(parent), m_player_engine(std::make_unique<PlayerEngine>()),
+    m_media_devices(new QMediaDevices(this)), m_min_db(-50.0)
 {
     if (!m_player_engine->startDevice()) {
         return;
     }
 
     m_player_engine->setPlaybackFinishedCallback([this](PlayerEngine::StopReason reason) {
-        QMetaObject::invokeMethod(this, [this, reason]() {
-            if (reason == PlayerEngine::StopReason::NATURAL_EOF) {
-                emit stateChanged(m_player_engine->state());
-                emit sgnPlaybackNatualEnd();
-            } /*else ...  */
-        }, Qt::QueuedConnection);
+        QMetaObject::invokeMethod(
+            this,
+            [this, reason]() {
+                if (reason == PlayerEngine::StopReason::NATURAL_EOF) {
+                    emit stateChanged(m_player_engine->state());
+                    emit sgnPlaybackNatualEnd();
+                } /*else ...  */
+            },
+            Qt::QueuedConnection);
     });
     m_player_engine->setWatcdog();
 
@@ -61,7 +62,8 @@ Player::Player(QObject *parent)
             }
 
             if (!preferred_exists) {
-                qInfo() << "[AUDIO] preferred device unavailable. fallback to:" << m_audio_devices.first().description();
+                qInfo() << "[AUDIO] preferred device unavailable. fallback to:"
+                        << m_audio_devices.first().description();
                 setOutputDevice(m_audio_devices.first());
             }
             return;
@@ -94,7 +96,6 @@ PlayingState Player::state() const
     return const_cast<PlayerEngine*>(m_player_engine.get())->state();
 }
 
-
 void Player::read(const QString& filepath)
 {
     if (!m_player_engine || filepath.isEmpty()) {
@@ -105,7 +106,7 @@ void Player::read(const QString& filepath)
 
     m_player_engine->setUrl(filepath.toStdString());
     m_player_engine->resume();
-    const auto meta = m_player_engine->metadata();
+    const auto meta  = m_player_engine->metadata();
     auto duration_it = meta.find("DURATION_MS");
     if (duration_it != meta.end()) {
         emit durationChanged(QString::fromStdString(duration_it->second).toLongLong());
@@ -129,7 +130,7 @@ void Player::play()
         }
 
         m_player_engine->setUrl(m_loaded_track_path.toStdString());
-        const auto meta = m_player_engine->metadata();
+        const auto meta  = m_player_engine->metadata();
         auto duration_it = meta.find("DURATION_MS");
         if (duration_it != meta.end()) {
             emit durationChanged(QString::fromStdString(duration_it->second).toLongLong());
@@ -186,7 +187,7 @@ void Player::setMute(bool mute)
         return;
     }
 
-    if (m_is_mute) {    // && mute = off (recover)
+    if (m_is_mute) { // && mute = off (recover)
         m_player_engine->setVolume(m_old_volume);
     } else { // mute = on (mute)
         m_old_volume = m_player_engine->volume();
@@ -203,14 +204,13 @@ void Player::setVolume(float vol)
     }
 
     const double normalized = std::clamp(static_cast<double>(vol) / 100.0, 0.0, 1.0);
-    double audio_gain = this->mapSliderToVolume(normalized, m_min_db);
+    double audio_gain       = this->mapSliderToVolume(normalized, m_min_db);
     m_player_engine->setVolume((float)audio_gain);
 
     if (!m_is_mute) {
         m_old_volume = static_cast<float>(audio_gain);
     }
 }
-
 
 double Player::mapSliderToVolume(double value, double min_db)
 {
@@ -223,7 +223,7 @@ double Player::mapSliderToVolume(double value, double min_db)
     }
 
     double db = min_db + (0.0 - min_db) * value;
-    return qPow(10.0, db/20.0);
+    return qPow(10.0, db / 20.0);
 }
 
 qint64 Player::position() const
@@ -322,14 +322,16 @@ void Player::refreshDeviceCache()
         for (const auto& dev : m_audio_devices) {
             if (dev.id() == m_preferred_output_id) {
                 m_current_output_id = dev.id();
-                qInfo() << "[AUDIO] backend device not in Qt list. use preferred Qt device:" << dev.description();
+                qInfo() << "[AUDIO] backend device not in Qt list. use preferred Qt device:"
+                        << dev.description();
                 return;
             }
         }
     }
 
     m_current_output_id = m_audio_devices.first().id();
-    qInfo() << "[AUDIO] using first available Qt output device:" << m_audio_devices.first().description();
+    qInfo() << "[AUDIO] using first available Qt output device:"
+            << m_audio_devices.first().description();
 }
 
 void Player::setEQ(gains_t gains)

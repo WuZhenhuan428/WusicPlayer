@@ -1,16 +1,16 @@
 #pragma once
 
-#include <QWidget>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QTableView>
-#include <QStandardItemModel>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QVector>
-#include <QPointer>
-
 #include "core/LyricsFetcher/lyrics_manager.h"
+
+#include <QHBoxLayout>
+#include <QLineEdit>
+#include <QPointer>
+#include <QPushButton>
+#include <QStandardItemModel>
+#include <QTableView>
+#include <QVBoxLayout>
+#include <QVector>
+#include <QWidget>
 
 class LyricsSearchWidget : public QWidget
 {
@@ -32,9 +32,9 @@ private:
     void updateResultTable(const QVector<lyrics_fetcher::LyricMeta>& results);
 
 private:
-    QLineEdit* m_le_query = nullptr;
-    QPushButton* m_btn_search = nullptr;
-    QTableView* m_tb_results = nullptr;
+    QLineEdit* m_le_query       = nullptr;
+    QPushButton* m_btn_search   = nullptr;
+    QTableView* m_tb_results    = nullptr;
     QStandardItemModel* m_model = nullptr;
 
     QVector<lyrics_fetcher::LyricMeta> m_results;

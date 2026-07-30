@@ -2,18 +2,19 @@
 
 #include "shortcuts_types.hpp"
 
-#include <QObject>
 #include <QAbstractTableModel>
+#include <QHash>
 #include <QModelIndex>
+#include <QObject>
 #include <QString>
 #include <QVector>
-#include <QHash>
 
 class ShortcutsViewModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    enum Column {
+    enum Column
+    {
         ColActionName = 0,
         ColKeySequence,
         ColScope,
@@ -21,7 +22,8 @@ public:
         ColCount
     };
 
-    enum UserRole {
+    enum UserRole
+    {
         RoleActionId = Qt::UserRole + 1,
         RoleConflict,
         RoleConflictWith,
@@ -42,10 +44,11 @@ signals:
     void sgnConflictUpdated();
 
 protected:
-    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    QModelIndex index(int row, int column,
+                      const QModelIndex& parent = QModelIndex()) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     Qt::ItemFlags flags(const QModelIndex& index) const override;
     bool setData(const QModelIndex& index, const QVariant& value, int role) override;

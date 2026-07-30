@@ -1,36 +1,32 @@
 #include "DesktopLyricsWidget.h"
 
 #include <QDebug>
-#include <QScreen>
-#include <QGuiApplication>
 #include <QFontMetrics>
+#include <QGuiApplication>
+#include <QJsonObject>
 #include <QMargins>
+#include <QPainter>
+#include <QScreen>
+#include <QTimer>
 #include <QWindow>
 
-#include <QJsonObject>
-#include <QTimer>
-#include <QPainter>
-
 #ifdef Q_OS_WIN
-#include <windows.h>
 #include <dwmapi.h>
+#include <windows.h>
 #endif
 
-DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent)
-    : QWidget(parent),
-      m_display_mode(DisplayMode::TwoLine),
-      m_line_up_mode(AlignMode::Left),
-      m_line_down_mode(AlignMode::Right),
-      m_has_up_line_changed(false)
+DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent) :
+    QWidget(parent), m_display_mode(DisplayMode::TwoLine), m_line_up_mode(AlignMode::Left),
+    m_line_down_mode(AlignMode::Right), m_has_up_line_changed(false)
 {
     this->initUI();
     this->setFixedSize(700, 120);
 
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint
 #ifdef Q_OS_WIN
-        | Qt::Tool  // Windows: hide from taskbar
+                         | Qt::Tool // Windows: hide from taskbar
 #else
-        | Qt::Window
+                         | Qt::Window
 #endif
     );
     this->setAttribute(Qt::WA_TranslucentBackground, true);
@@ -41,9 +37,10 @@ DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent)
 
 DesktopLyricsWidget::~DesktopLyricsWidget() {}
 
-void DesktopLyricsWidget::initUI() {
+void DesktopLyricsWidget::initUI()
+{
     m_btn_shut_down = new QPushButton(this);
-    m_btn_lock = new QPushButton(this);
+    m_btn_lock      = new QPushButton(this);
     m_btn_lock->setText("L");
     m_btn_lock->setFixedSize(20, 20);
     m_btn_shut_down->setText("X");
@@ -55,7 +52,7 @@ void DesktopLyricsWidget::initUI() {
     m_hbl_toolbar->addWidget(m_btn_lock);
     m_hbl_toolbar->addWidget(m_btn_shut_down);
 
-    m_lrc_line_up = new QLabel(this);
+    m_lrc_line_up   = new QLabel(this);
     m_lrc_line_down = new QLabel(this);
     m_lrc_line_up->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     m_lrc_line_down->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -78,26 +75,32 @@ void DesktopLyricsWidget::initUI() {
     this->setLayout(m_vbl_main);
 }
 
-void DesktopLyricsWidget::initConnect() {
+void DesktopLyricsWidget::initConnect()
+{
     connect(m_btn_shut_down, &QPushButton::clicked, this, &QWidget::hide);
-    connect(m_btn_lock, &QPushButton::clicked, this, [this](){
-        setLocked(!m_is_locked);
-    });
+    connect(m_btn_lock, &QPushButton::clicked, this, [this]() { setLocked(!m_is_locked); });
 }
 
-void DesktopLyricsWidget::setLocked(bool locked) {
-    if (m_is_locked == locked) return;
+void DesktopLyricsWidget::setLocked(bool locked)
+{
+    if (m_is_locked == locked)
+        return;
     m_is_locked = locked;
     m_btn_lock->setText(m_is_locked ? "U" : "L");
     m_btn_lock->setVisible(!m_is_locked);
     m_btn_shut_down->setVisible(!m_is_locked);
     applyClickThrough(m_is_locked);
-    if (!m_is_locked) update();
+    if (!m_is_locked)
+        update();
     emit sgnLockChanged(m_is_locked);
 }
 
-void DesktopLyricsWidget::mousePressEvent(QMouseEvent* event) {
-    if (m_is_locked) { event->ignore(); return; }
+void DesktopLyricsWidget::mousePressEvent(QMouseEvent* event)
+{
+    if (m_is_locked) {
+        event->ignore();
+        return;
+    }
     if (event->button() == Qt::LeftButton) {
         m_drag_offset = event->globalPosition().toPoint() - pos();
         m_is_dragging = true;
@@ -105,18 +108,22 @@ void DesktopLyricsWidget::mousePressEvent(QMouseEvent* event) {
     }
 }
 
-void DesktopLyricsWidget::mouseMoveEvent(QMouseEvent* event) {
+void DesktopLyricsWidget::mouseMoveEvent(QMouseEvent* event)
+{
     if (m_is_dragging && !m_is_locked) {
         move(event->globalPosition().toPoint() - m_drag_offset);
         event->accept();
     }
 }
 
-void DesktopLyricsWidget::mouseReleaseEvent(QMouseEvent* event) {
-    if (event->button() == Qt::LeftButton) m_is_dragging = false;
+void DesktopLyricsWidget::mouseReleaseEvent(QMouseEvent* event)
+{
+    if (event->button() == Qt::LeftButton)
+        m_is_dragging = false;
 }
 
-void DesktopLyricsWidget::paintEvent(QPaintEvent* event) {
+void DesktopLyricsWidget::paintEvent(QPaintEvent* event)
+{
     if (!m_is_locked) {
         QPainter painter(this);
         painter.fillRect(rect(), QColor(0, 0, 0, 1));
@@ -124,7 +131,8 @@ void DesktopLyricsWidget::paintEvent(QPaintEvent* event) {
     QWidget::paintEvent(event);
 }
 
-void DesktopLyricsWidget::showEvent(QShowEvent* event) {
+void DesktopLyricsWidget::showEvent(QShowEvent* event)
+{
     QWidget::showEvent(event);
     m_btn_lock->setVisible(!m_is_locked);
     m_btn_shut_down->setVisible(!m_is_locked);
@@ -133,13 +141,15 @@ void DesktopLyricsWidget::showEvent(QShowEvent* event) {
     emit sgnVisibilityChanged(true);
 }
 
-void DesktopLyricsWidget::hideEvent(QHideEvent* event) {
+void DesktopLyricsWidget::hideEvent(QHideEvent* event)
+{
     QWidget::hideEvent(event);
     m_is_visible = false;
     emit sgnVisibilityChanged(false);
 }
 
-void DesktopLyricsWidget::changeEvent(QEvent* event) {
+void DesktopLyricsWidget::changeEvent(QEvent* event)
+{
     QWidget::changeEvent(event);
     if (event->type() == QEvent::PaletteChange || event->type() == QEvent::StyleChange)
         updateLineColor();
@@ -147,13 +157,15 @@ void DesktopLyricsWidget::changeEvent(QEvent* event) {
 
 // ---- lyrics display ----
 
-void DesktopLyricsWidget::setLrcLine(const QString& curr_line, const QString& next_line) {
+void DesktopLyricsWidget::setLrcLine(const QString& curr_line, const QString& next_line)
+{
     if (m_display_mode == DisplayMode::OneLine) {
         m_lrc_line_up->setText(curr_line);
         m_lrc_line_down->clear();
     } else if (m_display_mode == DisplayMode::TwoLine) {
         if (curr_line.isEmpty() && next_line.isEmpty()) {
-            m_lrc_line_up->clear(); m_lrc_line_down->clear();
+            m_lrc_line_up->clear();
+            m_lrc_line_down->clear();
             m_has_up_line_changed = true;
             return;
         }
@@ -174,7 +186,8 @@ void DesktopLyricsWidget::setLrcLine(const QString& curr_line, const QString& ne
     }
 }
 
-void DesktopLyricsWidget::setLrcFont(QFont font) {
+void DesktopLyricsWidget::setLrcFont(QFont font)
+{
     m_font = font;
     m_lrc_line_up->setFont(m_font);
     m_lrc_line_down->setFont(m_font);
@@ -188,40 +201,81 @@ void DesktopLyricsWidget::setLrcFont(QFont font) {
     setFixedHeight(mg.top() + barH + (lines * lh) + sp + mg.bottom());
 }
 
-QFont DesktopLyricsWidget::getFont() { return m_font; }
+QFont DesktopLyricsWidget::getFont()
+{
+    return m_font;
+}
 
-void DesktopLyricsWidget::updateLineColor() {
-    QPalette pe_a; pe_a.setColor(QPalette::WindowText, QColor(m_rgb_active.r, m_rgb_active.g, m_rgb_active.b));
+void DesktopLyricsWidget::updateLineColor()
+{
+    QPalette pe_a;
+    pe_a.setColor(QPalette::WindowText, QColor(m_rgb_active.r, m_rgb_active.g, m_rgb_active.b));
     if (m_display_mode == DisplayMode::OneLine) {
         m_lrc_line_up->setPalette(pe_a);
         m_lrc_line_down->setPalette(pe_a);
     } else {
-        QPalette pe_i; pe_i.setColor(QPalette::WindowText, QColor(m_rgb_inactive.r, m_rgb_inactive.g, m_rgb_inactive.b));
+        QPalette pe_i;
+        pe_i.setColor(QPalette::WindowText,
+                      QColor(m_rgb_inactive.r, m_rgb_inactive.g, m_rgb_inactive.b));
         if (m_has_up_line_changed) {
-            m_lrc_line_up->setPalette(pe_a); m_lrc_line_down->setPalette(pe_i);
+            m_lrc_line_up->setPalette(pe_a);
+            m_lrc_line_down->setPalette(pe_i);
         } else {
-            m_lrc_line_up->setPalette(pe_i); m_lrc_line_down->setPalette(pe_a);
+            m_lrc_line_up->setPalette(pe_i);
+            m_lrc_line_down->setPalette(pe_a);
         }
     }
 }
 
-void DesktopLyricsWidget::setActiveLineColor(rgb_t c)  { m_rgb_active = c; updateLineColor(); }
-void DesktopLyricsWidget::setInactiveLineColor(rgb_t c){ m_rgb_inactive = c; updateLineColor(); }
-rgb_t DesktopLyricsWidget::getActiveLineColor()        { return m_rgb_active; }
-rgb_t DesktopLyricsWidget::getInactiveLineColor()      { return m_rgb_inactive; }
+void DesktopLyricsWidget::setActiveLineColor(rgb_t c)
+{
+    m_rgb_active = c;
+    updateLineColor();
+}
+void DesktopLyricsWidget::setInactiveLineColor(rgb_t c)
+{
+    m_rgb_inactive = c;
+    updateLineColor();
+}
+rgb_t DesktopLyricsWidget::getActiveLineColor()
+{
+    return m_rgb_active;
+}
+rgb_t DesktopLyricsWidget::getInactiveLineColor()
+{
+    return m_rgb_inactive;
+}
 
-void DesktopLyricsWidget::setDisplayMode(DisplayMode d)    { m_display_mode = d; applyConfig(); }
-void DesktopLyricsWidget::setUpLineAlignMode(AlignMode a)  { m_line_up_mode = a; applyConfig(); }
-void DesktopLyricsWidget::setDownLineAlignMode(AlignMode a){ m_line_down_mode = a; applyConfig(); }
+void DesktopLyricsWidget::setDisplayMode(DisplayMode d)
+{
+    m_display_mode = d;
+    applyConfig();
+}
+void DesktopLyricsWidget::setUpLineAlignMode(AlignMode a)
+{
+    m_line_up_mode = a;
+    applyConfig();
+}
+void DesktopLyricsWidget::setDownLineAlignMode(AlignMode a)
+{
+    m_line_down_mode = a;
+    applyConfig();
+}
 
-void DesktopLyricsWidget::applyConfig() {
-    if (m_display_mode == DisplayMode::OneLine) m_lrc_line_down->hide();
-    else m_lrc_line_down->show();
+void DesktopLyricsWidget::applyConfig()
+{
+    if (m_display_mode == DisplayMode::OneLine)
+        m_lrc_line_down->hide();
+    else
+        m_lrc_line_down->show();
     auto al = [](AlignMode m) {
         switch (m) {
-        case AlignMode::Left:   return Qt::AlignLeft;
-        case AlignMode::Middle: return Qt::AlignCenter;
-        case AlignMode::Right:  return Qt::AlignRight;
+        case AlignMode::Left:
+            return Qt::AlignLeft;
+        case AlignMode::Middle:
+            return Qt::AlignCenter;
+        case AlignMode::Right:
+            return Qt::AlignRight;
         }
         return Qt::AlignCenter;
     };
@@ -231,28 +285,40 @@ void DesktopLyricsWidget::applyConfig() {
     setInactiveLineColor(m_rgb_inactive);
 }
 
-const QByteArray DesktopLyricsWidget::getGeometry() const { return saveGeometry(); }
+const QByteArray DesktopLyricsWidget::getGeometry() const
+{
+    return saveGeometry();
+}
 
-void DesktopLyricsWidget::setGeometry(const QByteArray& geo) {
-    if (geo.isEmpty()) return;
+void DesktopLyricsWidget::setGeometry(const QByteArray& geo)
+{
+    if (geo.isEmpty())
+        return;
     restoreGeometry(geo);
     QScreen* s = QGuiApplication::screenAt(pos());
-    if (!s) s = QGuiApplication::primaryScreen();
+    if (!s)
+        s = QGuiApplication::primaryScreen();
     if (!s->availableGeometry().contains(rect()))
         move(s->availableGeometry().center() - rect().center());
 }
 
-void DesktopLyricsWidget::applyClickThrough(bool on) {
+void DesktopLyricsWidget::applyClickThrough(bool on)
+{
 #ifdef Q_OS_WIN
     HWND hwnd = reinterpret_cast<HWND>(winId());
-    if (!hwnd) return;
+    if (!hwnd)
+        return;
     BOOL ncrp = on ? TRUE : FALSE;
     DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, &ncrp, sizeof(ncrp));
     LONG_PTR ex = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
     ex |= WS_EX_LAYERED;
-    if (on) ex |= WS_EX_TRANSPARENT; else ex &= ~WS_EX_TRANSPARENT;
+    if (on)
+        ex |= WS_EX_TRANSPARENT;
+    else
+        ex &= ~WS_EX_TRANSPARENT;
     SetWindowLongPtr(hwnd, GWL_EXSTYLE, ex);
-    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 #else
     Q_UNUSED(on);
 #endif
@@ -260,11 +326,12 @@ void DesktopLyricsWidget::applyClickThrough(bool on) {
 
 // ---- config ----
 
-void DesktopLyricsWidget::loadFromJson(const QJsonObject& json) {
+void DesktopLyricsWidget::loadFromJson(const QJsonObject& json)
+{
     QJsonObject o = json.value(configSubKey()).toObject();
     restoreGeometry(QByteArray::fromBase64(o.value("geometry").toString().toUtf8()));
-    m_is_visible = o.value("is_visible").toBool(true);
-    m_is_locked  = o.value("is_locked").toBool(false);
+    m_is_visible     = o.value("is_visible").toBool(true);
+    m_is_locked      = o.value("is_locked").toBool(false);
     m_rgb_active.r   = o.value("rgb_active_r").toInt();
     m_rgb_active.g   = o.value("rgb_active_g").toInt();
     m_rgb_active.b   = o.value("rgb_active_b").toInt();
@@ -276,23 +343,29 @@ void DesktopLyricsWidget::loadFromJson(const QJsonObject& json) {
     m_btn_lock->setText(m_is_locked ? "U" : "L");
     m_btn_lock->setVisible(!m_is_locked);
     m_btn_shut_down->setVisible(!m_is_locked);
-    if (m_is_visible) QTimer::singleShot(20, this, &QWidget::show);
-    else hide();
+    if (m_is_visible)
+        QTimer::singleShot(20, this, &QWidget::show);
+    else
+        hide();
 }
 
-QJsonObject DesktopLyricsWidget::saveToJson() {
+QJsonObject DesktopLyricsWidget::saveToJson()
+{
     QJsonObject o;
-    o["geometry"] = QString::fromUtf8(getGeometry().toBase64());
-    o["is_visible"] = m_is_visible;
-    o["is_locked"] = m_is_locked;
+    o["geometry"]       = QString::fromUtf8(getGeometry().toBase64());
+    o["is_visible"]     = m_is_visible;
+    o["is_locked"]      = m_is_locked;
     o["rgb_active_r"]   = m_rgb_active.r;
     o["rgb_active_g"]   = m_rgb_active.g;
     o["rgb_active_b"]   = m_rgb_active.b;
     o["rgb_inactive_r"] = m_rgb_inactive.r;
     o["rgb_inactive_g"] = m_rgb_inactive.g;
     o["rgb_inactive_b"] = m_rgb_inactive.b;
-    o["font_string"] = m_font.toString();
+    o["font_string"]    = m_font.toString();
     return o;
 }
 
-QString DesktopLyricsWidget::configSubKey() const { return "desktop_lyrics"; }
+QString DesktopLyricsWidget::configSubKey() const
+{
+    return "desktop_lyrics";
+}

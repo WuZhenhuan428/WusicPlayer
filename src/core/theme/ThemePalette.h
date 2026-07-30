@@ -6,17 +6,18 @@
 
 /// 主题调色板——整个主题系统的唯一数据源。
 /// QPalette 角色直接映射到 Qt 标准色角色；语义颜色和尺寸供 WusicProxyStyle 绘制时使用。
-struct ThemePalette {
+struct ThemePalette
+{
     // ---- 元信息 ----
-    QString name;       // 主题名称，如 "Wusic Dark"
-    QString author;     // 作者
-    bool    isDark = false;
+    QString name;   // 主题名称，如 "Wusic Dark"
+    QString author; // 作者
+    bool isDark = false;
 
     // ---- QPalette 角色（将直接设入 QPalette） ----
-    QColor window;          // 主窗口背景
+    QColor window; // 主窗口背景
     QColor windowText;
-    QColor base;            // 输入框 / 列表背景
-    QColor alternateBase;   // 列表交替行
+    QColor base;          // 输入框 / 列表背景
+    QColor alternateBase; // 列表交替行
     QColor text;
     QColor button;
     QColor buttonText;
@@ -50,20 +51,21 @@ struct ThemePalette {
     int separatorW     = 1;
 
     /// 生成 QPalette
-    QPalette toQPalette() const {
+    QPalette toQPalette() const
+    {
         QPalette p;
-        p.setColor(QPalette::Window,          window);
-        p.setColor(QPalette::WindowText,      windowText);
-        p.setColor(QPalette::Base,            base);
-        p.setColor(QPalette::AlternateBase,   alternateBase);
-        p.setColor(QPalette::Text,            text);
-        p.setColor(QPalette::Button,          button);
-        p.setColor(QPalette::ButtonText,      buttonText);
-        p.setColor(QPalette::BrightText,      brightText);
-        p.setColor(QPalette::Highlight,       highlight);
+        p.setColor(QPalette::Window, window);
+        p.setColor(QPalette::WindowText, windowText);
+        p.setColor(QPalette::Base, base);
+        p.setColor(QPalette::AlternateBase, alternateBase);
+        p.setColor(QPalette::Text, text);
+        p.setColor(QPalette::Button, button);
+        p.setColor(QPalette::ButtonText, buttonText);
+        p.setColor(QPalette::BrightText, brightText);
+        p.setColor(QPalette::Highlight, highlight);
         p.setColor(QPalette::HighlightedText, highlightedText);
-        p.setColor(QPalette::ToolTipBase,     toolTipBase);
-        p.setColor(QPalette::ToolTipText,     toolTipText);
+        p.setColor(QPalette::ToolTipBase, toolTipBase);
+        p.setColor(QPalette::ToolTipText, toolTipText);
         return p;
     }
 };

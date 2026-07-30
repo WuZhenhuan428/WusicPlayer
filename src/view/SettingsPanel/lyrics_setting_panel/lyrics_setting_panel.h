@@ -1,19 +1,16 @@
 #pragma once
 
-#include <QWidget>
-#include <QListWidgetItem>
-
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-
-#include <QLabel>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QButtonGroup>
-#include <QRadioButton>     // n->1 button
-
 #include "core/hsv_types.h"
 
+#include <QButtonGroup>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QListWidgetItem>
+#include <QPushButton>
+#include <QRadioButton>
+#include <QVBoxLayout>
+#include <QWidget>
 
 class LyricsSettingPanel : public QWidget
 {
@@ -32,7 +29,7 @@ private:
 
     bool m_is_two_line;
 
-    rgb_t m_active_rgb = rgb_t{0xFF, 0xFF, 0xFF};
+    rgb_t m_active_rgb   = rgb_t{0xFF, 0xFF, 0xFF};
     rgb_t m_inactive_rgb = rgb_t{0x00, 0x00, 0x00};
 
     void update_active_btn_color(rgb_t rgb);

@@ -1,19 +1,19 @@
 #pragma once
 
+#include "core/types.h"
+#include "playlist.h"
+#include "playlist_layout.h"
+#include "playlist_repo.h"
+
 #include <QAbstractTableModel>
-#include <QVector>
-#include <QUuid>
 #include <QHash>
-#include <QVariant>
 #include <QModelIndex>
 #include <QPersistentModelIndex>
 #include <QStringList>
 #include <QTimer>
-
-#include "playlist.h"
-#include "playlist_repo.h"
-#include "core/types.h"
-#include "playlist_layout.h"
+#include <QUuid>
+#include <QVariant>
+#include <QVector>
 
 class PlaylistViewModel : public QAbstractItemModel
 {
@@ -26,7 +26,7 @@ public:
     void rebuild();
     void rebuildAsync();
 
-/* ==== Context & Repo 绑定 ==== */
+    /* ==== Context & Repo 绑定 ==== */
     void setPlaylist(const playlistId& pid);
     void setSortExpression(const QString& expression);
     void setGroupRules(const QVector<SortRule>& rules);
@@ -41,13 +41,14 @@ public:
     void setActiveTrack(const trackId& tid);
     void clear();
 
-/* ==== View视图数据访问 ====*/
+    /* ==== View视图数据访问 ====*/
     // QAbstractItemModel Interface
-    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
-    QModelIndex parent(const QModelIndex &child) const override;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    QModelIndex index(int row, int column,
+                      const QModelIndex& parent = QModelIndex()) const override;
+    QModelIndex parent(const QModelIndex& child) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
     /**
@@ -58,7 +59,8 @@ public:
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
     // Helper to get logic data
-    PlaybackQueueSnapshot playbackQueueSnapshot() const; // return value but not ptr because use rebuildAsync()
+    PlaybackQueueSnapshot
+    playbackQueueSnapshot() const; // return value but not ptr because use rebuildAsync()
     PlaybackQueueSnapshot singleShuffleQueueSnapshot() const;
     PlaybackQueueSnapshot groupShuffleQueueSnapshot() const;
     trackId trackAt(int index) const; // Still useful for linear queue access
@@ -68,13 +70,13 @@ public:
 
     const Playlist& resolvePlaylist();
 
-/* ==== Dynamic Column Management ==== */
+    /* ==== Dynamic Column Management ==== */
     void insertColumn(int index, const TableColumn& column);
     void removeColumn(int index);
     void setColumns(const QVector<TableColumn>& columns);
     const QVector<TableColumn>& getColumns() const;
 
-/* ==== 播放顺序辅助（用于Player） ==== */
+    /* ==== 播放顺序辅助（用于Player） ==== */
     QVector<trackId> generateGroupShuffleQueue();
     QVector<trackId> generateSingleShuffleQueue();
 
@@ -91,18 +93,19 @@ signals:
     void changedPlaybackQueue();
     void updatedTrackMetadata(const trackId& tid);
     void changedData(int row);
-    
+
 private:
     PlaylistRepo* m_repo = nullptr;
     playlistId m_pid;
     trackId m_active_track_id;
-    Node* m_root = nullptr;
+    Node* m_root                  = nullptr;
 
-    int m_rebuild_token = 0;
+    int m_rebuild_token           = 0;
 
     QTimer* m_batch_rebuild_timer = nullptr;
 
-    QVector<trackId> m_playback_queue; // Linear queue for playback logic (separate from Tree structure)
+    QVector<trackId>
+        m_playback_queue; // Linear queue for playback logic (separate from Tree structure)
     QVector<trackId> m_single_shuffle_queue;
     QVector<trackId> m_group_shuffle_queue;
 

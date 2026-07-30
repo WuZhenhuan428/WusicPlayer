@@ -1,15 +1,15 @@
 #pragma once
 
+#include "core/ConfigManager/IConfigurable.h"
 #include "model/ShortcutsViewModel/shortcuts_types.hpp"
 #include "model/ShortcutsViewModel/shortcuts_view_model.hpp"
-#include "core/ConfigManager/IConfigurable.h"
-#include <QObject>
-#include <QVector>
-#include <QHash>
-#include <QShortcut>
-#include <QPointer>
-#include <QWidget>
 
+#include <QHash>
+#include <QObject>
+#include <QPointer>
+#include <QShortcut>
+#include <QVector>
+#include <QWidget>
 #include <functional>
 
 class ShortcutsController : public QObject, public IConfigurable
@@ -20,15 +20,12 @@ public:
 
     explicit ShortcutsController(QObject* parent = nullptr);
     ~ShortcutsController() override = default;
-    
-    void registerAction(const ShortcutDescriptor& desc, ShortcutHandler handler, QObject* parent = nullptr);
-    void registerOperation(ShortcutActionId action_id,
-                           const QString& display_name,
-                           ShortcutScope scope,
-                           const QKeySequence& default_key,
-                           ShortcutHandler handler,
-                           QObject* owner = nullptr,
-                           bool editable = true);
+
+    void registerAction(const ShortcutDescriptor& desc, ShortcutHandler handler,
+                        QObject* parent = nullptr);
+    void registerOperation(ShortcutActionId action_id, const QString& display_name,
+                           ShortcutScope scope, const QKeySequence& default_key,
+                           ShortcutHandler handler, QObject* owner = nullptr, bool editable = true);
     void unregisterAction(ShortcutActionId action_id);
     bool setShortcut(ShortcutActionId action_id, const QKeySequence& seq);
     void enableAction(ShortcutActionId action_id, bool enabled);
@@ -38,10 +35,10 @@ public:
     void setScopeHost(ShortcutScope scope, QWidget* host);
     QVector<ShortcutBinding> bindings() const;
     void applyBindings(const QVector<ShortcutBinding>& bindings);
-    
+
     ShortcutsViewModel* viewModel() const;
 
-    void loadFromJson(const QJsonObject &json) override;
+    void loadFromJson(const QJsonObject& json) override;
     QJsonObject saveToJson() override;
     QString configSubKey() const override;
 

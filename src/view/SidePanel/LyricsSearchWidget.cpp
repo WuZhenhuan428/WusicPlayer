@@ -2,17 +2,19 @@
 
 #include <QHeaderView>
 #include <QMessageBox>
+#include <QMetaObject>
 #include <QNetworkAccessManager>
 #include <QThread>
-#include <QMetaObject>
 
-namespace {
-static lyrics_fetcher::TrackMeta parseQueryToMeta(const QString& query) {
+namespace
+{
+static lyrics_fetcher::TrackMeta parseQueryToMeta(const QString& query)
+{
     lyrics_fetcher::TrackMeta meta;
-    const QString trimmed = query.trimmed();
+    const QString trimmed   = query.trimmed();
     const QStringList parts = trimmed.split(" - ", Qt::SkipEmptyParts);
     if (parts.size() >= 2) {
-        meta.rawTitle = parts.at(0).trimmed();
+        meta.rawTitle  = parts.at(0).trimmed();
         meta.rawArtist = parts.at(1).trimmed();
     } else {
         meta.rawTitle = trimmed;
@@ -20,34 +22,36 @@ static lyrics_fetcher::TrackMeta parseQueryToMeta(const QString& query) {
     }
     return meta;
 }
-}
+} // namespace
 
-LyricsSearchWidget::LyricsSearchWidget(QWidget* parent)
-    : QWidget(parent)
+LyricsSearchWidget::LyricsSearchWidget(QWidget* parent) : QWidget(parent)
 {
     initUi();
     initConnections();
 }
 
-void LyricsSearchWidget::setInitialQuery(const QString& title, const QString& artist) {
+void LyricsSearchWidget::setInitialQuery(const QString& title, const QString& artist)
+{
     const QString query = artist.trimmed().isEmpty()
-        ? title.trimmed()
-        : QString("%1 - %2").arg(title.trimmed(), artist.trimmed());
+                              ? title.trimmed()
+                              : QString("%1 - %2").arg(title.trimmed(), artist.trimmed());
     m_le_query->setText(query.trimmed());
 }
 
-void LyricsSearchWidget::setSearchContext(const lyrics_fetcher::TrackMeta& context) {
+void LyricsSearchWidget::setSearchContext(const lyrics_fetcher::TrackMeta& context)
+{
     m_search_context = context;
 }
 
-void LyricsSearchWidget::initUi() {
+void LyricsSearchWidget::initUi()
+{
     m_le_query = new QLineEdit(this);
     m_le_query->setPlaceholderText(tr("Input title or title - artist"));
 
     m_btn_search = new QPushButton(tr("Search"), this);
 
     m_tb_results = new QTableView(this);
-    m_model = new QStandardItemModel(this);
+    m_model      = new QStandardItemModel(this);
     m_model->setColumnCount(4);
     m_model->setHeaderData(0, Qt::Horizontal, tr("Title"));
     m_model->setHeaderData(1, Qt::Horizontal, tr("Artist"));
@@ -75,7 +79,8 @@ void LyricsSearchWidget::initUi() {
     setWindowTitle(tr("Lyrics Search"));
 }
 
-void LyricsSearchWidget::initConnections() {
+void LyricsSearchWidget::initConnections()
+{
     connect(m_btn_search, &QPushButton::clicked, this, [this]() {
         if (m_searching) {
             return;
@@ -110,23 +115,24 @@ void LyricsSearchWidget::initConnections() {
             lyrics_fetcher::LyricsManager manager;
             results = manager.fetch(track_meta, &nam);
 
-            QMetaObject::invokeMethod(self, [self, results]() {
-                if (!self) {
-                    return;
-                }
-                self->updateResultTable(results);
-                self->m_searching = false;
-                self->m_btn_search->setEnabled(true);
-            }, Qt::QueuedConnection);
+            QMetaObject::invokeMethod(
+                self,
+                [self, results]() {
+                    if (!self) {
+                        return;
+                    }
+                    self->updateResultTable(results);
+                    self->m_searching = false;
+                    self->m_btn_search->setEnabled(true);
+                },
+                Qt::QueuedConnection);
         });
 
         connect(worker, &QThread::finished, worker, &QObject::deleteLater);
         worker->start();
     });
 
-    connect(m_le_query, &QLineEdit::returnPressed, this, [this]() {
-        m_btn_search->click();
-    });
+    connect(m_le_query, &QLineEdit::returnPressed, this, [this]() { m_btn_search->click(); });
 
     connect(m_tb_results, &QTableView::doubleClicked, this, [this](const QModelIndex& index) {
         if (!index.isValid()) {
@@ -140,7 +146,8 @@ void LyricsSearchWidget::initConnections() {
     });
 }
 
-void LyricsSearchWidget::updateResultTable(const QVector<lyrics_fetcher::LyricMeta>& results) {
+void LyricsSearchWidget::updateResultTable(const QVector<lyrics_fetcher::LyricMeta>& results)
+{
     m_results = results;
     m_model->removeRows(0, m_model->rowCount());
 

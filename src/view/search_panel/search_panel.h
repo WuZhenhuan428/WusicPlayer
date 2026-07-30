@@ -1,20 +1,19 @@
 #pragma once
 
-#include <QWidget>
-#include <QLineEdit>
-#include <QTreeView>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QComboBox>
-#include <QAbstractItemModel>
+#include "core/types.h"
 
+#include <QAbstractItemModel>
 #include <QCloseEvent>
+#include <QComboBox>
+#include <QHBoxLayout>
 #include <QHideEvent>
 #include <QKeyEvent>
-#include <QTimer>
+#include <QLineEdit>
 #include <QPoint>
-
-#include "core/types.h"
+#include <QTimer>
+#include <QTreeView>
+#include <QVBoxLayout>
+#include <QWidget>
 class ConfigManager;
 
 class QJsonObject;
@@ -23,7 +22,7 @@ class SearchPanel : public QWidget
 {
     Q_OBJECT
 public:
-    explicit SearchPanel(ConfigManager* cfg_mgr, QWidget *parent = nullptr);
+    explicit SearchPanel(ConfigManager* cfg_mgr, QWidget* parent = nullptr);
     ~SearchPanel();
 
     void setSearchBackend(class ISearchBackend* backend);
@@ -31,7 +30,7 @@ public:
     void applyHeaderStateDeferred(const QByteArray& state);
 
     // config S/L, temporary
-    void loadFromJson(const QJsonObject &json);
+    void loadFromJson(const QJsonObject& json);
     QJsonObject saveToJson();
     QString configSubKey() const;
 

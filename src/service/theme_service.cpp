@@ -1,20 +1,18 @@
 #include "theme_service.h"
 
-#include "model/theme_settings_model.h"
 #include "core/theme/ThemeManager.h"
+#include "model/theme_settings_model.h"
 
-ThemeService::ThemeService(QObject* parent)
-    : QObject(parent)
-    , m_model(std::make_unique<ThemeSettingsModel>(this))
+ThemeService::ThemeService(QObject* parent) :
+    QObject(parent), m_model(std::make_unique<ThemeSettingsModel>(this))
 {
     // 监听外部主题变更（如其他地方调用了 applyXxxTheme）
-    connect(&ThemeManager::instance(), &ThemeManager::themeChanged,
-            this, [this]() {
-                emit currentThemeChanged(ThemeManager::instance().currentThemeName());
-            });
+    connect(&ThemeManager::instance(), &ThemeManager::themeChanged, this,
+            [this]() { emit currentThemeChanged(ThemeManager::instance().currentThemeName()); });
 }
 
-void ThemeService::scanThemes() {
+void ThemeService::scanThemes()
+{
     QVector<ThemeEntry> entries;
     auto& tm = ThemeManager::instance();
 
@@ -52,12 +50,14 @@ void ThemeService::scanThemes() {
     m_model->setEntries(entries);
 }
 
-void ThemeService::applyTheme(int row) {
+void ThemeService::applyTheme(int row)
+{
     const auto& entries = m_model->entries();
-    if (row < 0 || row >= entries.size()) return;
+    if (row < 0 || row >= entries.size())
+        return;
 
     const auto& e = entries.at(row);
-    auto& tm = ThemeManager::instance();
+    auto& tm      = ThemeManager::instance();
 
     if (e.source == QStringLiteral("System")) {
         tm.applySystemTheme(e.name);
@@ -70,15 +70,18 @@ void ThemeService::applyTheme(int row) {
     emit currentThemeChanged(e.name);
 }
 
-ThemeSettingsModel* ThemeService::model() const {
+ThemeSettingsModel* ThemeService::model() const
+{
     return m_model.get();
 }
 
-QString ThemeService::currentThemeName() const {
+QString ThemeService::currentThemeName() const
+{
     return ThemeManager::instance().currentThemeName();
 }
 
-void ThemeService::rescanExternalPlugins(const QString& dir) {
+void ThemeService::rescanExternalPlugins(const QString& dir)
+{
     ThemeManager::instance().scanExternalPlugins(dir);
-    scanThemes();  // 刷新模型
+    scanThemes(); // 刷新模型
 }

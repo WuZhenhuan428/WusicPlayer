@@ -4,13 +4,15 @@
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct
+{
     double h;
     double s;
     double v;
 } hsv_t;
 
-typedef struct {
+typedef struct
+{
     unsigned char r;
     unsigned char g;
     unsigned char b;

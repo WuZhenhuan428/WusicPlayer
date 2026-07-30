@@ -1,25 +1,24 @@
 #pragma once
 
-#include <QWidget>
-#include <QSplitter>
-#include <QTreeWidget>
-#include <QTreeWidget>
+#include "core/ConfigManager/IConfigurable.h"
+#include "core/types.h"
+
+#include <QAbstractItemModel>
+#include <QByteArray>
+#include <QHBoxLayout>
 #include <QHeaderView>
 #include <QLabel>
-#include <QAbstractItemModel>
-#include <QHBoxLayout>
-#include <QPoint>
-#include <QByteArray>
 #include <QPair>
-
-#include "core/types.h"
-#include "core/ConfigManager/IConfigurable.h"
+#include <QPoint>
+#include <QSplitter>
+#include <QTreeWidget>
+#include <QWidget>
 
 class LibraryWidget : public QWidget, public IConfigurable
 {
     Q_OBJECT
 public:
-    explicit LibraryWidget(QAbstractItemModel* song_model, QWidget *parent = nullptr);
+    explicit LibraryWidget(QAbstractItemModel* song_model, QWidget* parent = nullptr);
     ~LibraryWidget();
 
     void setSongTreeModel(QAbstractItemModel* model);
@@ -29,7 +28,7 @@ public:
     QHeaderView* songTreeHeader() const;
 
     // config S/L interface
-    void loadFromJson(const QJsonObject &json) override;
+    void loadFromJson(const QJsonObject& json) override;
     QJsonObject saveToJson() override;
     QString configSubKey() const override;
 
@@ -37,7 +36,7 @@ signals:
     void sgnImportFiles(const playlistId& pid = playlistId());
     void sgnImportDir(const playlistId& pid = playlistId());
 
-    void sgnPlayTrackByModelIndex(const QModelIndex &index);
+    void sgnPlayTrackByModelIndex(const QModelIndex& index);
     void sgnTrackPropertyRequested(trackId tid, QString filepath, TrackMetaData meta);
     void sgnRemoveTrackRequested(trackId tid);
     void sgnRenamePlaylist(playlistId id);
@@ -54,8 +53,8 @@ private:
     void initConnections();
 
 private slots:
-    void callTreeContextMenu(const QPoint &pos);
-    void callSongContextMenu(const QPoint &pos);
+    void callTreeContextMenu(const QPoint& pos);
+    void callSongContextMenu(const QPoint& pos);
     void updateSongView();
 
 private:

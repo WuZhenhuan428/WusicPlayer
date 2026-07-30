@@ -1,7 +1,6 @@
 #include "WLyricsPanel.h"
 
-WLyricsPanel::WLyricsPanel(QWidget* parent)
-    : QListView(parent)
+WLyricsPanel::WLyricsPanel(QWidget* parent) : QListView(parent)
 {
     m_lrc_model = new WLyricsModel(this);
     this->setModel(m_lrc_model);
@@ -17,7 +16,8 @@ WLyricsPanel::WLyricsPanel(QWidget* parent)
 
 WLyricsPanel::~WLyricsPanel() {}
 
-void WLyricsPanel::ScrollByPosition(qint64 position_ms) {
+void WLyricsPanel::ScrollByPosition(qint64 position_ms)
+{
     int row = m_lrc_model->getRowByPosition(position_ms);
     if (row >= 0 && row < m_lrc_model->rowCount()) {
         QModelIndex idx = m_lrc_model->index(row, 0);
@@ -27,36 +27,42 @@ void WLyricsPanel::ScrollByPosition(qint64 position_ms) {
     }
 }
 
-bool WLyricsPanel::setRawLyrics(const QString& raw_data) {
+bool WLyricsPanel::setRawLyrics(const QString& raw_data)
+{
     if (m_lrc_model->setRawLyrics(raw_data)) {
         return true;
     }
     return false;
 }
 
-bool WLyricsPanel::setLocalLrc(const QString& filepath) {
+bool WLyricsPanel::setLocalLrc(const QString& filepath)
+{
     if (m_lrc_model->setLocalLrc(filepath)) {
         return true;
     }
     return false;
 }
 
-bool WLyricsPanel::setLrcFilePath(const QString& lrc_path) {
+bool WLyricsPanel::setLrcFilePath(const QString& lrc_path)
+{
     if (m_lrc_model->setLrcFilePath(lrc_path)) {
         return true;
     }
     return false;
 }
 
-QString WLyricsPanel::rawLyricsText() const {
+QString WLyricsPanel::rawLyricsText() const
+{
     return m_lrc_model->rawLyricsText();
 }
 
-void WLyricsPanel::setDefaultInfo(const TrackMetaData& meta) {
+void WLyricsPanel::setDefaultInfo(const TrackMetaData& meta)
+{
     m_lrc_model->setDefaultInfo(meta);
 }
 
-void WLyricsPanel::wheelEvent(QWheelEvent* event) {
+void WLyricsPanel::wheelEvent(QWheelEvent* event)
+{
     // do nothing to disable mouse wheel scroll
     event->accept();
 }

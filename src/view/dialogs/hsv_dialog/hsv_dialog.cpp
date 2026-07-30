@@ -2,21 +2,20 @@
 
 #include <QStyle>
 
-HSVDialog::HSVDialog(rgb_t curr_rgb, QWidget *parent)
-    : QDialog(parent)
+HSVDialog::HSVDialog(rgb_t curr_rgb, QWidget* parent) : QDialog(parent)
 {
 
-    m_current_color = curr_rgb;
+    m_current_color  = curr_rgb;
 
     int outer_radius = 100;
-    int label_width = 200;
-    m_hsv_palette = new HSVPalette((int)(outer_radius * 0.75), outer_radius, this);
-    m_color_preview = new ColorPreviewItem(60, outer_radius * 2, this);
-    m_color_layout = new QVBoxLayout;
+    int label_width  = 200;
+    m_hsv_palette    = new HSVPalette((int)(outer_radius * 0.75), outer_radius, this);
+    m_color_preview  = new ColorPreviewItem(60, outer_radius * 2, this);
+    m_color_layout   = new QVBoxLayout;
     m_color_layout->addWidget(m_hsv_palette);
     m_color_layout->addWidget(m_color_preview);
-    
-    m_label_matrix = new LabelMatrix(this);
+
+    m_label_matrix   = new LabelMatrix(this);
     m_palette_layout = new QHBoxLayout;
     m_palette_layout->addLayout(m_color_layout);
     m_palette_layout->addStretch();
@@ -33,39 +32,37 @@ HSVDialog::HSVDialog(rgb_t curr_rgb, QWidget *parent)
     m_bottom_layout->addWidget(m_btn_apply);
     m_bottom_layout->addWidget(m_btn_ok);
     m_bottom_layout->addWidget(m_btn_cancel);
-    
+
     m_main_layout = new QVBoxLayout;
     m_main_layout->addLayout(m_palette_layout);
     m_main_layout->addLayout(m_bottom_layout);
 
-    
     this->setLayout(m_main_layout);
-    this->setMinimumSize(outer_radius*2 + label_width, outer_radius*2 + 60);
+    this->setMinimumSize(outer_radius * 2 + label_width, outer_radius * 2 + 60);
 
     m_hsv_palette->setHsv(hsv_t{0.0f, 50.0f, 50.0f});
     m_hsv_palette->setRgb(m_current_color);
     m_color_preview->setInitialColor(m_current_color);
 
-
     connect(m_hsv_palette, &HSVPalette::sgnHSVChanged, m_label_matrix, &LabelMatrix::setHSV);
     connect(m_label_matrix, &LabelMatrix::sgnEditColor, m_hsv_palette, &HSVPalette::setHsv);
-    connect(m_hsv_palette, &HSVPalette::sgnMouseMovingColor, m_color_preview, &ColorPreviewItem::updateCurrColor);
-    connect(m_hsv_palette, &HSVPalette::sgnMouseReleaseColor, m_color_preview, &ColorPreviewItem::updateColor);
-    
-    connect(m_btn_apply, &QPushButton::clicked, this, [this](){
-        m_current_color = m_hsv_palette->getRgb();
-    });
-    connect(m_btn_ok, &QPushButton::clicked, this, [this](){
+    connect(m_hsv_palette, &HSVPalette::sgnMouseMovingColor, m_color_preview,
+            &ColorPreviewItem::updateCurrColor);
+    connect(m_hsv_palette, &HSVPalette::sgnMouseReleaseColor, m_color_preview,
+            &ColorPreviewItem::updateColor);
+
+    connect(m_btn_apply, &QPushButton::clicked, this,
+            [this]() { m_current_color = m_hsv_palette->getRgb(); });
+    connect(m_btn_ok, &QPushButton::clicked, this, [this]() {
         m_current_color = m_hsv_palette->getRgb();
         this->accept();
     });
-    connect(m_btn_cancel, &QPushButton::clicked, this, [this](){
-        this->reject();
-    });
+    connect(m_btn_cancel, &QPushButton::clicked, this, [this]() { this->reject(); });
 }
 
 HSVDialog::~HSVDialog() {}
 
-rgb_t HSVDialog::getColor() {
+rgb_t HSVDialog::getColor()
+{
     return m_current_color;
 }

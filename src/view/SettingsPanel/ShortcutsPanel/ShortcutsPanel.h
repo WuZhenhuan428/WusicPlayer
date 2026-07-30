@@ -1,14 +1,13 @@
 #pragma once
 
-#include <QWidget>
+#include <QCloseEvent>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QTableView>
-#include <QPushButton>
-#include <QHBoxLayout>
 #include <QListWidgetItem>
-
-#include <QCloseEvent>
+#include <QPushButton>
+#include <QTableView>
+#include <QWidget>
 
 class QJsonObject;
 class ConfigManager;
@@ -24,7 +23,7 @@ public:
 
     QListWidgetItem* getListItem();
 
-    void loadFromJson(const QJsonObject &json);
+    void loadFromJson(const QJsonObject& json);
     QJsonObject saveToJson();
     QString configSubKey() const;
 

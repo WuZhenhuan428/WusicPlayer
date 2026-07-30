@@ -1,51 +1,51 @@
 #include "search_panel.h"
-#include "model/search_model/search_model.h"
 
 #include "controller/search_backend/i_search_backend.h"
-
-#include <QTimer>
-#include <QHeaderView>
-#include <QMenu>
-#include <QAction>
-
-#include "core/search_types.h"
-
-#include <QJsonObject>
 #include "core/ConfigManager/ConfigManager.h"
+#include "core/search_types.h"
+#include "model/search_model/search_model.h"
 
-SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget *parent)
-    : QWidget(parent),
-      m_cfg_mgr(cfg_mgr)
+#include <QAction>
+#include <QHeaderView>
+#include <QJsonObject>
+#include <QMenu>
+#include <QTimer>
+
+SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget* parent) :
+    QWidget(parent), m_cfg_mgr(cfg_mgr)
 {
     setWindowTitle("Search");
     m_le_keyword = new QLineEdit;
-    m_cb_mode = new QComboBox;
+    m_cb_mode    = new QComboBox;
     m_le_keyword->setAttribute(Qt::WA_InputMethodEnabled, true);
     m_search_result_tree_view = new QTreeView;
-    m_hbl_query = new QHBoxLayout;
-    m_vbl_main = new QVBoxLayout;
+    m_hbl_query               = new QHBoxLayout;
+    m_vbl_main                = new QVBoxLayout;
 
-    m_cb_mode->addItem(QStringLiteral("Plain"), QVariant::fromValue(static_cast<int>(SearchQueryMode::Plain)));
-    m_cb_mode->addItem(QStringLiteral("Prefix"), QVariant::fromValue(static_cast<int>(SearchQueryMode::Prefix)));
-    m_cb_mode->addItem(QStringLiteral("Fuzzy"), QVariant::fromValue(static_cast<int>(SearchQueryMode::Fuzzy)));
-    
+    m_cb_mode->addItem(QStringLiteral("Plain"),
+                       QVariant::fromValue(static_cast<int>(SearchQueryMode::Plain)));
+    m_cb_mode->addItem(QStringLiteral("Prefix"),
+                       QVariant::fromValue(static_cast<int>(SearchQueryMode::Prefix)));
+    m_cb_mode->addItem(QStringLiteral("Fuzzy"),
+                       QVariant::fromValue(static_cast<int>(SearchQueryMode::Fuzzy)));
+
     m_search_result_tree_view->setSelectionMode(QAbstractItemView::SingleSelection);
     m_search_result_tree_view->setRootIsDecorated(false);
     m_search_result_tree_view->setAlternatingRowColors(true);
     m_search_result_tree_view->setMinimumWidth(120);
-    
+
     m_hbl_query->addWidget(m_le_keyword, 1);
     m_hbl_query->addWidget(m_cb_mode);
     m_vbl_main->addLayout(m_hbl_query);
     m_vbl_main->addWidget(m_search_result_tree_view);
     setLayout(m_vbl_main);
-    
+
     m_search_model = new SearchModel(nullptr, this);
     m_search_result_tree_view->setModel(m_search_model);
     if (m_search_result_tree_view->header()) {
         m_search_result_tree_view->header()->setContextMenuPolicy(Qt::CustomContextMenu);
     }
-    
+
     m_tim_input = new QTimer(this);
     m_tim_input->setSingleShot(true);
     m_tim_input->setInterval(150);
@@ -54,7 +54,7 @@ SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget *parent)
     QJsonObject config_obj = m_cfg_mgr->readSubConfig(this->configSubKey());
     this->loadFromJson(config_obj);
 
-    connect(m_le_keyword, &QLineEdit::textChanged, this, [this](const QString& keyword){
+    connect(m_le_keyword, &QLineEdit::textChanged, this, [this](const QString& keyword) {
         Q_UNUSED(keyword);
         m_tim_input->start();
     });
@@ -66,7 +66,7 @@ SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget *parent)
 
         SearchQuery query;
         query.keyword = m_le_keyword->text();
-        query.mode = static_cast<SearchQueryMode>(m_cb_mode->currentData().toInt());
+        query.mode    = static_cast<SearchQueryMode>(m_cb_mode->currentData().toInt());
         m_search_model->searchRequest(std::move(query));
     });
 
@@ -76,58 +76,66 @@ SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget *parent)
         }
         m_tim_input->start();
     });
-    
-    connect(m_search_result_tree_view, &QTreeView::doubleClicked, this, [this](const QModelIndex &index){
-        if (!index.isValid() || !m_search_model) {
-            return;
-        }
 
-        const trackId id = m_search_model->trackIdAt(index.row());
-        if (id.isNull()) {
-            return;
-        }
-        emit sgnRequestPlayTrack(id);
-    });
+    connect(m_search_result_tree_view, &QTreeView::doubleClicked, this,
+            [this](const QModelIndex& index) {
+                if (!index.isValid() || !m_search_model) {
+                    return;
+                }
+
+                const trackId id = m_search_model->trackIdAt(index.row());
+                if (id.isNull()) {
+                    return;
+                }
+                emit sgnRequestPlayTrack(id);
+            });
 
     if (m_search_result_tree_view->header()) {
-        connect(m_search_result_tree_view->header(), &QHeaderView::customContextMenuRequested,
-                this, &SearchPanel::showHeaderContextMenu);
+        connect(m_search_result_tree_view->header(), &QHeaderView::customContextMenuRequested, this,
+                &SearchPanel::showHeaderContextMenu);
     }
 }
 
 SearchPanel::~SearchPanel() {}
 
-void SearchPanel::setSearchBackend(ISearchBackend* backend) {
+void SearchPanel::setSearchBackend(ISearchBackend* backend)
+{
     if (!m_search_model) {
         return;
     }
     m_search_model->setBackend(backend);
 }
 
-QTreeView* SearchPanel::getView() const {
+QTreeView* SearchPanel::getView() const
+{
     return this->m_search_result_tree_view;
 }
 
-void SearchPanel::applyHeaderStateDeferred(const QByteArray& state) {
-    if (state.isEmpty()) return;
+void SearchPanel::applyHeaderStateDeferred(const QByteArray& state)
+{
+    if (state.isEmpty())
+        return;
 
-    QTimer::singleShot(0, this, [this, state](){
+    QTimer::singleShot(0, this, [this, state]() {
         if (m_search_result_tree_view && m_search_result_tree_view->header()) {
             m_search_result_tree_view->header()->restoreState(state);
         }
     });
 }
 
-void SearchPanel::closeEvent(QCloseEvent* event) {
+void SearchPanel::closeEvent(QCloseEvent* event)
+{
     m_cfg_mgr->writeSubConfig(this->configSubKey(), this->saveToJson());
     QWidget::closeEvent(event);
 }
 
-void SearchPanel::hideEvent(QHideEvent* event) {
+void SearchPanel::hideEvent(QHideEvent* event)
+{
     QWidget::hideEvent(event);
 }
 
-void SearchPanel::keyPressEvent(QKeyEvent* event) {
+void SearchPanel::keyPressEvent(QKeyEvent* event)
+{
     if (event->key() == Qt::Key_Escape) {
         this->close();
     } else {
@@ -135,7 +143,8 @@ void SearchPanel::keyPressEvent(QKeyEvent* event) {
     }
 }
 
-void SearchPanel::showHeaderContextMenu(const QPoint& pos) {
+void SearchPanel::showHeaderContextMenu(const QPoint& pos)
+{
     if (!m_search_result_tree_view || !m_search_result_tree_view->header() || !m_search_model) {
         return;
     }
@@ -146,7 +155,8 @@ void SearchPanel::showHeaderContextMenu(const QPoint& pos) {
 
     for (int logical_index = 0; logical_index < count; ++logical_index) {
 
-        QString label = m_search_model->headerData(logical_index, Qt::Horizontal, Qt::DisplayRole).toString();
+        QString label =
+            m_search_model->headerData(logical_index, Qt::Horizontal, Qt::DisplayRole).toString();
         if (label.isEmpty()) {
             label = tr("Column %1").arg(logical_index + 1);
         }
@@ -173,13 +183,14 @@ void SearchPanel::showHeaderContextMenu(const QPoint& pos) {
     menu.exec(header->mapToGlobal(pos));
 }
 
-bool SearchPanel::hasOtherVisibleColumns(int column_to_hide) const {
+bool SearchPanel::hasOtherVisibleColumns(int column_to_hide) const
+{
     if (!m_search_result_tree_view || !m_search_result_tree_view->header() || !m_search_model) {
         return false;
     }
 
     QHeaderView* header = m_search_result_tree_view->header();
-    const int count = m_search_model->columnCount();
+    const int count     = m_search_model->columnCount();
     for (int i = 0; i < count; ++i) {
         if (i == column_to_hide) {
             continue;
@@ -191,14 +202,15 @@ bool SearchPanel::hasOtherVisibleColumns(int column_to_hide) const {
     return false;
 }
 
-void SearchPanel::loadFromJson(const QJsonObject &json)
+void SearchPanel::loadFromJson(const QJsonObject& json)
 {
     const QByteArray geometry = QByteArray::fromBase64(json.value("geometry").toString().toUtf8());
     if (!geometry.isEmpty()) {
         restoreGeometry(geometry);
     }
     if (m_search_result_tree_view && m_search_result_tree_view->header()) {
-        const QByteArray header_state = QByteArray::fromBase64(json.value("header_state").toString().toUtf8());
+        const QByteArray header_state =
+            QByteArray::fromBase64(json.value("header_state").toString().toUtf8());
         if (!header_state.isEmpty()) {
             m_search_result_tree_view->header()->restoreState(header_state);
         }
@@ -209,7 +221,8 @@ QJsonObject SearchPanel::saveToJson()
 {
     QJsonObject obj;
     obj["geometry"] = QString::fromUtf8(this->saveGeometry().toBase64());
-    obj["header_state"] = QString::fromUtf8(this->m_search_result_tree_view->header()->saveState().toBase64());
+    obj["header_state"] =
+        QString::fromUtf8(this->m_search_result_tree_view->header()->saveState().toBase64());
     return obj;
 }
 

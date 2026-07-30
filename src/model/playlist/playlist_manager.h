@@ -1,13 +1,13 @@
 #pragma once
 
+#include "playlist_context.h"
+#include "playlist_repo.h"
+#include "playlist_view_model.h"
+
 #include <QObject>
 #include <QString>
 #include <QUuid>
 #include <QVector>
-
-#include "playlist_context.h"
-#include "playlist_repo.h"
-#include "playlist_view_model.h"
 
 struct PlaylistInfo
 {
@@ -20,11 +20,11 @@ class PlaylistManager : public QObject
     Q_OBJECT
 public:
     PlaylistContext* m_context = nullptr;
-    PlaylistRepo* m_repo = nullptr;
-    PlaylistViewModel* m_view = nullptr;
+    PlaylistRepo* m_repo       = nullptr;
+    PlaylistViewModel* m_view  = nullptr;
 
 public:
-    explicit PlaylistManager(QObject *parent = nullptr);
+    explicit PlaylistManager(QObject* parent = nullptr);
     ~PlaylistManager();
 
 public:
@@ -47,7 +47,7 @@ public slots:
     void renamePlaylist(const playlistId& src_pid, const QString dst_name);
     void savePlaylist(const playlistId& pid, const QString& save_path);
     void loadCacheAfterShown();
-    
+
     void addTrack(const playlistId& pid, const QString& filepath);
     void addFolder(const playlistId& pid, const QString& directory);
     void removeTrack(const trackId& tid);
@@ -69,5 +69,4 @@ signals:
     void playlistLoadFinished(const playlistId& pid);
 
 private:
-
 };

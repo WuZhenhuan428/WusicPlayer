@@ -1,11 +1,12 @@
 #pragma once
 
+#include "model/theme_settings_model.h"
 #include <QObject>
 #include <memory>
-#include "model/theme_settings_model.h"
 
 /// 主题服务——封装主题发现、应用逻辑，解耦 UI 与 ThemeManager。
-class ThemeService : public QObject {
+class ThemeService : public QObject
+{
     Q_OBJECT
 public:
     explicit ThemeService(QObject* parent = nullptr);

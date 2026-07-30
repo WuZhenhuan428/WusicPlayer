@@ -1,24 +1,23 @@
 #pragma once
 
-#include <QObject>
-#include <QWidget>
-#include <QLabel>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QPushButton>
-#include <QString>
-#include <QFont>
-#include <QMouseEvent>
-#include <QShowEvent>
-#include <QHideEvent>
-#include <QPoint>
-#include <QByteArray>
-#include "core/types.h"
-#include "core/hsv_types.h"
-
 #include "core/ConfigManager/IConfigurable.h"
+#include "core/hsv_types.h"
+#include "core/types.h"
 
+#include <QByteArray>
+#include <QFont>
+#include <QHBoxLayout>
+#include <QHideEvent>
 #include <QJsonObject>
+#include <QLabel>
+#include <QMouseEvent>
+#include <QObject>
+#include <QPoint>
+#include <QPushButton>
+#include <QShowEvent>
+#include <QString>
+#include <QVBoxLayout>
+#include <QWidget>
 
 class DesktopLyricsWidget : public QWidget, public IConfigurable
 {
@@ -41,13 +40,16 @@ public:
     void setInactiveLineColor(rgb_t rgb_inactive);
     rgb_t getActiveLineColor();
     rgb_t getInactiveLineColor();
-    bool isLocked() const { return m_is_locked; }
+    bool isLocked() const
+    {
+        return m_is_locked;
+    }
 
 public slots:
     void setLocked(bool locked);
 
     // config S/L interface
-    void loadFromJson(const QJsonObject &json) override;
+    void loadFromJson(const QJsonObject& json) override;
     QJsonObject saveToJson() override;
     QString configSubKey() const override;
 
@@ -69,7 +71,7 @@ private:
     void initConnect();
     void applyClickThrough(bool clickThrough);
 
-    bool m_is_locked = false;
+    bool m_is_locked   = false;
     bool m_is_dragging = false;
     QPoint m_drag_offset;
     QFont m_font;
@@ -79,15 +81,15 @@ private:
     AlignMode m_line_down_mode;
     bool m_has_up_line_changed;
 
-    QPushButton* m_btn_lock = nullptr;
+    QPushButton* m_btn_lock      = nullptr;
     QPushButton* m_btn_shut_down = nullptr;
 
-    QLabel* m_lrc_line_up = nullptr;
-    QLabel* m_lrc_line_down = nullptr;
+    QLabel* m_lrc_line_up        = nullptr;
+    QLabel* m_lrc_line_down      = nullptr;
 
-    QHBoxLayout* m_hbl_toolbar = nullptr;
-    QVBoxLayout* m_hbl_lrc = nullptr;
-    QVBoxLayout* m_vbl_main = nullptr;
+    QHBoxLayout* m_hbl_toolbar   = nullptr;
+    QVBoxLayout* m_hbl_lrc       = nullptr;
+    QVBoxLayout* m_vbl_main      = nullptr;
 
     rgb_t m_rgb_active;
     rgb_t m_rgb_inactive;

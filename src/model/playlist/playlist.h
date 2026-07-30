@@ -1,11 +1,11 @@
 #pragma once
 
-#include <QString>
-#include <QVector>
-#include <QDebug>
-#include <QUuid>
-
 #include "core/types.h"
+
+#include <QDebug>
+#include <QString>
+#include <QUuid>
+#include <QVector>
 
 struct Track
 {
@@ -27,7 +27,7 @@ public:
     void setPlaylistName(QString setname);
     void newUuid();
     void newUuid(const playlistId& pid);
-    
+
     // Modify & Manage
     void clearList();
     Track addTrack(const QString& filepath);
@@ -36,15 +36,14 @@ public:
     void removeTrack(const trackId& tid);
 
     Track* findTrackByID(const trackId& tid);
-    
+
     const QVector<Track>& getTracks() const;
 
     // status
     bool isEmpty();
-    
+
 private:
     QVector<Track> m_tracks;
     QString m_name;
     playlistId m_pid;
 };
-

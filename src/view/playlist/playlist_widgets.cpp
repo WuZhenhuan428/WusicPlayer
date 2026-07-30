@@ -3,25 +3,23 @@
 #include <limits>
 
 // ==== WSortTypeSetDialog ==== //
-WSortTypeSetDialog::WSortTypeSetDialog(QDialog *parent)
-    : QDialog(parent)
+WSortTypeSetDialog::WSortTypeSetDialog(QDialog* parent) : QDialog(parent)
 {
-    lbPrompt = new QLabel("Input sorting expression:");
+    lbPrompt      = new QLabel("Input sorting expression:");
     txtExpression = new QLineEdit(this);
-    btnEnter = new QPushButton("OK");
-    btnCancel = new QPushButton("Cancel");
-    btnHelp = new QPushButton("Help");
-    sldMain = new QSlider();
-    sldBtn = new QSlider();
-    hbPrompt = new QHBoxLayout();
-    hbBtn = new QHBoxLayout();
-    vbMain = new QVBoxLayout();
+    btnEnter      = new QPushButton("OK");
+    btnCancel     = new QPushButton("Cancel");
+    btnHelp       = new QPushButton("Help");
+    sldMain       = new QSlider();
+    sldBtn        = new QSlider();
+    hbPrompt      = new QHBoxLayout();
+    hbBtn         = new QHBoxLayout();
+    vbMain        = new QVBoxLayout();
 
     connect(btnEnter, &QPushButton::clicked, this, &QDialog::accept);
     connect(btnCancel, &QPushButton::clicked, this, &QDialog::reject);
-    connect(btnHelp, &QPushButton::clicked, this, [this](){
-        QMessageBox::information(this, "foo", "bar");
-    });
+    connect(btnHelp, &QPushButton::clicked, this,
+            [this]() { QMessageBox::information(this, "foo", "bar"); });
 
     hbPrompt->addWidget(lbPrompt);
     hbPrompt->addStretch();
@@ -36,18 +34,18 @@ WSortTypeSetDialog::WSortTypeSetDialog(QDialog *parent)
     vbMain->addWidget(txtExpression);
     vbMain->addStretch();
     vbMain->addLayout(hbBtn);
-    
+
     this->setLayout(vbMain);
 }
 
 WSortTypeSetDialog::~WSortTypeSetDialog() {};
 
-
 // ==== WInsertColumnDialog ==== //
 
-WInsertColumnDialog::WInsertColumnDialog() {
+WInsertColumnDialog::WInsertColumnDialog()
+{
     // index
-    lbIndex = new QLabel("Index:");
+    lbIndex  = new QLabel("Index:");
     txtIndex = new QLineEdit(this);
     txtIndex->setText("1");
     hbIndex = new QHBoxLayout();
@@ -55,29 +53,27 @@ WInsertColumnDialog::WInsertColumnDialog() {
     hbIndex->addWidget(txtIndex);
 
     // input title
-    lbTitle = new QLabel("Title:");
+    lbTitle  = new QLabel("Title:");
     txtTitle = new QLineEdit(this);
-    hbTitle = new QHBoxLayout();
+    hbTitle  = new QHBoxLayout();
     hbTitle->addWidget(lbTitle);
     hbTitle->addWidget(txtTitle);
 
     // choose type
-    lbType = new QLabel("Type:");
-    cbType = new QComboBox();
-    QVector<QString> types = {
-        "title", "artist", "album", "album artist",
-        "genre", "composer", "year", "date", "track",
-        "disc","bitrate", "filename", "directory"
-    };
+    lbType                 = new QLabel("Type:");
+    cbType                 = new QComboBox();
+    QVector<QString> types = {"title",    "artist",   "album",    "album artist", "genre",
+                              "composer", "year",     "date",     "track",        "disc",
+                              "bitrate",  "filename", "directory"};
     cbType->addItems(types);
     hbType = new QHBoxLayout();
     hbType->addWidget(lbType);
     hbType->addWidget(cbType);
 
     // button
-    btnOK = new QPushButton("OK");
+    btnOK     = new QPushButton("OK");
     btnCancel = new QPushButton("Cancel");
-    hbBtn = new QHBoxLayout();
+    hbBtn     = new QHBoxLayout();
     hbBtn->addStretch();
     hbBtn->addWidget(btnOK);
     hbBtn->addWidget(btnCancel);
@@ -90,12 +86,13 @@ WInsertColumnDialog::WInsertColumnDialog() {
     vbMain->addStretch();
     vbMain->addLayout(hbBtn);
     this->setLayout(vbMain);
-    
+
     connect(btnOK, &QPushButton::clicked, this, [this]() {
-        bool ok = false;
+        bool ok         = false;
         qlonglong value = txtIndex ? txtIndex->text().toLongLong(&ok) : 0;
         if (!ok || value <= 0) {
-            QMessageBox::warning(this, "Invalid index", "Index must be a positive integer (not 0).");
+            QMessageBox::warning(this, "Invalid index",
+                                 "Index must be a positive integer (not 0).");
             return;
         }
         if (value > std::numeric_limits<int>::max()) {
@@ -116,32 +113,36 @@ WInsertColumnDialog::WInsertColumnDialog() {
 
 WInsertColumnDialog::~WInsertColumnDialog() {}
 
-void WInsertColumnDialog::setIndex(int index) {
+void WInsertColumnDialog::setIndex(int index)
+{
     if (txtIndex) {
         txtIndex->setText(QString::number(index));
     }
 }
 
-void WInsertColumnDialog::setMaxIndex(int index) {
+void WInsertColumnDialog::setMaxIndex(int index)
+{
     m_maxIndex = index;
 }
 
-int WInsertColumnDialog::index() const {
-    bool ok = false;
+int WInsertColumnDialog::index() const
+{
+    bool ok   = false;
     int value = txtIndex ? txtIndex->text().toInt(&ok) : 0;
     return ok ? value : 0;
 }
 
-TableColumn WInsertColumnDialog::getRule() {
+TableColumn WInsertColumnDialog::getRule()
+{
     TableColumn retval;
     retval.headerName = txtTitle->text();
-    retval.sortType = mapStrToSorttype.value(cbType->currentText(), SortType::not_sorted);
+    retval.sortType   = mapStrToSorttype.value(cbType->currentText(), SortType::not_sorted);
     return retval;
 }
 
 // ==== WColumnIndexDialog ==== //
-WColumnIndexDialog::WColumnIndexDialog(const QString& title, const QString& prompt, QWidget* parent)
-    : QDialog(parent)
+WColumnIndexDialog::WColumnIndexDialog(const QString& title, const QString& prompt,
+                                       QWidget* parent) : QDialog(parent)
 {
     setWindowTitle(title);
     lbPrompt = new QLabel(prompt);
@@ -151,9 +152,9 @@ WColumnIndexDialog::WColumnIndexDialog(const QString& title, const QString& prom
     hbIndex->addWidget(lbPrompt);
     hbIndex->addWidget(txtIndex);
 
-    btnOK = new QPushButton("OK");
+    btnOK     = new QPushButton("OK");
     btnCancel = new QPushButton("Cancel");
-    hbBtn = new QHBoxLayout();
+    hbBtn     = new QHBoxLayout();
     hbBtn->addStretch();
     hbBtn->addWidget(btnOK);
     hbBtn->addWidget(btnCancel);
@@ -165,10 +166,11 @@ WColumnIndexDialog::WColumnIndexDialog(const QString& title, const QString& prom
     setLayout(vbMain);
 
     connect(btnOK, &QPushButton::clicked, this, [this]() {
-        bool ok = false;
+        bool ok         = false;
         qlonglong value = txtIndex ? txtIndex->text().toLongLong(&ok) : 0;
         if (!ok || value <= 0) {
-            QMessageBox::warning(this, "Invalid index", "Index must be a positive integer (not 0).");
+            QMessageBox::warning(this, "Invalid index",
+                                 "Index must be a positive integer (not 0).");
             return;
         }
         if (value > std::numeric_limits<int>::max()) {
@@ -189,18 +191,21 @@ WColumnIndexDialog::WColumnIndexDialog(const QString& title, const QString& prom
 
 WColumnIndexDialog::~WColumnIndexDialog() {}
 
-void WColumnIndexDialog::setIndex(int index) {
+void WColumnIndexDialog::setIndex(int index)
+{
     if (txtIndex) {
         txtIndex->setText(QString::number(index));
     }
 }
 
-void WColumnIndexDialog::setMaxIndex(int index) {
+void WColumnIndexDialog::setMaxIndex(int index)
+{
     m_maxIndex = index;
 }
 
-int WColumnIndexDialog::index() const {
-    bool ok = false;
+int WColumnIndexDialog::index() const
+{
+    bool ok   = false;
     int value = txtIndex ? txtIndex->text().toInt(&ok) : 0;
     return ok ? value : 0;
 }

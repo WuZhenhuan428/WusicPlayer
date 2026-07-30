@@ -1,14 +1,14 @@
 #pragma once
 
-#include <QWidget>
-#include <QPushButton>
-#include <QListWidget>
-#include <QStackedWidget>
-#include <QListWidgetItem>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
 #include <QCloseEvent>
+#include <QHBoxLayout>
 #include <QHideEvent>
+#include <QListWidget>
+#include <QListWidgetItem>
+#include <QPushButton>
+#include <QStackedWidget>
+#include <QVBoxLayout>
+#include <QWidget>
 
 class QJsonObject;
 class ConfigManager;
@@ -17,14 +17,14 @@ class SettingsPanel : public QWidget
 {
     Q_OBJECT
 public:
-    explicit SettingsPanel(ConfigManager* cfg_mgr, QWidget *parent = nullptr);
+    explicit SettingsPanel(ConfigManager* cfg_mgr, QWidget* parent = nullptr);
     ~SettingsPanel();
 
     void registerWidget(QListWidgetItem* title, QWidget* widget);
     void switchToPageByTitle(const QString& title);
     void emitStateSnapshot();
 
-    void loadFromJson(const QJsonObject &json);
+    void loadFromJson(const QJsonObject& json);
     QJsonObject saveToJson();
     QString configSubKey() const;
 
@@ -36,7 +36,7 @@ signals:
     void sgnStateSnapshot(const QByteArray& geometry);
 
 private:
-    QListWidget *m_list_widget;
+    QListWidget* m_list_widget;
     QStackedWidget* m_stacked_widget;
 
     QHBoxLayout* m_hbl_settings;

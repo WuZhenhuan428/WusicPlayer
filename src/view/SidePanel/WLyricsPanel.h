@@ -1,11 +1,11 @@
 #pragma once
 #include "WLyricsModel.h"
 
-#include <QWidget>
-#include <QListView>
-#include <QWheelEvent>
-#include <QObject>
 #include "core/types.h"
+#include <QListView>
+#include <QObject>
+#include <QWheelEvent>
+#include <QWidget>
 
 class WLyricsPanel : public QListView
 {
@@ -20,6 +20,7 @@ public:
     bool setLrcFilePath(const QString& lrc_path);
     QString rawLyricsText() const;
     void setDefaultInfo(const TrackMetaData& meta);
+
 private:
     WLyricsModel* m_lrc_model;
     void wheelEvent(QWheelEvent* event);

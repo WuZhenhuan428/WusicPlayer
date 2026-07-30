@@ -1,18 +1,19 @@
 #include "ConfigManager.h"
-#include <QStandardPaths>
-#include <QFileInfo>
-#include <QFile>
-#include <QDir>
-#include <QDebug>
 
-#include <QJsonDocument>
+#include <QDebug>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QJsonValue>
 #include <QJsonValueRef>
-#include <QJsonObject>
 #include <QSaveFile>
+#include <QStandardPaths>
 
-namespace {
+namespace
+{
 QJsonObject readRootFromFile(const QString& filepath)
 {
     QFile file(filepath);
@@ -48,36 +49,41 @@ void writeRootToFile(const QString& filepath, const QJsonObject& root)
         qWarning() << "[CONFIG] commit failed:" << file.fileName() << file.errorString();
     }
 }
-}
+} // namespace
 
 ConfigManager::ConfigManager() {}
 
-ConfigManager& ConfigManager::getInstance() {
+ConfigManager& ConfigManager::getInstance()
+{
     static ConfigManager instance;
     return instance;
 }
 
-QString ConfigManager::getConfigPath() const {
+QString ConfigManager::getConfigPath() const
+{
     return QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
 }
 
-QString ConfigManager::getConfigFilepath() const {
+QString ConfigManager::getConfigFilepath() const
+{
     QDir dir(getConfigPath());
     return dir.filePath(kFileName);
 }
 
-void ConfigManager::registerModule(IConfigurable* module) {
+void ConfigManager::registerModule(IConfigurable* module)
+{
     m_modules.push_back(module);
 }
 
-void ConfigManager::loadAll() {
-// check file
+void ConfigManager::loadAll()
+{
+    // check file
     const QString folder_path = getConfigPath();
     QDir dir(folder_path);
     if (!dir.exists()) {
         dir.mkpath(".");
     }
-    
+
     QFile file(getConfigFilepath());
     if (!file.exists()) {
         return;
@@ -97,7 +103,7 @@ void ConfigManager::loadAll() {
 
     const QJsonObject root = doc.object();
 
-    this->m_version = root.value("version").toInt(kConfigVersion);
+    this->m_version        = root.value("version").toInt(kConfigVersion);
 
     for (const auto& module : m_modules) {
         if (module) {
@@ -106,7 +112,8 @@ void ConfigManager::loadAll() {
     }
 }
 
-QJsonObject ConfigManager::saveAll() const {
+QJsonObject ConfigManager::saveAll() const
+{
     const QString folder_path = getConfigPath();
     QDir dir(folder_path);
     if (!dir.exists()) {
@@ -136,7 +143,7 @@ QJsonObject ConfigManager::readSubConfig(const QString& key) const
     return root.value(key).toObject();
 }
 
-void ConfigManager::writeSubConfig(const QString& key, const QJsonObject &sub_obj)
+void ConfigManager::writeSubConfig(const QString& key, const QJsonObject& sub_obj)
 {
     if (key.isEmpty()) {
         return;

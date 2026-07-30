@@ -1,22 +1,26 @@
 #include "playlist_manager.h"
 
-#include <QTimer>
 #include "core/utils/AudioUtils.h"
+#include <QTimer>
 
-PlaylistManager::PlaylistManager(QObject* parent)
-    : QObject(parent)
+PlaylistManager::PlaylistManager(QObject* parent) : QObject(parent)
 {
     m_context = new PlaylistContext(this);
-    m_repo = new PlaylistRepo(this);
-    m_view = new PlaylistViewModel(m_repo, this);
+    m_repo    = new PlaylistRepo(this);
+    m_view    = new PlaylistViewModel(m_repo, this);
 
-    connect(m_context, &PlaylistContext::changedCurrentListId , m_view, &PlaylistViewModel::setPlaylist);
-    connect(m_context, &PlaylistContext::changedCurrentTrackId, m_view, &PlaylistViewModel::setActiveTrack);
+    connect(m_context, &PlaylistContext::changedCurrentListId, m_view,
+            &PlaylistViewModel::setPlaylist);
+    connect(m_context, &PlaylistContext::changedCurrentTrackId, m_view,
+            &PlaylistViewModel::setActiveTrack);
 
-    connect(m_repo, &PlaylistRepo::playlistChanged, this, &PlaylistManager::retransmissionPlaylistChanged);
+    connect(m_repo, &PlaylistRepo::playlistChanged, this,
+            &PlaylistManager::retransmissionPlaylistChanged);
     connect(m_repo, &PlaylistRepo::cacheLoadStarted, this, &PlaylistManager::cacheLoadStarted);
-    connect(m_repo, &PlaylistRepo::playlistLoadStarted, this, &PlaylistManager::playlistLoadStarted);
-    connect(m_repo, &PlaylistRepo::playlistLoadFinished, this, &PlaylistManager::playlistLoadFinished);
+    connect(m_repo, &PlaylistRepo::playlistLoadStarted, this,
+            &PlaylistManager::playlistLoadStarted);
+    connect(m_repo, &PlaylistRepo::playlistLoadFinished, this,
+            &PlaylistManager::playlistLoadFinished);
     connect(m_repo, &PlaylistRepo::cacheLoadFinished, this, [this](int count) {
         emit cacheLoadFinished(count);
         if (m_context->getPlaylistId().isNull()) {
@@ -26,18 +30,20 @@ PlaylistManager::PlaylistManager(QObject* parent)
             }
         }
     });
-
 }
 
 PlaylistManager::~PlaylistManager() {}
 
-void PlaylistManager::createPlaylist() {
+void PlaylistManager::createPlaylist()
+{
     m_repo->createList();
 }
 
-void PlaylistManager::removePlaylist(const playlistId& to_remove_uuid) {
+void PlaylistManager::removePlaylist(const playlistId& to_remove_uuid)
+{
     const auto& pl = m_repo->findPlaylistById(to_remove_uuid);
-    if (!pl) return;
+    if (!pl)
+        return;
 
     m_repo->removeList(to_remove_uuid);
     if (m_context->getPlaylistId() == to_remove_uuid) {
@@ -50,22 +56,26 @@ void PlaylistManager::removePlaylist(const playlistId& to_remove_uuid) {
     }
 }
 
-void PlaylistManager::copyPlaylist(const playlistId& pid) {
+void PlaylistManager::copyPlaylist(const playlistId& pid)
+{
     m_repo->copyList(pid);
 }
 
-void PlaylistManager::loadPlaylist(const QString& playlist_path) {
+void PlaylistManager::loadPlaylist(const QString& playlist_path)
+{
     playlistId new_id = m_repo->loadListBatched(playlist_path, 500);
     if (!new_id.isNull()) {
         m_context->setPlaylist(new_id);
     }
 }
 
-void PlaylistManager::renamePlaylist(const playlistId& src_pid, const QString dst_name) {
+void PlaylistManager::renamePlaylist(const playlistId& src_pid, const QString dst_name)
+{
     m_repo->renameList(src_pid, dst_name);
 }
 
-void PlaylistManager::savePlaylist(const playlistId& pid, const QString& save_path) {
+void PlaylistManager::savePlaylist(const playlistId& pid, const QString& save_path)
+{
     auto pl = m_repo->findPlaylistById(pid);
     if (!pl->isEmpty()) {
         m_repo->saveList(pid, save_path);
@@ -73,16 +83,18 @@ void PlaylistManager::savePlaylist(const playlistId& pid, const QString& save_pa
     }
 }
 
-void PlaylistManager::loadCacheAfterShown() {
+void PlaylistManager::loadCacheAfterShown()
+{
     m_repo->loadCacheAsync();
 }
 
-
-void PlaylistManager::addTrack(const playlistId& pid, const QString& filepath) {
+void PlaylistManager::addTrack(const playlistId& pid, const QString& filepath)
+{
     m_repo->addTrackToPlaylist(pid, filepath);
 }
 
-void PlaylistManager::removeTrack(const trackId& tid) {
+void PlaylistManager::removeTrack(const trackId& tid)
+{
     if (tid.isNull() || !m_repo || !m_context) {
         return;
     }
@@ -112,7 +124,8 @@ void PlaylistManager::removeTrack(const trackId& tid) {
 }
 
 // a wrap of this->addTrack
-void PlaylistManager::addFolder(const playlistId& pid, const QString& directory) {
+void PlaylistManager::addFolder(const playlistId& pid, const QString& directory)
+{
     playlistId curr_pid = pid;
     if (pid.isNull()) {
         curr_pid = m_repo->createList();
@@ -123,7 +136,7 @@ void PlaylistManager::addFolder(const playlistId& pid, const QString& directory)
     QStringList tracks_to_add;
     tracks_to_add.reserve(static_cast<int>(files.size()));
 
-    for(const auto& file : files) {
+    for (const auto& file : files) {
         if (AudioUtils::isAudioFile(file)) {
             tracks_to_add.append(AudioUtils::fromFsPath(file));
         }
@@ -134,7 +147,8 @@ void PlaylistManager::addFolder(const playlistId& pid, const QString& directory)
     }
 }
 
-QString PlaylistManager::nextTrack(PlayMode mode) {
+QString PlaylistManager::nextTrack(PlayMode mode)
+{
     auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
     if (!pl) {
         return QString();
@@ -153,10 +167,12 @@ QString PlaylistManager::nextTrack(PlayMode mode) {
         next_id = PlaylistNavigator::nextOfShuffle(m_view->playbackQueueSnapshot().queue);
         break;
     case PlayMode::out_of_order_track:
-        next_id = PlaylistNavigator::nextOfOutOfOrderTrack(m_view->singleShuffleQueueSnapshot().queue, curr_id);
+        next_id = PlaylistNavigator::nextOfOutOfOrderTrack(
+            m_view->singleShuffleQueueSnapshot().queue, curr_id);
         break;
     case PlayMode::out_of_order_group:
-        next_id = PlaylistNavigator::nextOfOutOfOrderGroup(m_view->groupShuffleQueueSnapshot().queue, curr_id);
+        next_id = PlaylistNavigator::nextOfOutOfOrderGroup(
+            m_view->groupShuffleQueueSnapshot().queue, curr_id);
         break;
     }
 
@@ -170,7 +186,8 @@ QString PlaylistManager::nextTrack(PlayMode mode) {
     return QString();
 }
 
-QString PlaylistManager::prevTrack(PlayMode mode) {
+QString PlaylistManager::prevTrack(PlayMode mode)
+{
     auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
     if (!pl) {
         return QString();
@@ -181,19 +198,22 @@ QString PlaylistManager::prevTrack(PlayMode mode) {
     PlaybackQueueSnapshot queue;
     switch (mode) {
     case PlayMode::in_order:
-        prev_id = PlaylistNavigator::previousOfInOrder(m_view->playbackQueueSnapshot().queue, curr_id);
+        prev_id =
+            PlaylistNavigator::previousOfInOrder(m_view->playbackQueueSnapshot().queue, curr_id);
         break;
     case PlayMode::loop:
         prev_id = PlaylistNavigator::previousOfLoop(m_view->playbackQueueSnapshot().queue, curr_id);
         break;
     case PlayMode::shuffle:
-        prev_id = PlaylistNavigator::previousOfShuffle(m_view->playbackQueueSnapshot().queue); 
+        prev_id = PlaylistNavigator::previousOfShuffle(m_view->playbackQueueSnapshot().queue);
         break;
     case PlayMode::out_of_order_track:
-        prev_id = PlaylistNavigator::previousOfOutOfOrderTrack(m_view->singleShuffleQueueSnapshot().queue, curr_id);
+        prev_id = PlaylistNavigator::previousOfOutOfOrderTrack(
+            m_view->singleShuffleQueueSnapshot().queue, curr_id);
         break;
     case PlayMode::out_of_order_group:
-        prev_id = PlaylistNavigator::previousOfOutOfOrderGroup(m_view->groupShuffleQueueSnapshot().queue, curr_id);
+        prev_id = PlaylistNavigator::previousOfOutOfOrderGroup(
+            m_view->groupShuffleQueueSnapshot().queue, curr_id);
         break;
     }
 
@@ -207,16 +227,17 @@ QString PlaylistManager::prevTrack(PlayMode mode) {
     return QString();
 }
 
-
-PlaylistViewModel* PlaylistManager::getViewModel() {
+PlaylistViewModel* PlaylistManager::getViewModel()
+{
     return this->m_view;
 }
 
-void PlaylistManager::play(int index) {
+void PlaylistManager::play(int index)
+{
     trackId tid = m_view->trackAt(index);
     m_context->setPlayTrack(tid);
 
-    auto pid = m_context->getPlaylistId();
+    auto pid      = m_context->getPlaylistId();
     auto playlist = m_repo->findPlaylistById(pid);
     if (!playlist) {
         return;
@@ -227,9 +248,10 @@ void PlaylistManager::play(int index) {
     }
 }
 
-QString PlaylistManager::getCurrentTrack() const {
+QString PlaylistManager::getCurrentTrack() const
+{
     trackId tid = m_context->getPlayTrackId();
-    auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
+    auto pl     = m_repo->findPlaylistById(m_context->getPlaylistId());
     if (!pl) {
         return QString();
     }
@@ -240,44 +262,52 @@ QString PlaylistManager::getCurrentTrack() const {
     return track->filepath;
 }
 
-QString PlaylistManager::getCurrentPlaylistName() const {
+QString PlaylistManager::getCurrentPlaylistName() const
+{
     playlistId pid = m_context->getPlaylistId();
-    auto pl = m_repo->findPlaylistById(pid);
+    auto pl        = m_repo->findPlaylistById(pid);
     return pl->name();
 }
 
-const trackId& PlaylistManager::getCurrentTrackId() const {
+const trackId& PlaylistManager::getCurrentTrackId() const
+{
     return this->m_context->getPlayTrackId();
 }
 
-const playlistId& PlaylistManager::getCurrentPlaylist() const{
+const playlistId& PlaylistManager::getCurrentPlaylist() const
+{
     return this->m_context->getPlaylistId();
 }
 
-QVector<PlaylistInfo> PlaylistManager::getAllPlaylists() {
+QVector<PlaylistInfo> PlaylistManager::getAllPlaylists()
+{
     QVector<PlaylistInfo> infos;
 
     auto playlists = m_repo->getLists();
-    for(const auto& pl : playlists) {
+    for (const auto& pl : playlists) {
         infos.append({pl->id(), pl->name()});
     }
     return infos;
 }
 
-void PlaylistManager::retransmissionPlaylistChanged() {
+void PlaylistManager::retransmissionPlaylistChanged()
+{
     emit playlistChanged();
 }
 
-void PlaylistManager::switchToPlaylist(const playlistId& pid) {
+void PlaylistManager::switchToPlaylist(const playlistId& pid)
+{
     m_context->setPlaylist(pid);
 }
 
-QVector<std::shared_ptr<Playlist>> PlaylistManager::getPlaylists() {
-        return m_repo->getLists();
+QVector<std::shared_ptr<Playlist>> PlaylistManager::getPlaylists()
+{
+    return m_repo->getLists();
 }
 
-TrackMetaData PlaylistManager::getCurrentMetadata() {
-    trackId tid = m_context->getPlayTrackId();
+TrackMetaData PlaylistManager::getCurrentMetadata()
+{
+    trackId tid   = m_context->getPlayTrackId();
     auto playlist = m_repo->findPlaylistById(m_context->getPlaylistId());
 
     if (playlist) {
@@ -291,8 +321,8 @@ TrackMetaData PlaylistManager::getCurrentMetadata() {
     return empty_meta;
 }
 
-
-QString PlaylistManager::getPlaylistById(const playlistId& pid) const {
+QString PlaylistManager::getPlaylistById(const playlistId& pid) const
+{
     auto pl = m_repo->findPlaylistById(pid);
     if (!pl->isEmpty()) {
         return pl->name();

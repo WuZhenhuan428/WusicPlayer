@@ -1,13 +1,13 @@
 #pragma once
 
-#include <QWidget>
+#include "core/hsv_types.h"
+
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-
 #include <QString>
-#include "core/hsv_types.h"
+#include <QVBoxLayout>
+#include <QWidget>
 
 class LabelMatrix : public QWidget
 {
@@ -40,8 +40,8 @@ private:
     hsv_t m_hsv;
 
 private:
-    void updateRGB();   // when hsv changed
-    void updateHSV();   // when rgb changed
+    void updateRGB(); // when hsv changed
+    void updateHSV(); // when rgb changed
 
 signals:
     void sgnEditColor(hsv_t hsv);

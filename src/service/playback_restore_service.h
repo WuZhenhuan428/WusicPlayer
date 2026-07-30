@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QObject>
 #include "core/types.h"
+#include <QObject>
 
 class PlaybackController;
 class PlaylistController;
@@ -12,8 +12,7 @@ class PlaybackRestoreService : public QObject
 
 public:
     explicit PlaybackRestoreService(PlaylistController* playlist_ctl,
-                                    PlaybackController* playback_ctl,
-                                    QObject* parent);
+                                    PlaybackController* playback_ctl, QObject* parent);
     ~PlaybackRestoreService();
 
     void restore();
@@ -30,8 +29,8 @@ private:
 
     playlistId m_pending_pid;
     trackId m_pending_tid;
-    int m_pending_pos_ms = 0;
+    int m_pending_pos_ms         = 0;
     bool m_pending_should_resume = false;
 
-    bool m_restored = false;
+    bool m_restored              = false;
 };

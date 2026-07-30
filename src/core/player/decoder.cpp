@@ -1,6 +1,6 @@
 #include "decoder.h"
-#include <chrono>
 
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 
@@ -29,7 +29,7 @@ bool Decoder::init_decoder()
         fprintf(stderr, "[DECODER] Error: could not open file %s\n", m_filepath.c_str());
         return false;
     }
-    
+
     if (avformat_find_stream_info(m_fmt_ctx, nullptr) < 0) {
         fprintf(stderr, "[DECODER] Error: could not find stream info\n");
         return false;
@@ -49,7 +49,7 @@ bool Decoder::init_decoder()
         return false;
     }
 
-    m_codecpar = m_fmt_ctx->streams[m_audio_stream_index]->codecpar;
+    m_codecpar           = m_fmt_ctx->streams[m_audio_stream_index]->codecpar;
     const AVCodec* codec = avcodec_find_decoder(m_codecpar->codec_id);
     if (!codec) {
         fprintf(stderr, "[DECODER] Error: could not find codec\n");
@@ -64,7 +64,7 @@ bool Decoder::init_decoder()
         return false;
     }
 
-    m_pkt = av_packet_alloc();
+    m_pkt   = av_packet_alloc();
     m_frame = av_frame_alloc();
 
     this->parse_tag();
@@ -73,12 +73,12 @@ bool Decoder::init_decoder()
     return true;
 }
 
-void Decoder::work(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer, std::atomic_bool* decode_finished)
+void Decoder::work(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer,
+                   std::atomic_bool* decode_finished)
 {
     printf("[DECODER] thread start work\n");
-    m_thread = std::thread([this, buffer, decode_finished]() {
-        this->thread_decode(buffer, decode_finished);
-    });
+    m_thread = std::thread(
+        [this, buffer, decode_finished]() { this->thread_decode(buffer, decode_finished); });
 }
 
 void Decoder::join()
@@ -118,13 +118,15 @@ void Decoder::decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffe
 
         if (m_frame->best_effort_timestamp != AV_NOPTS_VALUE) {
             const AVRational stream_tb = m_fmt_ctx->streams[m_audio_stream_index]->time_base;
-            const int64_t pos_ms = av_rescale_q(m_frame->best_effort_timestamp, stream_tb, AVRational{1, 1000});
+            const int64_t pos_ms =
+                av_rescale_q(m_frame->best_effort_timestamp, stream_tb, AVRational{1, 1000});
             m_pos_ms.store(pos_ms, std::memory_order_release);
         }
 
         this->eq_check_and_update();
 
-        int ret_push = av_buffersrc_add_frame_flags(m_buffersrc_ctx, m_frame, AV_BUFFERSRC_FLAG_KEEP_REF);
+        int ret_push =
+            av_buffersrc_add_frame_flags(m_buffersrc_ctx, m_frame, AV_BUFFERSRC_FLAG_KEEP_REF);
         if (ret_push < 0) {
             fprintf(stderr, "[DECODER] Error processing frame with EQ");
             break;
@@ -132,7 +134,7 @@ void Decoder::decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffe
 
         while (true) {
             AVFrame* filtered_frame = av_frame_alloc();
-            ret = av_buffersink_get_frame(m_buffersink_ctx, filtered_frame);
+            ret                     = av_buffersink_get_frame(m_buffersink_ctx, filtered_frame);
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                 av_frame_free(&filtered_frame);
                 break;
@@ -142,12 +144,14 @@ void Decoder::decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffe
                 break;
             }
 
-            const F32StereoFrame* frames = reinterpret_cast<const F32StereoFrame*>(filtered_frame->data[0]);
-            std::size_t written = 0;
+            const F32StereoFrame* frames =
+                reinterpret_cast<const F32StereoFrame*>(filtered_frame->data[0]);
+            std::size_t written     = 0;
             const std::size_t total = static_cast<std::size_t>(filtered_frame->nb_samples);
 
             while (written < total) {
-                if (m_abort_request.load(std::memory_order_acquire) || m_seek_req_ms.load(std::memory_order_acquire) >= 0) {
+                if (m_abort_request.load(std::memory_order_acquire) ||
+                    m_seek_req_ms.load(std::memory_order_acquire) >= 0) {
                     break;
                 }
                 written += buffer->write(frames + written, total - written);
@@ -158,17 +162,20 @@ void Decoder::decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffe
 
             av_frame_free(&filtered_frame);
 
-            if (m_abort_request.load(std::memory_order_acquire) || m_seek_req_ms.load(std::memory_order_acquire) >= 0) {
+            if (m_abort_request.load(std::memory_order_acquire) ||
+                m_seek_req_ms.load(std::memory_order_acquire) >= 0) {
                 break;
             }
         }
 
-        if (m_abort_request.load(std::memory_order_acquire) || m_seek_req_ms.load(std::memory_order_acquire) >= 0)
+        if (m_abort_request.load(std::memory_order_acquire) ||
+            m_seek_req_ms.load(std::memory_order_acquire) >= 0)
             break;
     }
 }
 
-void Decoder::thread_decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer, std::atomic_bool* decode_finished)
+void Decoder::thread_decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer,
+                            std::atomic_bool* decode_finished)
 {
     // 如果没有被 abort，才继续向后解封装读取数据包
     while (!m_abort_request.load(std::memory_order_acquire)) {
@@ -184,7 +191,7 @@ void Decoder::thread_decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>
 
             m_seek_req_ms.store(-1, std::memory_order_release);
             // 重置播放完成标志，防止刚播完或者快播完的时候拉进度条导致提前结束
-            decode_finished->store(false, std::memory_order_release); 
+            decode_finished->store(false, std::memory_order_release);
 
             continue;
         }
@@ -209,14 +216,12 @@ void Decoder::thread_decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>
     decode_finished->store(true, std::memory_order_release);
 }
 
-
 const std::unordered_map<std::string, std::string> Decoder::metadata()
 {
     return m_meta;
 }
 
-
-bool Decoder::parse_tag()   // OK
+bool Decoder::parse_tag() // OK
 {
     if (!m_fmt_ctx) {
         return false;
@@ -226,7 +231,7 @@ bool Decoder::parse_tag()   // OK
     while ((tag = av_dict_iterate(m_fmt_ctx->metadata, tag))) {
         m_meta.emplace(tag->key, tag->value);
     }
-    
+
     // 手动提取运行时和文件属性相关的必须指标
     // 1. 时长 (Duration)
     if (m_fmt_ctx->duration != AV_NOPTS_VALUE) {
@@ -234,7 +239,7 @@ bool Decoder::parse_tag()   // OK
         int64_t duration_ms = m_fmt_ctx->duration / (AV_TIME_BASE / 1000);
         m_meta.emplace("DURATION_MS", std::to_string(duration_ms));
     }
-    
+
     // 2. 码率 (Bitrate)
     if (m_fmt_ctx->bit_rate > 0) {
         m_meta.emplace("BITRATE", std::to_string(m_fmt_ctx->bit_rate));
@@ -244,7 +249,7 @@ bool Decoder::parse_tag()   // OK
     if (m_codecpar) {
         m_meta.emplace("SAMPLE_RATE", std::to_string(m_codecpar->sample_rate));
         m_meta.emplace("CHANNELS", std::to_string(m_codecpar->ch_layout.nb_channels));
-        
+
         const AVCodec* codec = avcodec_find_decoder(m_codecpar->codec_id);
         if (codec) {
             m_meta.emplace("CODEC_NAME", codec->name);
@@ -257,18 +262,16 @@ bool Decoder::parse_tag()   // OK
     return true;
 }
 
-
 void Decoder::seek(int64_t position_ms)
 {
     m_seek_req_ms.store(position_ms, std::memory_order_release);
 }
 
-
 int Decoder::init_filters()
 {
-    const AVFilter* src = avfilter_get_by_name("abuffer");
+    const AVFilter* src  = avfilter_get_by_name("abuffer");
     const AVFilter* sink = avfilter_get_by_name("abuffersink");
-    m_filter_graph = avfilter_graph_alloc();
+    m_filter_graph       = avfilter_graph_alloc();
 
     // setup buffer args
     char args[512];
@@ -277,20 +280,20 @@ int Decoder::init_filters()
     // get metadata before resample
     std::snprintf(args, sizeof(args),
                   "time_base=1/%d:sample_rate=%d:sample_fmt=%s:channel_layout=%s",
-                  m_codec_ctx->sample_rate,
-                  m_codec_ctx->sample_rate,
-                  av_get_sample_fmt_name(m_codec_ctx->sample_fmt),
-                  layout_name);
+                  m_codec_ctx->sample_rate, m_codec_ctx->sample_rate,
+                  av_get_sample_fmt_name(m_codec_ctx->sample_fmt), layout_name);
 
-    int ret = avfilter_graph_create_filter(&m_buffersrc_ctx, src, "in", args, nullptr, m_filter_graph);
-    
+    int ret =
+        avfilter_graph_create_filter(&m_buffersrc_ctx, src, "in", args, nullptr, m_filter_graph);
+
     if (ret < 0) {
         fprintf(stderr, "[DECODER] Error: failed to create abuffer filter\n");
         return ret;
     }
-                    
+
     // setup sink args
-    ret = avfilter_graph_create_filter(&m_buffersink_ctx, sink, "out", nullptr, nullptr, m_filter_graph);
+    ret = avfilter_graph_create_filter(&m_buffersink_ctx, sink, "out", nullptr, nullptr,
+                                       m_filter_graph);
 
     if (ret < 0) {
         fprintf(stderr, "[DECODER] Error: failed to create abuffersink filter\n");
@@ -299,14 +302,11 @@ int Decoder::init_filters()
 
     // filter chain: (buffer)src -> aformat(to planar) -> eq -> aformat(to packed) -> (buffer)sink
     AVFilterContext *aformat_planar_ctx, *aformat_packed_ctx;
-    
+
     // 1. convert to planar float (FLTP) to use eq
-    ret = avfilter_graph_create_filter(&aformat_planar_ctx,
-                                       avfilter_get_by_name("aformat"),
-                                       "fmt_planar",
-                                       "sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo",
-                                       nullptr,
-                                       m_filter_graph);
+    ret = avfilter_graph_create_filter(
+        &aformat_planar_ctx, avfilter_get_by_name("aformat"), "fmt_planar",
+        "sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo", nullptr, m_filter_graph);
     if (ret < 0) {
         fprintf(stderr, "[DECODER] Error: failed to create aformat_planar filter\n");
         return ret;
@@ -316,43 +316,90 @@ int Decoder::init_filters()
     /* add more filter here
         31 63 125 250 500 1k 2k 4k 8k 16k
     */
-    ret = avfilter_graph_create_filter(&m_eq_ctx_31, avfilter_get_by_name("equalizer"), "eq_31", "frequency=31:width_type=o:width=1:gain=0", nullptr, m_filter_graph);
-    if (ret < 0) { fprintf(stderr, "[DECODER] Error: failed to create eq_31\n"); return ret; }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_63, avfilter_get_by_name("equalizer"), "eq_63", "frequency=63:width_type=o:width=1:gain=0", nullptr, m_filter_graph);
-    if (ret < 0) { fprintf(stderr, "[DECODER] Error: failed to create eq_63\n"); return ret; }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_125, avfilter_get_by_name("equalizer"), "eq_125", "frequency=125:width_type=o:width=1:gain=0", nullptr, m_filter_graph);
-    if (ret < 0) { fprintf(stderr, "[DECODER] Error: failed to create eq _25\n"); return ret; }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_250, avfilter_get_by_name("equalizer"), "eq_250", "frequency=250:width_type=o:width=1:gain=0", nullptr, m_filter_graph);
-    if (ret < 0) { fprintf(stderr, "[DECODER] Error: failed to create eq _50\n"); return ret; }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_500, avfilter_get_by_name("equalizer"), "eq_500", "frequency=500:width_type=o:width=1:gain=0", nullptr, m_filter_graph);
-    if (ret < 0) { fprintf(stderr, "[DECODER] Error: failed to create eq _00\n"); return ret; }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_1k, avfilter_get_by_name("equalizer"), "eq_1k", "frequency=1k:width_type=o:width=1:gain=0", nullptr, m_filter_graph);
-    if (ret < 0) { fprintf(stderr, "[DECODER] Error: failed to create eq_1k\n"); return ret; }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_2k, avfilter_get_by_name("equalizer"), "eq_2k", "frequency=2k:width_type=o:width=1:gain=0", nullptr, m_filter_graph);
-    if (ret < 0) { fprintf(stderr, "[DECODER] Error: failed to create eq_2k\n"); return ret; }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_4k, avfilter_get_by_name("equalizer"), "eq_4k", "frequency=4k:width_type=o:width=1:gain=0", nullptr, m_filter_graph);
-    if (ret < 0) { fprintf(stderr, "[DECODER] Error: failed to create eq_4k\n"); return ret; }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_8k, avfilter_get_by_name("equalizer"), "eq_8k", "frequency=8k:width_type=o:width=1:gain=0", nullptr, m_filter_graph);
-    if (ret < 0) { fprintf(stderr, "[DECODER] Error: failed to create eq_8k\n"); return ret; }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_16k, avfilter_get_by_name("equalizer"), "eq_16k", "frequency=16k:width_type=o:width=1:gain=0", nullptr, m_filter_graph);
-    if (ret < 0) { fprintf(stderr, "[DECODER] Error: failed to create eq _6k\n"); return ret; }
-    
-    // 2. packed
-    ret = avfilter_graph_create_filter(&aformat_packed_ctx,
-                                       avfilter_get_by_name("aformat"),
-                                       "fmt_packed",
-                                       "sample_fmts=flt:sample_rates=44100:channel_layouts=stereo",
-                                       nullptr,
+    ret = avfilter_graph_create_filter(&m_eq_ctx_31, avfilter_get_by_name("equalizer"), "eq_31",
+                                       "frequency=31:width_type=o:width=1:gain=0", nullptr,
                                        m_filter_graph);
+    if (ret < 0) {
+        fprintf(stderr, "[DECODER] Error: failed to create eq_31\n");
+        return ret;
+    }
+
+    ret = avfilter_graph_create_filter(&m_eq_ctx_63, avfilter_get_by_name("equalizer"), "eq_63",
+                                       "frequency=63:width_type=o:width=1:gain=0", nullptr,
+                                       m_filter_graph);
+    if (ret < 0) {
+        fprintf(stderr, "[DECODER] Error: failed to create eq_63\n");
+        return ret;
+    }
+
+    ret = avfilter_graph_create_filter(&m_eq_ctx_125, avfilter_get_by_name("equalizer"), "eq_125",
+                                       "frequency=125:width_type=o:width=1:gain=0", nullptr,
+                                       m_filter_graph);
+    if (ret < 0) {
+        fprintf(stderr, "[DECODER] Error: failed to create eq _25\n");
+        return ret;
+    }
+
+    ret = avfilter_graph_create_filter(&m_eq_ctx_250, avfilter_get_by_name("equalizer"), "eq_250",
+                                       "frequency=250:width_type=o:width=1:gain=0", nullptr,
+                                       m_filter_graph);
+    if (ret < 0) {
+        fprintf(stderr, "[DECODER] Error: failed to create eq _50\n");
+        return ret;
+    }
+
+    ret = avfilter_graph_create_filter(&m_eq_ctx_500, avfilter_get_by_name("equalizer"), "eq_500",
+                                       "frequency=500:width_type=o:width=1:gain=0", nullptr,
+                                       m_filter_graph);
+    if (ret < 0) {
+        fprintf(stderr, "[DECODER] Error: failed to create eq _00\n");
+        return ret;
+    }
+
+    ret = avfilter_graph_create_filter(&m_eq_ctx_1k, avfilter_get_by_name("equalizer"), "eq_1k",
+                                       "frequency=1k:width_type=o:width=1:gain=0", nullptr,
+                                       m_filter_graph);
+    if (ret < 0) {
+        fprintf(stderr, "[DECODER] Error: failed to create eq_1k\n");
+        return ret;
+    }
+
+    ret = avfilter_graph_create_filter(&m_eq_ctx_2k, avfilter_get_by_name("equalizer"), "eq_2k",
+                                       "frequency=2k:width_type=o:width=1:gain=0", nullptr,
+                                       m_filter_graph);
+    if (ret < 0) {
+        fprintf(stderr, "[DECODER] Error: failed to create eq_2k\n");
+        return ret;
+    }
+
+    ret = avfilter_graph_create_filter(&m_eq_ctx_4k, avfilter_get_by_name("equalizer"), "eq_4k",
+                                       "frequency=4k:width_type=o:width=1:gain=0", nullptr,
+                                       m_filter_graph);
+    if (ret < 0) {
+        fprintf(stderr, "[DECODER] Error: failed to create eq_4k\n");
+        return ret;
+    }
+
+    ret = avfilter_graph_create_filter(&m_eq_ctx_8k, avfilter_get_by_name("equalizer"), "eq_8k",
+                                       "frequency=8k:width_type=o:width=1:gain=0", nullptr,
+                                       m_filter_graph);
+    if (ret < 0) {
+        fprintf(stderr, "[DECODER] Error: failed to create eq_8k\n");
+        return ret;
+    }
+
+    ret = avfilter_graph_create_filter(&m_eq_ctx_16k, avfilter_get_by_name("equalizer"), "eq_16k",
+                                       "frequency=16k:width_type=o:width=1:gain=0", nullptr,
+                                       m_filter_graph);
+    if (ret < 0) {
+        fprintf(stderr, "[DECODER] Error: failed to create eq _6k\n");
+        return ret;
+    }
+
+    // 2. packed
+    ret = avfilter_graph_create_filter(
+        &aformat_packed_ctx, avfilter_get_by_name("aformat"), "fmt_packed",
+        "sample_fmts=flt:sample_rates=44100:channel_layouts=stereo", nullptr, m_filter_graph);
     if (ret < 0) {
         fprintf(stderr, "[DECODER] Error: failed to create aformat_packed filter\n");
         return ret;
@@ -382,7 +429,6 @@ int Decoder::init_filters()
     return 0;
 }
 
-
 int Decoder::process_frame_with_eq(AVFrame* frame)
 {
     int ret = av_buffersrc_add_frame_flags(m_buffersrc_ctx, frame, AV_BUFFERSRC_FLAG_KEEP_REF);
@@ -392,10 +438,10 @@ int Decoder::process_frame_with_eq(AVFrame* frame)
     }
 
     AVFrame* filtered_frame = av_frame_alloc();
-    ret = av_buffersink_get_frame(m_buffersink_ctx, filtered_frame);
+    ret                     = av_buffersink_get_frame(m_buffersink_ctx, filtered_frame);
     if (ret == AVERROR(EAGAIN)) {
         av_frame_free(&filtered_frame);
-        return 0;   // continue
+        return 0; // continue
     } else if (ret < 0) {
         av_frame_free(&filtered_frame);
         return ret;
@@ -417,16 +463,19 @@ void Decoder::eq_check_and_update()
         // compare
         gains_t new_gains = m_gains.load(std::memory_order_acquire);
         char gain_buf[32];
-        std::string gain_str;   // auto trim
+        std::string gain_str; // auto trim
 
         auto send_gain = [&](const char* filter_name, float gain) {
             float safe_gain = gain;
-            if (safe_gain > EQ_UPPER_LIMIT_DB) safe_gain = EQ_UPPER_LIMIT_DB;
-            if (safe_gain < EQ_LOWER_LIMIT_DB) safe_gain = EQ_LOWER_LIMIT_DB;
+            if (safe_gain > EQ_UPPER_LIMIT_DB)
+                safe_gain = EQ_UPPER_LIMIT_DB;
+            if (safe_gain < EQ_LOWER_LIMIT_DB)
+                safe_gain = EQ_LOWER_LIMIT_DB;
 
             std::snprintf(gain_buf, sizeof(gain_buf), "%.2f", static_cast<double>(safe_gain));
             gain_str = gain_buf;
-            avfilter_graph_send_command(m_filter_graph, filter_name, "gain", gain_str.c_str(), nullptr, 0, 0);
+            avfilter_graph_send_command(m_filter_graph, filter_name, "gain", gain_str.c_str(),
+                                        nullptr, 0, 0);
         };
 
         float epsilon = std::numeric_limits<float>::epsilon();
@@ -473,13 +522,13 @@ void Decoder::eq_check_and_update()
     }
 }
 
-
 int64_t Decoder::position()
 {
     return m_pos_ms.load(std::memory_order_acquire);
 }
 
-const gains_t Decoder::gains() const {
+const gains_t Decoder::gains() const
+{
     gains_t gains = m_gains.load(std::memory_order_acquire);
     return gains;
 }

@@ -1,15 +1,14 @@
 #pragma once
 
+#include "core/ConfigManager/IConfigurable.h"
 #include "core/player/player.h"
 #include "core/player_types.h"
 
-#include <QObject>
-#include <QString>
+#include <QAudioDevice>
 #include <QByteArray>
 #include <QList>
-#include <QAudioDevice>
-
-#include "core/ConfigManager/IConfigurable.h"
+#include <QObject>
+#include <QString>
 
 class PlaybackController : public QObject, public IConfigurable
 {
@@ -43,7 +42,7 @@ public:
     bool lastWasPlaying() const;
 
     // config S/L interface implement
-    void loadFromJson(const QJsonObject &json) override;
+    void loadFromJson(const QJsonObject& json) override;
     QJsonObject saveToJson() override;
     QString configSubKey() const override;
 
@@ -60,9 +59,9 @@ private:
     Player* m_player;
 
     bool m_is_muted;
-    int m_last_position_ms = 0;
+    int m_last_position_ms  = 0;
     bool m_last_was_playing = false;
 
-    gains_t m_gains_cache = {};
-    bool m_eq_enabled = false;
+    gains_t m_gains_cache   = {};
+    bool m_eq_enabled       = false;
 };

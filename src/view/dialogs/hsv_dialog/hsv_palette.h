@@ -1,12 +1,13 @@
 #pragma once
 
-#include <QWidget>
-#include <QObject>
-#include <QMouseEvent>
-#include <QPainter>
 #include "hsv_to_rgb.h"
-#include <QString>
+
 #include <QImage>
+#include <QMouseEvent>
+#include <QObject>
+#include <QPainter>
+#include <QString>
+#include <QWidget>
 
 class HSVPalette : public QWidget
 {
@@ -17,10 +18,10 @@ public:
 
     void setInnerRadius(uint radius);
     void setOuterRadius(uint radius);
-    
+
     bool setHsv(hsv_t hsv);
     bool setRgb(rgb_t rgb);
-    
+
     hsv_t getHsv();
     rgb_t getRgb();
 
@@ -54,9 +55,9 @@ private:
     uint m_cursor_x;
     uint m_cursor_y;
     bool m_has_cursor;
-    
+
     // use at mouseMoveEvent
-    
+
     float center;
     float half_width;
     float left;

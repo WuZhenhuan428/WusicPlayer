@@ -1,31 +1,31 @@
 #pragma once
 
 #include <QDialog>
-
-#include <QLabel>
-#include <QLineEdit>
-#include <QSpinBox>
-#include <QPushButton>
-#include <QListWidget>
-#include <QListWidgetItem>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QTextEdit>
-
-#include <QStringList>
 #include <QFont>
 #include <QFontDatabase>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QListWidget>
+#include <QListWidgetItem>
+#include <QPushButton>
+#include <QSpinBox>
+#include <QStringList>
+#include <QTextEdit>
+#include <QVBoxLayout>
 
 class FontSelectDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit FontSelectDialog(QFont default_font = QFontDatabase::systemFont(QFontDatabase::SystemFont::GeneralFont), QWidget* parent = nullptr);
+    explicit FontSelectDialog(
+        QFont default_font = QFontDatabase::systemFont(QFontDatabase::SystemFont::GeneralFont),
+        QWidget* parent    = nullptr);
     ~FontSelectDialog() = default;
 
     QFont selectFont();
 
-private:    // data structure & functions
+private: // data structure & functions
     void init_UI();
 
     QStringList m_fonts;
@@ -38,7 +38,7 @@ private:    // data structure & functions
     void update_sizes(const QString& family);
     void update_preview();
 
-private:    // widgets
+private: // widgets
     QLabel* m_lb_font;
     QListWidget* m_list_font;
     QVBoxLayout* m_vbl_font;

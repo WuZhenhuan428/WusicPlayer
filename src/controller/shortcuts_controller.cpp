@@ -4,33 +4,34 @@
 #include <QJsonArray>
 #include <QJsonObject>
 
-ShortcutsController::ShortcutsController(QObject* parent)
-    : QObject(parent),
-      m_viewModel(new ShortcutsViewModel(this))
+ShortcutsController::ShortcutsController(QObject* parent) :
+    QObject(parent), m_viewModel(new ShortcutsViewModel(this))
 {
-    connect(m_viewModel, &ShortcutsViewModel::sgnBindingChanged,
-            this, &ShortcutsController::onBindingChanged);
+    connect(m_viewModel, &ShortcutsViewModel::sgnBindingChanged, this,
+            &ShortcutsController::onBindingChanged);
 }
 
-void ShortcutsController::registerAction(const ShortcutDescriptor& desc, ShortcutHandler handler, QObject* parent) {
+void ShortcutsController::registerAction(const ShortcutDescriptor& desc, ShortcutHandler handler,
+                                         QObject* parent)
+{
     m_descMap.insert(desc.action_id, desc);
     m_handleMap.insert(desc.action_id, std::move(handler));
     m_ownerMap.insert(desc.action_id, parent);
 
     if (!m_bindingMap.contains(desc.action_id)) {
         ShortcutBinding binding;
-        binding.action_id = desc.action_id;
+        binding.action_id   = desc.action_id;
         binding.current_key = desc.default_key;
-        binding.enabled = true;
+        binding.enabled     = true;
         m_bindingMap.insert(desc.action_id, binding);
     }
 
     if (m_pendingBindingMap.contains(desc.action_id)) {
         const ShortcutBinding pending = m_pendingBindingMap.take(desc.action_id);
-        auto it = m_bindingMap.find(desc.action_id);
+        auto it                       = m_bindingMap.find(desc.action_id);
         if (it != m_bindingMap.end()) {
             it->current_key = pending.current_key;
-            it->enabled = pending.enabled;
+            it->enabled     = pending.enabled;
         }
     }
 
@@ -38,24 +39,21 @@ void ShortcutsController::registerAction(const ShortcutDescriptor& desc, Shortcu
     rebuildViewModel();
 }
 
-void ShortcutsController::registerOperation(ShortcutActionId action_id,
-                                            const QString& display_name,
-                                            ShortcutScope scope,
-                                            const QKeySequence& default_key,
-                                            ShortcutHandler handler,
-                                            QObject* owner,
-                                            bool editable)
+void ShortcutsController::registerOperation(ShortcutActionId action_id, const QString& display_name,
+                                            ShortcutScope scope, const QKeySequence& default_key,
+                                            ShortcutHandler handler, QObject* owner, bool editable)
 {
     ShortcutDescriptor desc;
-    desc.action_id = action_id;
+    desc.action_id    = action_id;
     desc.display_name = display_name;
-    desc.scope = scope;
-    desc.default_key = default_key;
-    desc.editable = editable;
+    desc.scope        = scope;
+    desc.default_key  = default_key;
+    desc.editable     = editable;
     registerAction(desc, std::move(handler), owner);
 }
 
-void ShortcutsController::unregisterAction(ShortcutActionId action_id) {
+void ShortcutsController::unregisterAction(ShortcutActionId action_id)
+{
     if (m_runtimeMap.contains(action_id) && m_runtimeMap[action_id]) {
         m_runtimeMap[action_id]->deleteLater();
     }
@@ -67,9 +65,11 @@ void ShortcutsController::unregisterAction(ShortcutActionId action_id) {
     rebuildViewModel();
 }
 
-bool ShortcutsController::setShortcut(ShortcutActionId action_id, const QKeySequence& seq) {
+bool ShortcutsController::setShortcut(ShortcutActionId action_id, const QKeySequence& seq)
+{
     if (!m_descMap.contains(action_id)) {
-        ShortcutBinding pending = m_pendingBindingMap.value(action_id, ShortcutBinding{action_id, QKeySequence(), true});
+        ShortcutBinding pending =
+            m_pendingBindingMap.value(action_id, ShortcutBinding{action_id, QKeySequence(), true});
         pending.current_key = seq;
         m_pendingBindingMap.insert(action_id, pending);
         return false;
@@ -78,9 +78,9 @@ bool ShortcutsController::setShortcut(ShortcutActionId action_id, const QKeySequ
     auto binding_it = m_bindingMap.find(action_id);
     if (binding_it == m_bindingMap.end()) {
         ShortcutBinding binding;
-        binding.action_id = action_id;
+        binding.action_id   = action_id;
         binding.current_key = seq;
-        binding.enabled = true;
+        binding.enabled     = true;
         m_bindingMap.insert(action_id, binding);
     } else {
         binding_it->current_key = seq;
@@ -92,9 +92,11 @@ bool ShortcutsController::setShortcut(ShortcutActionId action_id, const QKeySequ
     return true;
 }
 
-void ShortcutsController::enableAction(ShortcutActionId action_id, bool enabled) {
+void ShortcutsController::enableAction(ShortcutActionId action_id, bool enabled)
+{
     if (!m_bindingMap.contains(action_id)) {
-        ShortcutBinding pending = m_pendingBindingMap.value(action_id, ShortcutBinding{action_id, QKeySequence(), true});
+        ShortcutBinding pending =
+            m_pendingBindingMap.value(action_id, ShortcutBinding{action_id, QKeySequence(), true});
         pending.enabled = enabled;
         m_pendingBindingMap.insert(action_id, pending);
         return;
@@ -122,14 +124,15 @@ void ShortcutsController::rebind(ShortcutActionId action_id)
     }
 
     const ShortcutDescriptor desc = m_descMap.value(action_id);
-    QWidget* host = resolveScopeHost(desc.scope, m_ownerMap.value(action_id));
+    QWidget* host                 = resolveScopeHost(desc.scope, m_ownerMap.value(action_id));
     if (!host) {
         return;
     }
 
-    auto* shortcut = new QShortcut(binding.current_key, host);
-    const Qt::ShortcutContext context =
-        (desc.scope == ShortcutScope::Application) ? Qt::ApplicationShortcut : Qt::WidgetWithChildrenShortcut;
+    auto* shortcut                    = new QShortcut(binding.current_key, host);
+    const Qt::ShortcutContext context = (desc.scope == ShortcutScope::Application)
+                                            ? Qt::ApplicationShortcut
+                                            : Qt::WidgetWithChildrenShortcut;
     shortcut->setContext(context);
 
     const auto handler = m_handleMap.value(action_id);
@@ -200,7 +203,8 @@ void ShortcutsController::rebuildViewModel()
     for (auto it = m_descMap.constBegin(); it != m_descMap.constEnd(); ++it) {
         ShortcutItem item;
         item.desc = it.value();
-        item.binding = m_bindingMap.value(it.key(), ShortcutBinding{it.key(), QKeySequence(), true});
+        item.binding =
+            m_bindingMap.value(it.key(), ShortcutBinding{it.key(), QKeySequence(), true});
         items.push_back(item);
     }
     m_viewModel->setItems(items);
@@ -219,9 +223,9 @@ QWidget* ShortcutsController::resolveScopeHost(ShortcutScope scope, QObject* own
     return QApplication::activeWindow();
 }
 
-void ShortcutsController::loadFromJson(const QJsonObject &json)
+void ShortcutsController::loadFromJson(const QJsonObject& json)
 {
-    QJsonObject obj = json.value(this->configSubKey()).toObject();
+    QJsonObject obj      = json.value(this->configSubKey()).toObject();
     const QJsonArray arr = obj.value("bindings").toArray();
     QVector<ShortcutBinding> parsed;
     parsed.reserve(arr.size());
@@ -230,7 +234,7 @@ void ShortcutsController::loadFromJson(const QJsonObject &json)
         if (!value.isObject()) {
             continue;
         }
-        const QJsonObject item = value.toObject();
+        const QJsonObject item    = value.toObject();
         ShortcutActionId actionId = ShortcutActionId::play_pause;
         if (!shortcutActionIdFromString(item.value("action_id").toString(), actionId)) {
             continue;
@@ -238,10 +242,8 @@ void ShortcutsController::loadFromJson(const QJsonObject &json)
 
         ShortcutBinding binding;
         binding.action_id = actionId;
-        binding.current_key = QKeySequence::fromString(
-            item.value("key").toString(),
-            QKeySequence::PortableText
-        );
+        binding.current_key =
+            QKeySequence::fromString(item.value("key").toString(), QKeySequence::PortableText);
         binding.enabled = item.value("enabled").toBool(true);
         parsed.push_back(binding);
     }
@@ -255,8 +257,8 @@ QJsonObject ShortcutsController::saveToJson()
     for (const ShortcutBinding& binding : bindings()) {
         QJsonObject item;
         item["action_id"] = shortcutActionIdToString(binding.action_id);
-        item["key"] = binding.current_key.toString(QKeySequence::PortableText);
-        item["enabled"] = binding.enabled;
+        item["key"]       = binding.current_key.toString(QKeySequence::PortableText);
+        item["enabled"]   = binding.enabled;
         arr.append(item);
     }
 

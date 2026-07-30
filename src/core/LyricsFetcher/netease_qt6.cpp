@@ -13,12 +13,13 @@
 #include <QRegularExpression>
 #include <QUrl>
 #include <QUrlQuery>
-
 #include <openssl/evp.h>
 
-namespace netease_qt6 {
+namespace netease_qt6
+{
 
-struct SongCandidate {
+struct SongCandidate
+{
     qint64 id = 0;
     QString title;
     QString artist;
@@ -26,16 +27,17 @@ struct SongCandidate {
 };
 
 static const QByteArray kLinuxApiKey("rFgB&h#%2?^eDg:Q");
-static const QString kAnonymousToken =
-    "bf8bfeabb1aa84f9c8c3906c04a04fb864322804c83f5d607e91a04eae463c9436bd1a17ec353cf780b396507a3f7464"
-    "e8a60f4bbc019437993166e004087dd32d1490298caf655c2353e58daa0bc13cc7d5c198250968580b12c1b8817e3f5c"
-    "807e650dd04abd3fb8130b7ae43fcc5b";
+static const QString kAnonymousToken = "bf8bfeabb1aa84f9c8c3906c04a04fb864322804c83f5d607e91a04eae4"
+                                       "63c9436bd1a17ec353cf780b396507a3f7464"
+                                       "e8a60f4bbc019437993166e004087dd32d1490298caf655c2353e58daa0"
+                                       "bc13cc7d5c198250968580b12c1b8817e3f5c"
+                                       "807e650dd04abd3fb8130b7ae43fcc5b";
 
-static QByteArray aesEncryptEcb(const QByteArray &plain, const QByteArray &key)
+static QByteArray aesEncryptEcb(const QByteArray& plain, const QByteArray& key)
 {
     QByteArray out(plain.size() + EVP_MAX_BLOCK_LENGTH, Qt::Uninitialized);
 
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     if (!ctx) {
         return {};
     }
@@ -43,22 +45,17 @@ static QByteArray aesEncryptEcb(const QByteArray &plain, const QByteArray &key)
     int outLen1 = 0;
     int outLen2 = 0;
 
-    bool ok = EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), nullptr,
-                                 reinterpret_cast<const unsigned char *>(key.constData()),
-                                 nullptr) == 1;
+    bool ok =
+        EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), nullptr,
+                           reinterpret_cast<const unsigned char*>(key.constData()), nullptr) == 1;
     if (ok) {
-        ok = EVP_EncryptUpdate(
-                 ctx,
-                 reinterpret_cast<unsigned char *>(out.data()),
-                 &outLen1,
-                 reinterpret_cast<const unsigned char *>(plain.constData()),
-                 plain.size()) == 1;
+        ok = EVP_EncryptUpdate(ctx, reinterpret_cast<unsigned char*>(out.data()), &outLen1,
+                               reinterpret_cast<const unsigned char*>(plain.constData()),
+                               plain.size()) == 1;
     }
     if (ok) {
-        ok = EVP_EncryptFinal_ex(
-                 ctx,
-                 reinterpret_cast<unsigned char *>(out.data() + outLen1),
-                 &outLen2) == 1;
+        ok = EVP_EncryptFinal_ex(ctx, reinterpret_cast<unsigned char*>(out.data() + outLen1),
+                                 &outLen2) == 1;
     }
 
     EVP_CIPHER_CTX_free(ctx);
@@ -77,33 +74,32 @@ static QString procKeywords(QString s)
     s.remove(QRegularExpression("['·$&–]"));
     s.remove(QRegularExpression("\\(.*?\\)|\\[.*?\\]|\\{.*?\\}|（.*?"));
     s.remove(QRegularExpression("[-/:-@[-`{-~]+"));
-    s.remove(QRegularExpression("[\\u2014\\u2018\\u201c\\u2026\\u3001\\u3002\\u300a\\u300b\\u300e\\u300f"
-                                "\\u3010\\u3011\\u30fb\\uff01\\uff08\\uff09\\uff0c\\uff1a\\uff1b\\uff1f"
-                                "\\uff5e\\uffe5]+"));
+    s.remove(
+        QRegularExpression("[\\u2014\\u2018\\u201c\\u2026\\u3001\\u3002\\u300a\\u300b\\u300e\\u300f"
+                           "\\u3010\\u3011\\u30fb\\uff01\\uff08\\uff09\\uff0c\\uff1a\\uff1b\\uff1f"
+                           "\\uff5e\\uffe5]+"));
     return s;
 }
 
-static QMap<QString, QString> linuxApiPayload(const QString &method, const QString &url, const QJsonObject &params)
+static QMap<QString, QString> linuxApiPayload(const QString& method, const QString& url,
+                                              const QJsonObject& params)
 {
     QJsonObject wrapped;
     wrapped.insert("method", method);
     wrapped.insert("url", url);
     wrapped.insert("params", params);
 
-    const QByteArray text = QJsonDocument(wrapped).toJson(QJsonDocument::Compact);
+    const QByteArray text      = QJsonDocument(wrapped).toJson(QJsonDocument::Compact);
     const QByteArray encrypted = aesEncryptEcb(text, kLinuxApiKey);
-    const QString eparams = QString::fromLatin1(encrypted.toHex()).toUpper();
+    const QString eparams      = QString::fromLatin1(encrypted.toHex()).toUpper();
 
     QMap<QString, QString> data;
     data.insert("eparams", eparams);
     return data;
 }
 
-static QByteArray doRequest(const QString &method,
-                            const QUrl &originUrl,
-                            const QJsonObject &data,
-                            const QString &crypto,
-                            QNetworkAccessManager *nam)
+static QByteArray doRequest(const QString& method, const QUrl& originUrl, const QJsonObject& data,
+                            const QString& crypto, QNetworkAccessManager* nam)
 {
     QUrl url = originUrl;
     QMap<QString, QString> form;
@@ -120,8 +116,9 @@ static QByteArray doRequest(const QString &method,
         apiUrl.replace(QRegularExpression("\\w*api"), "api");
 
         form = linuxApiPayload(method, apiUrl, data);
-        req.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                                       "Chrome/60.0.3112.90 Safari/537.36");
+        req.setRawHeader("User-Agent",
+                         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                         "Chrome/60.0.3112.90 Safari/537.36");
         req.setRawHeader("Cookie", QString("MUSIC_A=%1").arg(kAnonymousToken).toUtf8());
         url = QUrl("https://music.163.com/api/linux/forward");
     } else {
@@ -136,7 +133,7 @@ static QByteArray doRequest(const QString &method,
     }
     const QByteArray body = query.toString(QUrl::FullyEncoded).toUtf8();
 
-    QNetworkReply *reply = nullptr;
+    QNetworkReply* reply  = nullptr;
     if (method.compare("POST", Qt::CaseInsensitive) == 0) {
         reply = nam->post(req, body);
     } else {
@@ -147,8 +144,8 @@ static QByteArray doRequest(const QString &method,
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
 
-    const bool ok = reply->error() == QNetworkReply::NoError;
-    const int code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    const bool ok         = reply->error() == QNetworkReply::NoError;
+    const int code        = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     const QByteArray resp = reply->readAll();
     reply->deleteLater();
 
@@ -158,7 +155,7 @@ static QByteArray doRequest(const QString &method,
     return resp;
 }
 
-static QList<SongCandidate> parseSearchResults(const QByteArray &body)
+static QList<SongCandidate> parseSearchResults(const QByteArray& body)
 {
     QList<SongCandidate> candidates;
     QJsonParseError err;
@@ -167,22 +164,22 @@ static QList<SongCandidate> parseSearchResults(const QByteArray &body)
         return candidates;
     }
 
-    const QJsonObject root = doc.object();
+    const QJsonObject root   = doc.object();
     const QJsonObject result = root.value("result").toObject();
-    const QJsonArray songs = result.value("songs").toArray();
+    const QJsonArray songs   = result.value("songs").toArray();
 
-    for (const QJsonValue &v : songs) {
+    for (const QJsonValue& v : songs) {
         const QJsonObject song = v.toObject();
         if (!song.contains("id") || !song.contains("name")) {
             continue;
         }
 
         SongCandidate c;
-        c.id = static_cast<qint64>(song.value("id").toDouble());
-        c.title = song.value("name").toString();
+        c.id                     = static_cast<qint64>(song.value("id").toDouble());
+        c.title                  = song.value("name").toString();
 
         const QJsonArray artists = song.value("artists").toArray();
-        for (const QJsonValue &av : artists) {
+        for (const QJsonValue& av : artists) {
             const QJsonObject ao = av.toObject();
             if (ao.contains("name")) {
                 c.artist = ao.value("name").toString();
@@ -197,7 +194,7 @@ static QList<SongCandidate> parseSearchResults(const QByteArray &body)
     return candidates;
 }
 
-static void parseLyricResponse(const SongCandidate &item, LyricsSink &sink, const QByteArray &body)
+static void parseLyricResponse(const SongCandidate& item, LyricsSink& sink, const QByteArray& body)
 {
     QJsonParseError err;
     const QJsonDocument doc = QJsonDocument::fromJson(body, &err);
@@ -210,8 +207,8 @@ static void parseLyricResponse(const SongCandidate &item, LyricsSink &sink, cons
 
     if (lyricObj.contains("lrc")) {
         const QJsonObject lrc = lyricObj.value("lrc").toObject();
-        lyricText = lrc.value("lyric").toString();
-        const int version = lrc.value("version").toInt();
+        lyricText             = lrc.value("lyric").toString();
+        const int version     = lrc.value("version").toInt();
         if (version == 1) {
             return;
         }
@@ -222,30 +219,26 @@ static void parseLyricResponse(const SongCandidate &item, LyricsSink &sink, cons
     }
 
     LyricMeta meta = sink.createLyric();
-    meta.title = item.title;
-    meta.artist = item.artist;
-    meta.album = item.album;
+    meta.title     = item.title;
+    meta.artist    = item.artist;
+    meta.album     = item.album;
     meta.lyricText = lyricText;
-    meta.source = QStringLiteral("Netease");
+    meta.source    = QStringLiteral("Netease");
     sink.addLyric(meta);
 }
 
 Config getConfig()
 {
-    return {
-        QStringLiteral("网易云音乐"),
-        QStringLiteral("0.3"),
-        QStringLiteral("ohyeah")
-    };
+    return {QStringLiteral("网易云音乐"), QStringLiteral("0.3"), QStringLiteral("ohyeah")};
 }
 
-void getLyrics(const TrackMeta &meta, LyricsSink &sink, QNetworkAccessManager *nam)
+void getLyrics(const TrackMeta& meta, LyricsSink& sink, QNetworkAccessManager* nam)
 {
     if (!nam) {
         return;
     }
 
-    const QString title = procKeywords(meta.rawTitle);
+    const QString title  = procKeywords(meta.rawTitle);
     const QString artist = procKeywords(meta.rawArtist);
 
     QJsonObject searchData;
@@ -255,27 +248,22 @@ void getLyrics(const TrackMeta &meta, LyricsSink &sink, QNetworkAccessManager *n
     searchData.insert("offset", 0);
 
     const QByteArray searchBody = doRequest(
-        QStringLiteral("POST"),
-        QUrl(QStringLiteral("https://music.163.com/weapi/search/get")),
-        searchData,
-        QStringLiteral("linuxapi"),
-        nam);
+        QStringLiteral("POST"), QUrl(QStringLiteral("https://music.163.com/weapi/search/get")),
+        searchData, QStringLiteral("linuxapi"), nam);
 
     if (searchBody.isEmpty()) {
         return;
     }
 
     const QList<SongCandidate> candidates = parseSearchResults(searchBody);
-    for (const SongCandidate &item : candidates) {
+    for (const SongCandidate& item : candidates) {
         QJsonObject queryData;
         queryData.insert("id", QString::number(item.id));
 
         const QByteArray lyricBody = doRequest(
             QStringLiteral("POST"),
             QUrl(QStringLiteral("https://music.163.com/weapi/song/lyric?lv=-1&kv=-1&tv=-1")),
-            queryData,
-            QStringLiteral("linuxapi"),
-            nam);
+            queryData, QStringLiteral("linuxapi"), nam);
 
         parseLyricResponse(item, sink, lyricBody);
     }

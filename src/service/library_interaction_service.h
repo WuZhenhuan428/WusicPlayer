@@ -1,7 +1,7 @@
 #pragma once
 
+#include "core/types.h"
 #include <QObject>
-#include <core/types.h>
 
 class LibraryWidget;
 class PlaybackController;
@@ -14,8 +14,7 @@ class LibraryInteractionService : public QObject
 public:
     explicit LibraryInteractionService(LibraryWidget* library_widget,
                                        PlaybackController* playback_ctl,
-                                       PlaylistController* playlist_ctl,
-                                       QObject* parent);
+                                       PlaylistController* playlist_ctl, QObject* parent);
     ~LibraryInteractionService();
 
     void bind();

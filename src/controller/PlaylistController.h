@@ -1,11 +1,11 @@
 #pragma once
+#include "core/ConfigManager/IConfigurable.h"
+#include "core/types.h"
+#include "model/playlist/playlist_manager.h"
+
+#include <QByteArray>
 #include <QObject>
 #include <QVector>
-#include <QByteArray>
-#include "model/playlist/playlist_manager.h"
-#include "core/types.h"
-
-#include "core/ConfigManager/IConfigurable.h"
 
 class QJsonObject;
 
@@ -13,7 +13,8 @@ class PlaylistController : public QObject, public IConfigurable
 {
     Q_OBJECT
 public:
-    explicit PlaylistController(PlaylistManager* manager, QWidget* dialog_parent = nullptr, QObject* parent = nullptr);
+    explicit PlaylistController(PlaylistManager* manager, QWidget* dialog_parent = nullptr,
+                                QObject* parent = nullptr);
     ~PlaylistController();
 
     void importFiles(const playlistId& pid = playlistId());
@@ -49,7 +50,7 @@ public:
     const QVector<SortRule> sortRules() const;
 
     // config S/L interface
-    void loadFromJson(const QJsonObject &json) override;
+    void loadFromJson(const QJsonObject& json) override;
     QJsonObject saveToJson() override;
     QString configSubKey() const override;
 
@@ -67,7 +68,7 @@ public slots:
 
 private:
     PlaylistManager* m_manager = nullptr;
-    QWidget* m_dialogParent = nullptr;
+    QWidget* m_dialogParent    = nullptr;
     playlistId m_last_playlist_id;
     trackId m_last_track_id;
 };

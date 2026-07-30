@@ -1,23 +1,22 @@
 #pragma once
 
+#include "color_preview_item.h"
 #include "hsv_palette.h"
 #include "label_matrix.h"
-#include "color_preview_item.h"
 
 #include <QDialog>
-#include <QWidget>
-#include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLineEdit>
 #include <QPushButton>
-
+#include <QVBoxLayout>
+#include <QWidget>
 
 class HSVDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit HSVDialog(rgb_t curr_rgb, QWidget *parent = nullptr);
+    explicit HSVDialog(rgb_t curr_rgb, QWidget* parent = nullptr);
     ~HSVDialog();
 
     rgb_t getColor();

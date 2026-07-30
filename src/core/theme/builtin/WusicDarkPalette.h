@@ -2,25 +2,26 @@
 #include "core/theme/ThemePalette.h"
 
 /// 内置暗色调色板
-inline ThemePalette darkPalette() {
+inline ThemePalette darkPalette()
+{
     ThemePalette p;
-    p.name   = "Wusic Dark";
-    p.author = "WusicPlayer";
-    p.isDark = true;
+    p.name             = "Wusic Dark";
+    p.author           = "WusicPlayer";
+    p.isDark           = true;
 
     // QPalette 角色
-    p.window          = QColor("#1a1a2e");
-    p.windowText      = QColor("#e0e0e0");
-    p.base            = QColor("#16213e");
-    p.alternateBase   = QColor("#1e2a4a");
-    p.text            = QColor("#e0e0e0");
-    p.button          = QColor("#0f3460");
-    p.buttonText      = QColor("#e0e0e0");
-    p.brightText      = QColor("#ffffff");
-    p.highlight       = QColor("#e94560");
-    p.highlightedText = QColor("#ffffff");
-    p.toolTipBase     = QColor("#2a2a3e");
-    p.toolTipText     = QColor("#e0e0e0");
+    p.window           = QColor("#1a1a2e");
+    p.windowText       = QColor("#e0e0e0");
+    p.base             = QColor("#16213e");
+    p.alternateBase    = QColor("#1e2a4a");
+    p.text             = QColor("#e0e0e0");
+    p.button           = QColor("#0f3460");
+    p.buttonText       = QColor("#e0e0e0");
+    p.brightText       = QColor("#ffffff");
+    p.highlight        = QColor("#e94560");
+    p.highlightedText  = QColor("#ffffff");
+    p.toolTipBase      = QColor("#2a2a3e");
+    p.toolTipText      = QColor("#e0e0e0");
 
     // 语义颜色
     p.sidebarBg        = QColor("#16213e");
@@ -37,13 +38,13 @@ inline ThemePalette darkPalette() {
     p.frameBorder      = QColor("#3a3a5a");
 
     // 尺寸
-    p.buttonRadius   = 6;
-    p.panelRadius    = 8;
-    p.menuRadius     = 4;
-    p.scrollbarWidth = 16;
-    p.sliderGrooveH  = 4;
-    p.sliderHandleW  = 12;
-    p.separatorW     = 1;
+    p.buttonRadius     = 6;
+    p.panelRadius      = 8;
+    p.menuRadius       = 4;
+    p.scrollbarWidth   = 16;
+    p.sliderGrooveH    = 4;
+    p.sliderHandleW    = 12;
+    p.separatorW       = 1;
 
     return p;
 }

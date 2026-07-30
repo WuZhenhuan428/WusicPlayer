@@ -2,27 +2,21 @@
 
 #include <QJsonObject>
 
-PlaybackController::PlaybackController(Player* player, QObject* parent)
-    : QObject(parent),
-      m_player(player),
-      m_is_muted(false)
+PlaybackController::PlaybackController(Player* player, QObject* parent) :
+    QObject(parent), m_player(player), m_is_muted(false)
 {
     if (!player) {
         return;
     }
     // broadcast Player signals
-    connect(m_player, &Player::positionChanged, this, [this](qint64 pos_ms) {
-        emit sgnPositionChanged(pos_ms);
-    });
-    connect(m_player, &Player::durationChanged, this, [this](qint64 dur_ms) {
-        emit sgnDurationChanged(dur_ms);
-    });
-    connect(m_player, &Player::stateChanged, this, [this](PlayingState state) {
-        emit sgnPlaybackStateChanged(state);
-    });
-    connect(m_player, &Player::sgnPlaybackNatualEnd, this, [this]() {
-        emit sgnPlaybackNatualEnd();
-    });
+    connect(m_player, &Player::positionChanged, this,
+            [this](qint64 pos_ms) { emit sgnPositionChanged(pos_ms); });
+    connect(m_player, &Player::durationChanged, this,
+            [this](qint64 dur_ms) { emit sgnDurationChanged(dur_ms); });
+    connect(m_player, &Player::stateChanged, this,
+            [this](PlayingState state) { emit sgnPlaybackStateChanged(state); });
+    connect(m_player, &Player::sgnPlaybackNatualEnd, this,
+            [this]() { emit sgnPlaybackNatualEnd(); });
     connect(m_player, &Player::deviceChanged, this, [this](QAudioDevice device) {
         emit sgnDevicesChanged(this->availableDevices(), device.id());
     });
@@ -32,50 +26,56 @@ PlaybackController::PlaybackController(Player* player, QObject* parent)
 
 PlaybackController::~PlaybackController() {}
 
-
-void PlaybackController::play() {
+void PlaybackController::play()
+{
     if (!m_player) {
         return;
     }
     m_player->play();
 }
 
-void PlaybackController::pause() {
+void PlaybackController::pause()
+{
     if (!m_player) {
         return;
     }
     m_player->pause();
 }
 
-void PlaybackController::stop() {
+void PlaybackController::stop()
+{
     if (!m_player) {
         return;
     }
     m_player->stop();
 }
 
-PlayingState PlaybackController::state() {
+PlayingState PlaybackController::state()
+{
     if (!m_player) {
         return PlayingState::STOP;
     }
     return m_player->state();
 }
 
-void PlaybackController::setPosition(qint64 pos_ms) {
+void PlaybackController::setPosition(qint64 pos_ms)
+{
     if (!m_player) {
         return;
     }
     m_player->seek(pos_ms);
 }
 
-qint64 PlaybackController::position() {
+qint64 PlaybackController::position()
+{
     if (!m_player) {
         return 0;
     }
     return m_player->position();
 }
 
-void PlaybackController::setVolume(int percent) {
+void PlaybackController::setVolume(int percent)
+{
     if (!m_player) {
         return;
     }
@@ -83,7 +83,8 @@ void PlaybackController::setVolume(int percent) {
     emit sgnVolumeChanged(percent);
 }
 
-void PlaybackController::setGains(gains_t gains){
+void PlaybackController::setGains(gains_t gains)
+{
     if (!m_player) {
         return;
     }
@@ -91,7 +92,8 @@ void PlaybackController::setGains(gains_t gains){
     m_player->setEQ(gains);
 }
 
-void PlaybackController::setEqEnabled(bool enabled) {
+void PlaybackController::setEqEnabled(bool enabled)
+{
     m_eq_enabled = enabled;
     if (enabled) {
         m_player->setEQ(m_gains_cache);
@@ -100,18 +102,21 @@ void PlaybackController::setEqEnabled(bool enabled) {
     }
 }
 
-bool PlaybackController::isEqEnabled() const {
+bool PlaybackController::isEqEnabled() const
+{
     return m_eq_enabled;
 }
 
-void PlaybackController::read(QString filepath) {
+void PlaybackController::read(QString filepath)
+{
     if (!m_player) {
         return;
     }
     m_player->read(filepath);
 }
 
-void PlaybackController::setMute(bool mute_on) {
+void PlaybackController::setMute(bool mute_on)
+{
     if (m_player) {
         m_player->setMute(mute_on);
         m_is_muted = mute_on;
@@ -119,7 +124,8 @@ void PlaybackController::setMute(bool mute_on) {
     }
 }
 
-bool PlaybackController::getMute() {
+bool PlaybackController::getMute()
+{
     if (m_player) {
         return m_player->muted();
     }
@@ -131,7 +137,8 @@ void PlaybackController::flipMute()
     this->setMute(!m_is_muted);
 }
 
-void PlaybackController::setDevice(QAudioDevice dev) {
+void PlaybackController::setDevice(QAudioDevice dev)
+{
     if (!m_player) {
         return;
     }
@@ -139,7 +146,8 @@ void PlaybackController::setDevice(QAudioDevice dev) {
     emit sgnDevicesChanged(this->availableDevices(), this->currentDeviceId());
 }
 
-void PlaybackController::setDeviceById(QByteArray id) {
+void PlaybackController::setDeviceById(QByteArray id)
+{
     if (!m_player) {
         return;
     }
@@ -147,34 +155,35 @@ void PlaybackController::setDeviceById(QByteArray id) {
     emit sgnDevicesChanged(this->availableDevices(), this->currentDeviceId());
 }
 
-QList<QAudioDevice> PlaybackController::availableDevices() {
+QList<QAudioDevice> PlaybackController::availableDevices()
+{
     if (!m_player) {
         return {};
     }
     return m_player->devices();
 }
 
-QByteArray PlaybackController::currentDeviceId() {
+QByteArray PlaybackController::currentDeviceId()
+{
     if (!m_player) {
         return {};
     }
     return m_player->currentOutputDevice().id();
 }
 
-
-void PlaybackController::loadFromJson(const QJsonObject &json)
+void PlaybackController::loadFromJson(const QJsonObject& json)
 {
-    QJsonObject obj = json.value(this->configSubKey()).toObject();
+    QJsonObject obj      = json.value(this->configSubKey()).toObject();
     double volume_double = obj.value("volume").toDouble();
     this->setVolume(static_cast<int>(volume_double * 100));
     this->setMute(obj.value("muted").toBool());
     this->setDeviceById(QByteArray::fromBase64(obj.value("last_device").toString().toUtf8()));
 
-    m_last_position_ms = obj.value("last_position_ms").toInt();
-    m_last_was_playing = obj.value("last_was_playing").toBool(false);
+    m_last_position_ms   = obj.value("last_position_ms").toInt();
+    m_last_was_playing   = obj.value("last_was_playing").toBool(false);
 
     // Restore EQ state
-    m_eq_enabled = obj.value("eq_enabled").toBool(false);
+    m_eq_enabled         = obj.value("eq_enabled").toBool(false);
     QJsonObject eq_gains = obj.value("eq_gains").toObject();
     if (!eq_gains.isEmpty()) {
         m_gains_cache._31  = static_cast<float>(eq_gains.value("_31").toDouble());
@@ -202,18 +211,16 @@ QJsonObject PlaybackController::saveToJson()
 {
     QJsonObject obj;
 
-    m_last_was_playing = this->state() == PlayingState::PLAYING;
-    m_last_position_ms = this->state() != PlayingState::STOP
-                            ? m_player->position()
-                            : 0;
+    m_last_was_playing      = this->state() == PlayingState::PLAYING;
+    m_last_position_ms      = this->state() != PlayingState::STOP ? m_player->position() : 0;
 
-    obj["volume"] = m_player->volume();
-    obj["muted"] = m_is_muted;
-    obj["last_device"] = QString::fromUtf8(this->currentDeviceId().toBase64());
+    obj["volume"]           = m_player->volume();
+    obj["muted"]            = m_is_muted;
+    obj["last_device"]      = QString::fromUtf8(this->currentDeviceId().toBase64());
     obj["last_was_playing"] = m_last_was_playing;
     obj["last_position_ms"] = m_last_position_ms;
 
-    obj["eq_enabled"] = m_eq_enabled;
+    obj["eq_enabled"]       = m_eq_enabled;
     QJsonObject eq_gains;
     eq_gains["_31"]  = m_gains_cache._31;
     eq_gains["_63"]  = m_gains_cache._63;
@@ -225,7 +232,7 @@ QJsonObject PlaybackController::saveToJson()
     eq_gains["_4k"]  = m_gains_cache._4k;
     eq_gains["_8k"]  = m_gains_cache._8k;
     eq_gains["_16k"] = m_gains_cache._16k;
-    obj["eq_gains"] = eq_gains;
+    obj["eq_gains"]  = eq_gains;
 
     return obj;
 }
@@ -244,7 +251,6 @@ bool PlaybackController::lastWasPlaying() const
 {
     return m_last_was_playing;
 }
-
 
 const gains_t PlaybackController::gains() const
 {

@@ -5,16 +5,19 @@
 
 class QNetworkAccessManager;
 
-namespace lyrics_fetcher {
+namespace lyrics_fetcher
+{
 
-struct TrackMeta {
+struct TrackMeta
+{
     QString rawTitle;
     QString rawArtist;
     QString rawAlbum;
     int durationSec = 0;
 };
 
-struct LyricMeta {
+struct LyricMeta
+{
     QString title;
     QString artist;
     QString album;
@@ -22,27 +25,30 @@ struct LyricMeta {
     QString source;
 };
 
-class LyricsSink {
+class LyricsSink
+{
 public:
-    virtual ~LyricsSink() = default;
-    virtual LyricMeta createLyric() = 0;
+    virtual ~LyricsSink()                        = default;
+    virtual LyricMeta createLyric()              = 0;
     virtual void addLyric(const LyricMeta& meta) = 0;
 };
 
-class LyricsManager {
+class LyricsManager
+{
 public:
-    enum class Platform {
+    enum class Platform
+    {
         Netease
     };
 
     LyricsManager();
 
-    QVector<LyricMeta> fetch(const TrackMeta& meta,
-                             QNetworkAccessManager* nam,
+    QVector<LyricMeta> fetch(const TrackMeta& meta, QNetworkAccessManager* nam,
                              const QVector<Platform>& platforms = {}) const;
 
 private:
-    struct PlatformEntry {
+    struct PlatformEntry
+    {
         Platform platform;
         void (*fetchFn)(const TrackMeta&, LyricsSink&, QNetworkAccessManager*);
     };

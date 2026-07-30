@@ -1,19 +1,20 @@
 #pragma once
 
-#include <QWidget>
-#include <QRadioButton>
 #include <QButtonGroup>
-#include <QTableView>
-#include <QPushButton>
-#include <QLabel>
 #include <QHBoxLayout>
-#include <QVBoxLayout>
+#include <QLabel>
 #include <QListWidgetItem>
+#include <QPushButton>
+#include <QRadioButton>
+#include <QTableView>
+#include <QVBoxLayout>
+#include <QWidget>
 
 class ThemeService;
 
 /// 主题设置页面——展示所有可用主题，支持按来源过滤和一键应用。
-class ThemeSettingsPage : public QWidget {
+class ThemeSettingsPage : public QWidget
+{
     Q_OBJECT
 public:
     explicit ThemeSettingsPage(ThemeService* service, QWidget* parent = nullptr);
@@ -47,8 +48,8 @@ private:
 
     // 表格 + 标签
     QTableView* m_table_view;
-    QLabel*      m_lb_current;
-    QLabel*      m_lb_hint;
+    QLabel* m_lb_current;
+    QLabel* m_lb_hint;
 
     // 操作按钮
     QPushButton* m_btn_apply;

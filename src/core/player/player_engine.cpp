@@ -1,7 +1,7 @@
 #include "player_engine.h"
 
-#include <thread>
 #include <chrono>
+#include <thread>
 
 PlayerEngine::PlayerEngine()
 {
@@ -11,12 +11,13 @@ PlayerEngine::PlayerEngine()
     m_state = PlayingState::STOP;
 }
 
-PlayerEngine::~PlayerEngine() {
+PlayerEngine::~PlayerEngine()
+{
     m_abort_watchdog.store(true, std::memory_order_release);
     if (m_watchdog.joinable()) {
         m_watchdog.join();
     }
-    
+
     if (m_decoder) {
         m_decoder->stop();
         m_decoder->join();
@@ -51,9 +52,11 @@ void PlayerEngine::setWatcdog()
         bool has_notified = false;
         while (!m_abort_watchdog.load(std::memory_order_acquire)) {
             // If decoder exists, completed reading, AND buffer drained completely:
-            if (m_decoder && m_decode_finished.load(std::memory_order_acquire) && m_buffer->empty()) {
+            if (m_decoder && m_decode_finished.load(std::memory_order_acquire) &&
+                m_buffer->empty()) {
                 if (!has_notified) {
-                    PlayingState curr_state = m_state.exchange(PlayingState::STOP, std::memory_order_acq_rel);
+                    PlayingState curr_state =
+                        m_state.exchange(PlayingState::STOP, std::memory_order_acq_rel);
                     if (curr_state != PlayingState::STOP) {
                         printf("[Playback finished autonomously]\n");
                         if (m_playback_callback) {
@@ -64,14 +67,13 @@ void PlayerEngine::setWatcdog()
                 }
             } else {
                 // If a new song starts or seek clears the finish flag, reset notification state
-                has_notified = false; 
+                has_notified = false;
             }
             // polling interval
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
     });
 }
-
 
 void PlayerEngine::setUrl(const std::string& url)
 {
@@ -89,7 +91,7 @@ void PlayerEngine::setUrl(const std::string& url)
     m_decode_finished.store(false, std::memory_order_release);
 
     m_decoder = std::make_unique<Decoder>(url);
-    m_decoder->set_eq_gain(m_pending_gains);  // apply cached EQ config
+    m_decoder->set_eq_gain(m_pending_gains); // apply cached EQ config
     m_decoder->work(m_buffer.get(), &m_decode_finished);
 
     // pre-filling 100ms buffer
@@ -177,7 +179,6 @@ void PlayerEngine::seek(int64_t pos_ms)
     }
 }
 
-
 void PlayerEngine::setPlaybackFinishedCallback(std::function<void(StopReason)> func)
 {
     m_playback_callback = func;
@@ -224,7 +225,7 @@ bool PlayerEngine::setOutputDeviceByName(const std::string& name)
     }
 
     const bool should_start = (m_state.load(std::memory_order_acquire) == PlayingState::PLAYING);
-    const bool ok = m_device->switch_playback_device_by_name(name, should_start);
+    const bool ok           = m_device->switch_playback_device_by_name(name, should_start);
     if (!ok) {
         return false;
     }

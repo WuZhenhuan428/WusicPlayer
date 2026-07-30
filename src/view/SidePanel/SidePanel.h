@@ -1,19 +1,19 @@
 #pragma once
 
+#include "ElidedLabel.h"
 #include "WLyricsPanel.h"
 #include "core/types.h"
-#include "ElidedLabel.h"
 
-#include <QWidget>
-#include <QString>
-#include <QResizeEvent>
 #include <QLabel>
 #include <QPixmap>
-#include <QSplitter>
-#include <QVBoxLayout>
 #include <QPoint>
 #include <QPointer>
+#include <QResizeEvent>
+#include <QSplitter>
+#include <QString>
 #include <QTimer>
+#include <QVBoxLayout>
+#include <QWidget>
 
 class LyricsSearchWidget;
 
@@ -21,7 +21,7 @@ class SidePanel : public QWidget
 {
     Q_OBJECT
 public:
-    explicit SidePanel(QWidget *parent = nullptr);
+    explicit SidePanel(QWidget* parent = nullptr);
     ~SidePanel();
 
     void loadCover(const QString& filepath);
@@ -40,7 +40,7 @@ private slots:
     void showLyricsContextMenu(const QPoint& pos);
 
 protected:
-    void resizeEvent(QResizeEvent *event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 private:
     QLabel* m_lb_cover;
