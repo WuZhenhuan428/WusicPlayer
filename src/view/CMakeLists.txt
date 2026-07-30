@@ -40,9 +40,6 @@ add_library(wusic_view STATIC
 
     SettingsPanel/ThemeSettingsPage/ThemeSettingsPage.cpp
     SettingsPanel/ThemeSettingsPage/ThemeSettingsPage.h
-
-    dialogs/hsv_dialog/basic_colors_item.cpp
-    dialogs/hsv_dialog/basic_colors_item.h
     dialogs/hsv_dialog/color_preview_item.cpp
     dialogs/hsv_dialog/color_preview_item.h
     dialogs/hsv_dialog/hsv_dialog.cpp
@@ -67,6 +64,9 @@ add_library(wusic_view STATIC
 
     eq_widget/eq_widget.cpp
     eq_widget/eq_widget.h
+
+    status_bar/status_bar.cpp
+    status_bar/status_bar.h
 )
 
 target_link_libraries(wusic_view
