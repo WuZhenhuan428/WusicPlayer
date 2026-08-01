@@ -7,7 +7,6 @@
 #include "view/LibraryWidget/LibraryWidget.h"
 #include "view/SidePanel/SidePanel.h"
 #include "view/WControlBar/WControlBar.h"
-#include "view/status_bar/status_bar.h"
 
 #include <QAction>
 #include <QByteArray>
@@ -63,8 +62,8 @@ protected:
     void closeEvent(QCloseEvent* event) override;
 
 private:
-    PlaybackController* m_playback_controller;
-    PlaylistController* m_playlist_controller;
+    PlaybackController* playback_controller_;
+    PlaylistController* playlist_controller_;
 
     bool m_cache_load_scheduled = false;
 
@@ -126,9 +125,6 @@ private:
     QHBoxLayout* m_hbl_centre;
 
     DesktopLyricsWidget* m_desktop_lyrics_widget = nullptr;
-
-    // status bar
-    StatusBar* status_bar_;
 
 signals:
     void sgnLoadPlaylist();

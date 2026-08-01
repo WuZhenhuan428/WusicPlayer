@@ -32,7 +32,7 @@ public:
     QString getCurrentTrack() const;
     QString getCurrentPlaylistName() const;
     const trackId& getCurrentTrackId() const;
-    const playlistId& getCurrentPlaylist() const;
+    const playlistId& getCurrentPlaylistId() const;
     QVector<PlaylistInfo> getAllPlaylists();
     QVector<std::shared_ptr<Playlist>> getPlaylists();
     TrackMetaData getCurrentMetadata();

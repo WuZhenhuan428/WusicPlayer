@@ -8,8 +8,8 @@
 
 MainWindow::MainWindow(PlaybackController* playback_controller,
                        PlaylistController* playlist_controller, QWidget* parent) :
-    QMainWindow(parent), m_playback_controller(playback_controller),
-    m_playlist_controller(playlist_controller)
+    QMainWindow(parent), playback_controller_(playback_controller),
+    playlist_controller_(playlist_controller)
 {
     this->setMinimumSize(960, 540);
     this->initUI();
@@ -20,12 +20,12 @@ MainWindow::~MainWindow() {}
 
 PlaylistController* MainWindow::playlistController() const
 {
-    return m_playlist_controller;
+    return playlist_controller_;
 }
 
 PlaybackController* MainWindow::playbackController() const
 {
-    return m_playback_controller;
+    return playback_controller_;
 }
 
 LibraryWidget* MainWindow::libraryPanel() const
@@ -60,7 +60,7 @@ void MainWindow::showEvent(QShowEvent* event)
         return;
     }
     m_cache_load_scheduled = true;
-    QTimer::singleShot(0, m_playlist_controller, &PlaylistController::loadCacheAfterShown);
+    QTimer::singleShot(0, playlist_controller_, &PlaylistController::loadCacheAfterShown);
 }
 
 void MainWindow::initConnection()
@@ -113,9 +113,6 @@ void MainWindow::initUI()
     buildMenuBar();
     buildBottomToolBar();
     buildCentralArea();
-
-    this->status_bar_ = new StatusBar(this);
-    this->statusBar()->addWidget(status_bar_);
 }
 
 void MainWindow::buildMenuBar()
@@ -198,8 +195,8 @@ void MainWindow::buildBottomToolBar()
     m_control_bar = new WControlBar(m_bottom_toolbar);
     m_bottom_toolbar->addWidget(m_control_bar);
     addToolBar(Qt::BottomToolBarArea, m_bottom_toolbar);
-    m_control_bar->setDevice(m_playback_controller->availableDevices(),
-                             m_playback_controller->currentDeviceId());
+    m_control_bar->setDevice(playback_controller_->availableDevices(),
+                             playback_controller_->currentDeviceId());
 }
 
 void MainWindow::buildCentralArea()
@@ -207,7 +204,7 @@ void MainWindow::buildCentralArea()
     // center window
     // playlist & table with splitter
     m_center_widget = new QWidget(this);
-    m_library_panel = new LibraryWidget(m_playlist_controller->viewModel(), m_center_widget);
+    m_library_panel = new LibraryWidget(playlist_controller_->viewModel(), m_center_widget);
     m_side_panel    = new SidePanel(m_center_widget);
     connect(m_side_panel, &SidePanel::sgnToggleDesktopLyrics, this, [this]() {
         if (m_desktop_lyrics_widget)

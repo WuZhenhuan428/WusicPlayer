@@ -11,6 +11,9 @@ add_library(wusic_controller STATIC
 
     shortcuts_controller.cpp
     shortcuts_controller.h
+
+    status_bar_controller.cpp
+    status_bar_controller.h
 )
 
 target_link_libraries(wusic_controller

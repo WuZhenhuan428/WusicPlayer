@@ -64,9 +64,6 @@ add_library(wusic_view STATIC
 
     eq_widget/eq_widget.cpp
     eq_widget/eq_widget.h
-
-    status_bar/status_bar.cpp
-    status_bar/status_bar.h
 )
 
 target_link_libraries(wusic_view

@@ -140,3 +140,8 @@ const QVector<Track>& Playlist::getTracks() const
 {
     return m_tracks;
 }
+
+size_t Playlist::track_count()
+{
+    return m_tracks.size();
+}

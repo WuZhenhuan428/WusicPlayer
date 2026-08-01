@@ -274,7 +274,7 @@ const trackId& PlaylistManager::getCurrentTrackId() const
     return this->m_context->getPlayTrackId();
 }
 
-const playlistId& PlaylistManager::getCurrentPlaylist() const
+const playlistId& PlaylistManager::getCurrentPlaylistId() const
 {
     return this->m_context->getPlaylistId();
 }

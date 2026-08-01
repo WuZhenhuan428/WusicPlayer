@@ -140,7 +140,7 @@ void PlaylistController::renamePlaylist(const playlistId& id)
     if (!m_manager)
         return;
 
-    playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylist() : id;
+    playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylistId() : id;
     if (target_id.isNull())
         return;
     QString old_name = m_manager->getPlaylistById(target_id);
@@ -158,7 +158,7 @@ void PlaylistController::removePlaylist(const playlistId& id)
     if (!m_manager)
         return;
 
-    playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylist() : id;
+    playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylistId() : id;
     if (target_id.isNull())
         return;
 
@@ -176,7 +176,7 @@ void PlaylistController::savePlaylist(const playlistId& id)
     if (!m_manager)
         return;
 
-    const playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylist() : id;
+    const playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylistId() : id;
     if (target_id.isNull())
         return;
 
@@ -202,7 +202,7 @@ void PlaylistController::copyPlaylist(const playlistId& id)
     if (!m_manager)
         return;
 
-    const playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylist() : id;
+    const playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylistId() : id;
     if (!target_id.isNull()) {
         m_manager->copyPlaylist(target_id);
     }
@@ -262,17 +262,22 @@ const QVector<std::shared_ptr<Playlist>> PlaylistController::playlists() const
 {
     return m_manager->getPlaylists();
 }
-playlistId PlaylistController::currentPlaylist() const
+playlistId PlaylistController::currentPlaylistId() const
 {
-    return m_manager->getCurrentPlaylist();
+    return m_manager->getCurrentPlaylistId();
 }
 trackId PlaylistController::currentTrackId() const
 {
     return m_manager->getCurrentTrackId();
 }
-TrackMetaData PlaylistController::currentMetadata() const
+const TrackMetaData PlaylistController::currentMetadata() const
 {
     return m_manager->getCurrentMetadata();
+}
+const std::shared_ptr<Playlist> PlaylistController::current_playlist()
+{
+    // return a share_ptr will cause the ref count increase
+    return this->findPlaylistById(this->currentPlaylistId());
 }
 
 std::shared_ptr<Playlist> PlaylistController::findPlaylistById(playlistId pid)
@@ -375,7 +380,7 @@ QJsonObject PlaylistController::saveToJson()
 
     obj["play_mode"]        = static_cast<int>(this->playMode());
 
-    m_last_playlist_id      = this->currentPlaylist();
+    m_last_playlist_id      = this->currentPlaylistId();
     m_last_track_id         = this->currentTrackId();
 
     obj["last_playlist_id"] = m_last_playlist_id.toString(QUuid::WithoutBraces);

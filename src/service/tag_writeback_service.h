@@ -25,9 +25,9 @@ public:
 private:
     PlaylistController* m_playlist_ctl;
     PlaybackController* m_playback_ctl;
-    PlaylistManager* m_playlist_manager;
-    MainWindow* m_main_window;
-    QPointer<TagEditWidget> m_tag_edit_widget;
+    PlaylistManager* playlist_manager_;
+    MainWindow* main_window_;
+    QPointer<TagEditWidget> tag_edit_widget_;
 
     bool m_bound = false;
 };

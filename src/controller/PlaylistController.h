@@ -38,9 +38,10 @@ public:
     PlayMode playMode() const;
 
     const QVector<std::shared_ptr<Playlist>> playlists() const;
-    playlistId currentPlaylist() const;
+    playlistId currentPlaylistId() const;
     trackId currentTrackId() const;
-    TrackMetaData currentMetadata() const;
+    const TrackMetaData currentMetadata() const;
+    const std::shared_ptr<Playlist> current_playlist();
 
     std::shared_ptr<Playlist> findPlaylistById(playlistId pid);
 

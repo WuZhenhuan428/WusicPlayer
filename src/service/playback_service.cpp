@@ -2,11 +2,11 @@
 
 PlaybackService::PlaybackService(MainWindow* main_window, PlaybackController* playback_ctl,
                                  PlaylistController* playlist_ctl, QObject* parent) :
-    QObject(parent), m_main_window(main_window), m_playback_ctl(playback_ctl),
+    QObject(parent), main_window_(main_window), m_playback_ctl(playback_ctl),
     m_playlist_ctl(playlist_ctl)
 {
-    assert(m_main_window && m_playback_ctl && m_playlist_ctl);
-    m_control_bar = m_main_window->controlBarWidget();
+    assert(main_window_ && m_playback_ctl && m_playlist_ctl);
+    m_control_bar = main_window_->controlBarWidget();
     assert(m_control_bar);
 }
 
@@ -17,7 +17,7 @@ void PlaybackService::bind()
     if (m_bound) {
         return;
     }
-    connect(m_main_window, &MainWindow::sgnPlayTrackRequested, this,
+    connect(main_window_, &MainWindow::sgnPlayTrackRequested, this,
             &PlaybackService::handlePlayTrackRequest);
     connect(m_control_bar, &WControlBar::sgnBtnPlayPauseClicked, m_playback_ctl,
             [this](bool is_request_play) {
@@ -68,29 +68,29 @@ void PlaybackService::bind()
     connect(m_control_bar, &WControlBar::sgnBtnNextClicked, this, [this]() {
         QString nextTrack = m_playlist_ctl->nextTrack();
         if (!nextTrack.isEmpty()) {
-            m_locate_on_next_play_request = true;
-            m_main_window->playTrackInUi(nextTrack);
+            locate_on_next_play_request_ = true;
+            main_window_->playTrackInUi(nextTrack);
         }
     });
 
     connect(m_control_bar, &WControlBar::sgnBtnPrevClicked, this, [this]() {
         QString prevTrack = m_playlist_ctl->prevTrack();
         if (!prevTrack.isEmpty()) {
-            m_locate_on_next_play_request = true;
-            m_main_window->playTrackInUi(prevTrack);
+            locate_on_next_play_request_ = true;
+            main_window_->playTrackInUi(prevTrack);
         }
     });
 
     connect(m_playback_ctl, &PlaybackController::sgnPlaybackNatualEnd, this, [this]() {
         QString nextTrack = m_playlist_ctl->nextTrack();
         if (!nextTrack.isEmpty()) {
-            m_locate_on_next_play_request = true;
-            m_main_window->playTrackInUi(nextTrack);
+            locate_on_next_play_request_ = true;
+            main_window_->playTrackInUi(nextTrack);
         }
     });
 
     connect(m_playlist_ctl, &PlaylistController::requestPlay, this,
-            [this](const QString& filepath) { m_main_window->playTrackInUi(filepath); });
+            [this](const QString& filepath) { main_window_->playTrackInUi(filepath); });
 
     m_bound = true;
 }
@@ -102,21 +102,21 @@ void PlaybackService::shutdown() {}
 void PlaybackService::handlePlayTrackRequest(const QString& filepath)
 {
     if (filepath.isEmpty()) {
-        m_locate_on_next_play_request = false;
+        locate_on_next_play_request_ = false;
         return;
     }
 
-    auto* sidePanel = m_main_window->sidePanel();
+    auto* sidePanel = main_window_->sidePanel();
 
     m_playback_ctl->read(filepath);
     sidePanel->loadCover(filepath);
 
-    if (m_locate_on_next_play_request) {
+    if (locate_on_next_play_request_) {
         emit sgnLocateCurrentTrack();
     }
-    m_locate_on_next_play_request = false;
+    locate_on_next_play_request_ = false;
 
-    TrackMetaData meta            = m_playlist_ctl->currentMetadata();
+    TrackMetaData meta           = m_playlist_ctl->currentMetadata();
     sidePanel->loadLyrics(meta);
     sidePanel->loadMetaData(meta);
 }

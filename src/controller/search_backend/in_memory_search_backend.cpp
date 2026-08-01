@@ -36,17 +36,17 @@ int clampScore(int score)
 } // namespace
 
 InMemorySearchBackend::InMemorySearchBackend(PlaylistController* playlist_controller) :
-    m_playlist_controller(playlist_controller)
+    playlist_controller_(playlist_controller)
 {}
 
 void InMemorySearchBackend::warmup(const playlistId& pid)
 {
-    if (!m_playlist_controller) {
+    if (!playlist_controller_) {
         return;
     }
 
     if (pid.isNull()) {
-        const playlistId current = m_playlist_controller->currentPlaylist();
+        const playlistId current = playlist_controller_->currentPlaylistId();
         if (!current.isNull()) {
             rebuildIndex(current);
         }
@@ -69,7 +69,7 @@ QVector<SearchHint> InMemorySearchBackend::search(const SearchQuery& query)
 {
     QVector<SearchHint> hits;
 
-    if (!m_playlist_controller) {
+    if (!playlist_controller_) {
         return hits;
     }
 
@@ -120,19 +120,19 @@ playlistId InMemorySearchBackend::resolvePid(const SearchQuery& query) const
     if (!query.pid.isNull()) {
         return query.pid;
     }
-    if (!m_playlist_controller) {
+    if (!playlist_controller_) {
         return playlistId{};
     }
-    return m_playlist_controller->currentPlaylist();
+    return playlist_controller_->currentPlaylistId();
 }
 
 void InMemorySearchBackend::rebuildIndex(const playlistId& pid)
 {
-    if (!m_playlist_controller || pid.isNull()) {
+    if (!playlist_controller_ || pid.isNull()) {
         return;
     }
 
-    std::shared_ptr<Playlist> playlist = m_playlist_controller->findPlaylistById(pid);
+    std::shared_ptr<Playlist> playlist = playlist_controller_->findPlaylistById(pid);
     if (!playlist) {
         m_index_by_playlist.remove(pid);
         return;

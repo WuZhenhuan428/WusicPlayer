@@ -4,6 +4,7 @@
 #include "controller/PlaylistController.h"
 #include "controller/search_backend/in_memory_search_backend.h"
 #include "controller/shortcuts_controller.h"
+#include "controller/status_bar_controller.h"
 #include "core/ConfigManager/ConfigManager.h"
 #include "core/ConfigManager/IConfigurable.h"
 #include "core/types.h"
@@ -32,69 +33,75 @@
 #include <QListWidgetItem>
 #include <QMessageBox>
 #include <QShortcut>
+#include <QString>
 #include <QThread>
 #include <QTimer>
 #include <QTreeView>
+#include <format>
+#include <string>
 
 AppController::AppController(PlaybackController* playbackController, QObject* parent) :
-    QObject(parent), m_playback_controller(playbackController),
-    m_playlist_manager(std::make_unique<PlaylistManager>()),
-    m_playlist_controller(
-        std::make_unique<PlaylistController>(m_playlist_manager.get(), nullptr, this)),
-    m_search_backend(std::make_unique<InMemorySearchBackend>(m_playlist_controller.get())),
-    m_main_window(std::make_unique<MainWindow>(m_playback_controller, m_playlist_controller.get())),
-    m_playback_service(std::make_unique<PlaybackService>(m_main_window.get(), m_playback_controller,
-                                                         m_playlist_controller.get(), this)),
-    m_playback_restore_service(std::make_unique<PlaybackRestoreService>(
-        m_playlist_controller.get(), m_playback_controller, this)),
-    m_library_interaction_serivce(std::make_unique<LibraryInteractionService>(
-        m_main_window->libraryPanel(), m_playback_controller, m_playlist_controller.get(), this)),
-    m_tag_writeback_service(
-        std::make_unique<TagWritebackService>(m_playlist_controller.get(), m_playback_controller,
-                                              m_playlist_manager.get(), m_main_window.get(), this)),
-    m_theme_service(std::make_unique<ThemeService>(this))
+    QObject(parent), playback_controller_(playbackController),
+    playlist_manager_(std::make_unique<PlaylistManager>()),
+    playlist_controller_(
+        std::make_unique<PlaylistController>(playlist_manager_.get(), nullptr, this)),
+    search_backend_(std::make_unique<InMemorySearchBackend>(playlist_controller_.get())),
+    main_window_(std::make_unique<MainWindow>(playback_controller_, playlist_controller_.get())),
+    status_bar_controller_(std::make_unique<StatusBarController>(main_window_->statusBar(), this)),
+    playback_service_(std::make_unique<PlaybackService>(main_window_.get(), playback_controller_,
+                                                        playlist_controller_.get(), this)),
+    playback_restore_service_(std::make_unique<PlaybackRestoreService>(playlist_controller_.get(),
+                                                                       playback_controller_, this)),
+    library_interaction_serivce_(std::make_unique<LibraryInteractionService>(
+        main_window_->libraryPanel(), playback_controller_, playlist_controller_.get(), this)),
+    tag_writeback_service_(
+        std::make_unique<TagWritebackService>(playlist_controller_.get(), playback_controller_,
+                                              playlist_manager_.get(), main_window_.get(), this)),
+    theme_service_(std::make_unique<ThemeService>(this))
 {
     ensureShortcutsController();
     initializeConfig();
-    m_playback_restore_service->restore();
+    playback_restore_service_->restore();
     initializeCoreConnections();
     configureDesktopLyricsWindowRelation();
 
-    connect(m_main_window.get(), &MainWindow::sgnOpenSearchPanelRequested, this,
+    connect(main_window_.get(), &MainWindow::sgnOpenSearchPanelRequested, this,
             &AppController::onOpenSearchPanelRequested);
-    connect(m_main_window.get(), &MainWindow::sgnOpenSettingsPanelRequested, this,
+    connect(main_window_.get(), &MainWindow::sgnOpenSettingsPanelRequested, this,
             &AppController::onOpenSettingsPanelRequested);
-    connect(m_main_window.get(), &MainWindow::sgnShowDesktopLyricsRequested, this,
+    connect(main_window_.get(), &MainWindow::sgnShowDesktopLyricsRequested, this,
             &AppController::handleShowDesktopLyricsRequested);
 
-    connect(m_main_window.get(), &MainWindow::sgnAboutToClose, this, &AppController::saveConfig);
+    connect(main_window_.get(), &MainWindow::sgnAboutToClose, this, &AppController::saveConfig);
 
     connect(qApp, &QCoreApplication::aboutToQuit, this, &AppController::saveConfig);
+
+    this->setup_status_bar_connections();
 }
 
 AppController::~AppController() = default;
 
 void AppController::showMainWindow()
 {
-    if (m_main_window) {
-        m_main_window->show();
+    if (main_window_) {
+        main_window_->show();
     }
 }
 
 void AppController::initializeCoreConnections()
 {
-    PlaylistController* playlistController = m_playlist_controller.get();
-    PlaybackController* playbackController = m_playback_controller;
-    LibraryWidget* libraryPanel            = m_main_window->libraryPanel();
-    SidePanel* sidePanel                   = m_main_window->sidePanel();
-    // DesktopLyricsWidget* desktopLyrics = m_main_window->desktopLyricsWidget();
+    PlaylistController* playlistController = playlist_controller_.get();
+    PlaybackController* playbackController = playback_controller_;
+    LibraryWidget* libraryPanel            = main_window_->libraryPanel();
+    SidePanel* sidePanel                   = main_window_->sidePanel();
+    // DesktopLyricsWidget* desktopLyrics = main_window_->desktopLyricsWidget();
 
-    m_playback_service->bind();
-    connect(m_playback_service.get(), &PlaybackService::sgnLocateCurrentTrack, this,
+    playback_service_->bind();
+    connect(playback_service_.get(), &PlaybackService::sgnLocateCurrentTrack, this,
             &AppController::locateCurrentTrackInView);
 
-    m_library_interaction_serivce->bind();
-    connect(libraryPanel, &LibraryWidget::sgnTrackPropertyRequested, m_tag_writeback_service.get(),
+    library_interaction_serivce_->bind();
+    connect(libraryPanel, &LibraryWidget::sgnTrackPropertyRequested, tag_writeback_service_.get(),
             &TagWritebackService::requestTrackProperty);
 
     auto* lyricsModel = qobject_cast<WLyricsModel*>(sidePanel->getLyricsPanel()->model());
@@ -102,63 +109,63 @@ void AppController::initializeCoreConnections()
             sidePanel->getLyricsPanel(), &WLyricsPanel::ScrollByPosition);
     connect(sidePanel, &SidePanel::sgnDesktopLyricsConfigRequested, this, [this]() {
         onOpenSettingsPanelRequested();
-        if (m_settings_panel) {
-            m_settings_panel->switchToPageByTitle("Lyrics");
+        if (settings_panel_) {
+            settings_panel_->switchToPageByTitle("Lyrics");
         }
     });
 
     if (lyricsModel) {
-        m_lyrics_follow_conn = connect(playbackController, &PlaybackController::sgnPositionChanged,
-                                       lyricsModel, &WLyricsModel::setCurrentPosition);
+        lyrics_follow_conn_ = connect(playbackController, &PlaybackController::sgnPositionChanged,
+                                      lyricsModel, &WLyricsModel::setCurrentPosition);
         connect(lyricsModel, &WLyricsModel::currentLineChanged, this,
                 [this](const QString& currText, const QString& nextText) {
-                    m_main_window->desktopLyricsWidget()->setLrcLine(currText, nextText);
+                    main_window_->desktopLyricsWidget()->setLrcLine(currText, nextText);
                 });
         connect(lyricsModel, &WLyricsModel::currentLineChanged, this,
-                [this]() { m_main_window->desktopLyricsWidget()->updateLineColor(); });
+                [this]() { main_window_->desktopLyricsWidget()->updateLineColor(); });
         connect(lyricsModel, &WLyricsModel::sgnUseTimelineFollow, this,
                 [this, playbackController, lyricsModel](bool enable) {
                     if (enable) {
-                        if (!m_lyrics_follow_conn) {
-                            m_lyrics_follow_conn =
+                        if (!lyrics_follow_conn_) {
+                            lyrics_follow_conn_ =
                                 connect(playbackController, &PlaybackController::sgnPositionChanged,
                                         lyricsModel, &WLyricsModel::setCurrentPosition);
                         }
                         return;
                     }
 
-                    if (m_lyrics_follow_conn) {
-                        disconnect(m_lyrics_follow_conn);
-                        m_lyrics_follow_conn = QMetaObject::Connection{};
+                    if (lyrics_follow_conn_) {
+                        disconnect(lyrics_follow_conn_);
+                        lyrics_follow_conn_ = QMetaObject::Connection{};
                     }
                 });
     }
 
-    connect(m_main_window.get(), &MainWindow::sgnImportFilesRequested, this,
+    connect(main_window_.get(), &MainWindow::sgnImportFilesRequested, this,
             [playlistController]() { playlistController->importFiles(); });
-    connect(m_main_window.get(), &MainWindow::sgnImportFolderRequested, this,
+    connect(main_window_.get(), &MainWindow::sgnImportFolderRequested, this,
             [playlistController]() { playlistController->importDir(); });
-    connect(m_main_window.get(), &MainWindow::sgnCreatePlaylistRequested, playlistController,
+    connect(main_window_.get(), &MainWindow::sgnCreatePlaylistRequested, playlistController,
             &PlaylistController::createNewPlaylist);
-    connect(m_main_window.get(), &MainWindow::sgnLoadPlaylist, playlistController,
+    connect(main_window_.get(), &MainWindow::sgnLoadPlaylist, playlistController,
             &PlaylistController::loadPlaylist);
-    connect(m_main_window.get(), &MainWindow::sgnCopyPlaylistRequested, this,
+    connect(main_window_.get(), &MainWindow::sgnCopyPlaylistRequested, this,
             [playlistController]() { playlistController->copyPlaylist(); });
-    connect(m_main_window.get(), &MainWindow::sgnRenamePlaylistRequested, this,
+    connect(main_window_.get(), &MainWindow::sgnRenamePlaylistRequested, this,
             [playlistController]() { playlistController->renamePlaylist(); });
-    connect(m_main_window.get(), &MainWindow::sgnRemovePlaylistRequested, this,
+    connect(main_window_.get(), &MainWindow::sgnRemovePlaylistRequested, this,
             [playlistController]() { playlistController->removePlaylist(); });
-    connect(m_main_window.get(), &MainWindow::sgnSavePlaylistRequested, this,
+    connect(main_window_.get(), &MainWindow::sgnSavePlaylistRequested, this,
             [playlistController]() { playlistController->savePlaylist(); });
-    connect(m_main_window.get(), &MainWindow::sgnSetSortRuleRequested, this,
+    connect(main_window_.get(), &MainWindow::sgnSetSortRuleRequested, this,
             &AppController::handleSetSortRuleRequested);
-    connect(m_main_window.get(), &MainWindow::sgnInsertColumnRequested, this,
+    connect(main_window_.get(), &MainWindow::sgnInsertColumnRequested, this,
             &AppController::handleInsertColumnRequested);
-    connect(m_main_window.get(), &MainWindow::sgnRemoveColumnRequested, this,
+    connect(main_window_.get(), &MainWindow::sgnRemoveColumnRequested, this,
             &AppController::handleRemoveColumnRequested);
-    connect(m_main_window.get(), &MainWindow::sgnShowAboutMessagebox, this,
+    connect(main_window_.get(), &MainWindow::sgnShowAboutMessagebox, this,
             &AppController::handleShowAboutMessagebox);
-    connect(m_main_window.get(), &MainWindow::sgnOpenEQWidgetRequested, this,
+    connect(main_window_.get(), &MainWindow::sgnOpenEQWidgetRequested, this,
             &AppController::handleOpenEQRequested);
 
     auto* locateShortcut = new QShortcut(QKeySequence(Qt::Key_Tab), libraryPanel->songTreeView());
@@ -168,8 +175,8 @@ void AppController::initializeCoreConnections()
 
 void AppController::locateCurrentTrackInView()
 {
-    auto* playlistController = m_playlist_controller.get();
-    auto* libraryPanel       = m_main_window ? m_main_window->libraryPanel() : nullptr;
+    auto* playlistController = playlist_controller_.get();
+    auto* libraryPanel       = main_window_ ? main_window_->libraryPanel() : nullptr;
     if (!playlistController || !libraryPanel) {
         return;
     }
@@ -191,7 +198,7 @@ void AppController::locateCurrentTrackInView()
 
 void AppController::handleSetSortRuleRequested()
 {
-    auto* playlistController = m_playlist_controller.get();
+    auto* playlistController = playlist_controller_.get();
     WSortTypeSetDialog dialog;
     if (dialog.exec() == QDialog::Accepted) {
         QString input = dialog.getText();
@@ -201,7 +208,7 @@ void AppController::handleSetSortRuleRequested()
 
 void AppController::handleInsertColumnRequested()
 {
-    auto* playlistController = m_playlist_controller.get();
+    auto* playlistController = playlist_controller_.get();
     WInsertColumnDialog dialog;
     int maxIndex = playlistController->viewModel()->getColumns().size();
     dialog.setMaxIndex(maxIndex);
@@ -216,9 +223,9 @@ void AppController::handleInsertColumnRequested()
 
 void AppController::handleRemoveColumnRequested()
 {
-    auto* playlistController = m_playlist_controller.get();
+    auto* playlistController = playlist_controller_.get();
     WColumnIndexDialog dialog(QObject::tr("Remove column"),
-                              QObject::tr("Input the column index except 0"), m_main_window.get());
+                              QObject::tr("Input the column index except 0"), main_window_.get());
     int maxIndex = playlistController->viewModel()->getColumns().size() - 1;
     dialog.setMaxIndex(maxIndex);
     dialog.setIndex(1);
@@ -229,7 +236,7 @@ void AppController::handleRemoveColumnRequested()
 
 void AppController::handleShowAboutMessagebox()
 {
-    QMessageBox* msg = new QMessageBox(m_main_window.get());
+    QMessageBox* msg = new QMessageBox(main_window_.get());
     msg->setWindowTitle("About");
     msg->setText("This is a ABOUT message box.");
     msg->setIcon(QMessageBox::Information);
@@ -240,7 +247,7 @@ void AppController::handleShowAboutMessagebox()
 
 void AppController::handleShowDesktopLyricsRequested()
 {
-    auto* desktopLyrics = m_main_window->desktopLyricsWidget();
+    auto* desktopLyrics = main_window_->desktopLyricsWidget();
     if (desktopLyrics) {
         configureDesktopLyricsWindowRelation();
         desktopLyrics->show();
@@ -249,7 +256,7 @@ void AppController::handleShowDesktopLyricsRequested()
 
 void AppController::configureDesktopLyricsWindowRelation()
 {
-    auto* desktopLyrics = m_main_window ? m_main_window->desktopLyricsWidget() : nullptr;
+    auto* desktopLyrics = main_window_ ? main_window_->desktopLyricsWidget() : nullptr;
     if (!desktopLyrics) {
         return;
     }
@@ -262,28 +269,28 @@ void AppController::configureDesktopLyricsWindowRelation()
 void AppController::initializeConfig()
 {
     ConfigManager& cm = ConfigManager::getInstance();
-    if (m_playback_controller) {
-        cm.registerModule(m_playback_controller);
+    if (playback_controller_) {
+        cm.registerModule(playback_controller_);
         qDebug() << "[CONFIG] register playback controller";
     }
-    if (m_playlist_controller) {
-        cm.registerModule(m_playlist_controller.get());
+    if (playlist_controller_) {
+        cm.registerModule(playlist_controller_.get());
         qDebug() << "[CONFIG] register playlist controller";
     }
-    if (m_main_window) {
-        cm.registerModule(m_main_window.get());
+    if (main_window_) {
+        cm.registerModule(main_window_.get());
         qDebug() << "[CONFIG] register main window";
-        if (m_main_window->libraryPanel()) {
-            cm.registerModule(m_main_window->libraryPanel());
+        if (main_window_->libraryPanel()) {
+            cm.registerModule(main_window_->libraryPanel());
             qDebug() << "[CONFIG] register library panel";
         }
-        if (m_main_window->desktopLyricsWidget()) {
-            cm.registerModule(m_main_window->desktopLyricsWidget());
+        if (main_window_->desktopLyricsWidget()) {
+            cm.registerModule(main_window_->desktopLyricsWidget());
             qDebug() << "[CONFIG] register desktop lyrics widget";
         }
     }
-    if (m_shortcuts_controller) {
-        cm.registerModule(m_shortcuts_controller);
+    if (shortcuts_controller_) {
+        cm.registerModule(shortcuts_controller_);
         qDebug() << "[CONFIG] register shortcuts controller";
     }
     cm.loadAll();
@@ -292,57 +299,57 @@ void AppController::initializeConfig()
     // but not sufficient to create interfaces seprately
     // current:
     //      WControlBar -> m_btn_mode->icon
-    m_main_window.get()->controlBarWidget()->setPlayMode(m_playlist_controller->playMode());
+    main_window_.get()->controlBarWidget()->setPlayMode(playlist_controller_->playMode());
 }
 
 void AppController::saveConfig()
 {
-    if (!m_main_window) {
+    if (!main_window_) {
         return;
     }
 
-    if (m_has_saved_config_on_exit) {
+    if (has_saved_config_on_exit_) {
         return;
     }
-    m_has_saved_config_on_exit = true;
+    has_saved_config_on_exit_ = true;
 
-    ConfigManager& cm          = ConfigManager::getInstance();
-    if (m_settings_panel) {
-        cm.writeSubConfig(m_settings_panel->configSubKey(), m_settings_panel->saveToJson());
+    ConfigManager& cm         = ConfigManager::getInstance();
+    if (settings_panel_) {
+        cm.writeSubConfig(settings_panel_->configSubKey(), settings_panel_->saveToJson());
     }
-    if (m_shortcuts_panel) {
-        cm.writeSubConfig(m_shortcuts_panel->configSubKey(), m_shortcuts_panel->saveToJson());
+    if (shortcuts_panel_) {
+        cm.writeSubConfig(shortcuts_panel_->configSubKey(), shortcuts_panel_->saveToJson());
     }
-    if (m_search_panel) {
-        cm.writeSubConfig(m_search_panel->configSubKey(), m_search_panel->saveToJson());
+    if (search_panel_) {
+        cm.writeSubConfig(search_panel_->configSubKey(), search_panel_->saveToJson());
     }
     cm.saveAll();
 }
 
 void AppController::handleOpenEQRequested()
 {
-    if (!m_eq_widget) {
-        m_eq_widget = new EQWidget(m_playback_controller->gains(),
-                                   m_playback_controller->isEqEnabled(), false,
-                                   nullptr // no parent — WA_DeleteOnClose will clean up
-        );
-        m_eq_widget->setWindowFlag(Qt::Window, true);
-        m_eq_widget->setAttribute(Qt::WA_DeleteOnClose);
+    if (!eq_widget_) {
+        eq_widget_ =
+            new EQWidget(playback_controller_->gains(), playback_controller_->isEqEnabled(), false,
+                         nullptr // no parent — WA_DeleteOnClose will clean up
+            );
+        eq_widget_->setWindowFlag(Qt::Window, true);
+        eq_widget_->setAttribute(Qt::WA_DeleteOnClose);
 
-        connect(m_eq_widget, &EQWidget::sgnGainChanged, m_playback_controller,
+        connect(eq_widget_, &EQWidget::sgnGainChanged, playback_controller_,
                 &PlaybackController::setGains);
-        connect(m_eq_widget, &EQWidget::sgnEqEnabledChanged, m_playback_controller,
+        connect(eq_widget_, &EQWidget::sgnEqEnabledChanged, playback_controller_,
                 &PlaybackController::setEqEnabled);
 
-        connect(m_eq_widget, &QObject::destroyed, this, [this]() {
+        connect(eq_widget_, &QObject::destroyed, this, [this]() {
             Q_UNUSED(this);
             // QPointer auto-nulls; config is saved on app close via saveConfig().
         });
     }
 
-    m_eq_widget->show();
-    m_eq_widget->raise();
-    m_eq_widget->activateWindow();
+    eq_widget_->show();
+    eq_widget_->raise();
+    eq_widget_->activateWindow();
 }
 
 void AppController::onOpenSettingsPanelRequested()
@@ -350,163 +357,162 @@ void AppController::onOpenSettingsPanelRequested()
     ensureSettingsPanel();
     ensureShortcutsPage();
     // ensure lyrics panel
-    if (!m_lyrics_settings_panel) {
-        m_lyrics_settings_panel =
-            new LyricsSettingPanel(m_main_window->desktopLyricsWidget()->getActiveLineColor(),
-                                   m_main_window->desktopLyricsWidget()->getInactiveLineColor());
-        m_lyrics_settings_panel->setLineEditText(m_main_window->desktopLyricsWidget()->getFont());
+    if (!lyrics_settings_panel_) {
+        lyrics_settings_panel_ =
+            new LyricsSettingPanel(main_window_->desktopLyricsWidget()->getActiveLineColor(),
+                                   main_window_->desktopLyricsWidget()->getInactiveLineColor());
+        lyrics_settings_panel_->setLineEditText(main_window_->desktopLyricsWidget()->getFont());
 
         connect(
-            m_lyrics_settings_panel, &LyricsSettingPanel::sgnActiveColorChanged, this,
-            [this](rgb_t rgb) { m_main_window->desktopLyricsWidget()->setActiveLineColor(rgb); });
+            lyrics_settings_panel_, &LyricsSettingPanel::sgnActiveColorChanged, this,
+            [this](rgb_t rgb) { main_window_->desktopLyricsWidget()->setActiveLineColor(rgb); });
         connect(
-            m_lyrics_settings_panel, &LyricsSettingPanel::sgnInactiveColorChanged, this,
-            [this](rgb_t rgb) { m_main_window->desktopLyricsWidget()->setInactiveLineColor(rgb); });
-        connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnDisplayModeChanged, this,
+            lyrics_settings_panel_, &LyricsSettingPanel::sgnInactiveColorChanged, this,
+            [this](rgb_t rgb) { main_window_->desktopLyricsWidget()->setInactiveLineColor(rgb); });
+        connect(lyrics_settings_panel_, &LyricsSettingPanel::sgnDisplayModeChanged, this,
                 [this](bool is_two_line) {
-                    m_main_window->desktopLyricsWidget()->setDisplayMode(
+                    main_window_->desktopLyricsWidget()->setDisplayMode(
                         is_two_line ? DisplayMode::TwoLine : DisplayMode::OneLine);
                 });
-        connect(m_lyrics_settings_panel, &LyricsSettingPanel::sgnFontChanged,
-                m_main_window->desktopLyricsWidget(), &DesktopLyricsWidget::setLrcFont);
+        connect(lyrics_settings_panel_, &LyricsSettingPanel::sgnFontChanged,
+                main_window_->desktopLyricsWidget(), &DesktopLyricsWidget::setLrcFont);
 
-        m_settings_panel->registerWidget(m_lyrics_settings_panel->getTitleItem(),
-                                         m_lyrics_settings_panel);
+        settings_panel_->registerWidget(lyrics_settings_panel_->getTitleItem(),
+                                        lyrics_settings_panel_);
     }
 
     // 主题设置页
-    if (!m_theme_settings_page) {
-        m_theme_settings_page = new ThemeSettingsPage(m_theme_service.get(), m_settings_panel);
-        m_settings_panel->registerWidget(m_theme_settings_page->getTitleItem(),
-                                         m_theme_settings_page);
+    if (!theme_settings_page_) {
+        theme_settings_page_ = new ThemeSettingsPage(theme_service_.get(), settings_panel_);
+        settings_panel_->registerWidget(theme_settings_page_->getTitleItem(), theme_settings_page_);
     }
 
-    m_settings_panel->show();
-    m_settings_panel->raise();
-    m_settings_panel->activateWindow();
+    settings_panel_->show();
+    settings_panel_->raise();
+    settings_panel_->activateWindow();
 }
 
 void AppController::onOpenSearchPanelRequested()
 {
     ensureSearchPanel();
 
-    m_search_panel->show();
-    m_search_panel->raise();
-    m_search_panel->activateWindow();
+    search_panel_->show();
+    search_panel_->raise();
+    search_panel_->activateWindow();
 }
 
 void AppController::ensureSettingsPanel()
 {
-    if (m_settings_panel) {
+    if (settings_panel_) {
         return;
     }
 
-    m_settings_panel = new SettingsPanel(&ConfigManager::getInstance());
-    m_settings_panel->setWindowFlag(Qt::Window, true);
+    settings_panel_ = new SettingsPanel(&ConfigManager::getInstance());
+    settings_panel_->setWindowFlag(Qt::Window, true);
     // 不使用 WA_DeleteOnClose：改为 hide/show 复用，避免销毁/重建循环中的状态不一致
 
     // 面板隐藏后激活主窗口，防止菜单栏焦点丢失导致不响应点击
-    m_settings_panel->installEventFilter(this);
+    settings_panel_->installEventFilter(this);
 }
 
 void AppController::ensureShortcutsPage()
 {
     ensureShortcutsController();
 
-    if (!m_shortcuts_panel) {
-        m_shortcuts_panel = new ShortcutsPanel(&ConfigManager::getInstance(), m_settings_panel);
-        m_shortcuts_panel->setViewModel(m_shortcuts_controller->viewModel());
+    if (!shortcuts_panel_) {
+        shortcuts_panel_ = new ShortcutsPanel(&ConfigManager::getInstance(), settings_panel_);
+        shortcuts_panel_->setViewModel(shortcuts_controller_->viewModel());
 
-        connect(m_shortcuts_panel, &ShortcutsPanel::sgnDefaultConfig, this, [this]() {
-            if (m_shortcuts_controller) {
-                m_shortcuts_controller->resetAllToDefault();
+        connect(shortcuts_panel_, &ShortcutsPanel::sgnDefaultConfig, this, [this]() {
+            if (shortcuts_controller_) {
+                shortcuts_controller_->resetAllToDefault();
             }
         });
 
-        connect(m_shortcuts_panel, &ShortcutsPanel::sgnRestoreConfig, this, [this]() {
-            if (!m_shortcuts_controller) {
+        connect(shortcuts_panel_, &ShortcutsPanel::sgnRestoreConfig, this, [this]() {
+            if (!shortcuts_controller_) {
                 return;
             }
             QJsonObject sub_obj =
-                ConfigManager::getInstance().readSubConfig(m_shortcuts_controller->configSubKey());
+                ConfigManager::getInstance().readSubConfig(shortcuts_controller_->configSubKey());
             QJsonObject root;
-            root.insert(m_shortcuts_controller->configSubKey(), sub_obj);
-            m_shortcuts_controller->loadFromJson(root);
+            root.insert(shortcuts_controller_->configSubKey(), sub_obj);
+            shortcuts_controller_->loadFromJson(root);
         });
 
-        connect(m_shortcuts_panel, &ShortcutsPanel::sgnApplyConfig, this,
+        connect(shortcuts_panel_, &ShortcutsPanel::sgnApplyConfig, this,
                 []() { ConfigManager::getInstance().saveAll(); });
 
-        m_settings_panel->registerWidget(m_shortcuts_panel->getListItem(), m_shortcuts_panel);
+        settings_panel_->registerWidget(shortcuts_panel_->getListItem(), shortcuts_panel_);
     }
 }
 
 void AppController::ensureShortcutsController()
 {
-    if (m_shortcuts_controller) {
+    if (shortcuts_controller_) {
         return;
     }
 
-    m_shortcuts_controller = new ShortcutsController(this);
+    shortcuts_controller_ = new ShortcutsController(this);
     registerDefaultShortcuts();
 }
 
 void AppController::registerDefaultShortcuts()
 {
-    if (!m_shortcuts_controller || m_shortcuts_registered) {
+    if (!shortcuts_controller_ || has_shortcuts_registered_) {
         return;
     }
 
-    m_shortcuts_controller->setScopeHost(ShortcutScope::Application, m_main_window.get());
-    m_shortcuts_controller->setScopeHost(ShortcutScope::MainWindow, m_main_window.get());
-    m_shortcuts_controller->setScopeHost(ShortcutScope::DesktopLyrics, m_main_window.get());
+    shortcuts_controller_->setScopeHost(ShortcutScope::Application, main_window_.get());
+    shortcuts_controller_->setScopeHost(ShortcutScope::MainWindow, main_window_.get());
+    shortcuts_controller_->setScopeHost(ShortcutScope::DesktopLyrics, main_window_.get());
 
-    m_shortcuts_controller->registerOperation(
+    shortcuts_controller_->registerOperation(
         ShortcutActionId::save_playlist, "Save Playlist", ShortcutScope::PlaylistView,
         QKeySequence(Qt::CTRL | Qt::Key_S),
-        [this]() { m_playlist_controller.get()->savePlaylist(); }, m_main_window.get(), true);
+        [this]() { playlist_controller_.get()->savePlaylist(); }, main_window_.get(), true);
 
-    m_shortcuts_controller->registerOperation(
+    shortcuts_controller_->registerOperation(
         ShortcutActionId::open_file, "Open File", ShortcutScope::PlaylistView,
-        QKeySequence(Qt::CTRL | Qt::Key_O),
-        [this]() { m_playlist_controller.get()->importFiles(); }, m_main_window.get(), true);
+        QKeySequence(Qt::CTRL | Qt::Key_O), [this]() { playlist_controller_.get()->importFiles(); },
+        main_window_.get(), true);
 
-    m_shortcuts_controller->registerOperation(
+    shortcuts_controller_->registerOperation(
         ShortcutActionId::open_playlist, "Open playlist", ShortcutScope::PlaylistView,
         QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_O),
-        [this]() { m_playlist_controller.get()->loadPlaylist(); }, m_main_window.get(), true);
+        [this]() { playlist_controller_.get()->loadPlaylist(); }, main_window_.get(), true);
 
-    m_shortcuts_controller->registerOperation(
+    shortcuts_controller_->registerOperation(
         ShortcutActionId::play_pause, "Play / Pause", ShortcutScope::Application,
         QKeySequence(Qt::Key_Space),
         [this]() {
-            if (m_playback_controller->state() == PlayingState::PLAYING) {
-                m_playback_controller->pause();
+            if (playback_controller_->state() == PlayingState::PLAYING) {
+                playback_controller_->pause();
             } else {
-                m_playback_controller->play();
+                playback_controller_->play();
             }
         },
-        m_main_window.get(), true);
+        main_window_.get(), true);
 
-    m_shortcuts_controller->registerOperation(
+    shortcuts_controller_->registerOperation(
         ShortcutActionId::open_settings, "Open settings", ShortcutScope::MainWindow,
         QKeySequence(Qt::CTRL | Qt::Key_Comma), [this]() { onOpenSettingsPanelRequested(); }, this,
         true);
 
-    m_shortcuts_controller->registerOperation(
+    shortcuts_controller_->registerOperation(
         ShortcutActionId::stop, "Stop", ShortcutScope::Application, QKeySequence(Qt::Key_S),
-        [this]() { m_playback_controller->stop(); }, m_main_window.get(), true);
+        [this]() { playback_controller_->stop(); }, main_window_.get(), true);
 
-    m_shortcuts_controller->registerOperation(
+    shortcuts_controller_->registerOperation(
         ShortcutActionId::open_search, "Open Search Panel", ShortcutScope::MainWindow,
         QKeySequence(Qt::CTRL | Qt::Key_F), [this]() { onOpenSearchPanelRequested(); },
-        m_main_window.get(), true);
+        main_window_.get(), true);
 
-    m_shortcuts_controller->registerOperation(
+    shortcuts_controller_->registerOperation(
         ShortcutActionId::show_hide_desktop_lyrics, "Show / Hide Desktop Lyrics",
         ShortcutScope::Application, QKeySequence(Qt::CTRL | Qt::Key_L),
         [this]() {
-            auto* desktopLyrics = m_main_window->desktopLyricsWidget();
+            auto* desktopLyrics = main_window_->desktopLyricsWidget();
             if (!desktopLyrics) {
                 return;
             }
@@ -517,41 +523,41 @@ void AppController::registerDefaultShortcuts()
                 desktopLyrics->show();
             }
         },
-        m_main_window.get(), true);
+        main_window_.get(), true);
 
-    m_shortcuts_registered = true;
+    has_shortcuts_registered_ = true;
 }
 
 void AppController::ensureSearchPanel()
 {
-    if (m_search_panel) {
+    if (search_panel_) {
         return;
     }
 
-    m_search_panel = new SearchPanel(&ConfigManager::getInstance());
-    m_search_panel->setWindowFlag(Qt::Window, true);
-    m_search_panel->setAttribute(Qt::WA_DeleteOnClose, true);
-    m_search_panel->setSearchBackend(m_search_backend.get());
-    m_search_backend->warmup(m_playlist_controller->currentPlaylist());
+    search_panel_ = new SearchPanel(&ConfigManager::getInstance());
+    search_panel_->setWindowFlag(Qt::Window, true);
+    search_panel_->setAttribute(Qt::WA_DeleteOnClose, true);
+    search_panel_->setSearchBackend(search_backend_.get());
+    search_backend_->warmup(playlist_controller_->currentPlaylistId());
 
-    connect(m_playlist_controller->viewModel(), &QAbstractItemModel::modelReset, m_search_panel,
+    connect(playlist_controller_->viewModel(), &QAbstractItemModel::modelReset, search_panel_,
             [this]() {
-                if (m_search_panel) {
+                if (search_panel_) {
                     const QJsonObject sub_obj =
-                        ConfigManager::getInstance().readSubConfig(m_search_panel->configSubKey());
+                        ConfigManager::getInstance().readSubConfig(search_panel_->configSubKey());
                     const QByteArray header_state =
                         QByteArray::fromBase64(sub_obj.value("header_state").toString().toUtf8());
-                    m_search_panel->applyHeaderStateDeferred(header_state);
+                    search_panel_->applyHeaderStateDeferred(header_state);
                 }
-                if (m_search_backend) {
-                    m_search_backend->invalidate(playlistId{});
-                    m_search_backend->warmup(m_playlist_controller->currentPlaylist());
+                if (search_backend_) {
+                    search_backend_->invalidate(playlistId{});
+                    search_backend_->warmup(playlist_controller_->currentPlaylistId());
                 }
             });
 
-    connect(m_search_panel, &SearchPanel::sgnRequestPlayTrack, m_main_window.get(),
+    connect(search_panel_, &SearchPanel::sgnRequestPlayTrack, main_window_.get(),
             [this](const trackId& id) {
-                auto* model = m_playlist_controller->viewModel();
+                auto* model = playlist_controller_->viewModel();
                 if (!model)
                     return;
                 if (id.isNull())
@@ -559,24 +565,71 @@ void AppController::ensureSearchPanel()
 
                 int queueIndex = model->playbackQueue().indexOf(id);
                 if (queueIndex >= 0) {
-                    m_locate_on_next_play_request = true;
-                    m_playlist_controller->play(queueIndex);
+                    locate_on_next_play_request_ = true;
+                    playlist_controller_->play(queueIndex);
 
                     this->locateCurrentTrackInView();
                 }
             });
 
-    connect(m_search_panel, &QObject::destroyed, this, [this]() { m_search_panel = nullptr; });
+    connect(search_panel_, &QObject::destroyed, this, [this]() { search_panel_ = nullptr; });
 }
 
 bool AppController::eventFilter(QObject* obj, QEvent* event)
 {
-    if (obj == m_settings_panel && event->type() == QEvent::Hide) {
+    if (obj == settings_panel_ && event->type() == QEvent::Hide) {
         // 设置面板关闭后激活主窗口，防止菜单栏焦点丢失
-        if (m_main_window) {
-            m_main_window->activateWindow();
-            m_main_window->raise();
+        if (main_window_) {
+            main_window_->activateWindow();
+            main_window_->raise();
         }
     }
     return QObject::eventFilter(obj, event);
+}
+
+void AppController::setup_status_bar_connections()
+{
+    status_bar_controller_->register_item("play_state");
+    connect(playback_controller_, &PlaybackController::sgnPlaybackStateChanged, this,
+            [this](PlayingState state) {
+                QString hint = "";
+                switch (state) {
+                case PlayingState::PAUSE:
+                    hint = "PAUSE";
+                    break;
+                case PlayingState::PLAYING:
+                    hint = "PLAYING";
+                    break;
+                case PlayingState::STOP:
+                    hint = "STOP";
+                    break;
+                }
+                status_bar_controller_->update_item_by_id("play_state", hint);
+            });
+
+    // NOTE: 通过cacheLoadFinished信号，确保播放列表已经创建完成，防止悬垂引用
+    connect(
+        playlist_controller_.get(), &PlaylistController::cacheLoadFinished, this,
+        [this]() {
+            std::string tracks =
+                std::format("{} track(s)", playlist_controller_->current_playlist()->track_count());
+            status_bar_controller_->register_item("playlist_track_num", tracks.c_str());
+            // 双击列表项目时触发 &LibraryWidget::sgnSwitchPlaylist
+            // CRUD 时触发 `&PlaylistController::playlistChanged`
+            connect(playlist_controller_.get(), &PlaylistController::playlistChanged, this,
+                    [this]() {
+                        std::string tracks = std::format(
+                            "{} track(s)", playlist_controller_->current_playlist()->track_count());
+                        this->status_bar_controller_->update_item_by_id("playlist_track_num",
+                                                                        tracks.c_str());
+                    });
+            connect(main_window_.get()->libraryPanel(), &LibraryWidget::sgnSwitchPlaylist, this,
+                    [this]() {
+                        std::string tracks = std::format(
+                            "{} track(s)", playlist_controller_->current_playlist()->track_count());
+                        this->status_bar_controller_->update_item_by_id("playlist_track_num",
+                                                                        tracks.c_str());
+                    });
+        },
+        Qt::SingleShotConnection);
 }

@@ -27,6 +27,7 @@ public:
     void setPlaylistName(QString setname);
     void newUuid();
     void newUuid(const playlistId& pid);
+    size_t track_count();
 
     // Modify & Manage
     void clearList();

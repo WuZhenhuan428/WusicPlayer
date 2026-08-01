@@ -35,11 +35,11 @@ private:
 
 private:
     // just "borrow" a "pointer_view", so use raw pointer is safe
-    MainWindow* m_main_window          = nullptr;
+    MainWindow* main_window_           = nullptr;
     PlaybackController* m_playback_ctl = nullptr;
     PlaylistController* m_playlist_ctl = nullptr;
     WControlBar* m_control_bar         = nullptr;
 
-    bool m_locate_on_next_play_request = false;
+    bool locate_on_next_play_request_  = false;
     bool m_bound                       = false;
 };

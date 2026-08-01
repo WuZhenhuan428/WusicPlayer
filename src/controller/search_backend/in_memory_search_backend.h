@@ -38,6 +38,6 @@ private:
                    const QString& keyword_norm) const;
 
 private:
-    PlaylistController* m_playlist_controller = nullptr;
+    PlaylistController* playlist_controller_ = nullptr;
     QHash<playlistId, QVector<IndexedTrack>> m_index_by_playlist;
 };
