@@ -1,6 +1,6 @@
 #include "SidePanel.h"
 #include "LyricsSearchWidget.h"
-#include "core/utils/AudioUtils.h"
+#include "core/utils/audio.hpp"
 
 #include <QDebug>
 #include <QFile>
@@ -67,7 +67,7 @@ SidePanel::~SidePanel() {}
 
 void SidePanel::loadCover(const QString& filepath)
 {
-    QPixmap pix = AudioUtils::parse_cover_to_qpixmap(filepath);
+    QPixmap pix = utils::audio::parse_cover_to_qpixmap(filepath);
     if (!pix.isNull()) {
         m_original_cover = pix;
     } else {
@@ -248,7 +248,7 @@ void SidePanel::showLyricsContextMenu(const QPoint& pos)
 
                 QMap<QString, QStringList> tags;
                 tags.insert("LYRICS", QStringList{getCurrentLyricsText()});
-                const bool ok = AudioUtils::taglib_writeback(m_last_lyrics_meta.filepath, tags);
+                const bool ok = utils::audio::taglib_writeback(m_last_lyrics_meta.filepath, tags);
                 if (!ok) {
                     QMessageBox::warning(this, tr("Save Failed"),
                                          tr("Unable to save lyrics into tags."));

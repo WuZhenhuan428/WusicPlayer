@@ -1,6 +1,6 @@
 #include "playlist_manager.h"
 
-#include "core/utils/AudioUtils.h"
+#include "core/utils/audio.hpp"
 #include <QTimer>
 
 PlaylistManager::PlaylistManager(QObject* parent) : QObject(parent)
@@ -132,13 +132,13 @@ void PlaylistManager::addFolder(const playlistId& pid, const QString& directory)
         m_context->setPlaylist(curr_pid);
     }
 
-    const auto& files = AudioUtils::findAll(directory);
+    const auto& files = utils::audio::findAll(directory);
     QStringList tracks_to_add;
     tracks_to_add.reserve(static_cast<int>(files.size()));
 
     for (const auto& file : files) {
-        if (AudioUtils::isAudioFile(file)) {
-            tracks_to_add.append(AudioUtils::fromFsPath(file));
+        if (utils::audio::isAudioFile(file)) {
+            tracks_to_add.append(utils::audio::fromFsPath(file));
         }
     }
 

@@ -3,7 +3,9 @@
 #include <QFileInfo>
 #include <QString>
 
-namespace PathUtils
+namespace utils
+{
+namespace path
 {
 
 inline QString normalize_path(const QString& filepath)
@@ -16,4 +18,5 @@ inline QString normalize_path(const QString& filepath)
     return info.absoluteFilePath();
 }
 
-} // namespace PathUtils
+} // namespace path
+} // namespace utils

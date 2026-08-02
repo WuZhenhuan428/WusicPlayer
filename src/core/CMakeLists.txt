@@ -4,8 +4,9 @@ add_library(wusic_core STATIC
     search_types.h
     player_types.h
     
-    utils/AudioUtils.h
-    utils/path_utils.h
+    utils/audio.hpp
+    utils/path_utils.hpp
+
     ConfigManager/ConfigManager.h
     ConfigManager/ConfigManager.cpp
     ConfigManager/IConfigurable.h

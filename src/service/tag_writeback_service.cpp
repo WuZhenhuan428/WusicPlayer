@@ -2,8 +2,8 @@
 
 #include "controller/PlaybackController.h"
 #include "controller/PlaylistController.h"
-#include "core/utils/AudioUtils.h"
-#include "core/utils/path_utils.h"
+#include "core/utils/audio.hpp"
+#include "core/utils/path_utils.hpp"
 #include "view/MainWindow.h"
 #include "view/tag_edit_widget/tag_edit_widget.h"
 
@@ -63,11 +63,11 @@ void TagWritebackService::requestTrackProperty(trackId tid, QString filepath, Tr
             QPointer<TagWritebackService> self(this);
             QThread* worker = QThread::create([self, tags, changedTid, curr_id, curr_pos_ms,
                                                old_state, target_filepath]() {
-                const bool write_ok = AudioUtils::taglib_writeback(target_filepath, tags);
+                const bool write_ok = utils::audio::taglib_writeback(target_filepath, tags);
                 TrackMetaData refreshed;
                 if (write_ok) {
-                    refreshed = AudioUtils::parse_to_local_meta(target_filepath);
-                    refreshed = AudioUtils::format(refreshed);
+                    refreshed = utils::audio::parse_to_local_meta(target_filepath);
+                    refreshed = utils::audio::format(refreshed);
                 }
 
                 QMetaObject::invokeMethod(
@@ -82,7 +82,7 @@ void TagWritebackService::requestTrackProperty(trackId tid, QString filepath, Tr
                             qDebug() << "[TAG] Failed to writeback tag";
                         } else {
                             const QString target_normalized =
-                                PathUtils::normalize_path(target_filepath);
+                                utils::path::normalize_path(target_filepath);
                             int updated_tracks       = 0;
 
                             const auto all_playlists = self->m_playlist_ctl->playlists();
@@ -95,7 +95,7 @@ void TagWritebackService::requestTrackProperty(trackId tid, QString filepath, Tr
                                 QVector<trackId> to_update;
                                 const auto& tracks = playlist->getTracks();
                                 for (const auto& track : tracks) {
-                                    if (PathUtils::normalize_path(track.filepath) ==
+                                    if (utils::path::normalize_path(track.filepath) ==
                                         target_normalized) {
                                         to_update.push_back(track.tid);
                                     }

@@ -12,7 +12,7 @@ option(WUSIC_BUILD_TESTS "Build unit tests" ON)
 option(WUSIC_ENABLE_GPROF "Enable gprof instrumentation (-pg)" OFF)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    add_compile_options(-Wall -Wextra)
+    add_compile_options(-Werror -Wall -Wextra)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_compile_options(/W4)
 endif ()
@@ -30,7 +30,7 @@ endif ()
 # Custom find modules (cmake/FindFFmpeg.cmake etc.)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Multimedia Network Svg)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Multimedia Network Svg Sql)
 find_package(FFmpeg REQUIRED)       # cmake/FindFFmpeg.cmake
 find_package(Taglib REQUIRED)       # CMake built-in module (uses pkg-config internally)
 # Normalize target name — some distros' CMake configs don't create a target at all

@@ -1,6 +1,6 @@
 #include "tag_edit_widget.h"
 
-#include "core/utils/AudioUtils.h"
+#include "core/utils/audio.hpp"
 #include "new_tag_item_dialog.h"
 #include "view/dialogs/text_editor_dialog.h"
 
@@ -267,7 +267,7 @@ void TagEditWidget::initTableModel(TrackMetaData meta)
 {
 
     m_meta_buffer.clear();
-    m_meta_buffer   = AudioUtils::parse_meta_to_map(meta.filepath);
+    m_meta_buffer   = utils::audio::parse_meta_to_map(meta.filepath);
 
     auto firstValue = [&](std::initializer_list<QString> keys) -> QString {
         for (const QString& key : keys) {

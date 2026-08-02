@@ -1,6 +1,6 @@
 #include "playlist_layout.h"
 
-#include "core/utils/AudioUtils.h"
+#include "core/utils/audio.hpp"
 
 #include <QCollator>
 #include <QFileInfo>
@@ -53,12 +53,12 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist)
                 node->meta.filename = QFileInfo(t.filepath).fileName();
             }
         } else {
-            node->meta          = AudioUtils::parse_to_local_meta(t.filepath);
+            node->meta          = utils::audio::parse_to_local_meta(t.filepath);
             node->meta.filepath = t.filepath;
             if (!node->meta.isValid) {
                 node->meta.title = QFileInfo(t.filepath).fileName();
             }
-            node->meta = AudioUtils::format(node->meta);
+            node->meta = utils::audio::format(node->meta);
             result.updated_meta.append({t.tid, node->meta});
         }
         trackNodes.append(node);
@@ -84,7 +84,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist)
             QMap<QString, QVector<Node*>> buckets;
             for (Node* node : nodes) {
                 QString key = getMetaDataValue(node->meta, current_sort_rule.type).toString();
-                // @note: AudioUtils::parse_to_local_meta()将对内容进行格式化, if表达式将废弃
+                // @note: utils::audio::parse_to_local_meta()将对内容进行格式化, if表达式将废弃
                 if (key.isEmpty())
                     key = "unknown";
                 buckets[key].append(node);
