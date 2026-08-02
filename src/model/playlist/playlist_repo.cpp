@@ -172,8 +172,11 @@ bool PlaylistRepo::writeJsonPlaylist(QIODevice& device,
     const auto& list = playlist->getTracks();
     for (const auto& track : list) {
         QJsonObject t;
-        t["id"]       = track.entry_id.toString(QUuid::WithoutBraces);
-        t["filepath"] = track.filepath;
+        t["entry_id"]         = track.entry_id.toString(QUuid::WithoutBraces);
+        t["library_track_id"] = track.library_track_id.toString(QUuid::WithoutBraces);
+        t["source"]           = track.source == TrackSource::library ? "library" : "external";
+        t["filepath"]         = track.filepath;
+        t["missing"]          = track.missing;
         if (track.meta.isValid) {
             t["meta"] = metaToJson(track.meta);
         }
@@ -221,9 +224,14 @@ bool PlaylistRepo::loadJsonPlaylist(const QByteArray& data, const QString& fallb
         if (filepath.isEmpty()) {
             continue;
         }
-        EntryId tid          = EntryId(obj.value("id").toString());
-        Track t              = tid.isNull() ? out_playlist->addTrack(filepath)
-                                            : out_playlist->addTrackWithId(tid, filepath);
+        EntryId tid = EntryId(obj.value("entry_id").toString());
+        Track t  = tid.isNull() ? Track::from_filepath(filepath) : Track::from_entry(tid, filepath);
+        t.source = obj.value("source").toString() == "library" ? TrackSource::library
+                                                               : TrackSource::external;
+        t.library_track_id = TrackId(obj.value("library_track_id").toString());
+        t.missing          = obj.value("missing").toBool(false);
+        out_playlist->addTrackObject(t);
+
         QJsonValue metaValue = obj.value("meta");
         if (metaValue.isObject()) {
             TrackMetaData meta;
@@ -354,6 +362,9 @@ PlaylistId PlaylistRepo::loadListBatched(const QString& filepath, int batch_size
         QString filepath;
         bool hasMeta = false;
         TrackMetaData meta;
+        TrackSource source = TrackSource::external;
+        TrackId library_track_id;
+        bool missing = false;
     };
 
     QVector<LoadEntry> entries;
@@ -391,11 +402,15 @@ PlaylistId PlaylistRepo::loadListBatched(const QString& filepath, int batch_size
                 if (trackPath.isEmpty()) {
                     continue;
                 }
-                EntryId tid = EntryId(obj.value("id").toString());
+                EntryId tid = EntryId(obj.value("entry_id").toString());
                 LoadEntry entry;
-                entry.id             = tid;
-                entry.filepath       = trackPath;
-                QJsonValue metaValue = obj.value("meta");
+                entry.id       = tid;
+                entry.filepath = trackPath;
+                entry.source   = obj.value("source").toString() == "library" ? TrackSource::library
+                                                                             : TrackSource::external;
+                entry.library_track_id = TrackId(obj.value("library_track_id").toString());
+                entry.missing          = obj.value("missing").toBool(false);
+                QJsonValue metaValue   = obj.value("meta");
                 if (metaValue.isObject()) {
                     TrackMetaData meta;
                     meta.filepath = trackPath;
@@ -416,7 +431,9 @@ PlaylistId PlaylistRepo::loadListBatched(const QString& filepath, int batch_size
         while (!in.atEnd()) {
             QString line = in.readLine().trimmed();
             if (!line.isEmpty()) {
-                entries.push_back({PlaylistId{}, line, false, TrackMetaData{}});
+                LoadEntry entry;
+                entry.filepath = line;
+                entries.push_back(entry);
             }
         }
     }
@@ -452,8 +469,16 @@ PlaylistId PlaylistRepo::loadListBatched(const QString& filepath, int batch_size
             if (entry.filepath.isEmpty()) {
                 continue;
             }
-            Track t = entry.id.isNull() ? playlistPtr->addTrack(entry.filepath)
-                                        : playlistPtr->addTrackWithId(entry.id, entry.filepath);
+            Track t;
+            if (entry.id.isNull()) {
+                t = Track::from_filepath(entry.filepath);
+            } else {
+                t = Track::from_entry(entry.id, entry.filepath);
+            }
+            t.source           = entry.source;
+            t.library_track_id = entry.library_track_id;
+            t.missing          = entry.missing;
+            playlistPtr->addTrackObject(t);
             if (entry.hasMeta) {
                 playlistPtr->updateTrackMeta(t.entry_id, entry.meta);
             }

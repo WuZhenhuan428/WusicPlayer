@@ -13,11 +13,11 @@
 
 ## 阶段 2: 曲目身份改造(最底层,先做)
 
-- [x] 引入库级曲目身份:`TrackId`(库级)/ `EntryId`(条目级)/ `PlaylistId` 三类型分离,全库机械重命名完成(编译器兜底验证)
-- [x] `core/types.h` 改造:`Track` 上移至此,新增 `library_track_id` / `source` / `missing` 字段与静态工厂 `from_filepath` / `from_entry`
-- [x] 路径规范化:`Track::from_filepath` / `from_entry` 已强制 `normalize_path()`(步骤 1.2 的核心部分已随工厂落地;`path_utils` 的 `case_fold` 增强与 `loadList*` 入口规范化待补)
-- [ ] 播放列表缓存 `kSchemaVersion` 升级与迁移(步骤 1.4)
-- [ ] 同步更新 `test/playlist` 测试(步骤 1.5)
+- [x] 步骤 1.1 类型层 + 全库重命名:`TrackId` / `EntryId` / `PlaylistId` 三类型分离;`Track` 上移 `core/types.h` 并新增字段与工厂;全库机械重命名完成(编译器兜底验证)
+- [x] 步骤 1.2 路径规范化:`path` 增强(`canonical_path` / `case_fold` / `normalize_path`);`Track::from_filepath` / `from_entry` 与 `loadList*` 入口全部经过规范化
+- [x] 步骤 1.3 `findTrackByID` 所有权:改为 `const Track*` + 生命周期注释,5 处调用点同步更新
+- [x] 步骤 1.4 缓存格式不兼容更新(保持 `kSchemaVersion = 1`,无迁移;旧缓存按缺失字段降级处理)
+- [ ] 步骤 1.5 同步更新 `test/playlist` 测试
 
 ## 阶段 3: 新建音乐库模块 `model/library` + SQLite
 

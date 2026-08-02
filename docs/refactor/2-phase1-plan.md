@@ -58,7 +58,7 @@ struct Track {
 
 ### 2.3 路径规范化
 
-`core/utils/path_utils.hpp` 已有 `normalize_path()`(解析符号链接),阶段 1 增强:
+`core/utils/path.hpp` 已有 `normalize_path()`(解析符号链接),阶段 1 增强:
 
 ```cpp
 namespace utils::path {
@@ -102,7 +102,7 @@ QString normalize_path(const QString& p);  // canonical + case_fold + 分隔符�
 
 ### 步骤 1.2 — 路径规范化落地
 
-1. 增强 `path_utils.hpp`。
+1. 增强 `utils/path.hpp`。
 2. `Track::from_filepath` 内部强制 `normalize_path()`;`Playlist::addTrack` / `addTrackWithId` 改走静态工厂。
 3. `PlaylistRepo::loadJsonPlaylist` 与 `.m3u/.wpl` 导入入口(`loadList`/`loadListBatched`)也过 normalize(外部文件可能用相对路径)。
 4. **验证**:手动添加含子目录/符号链接的文件夹,确认无重复条目。
@@ -119,12 +119,14 @@ const Track* findTrackByID(const EntryId& eid) const;
 
 同步更新 5 处调用点(`playlist_manager.cpp` ×4、`tag_writeback_service.cpp` ×1)的 const 性 + 就近注释生命周期约束。
 
-### 步骤 1.4 — 持久化 schema v2 + 迁移
+### 步骤 1.4 — 持久化格式不兼容更新(保持 kSchemaVersion = 1)
+
+> 决策:不做兼容与迁移。`kSchemaVersion` 保持 `1`,直接破坏性改变格式;旧缓存读入时按缺失字段降级处理(`entry_id` 缺失 → 重新分配,`source` 缺失 → external)。
 
 ```jsonc
-// v2(写入)
+// 当前格式(不兼容旧格式)
 {
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "id": "...",
   "name": "...",
   "tracks": [
@@ -140,11 +142,8 @@ const Track* findTrackByID(const EntryId& eid) const;
 }
 ```
 
-**迁移策略(读时透明升级,无独立迁移脚本)**:
-
-- 读到 `schemaVersion < 2`(或缺失)→ 按 v1 解析:`id` → `entry_id`、`library_track_id` 置空、`source=external`、`missing=false`、`filepath` 过 normalize;
-- 写回时统一写 v2(`kSchemaVersion = 2`)。
-- 播放列表缓存小,读时迁移足够,不需要批处理。
+- 写读统一走新格式(`writeJsonPlaylist` / `loadJsonPlaylist` / `loadListBatched`)。
+- 旧缓存文件(含 `"id"` 字段)加载时:`entry_id` 缺失 → `from_filepath` 重新分配身份,其余字段按默认值处理。
 
 ### 步骤 1.5 — 测试
 

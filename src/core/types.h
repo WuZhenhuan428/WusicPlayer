@@ -7,7 +7,7 @@
 #include <QString>
 #include <QUuid>
 
-#include "utils/path_utils.hpp"
+#include "core/utils/path.hpp"
 
 using EntryId    = QUuid; // 播放列表条目身份:播放列表内唯一
 using PlaylistId = QUuid; // 播放列表身份

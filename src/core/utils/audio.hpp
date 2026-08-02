@@ -25,24 +25,43 @@
 
 #include <QDir>
 #include <QFileInfo>
+#include <QImageReader>
+#include <QMap>
+#include <QPixmap>
 #include <QString>
 #include <QStringList>
-#include <QtGui/QImageReader>
-#include <QtGui/QPixmap>
-
-#include <QMap>
-
-namespace fs = std::filesystem;
 
 namespace utils
 {
 namespace audio
 {
 
+namespace fs = std::filesystem;
+
+/*================ DECLARATION  ================ */
+// helpers
+fs::path to_fs_path(const QString& s);
+QString from_fs_path(const fs::path& p);
+
+// property check
+bool is_audio_file(const fs::path& path);
+bool is_playlist(const fs::path& path);
+
+// find file and parse property
+std::vector<fs::path> find_all(const QString& root_dir);
+std::pair<int, int> parse_disc_number(const std::string& str);
+QPixmap find_cover_at_folder(const QString& audio_path);
+QPixmap parse_cover_to_qpixmap(const QString& filepath);
+bool taglib_writeback(const QString& filepath, const QMap<QString, QStringList>& tags);
+QMap<QString, QStringList> parse_meta_to_map(const QString& filepath);
+TrackMetaData parse_to_local_meta(const QString& filepath);
+TrackMetaData format(TrackMetaData meta);
+
+/*================ IMPLEMENTS  ================ */
 // --- helpers: fs::path <-> QString (encoding-safe across platforms) ---
 // On Windows with MSVC, std::filesystem uses wide chars internally;
 // with MinGW it uses UTF-8 narrow chars. These helpers unify the two.
-inline fs::path toFsPath(const QString& s)
+inline fs::path to_fs_path(const QString& s)
 {
 #ifdef Q_OS_WIN
     return fs::path(s.toStdWString());
@@ -51,7 +70,7 @@ inline fs::path toFsPath(const QString& s)
 #endif
 }
 
-inline QString fromFsPath(const fs::path& p)
+inline QString from_fs_path(const fs::path& p)
 {
 #ifdef Q_OS_WIN
     return QString::fromStdWString(p.wstring());
@@ -97,7 +116,7 @@ struct TagLibFileNameHolder
 };
 
 // 判断是否是音频文件
-inline bool isAudioFile(const fs::path& path)
+inline bool is_audio_file(const fs::path& path)
 {
     if (!fs::is_regular_file(path))
         return false;
@@ -118,7 +137,7 @@ inline bool isAudioFile(const fs::path& path)
 }
 
 // 判断是否是播放列表
-inline bool isPlaylist(const fs::path& path)
+inline bool is_playlist(const fs::path& path)
 {
     if (!fs::is_regular_file(path))
         return false;
@@ -138,16 +157,16 @@ inline bool isPlaylist(const fs::path& path)
 }
 
 // 扫描并返回所有音频文件和播放列表的路径
-inline std::vector<fs::path> findAll(const QString& rootDir)
+inline std::vector<fs::path> find_all(const QString& root_dir)
 {
     std::vector<fs::path> results;
-    const fs::path rootPath = toFsPath(rootDir);
+    const fs::path rootPath = to_fs_path(root_dir);
 
     auto scanDir            = [](const fs::path& dir, std::vector<fs::path>& results) {
         try {
             for (const auto& entry : fs::recursive_directory_iterator(dir)) {
                 if (entry.is_regular_file()) {
-                    if (isAudioFile(entry.path()) || isPlaylist(entry.path())) {
+                    if (is_audio_file(entry.path()) || is_playlist(entry.path())) {
                         results.push_back(entry.path());
                     }
                 }
@@ -254,7 +273,7 @@ inline QPixmap find_cover_at_folder(const QString& audio_path)
 inline QPixmap parse_cover_to_qpixmap(const QString& filepath)
 {
     TagLibFileNameHolder fname(filepath);
-    fs::path path   = toFsPath(filepath);
+    fs::path path   = to_fs_path(filepath);
     std::string ext = path.extension().string();
     std::transform(ext.begin(), ext.end(), ext.begin(),
                    [](unsigned char c) { return std::tolower(c); });
@@ -567,15 +586,15 @@ inline TrackMetaData format(TrackMetaData meta)
 
 // // 使用例
 // int main() {
-//     std::string dir = "/mnt/win_d/MUSIC/MUSIC/MintJam/ONE";
-//     auto files = AudioUtils::findAll(dir);
+//     std::string dir = "/mnt/win_c/MUSIC/MintJam/ONE";
+//     auto files = AudioUtils::find_all(dir);
 
 //     std::cout << "找到 " << files.size() << " 个音频相关文件:\n" << std::endl;
 
 //     for (const auto& file : files) {
-//         if (AudioUtils::isAudioFile(file)) {
+//         if (AudioUtils::is_audio_file(file)) {
 //             std::cout << "[AUDIO] ";
-//         } else if (AudioUtils::isPlaylist(file)) {
+//         } else if (AudioUtils::is_playlist(file)) {
 //             std::cout << "[PLAYLIST] ";
 //         }
 //         std::cout << file.filename().string()

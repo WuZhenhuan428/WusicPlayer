@@ -104,7 +104,7 @@ void PlaylistManager::removeTrack(const EntryId& tid)
         return;
     }
 
-    Track* track = playlist->findTrackByID(tid);
+    const Track* track = playlist->findTrackByID(tid);
     if (!track) {
         return;
     }
@@ -132,13 +132,13 @@ void PlaylistManager::addFolder(const PlaylistId& pid, const QString& directory)
         m_context->setPlaylist(curr_pid);
     }
 
-    const auto& files = utils::audio::findAll(directory);
+    const auto& files = utils::audio::find_all(directory);
     QStringList tracks_to_add;
     tracks_to_add.reserve(static_cast<int>(files.size()));
 
     for (const auto& file : files) {
-        if (utils::audio::isAudioFile(file)) {
-            tracks_to_add.append(utils::audio::fromFsPath(file));
+        if (utils::audio::is_audio_file(file)) {
+            tracks_to_add.append(utils::audio::from_fs_path(file));
         }
     }
 
@@ -242,7 +242,7 @@ void PlaylistManager::play(int index)
     if (!playlist) {
         return;
     }
-    Track* t = playlist->findTrackByID(tid);
+    const Track* t = playlist->findTrackByID(tid);
     if (t) {
         emit requestPlay(t->filepath);
     }
@@ -255,7 +255,7 @@ QString PlaylistManager::getCurrentTrack() const
     if (!pl) {
         return QString();
     }
-    Track* track = pl->findTrackByID(tid);
+    const Track* track = pl->findTrackByID(tid);
     if (!track) {
         return QString();
     }
@@ -311,7 +311,7 @@ TrackMetaData PlaylistManager::getCurrentMetadata()
     auto playlist = m_repo->findPlaylistById(m_context->getPlaylistId());
 
     if (playlist) {
-        Track* track = playlist->findTrackByID(tid);
+        const Track* track = playlist->findTrackByID(tid);
         if (track) {
             return track->meta;
         }

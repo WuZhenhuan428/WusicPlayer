@@ -3,7 +3,7 @@
 #include "controller/PlaybackController.h"
 #include "controller/PlaylistController.h"
 #include "core/utils/audio.hpp"
-#include "core/utils/path_utils.hpp"
+#include "core/utils/path.hpp"
 #include "view/MainWindow.h"
 #include "view/tag_edit_widget/tag_edit_widget.h"
 
@@ -49,7 +49,7 @@ void TagWritebackService::requestTrackProperty(EntryId tid, QString filepath, Tr
             QString target_filepath;
             auto playlist = m_playlist_ctl->findPlaylistById(m_playlist_ctl->currentPlaylistId());
             if (playlist) {
-                Track* track = playlist->findTrackByID(changedTid);
+                const Track* track = playlist->findTrackByID(changedTid);
                 if (track) {
                     target_filepath = track->filepath;
                 }

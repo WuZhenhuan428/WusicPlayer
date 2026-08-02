@@ -32,17 +32,20 @@ void Playlist::clearList()
 Track Playlist::addTrack(const QString& filepath)
 {
     Track t = Track::from_filepath(filepath);
-    m_tracks.emplace_back(t);
-    // qDebug() << "[INFO] Add uuid:" << t.entry_id << "filepath:" << t.filepath;
+    addTrackObject(t);
     return t;
 }
 
 Track Playlist::addTrackWithId(const EntryId& tid, const QString& filepath)
 {
     Track t = Track::from_entry(tid, filepath);
-    m_tracks.emplace_back(t);
-    // qDebug() << "[INFO] Add uuid:" << t.entry_id << "filepath:" << t.filepath;
+    addTrackObject(t);
     return t;
+}
+
+void Playlist::addTrackObject(const Track& track)
+{
+    m_tracks.emplace_back(track);
 }
 
 bool Playlist::updateTrackMeta(const EntryId& tid, const TrackMetaData& meta)
@@ -115,15 +118,15 @@ void Playlist::newUuid(const PlaylistId& pid)
     m_pid = pid;
 }
 
-Track* Playlist::findTrackByID(const EntryId& tid)
+const Track* Playlist::findTrackByID(const EntryId& eid) const
 {
     for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
-        if (it->entry_id == tid) {
+        if (it->entry_id == eid) {
             return &(*it);
             qDebug() << "[INFO] find track " << it->entry_id << " at playlist " << m_name;
         }
     }
-    qDebug() << "[WARNING] track " << tid << " does not exist!";
+    qDebug() << "[WARNING] track " << eid << " does not exist!";
     return nullptr;
 }
 
