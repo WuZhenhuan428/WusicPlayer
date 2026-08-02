@@ -17,7 +17,7 @@
 - [x] 步骤 1.2 路径规范化:`path` 增强(`canonical_path` / `case_fold` / `normalize_path`);`Track::from_filepath` / `from_entry` 与 `loadList*` 入口全部经过规范化
 - [x] 步骤 1.3 `findTrackByID` 所有权:改为 `const Track*` + 生命周期注释,5 处调用点同步更新
 - [x] 步骤 1.4 缓存格式不兼容更新(保持 `kSchemaVersion = 1`,无迁移;旧缓存按缺失字段降级处理)
-- [ ] 步骤 1.5 同步更新 `test/playlist` 测试
+- [x] 步骤 1.5 补 `test/playlist` 单测:`tb_playlist` 64 项断言(Track 身份/路径规范化/查找删除/元数据/round-trip/批处理加载/旧格式降级)
 
 ## 阶段 3: 新建音乐库模块 `model/library` + SQLite
 
