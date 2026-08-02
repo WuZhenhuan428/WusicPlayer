@@ -550,13 +550,13 @@ void AppController::ensureSearchPanel()
                     search_panel_->applyHeaderStateDeferred(header_state);
                 }
                 if (search_backend_) {
-                    search_backend_->invalidate(playlistId{});
+                    search_backend_->invalidate(PlaylistId{});
                     search_backend_->warmup(playlist_controller_->currentPlaylistId());
                 }
             });
 
     connect(search_panel_, &SearchPanel::sgnRequestPlayTrack, main_window_.get(),
-            [this](const trackId& id) {
+            [this](const EntryId& id) {
                 auto* model = playlist_controller_->viewModel();
                 if (!model)
                     return;

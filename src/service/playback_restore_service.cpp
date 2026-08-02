@@ -36,7 +36,7 @@ void PlaybackRestoreService::restore()
     m_restored = true;
 }
 
-int PlaybackRestoreService::findQueueIndexByTrackId(const trackId& tid)
+int PlaybackRestoreService::findQueueIndexByTrackId(const EntryId& tid)
 {
     if (tid.isNull() || !m_playlist_ctl->viewModel()) {
         return -1;

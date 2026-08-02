@@ -8,7 +8,7 @@
 Playlist::Playlist(const QString& name)
 {
     m_name = name;
-    m_pid  = playlistId::createUuid();
+    m_pid  = PlaylistId::createUuid();
     qDebug() << "[INFO] Create playlist uuid: " << m_pid.toString();
 }
 
@@ -31,33 +31,24 @@ void Playlist::clearList()
  */
 Track Playlist::addTrack(const QString& filepath)
 {
-    Track t;
-    t.filepath      = filepath;
-    t.meta.filepath = filepath;
-    t.meta.filename = QFileInfo(filepath).fileName();
-    t.meta.isValid  = false;
+    Track t = Track::from_filepath(filepath);
     m_tracks.emplace_back(t);
-    // qDebug() << "[INFO] Add uuid:" << t.tid << "filepath:" << t.filepath;
+    // qDebug() << "[INFO] Add uuid:" << t.entry_id << "filepath:" << t.filepath;
     return t;
 }
 
-Track Playlist::addTrackWithId(const trackId& tid, const QString& filepath)
+Track Playlist::addTrackWithId(const EntryId& tid, const QString& filepath)
 {
-    Track t;
-    t.tid           = tid;
-    t.filepath      = filepath;
-    t.meta.filepath = filepath;
-    t.meta.filename = QFileInfo(filepath).fileName();
-    t.meta.isValid  = false;
+    Track t = Track::from_entry(tid, filepath);
     m_tracks.emplace_back(t);
-    // qDebug() << "[INFO] Add uuid:" << t.tid << "filepath:" << t.filepath;
+    // qDebug() << "[INFO] Add uuid:" << t.entry_id << "filepath:" << t.filepath;
     return t;
 }
 
-bool Playlist::updateTrackMeta(const trackId& tid, const TrackMetaData& meta)
+bool Playlist::updateTrackMeta(const EntryId& tid, const TrackMetaData& meta)
 {
     for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
-        if (it->tid == tid) {
+        if (it->entry_id == tid) {
             it->meta = meta;
             if (it->meta.filepath.isEmpty()) {
                 it->meta.filepath = it->filepath;
@@ -75,12 +66,12 @@ bool Playlist::updateTrackMeta(const trackId& tid, const TrackMetaData& meta)
  * @brief: 查找并删除音轨
  * @note: 如果删除当前音轨, 则暂停播放
  */
-void Playlist::removeTrack(const trackId& tid)
+void Playlist::removeTrack(const EntryId& tid)
 {
     for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
-        if (it->tid == tid) {
+        if (it->entry_id == tid) {
             QString path      = it->filepath;
-            trackId removedId = it->tid;
+            EntryId removedId = it->entry_id;
             m_tracks.erase(it);
 
             qDebug() << "[INFO] Remove UUID=" << removedId << ", filepath=" << path;
@@ -99,7 +90,7 @@ bool Playlist::isEmpty()
     return m_tracks.empty();
 };
 
-playlistId Playlist::id() const
+PlaylistId Playlist::id() const
 {
     return m_pid;
 }
@@ -116,20 +107,20 @@ void Playlist::setPlaylistName(QString setname)
 
 void Playlist::newUuid()
 {
-    m_pid = playlistId::createUuid();
+    m_pid = PlaylistId::createUuid();
 }
 
-void Playlist::newUuid(const playlistId& pid)
+void Playlist::newUuid(const PlaylistId& pid)
 {
     m_pid = pid;
 }
 
-Track* Playlist::findTrackByID(const trackId& tid)
+Track* Playlist::findTrackByID(const EntryId& tid)
 {
     for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
-        if (it->tid == tid) {
+        if (it->entry_id == tid) {
             return &(*it);
-            qDebug() << "[INFO] find track " << it->tid << " at playlist " << m_name;
+            qDebug() << "[INFO] find track " << it->entry_id << " at playlist " << m_name;
         }
     }
     qDebug() << "[WARNING] track " << tid << " does not exist!";

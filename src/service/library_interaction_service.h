@@ -20,7 +20,7 @@ public:
     void bind();
 
 signals:
-    void sgnTrackPropertyRequested(trackId tid, QString filepath, TrackMetaData meta);
+    void sgnTrackPropertyRequested(EntryId tid, QString filepath, TrackMetaData meta);
 
 private:
     void refreshPlaylistView();

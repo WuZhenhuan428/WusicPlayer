@@ -11,7 +11,7 @@
 
 struct PlaylistInfo
 {
-    playlistId id;
+    PlaylistId id;
     QString name;
 };
 
@@ -31,32 +31,32 @@ public:
     PlaylistViewModel* getViewModel();
     QString getCurrentTrack() const;
     QString getCurrentPlaylistName() const;
-    const trackId& getCurrentTrackId() const;
-    const playlistId& getCurrentPlaylistId() const;
+    const EntryId& getCurrentTrackId() const;
+    const PlaylistId& getCurrentPlaylistId() const;
     QVector<PlaylistInfo> getAllPlaylists();
     QVector<std::shared_ptr<Playlist>> getPlaylists();
     TrackMetaData getCurrentMetadata();
-    QString getPlaylistById(const playlistId& pid) const;
+    QString getPlaylistById(const PlaylistId& pid) const;
 
 public slots:
     // receive signals from UI
     void createPlaylist();
-    void removePlaylist(const playlistId& to_remove_uuid);
-    void copyPlaylist(const playlistId& pid);
+    void removePlaylist(const PlaylistId& to_remove_uuid);
+    void copyPlaylist(const PlaylistId& pid);
     void loadPlaylist(const QString& playlist_path);
-    void renamePlaylist(const playlistId& src_pid, const QString dst_name);
-    void savePlaylist(const playlistId& pid, const QString& save_path);
+    void renamePlaylist(const PlaylistId& src_pid, const QString dst_name);
+    void savePlaylist(const PlaylistId& pid, const QString& save_path);
     void loadCacheAfterShown();
 
-    void addTrack(const playlistId& pid, const QString& filepath);
-    void addFolder(const playlistId& pid, const QString& directory);
-    void removeTrack(const trackId& tid);
+    void addTrack(const PlaylistId& pid, const QString& filepath);
+    void addFolder(const PlaylistId& pid, const QString& directory);
+    void removeTrack(const EntryId& tid);
 
     QString nextTrack(PlayMode mode);
     QString prevTrack(PlayMode mode);
 
     void retransmissionPlaylistChanged();
-    void switchToPlaylist(const playlistId& pid);
+    void switchToPlaylist(const PlaylistId& pid);
 
     void play(int index);
 
@@ -65,8 +65,8 @@ signals:
     void playlistChanged();
     void cacheLoadStarted();
     void cacheLoadFinished(int playlistCount);
-    void playlistLoadStarted(const playlistId& pid, int total_count);
-    void playlistLoadFinished(const playlistId& pid);
+    void playlistLoadStarted(const PlaylistId& pid, int total_count);
+    void playlistLoadFinished(const PlaylistId& pid);
 
 private:
 };

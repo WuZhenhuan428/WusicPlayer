@@ -19,7 +19,7 @@ PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo, QObject* parent) :
     if (m_repo) {
         connect(m_repo, &PlaylistRepo::playlistChanged, this, &PlaylistViewModel::rebuildAsync);
         connect(m_repo, &PlaylistRepo::playlistBatchLoaded, this,
-                [this](const playlistId& playlist_id, int, int) {
+                [this](const PlaylistId& playlist_id, int, int) {
                     if (playlist_id == m_pid) {
                         scheduleBatchRebuild();
                     }
@@ -183,7 +183,7 @@ void PlaylistViewModel::rebuildAsync()
     worker->start();
 }
 
-void PlaylistViewModel::setPlaylist(const playlistId& pid)
+void PlaylistViewModel::setPlaylist(const PlaylistId& pid)
 {
     if (m_pid == pid) {
         return;
@@ -274,7 +274,7 @@ void PlaylistViewModel::setSingleGrouping(SortRule rule)
     this->rebuildAsync();
 }
 
-void PlaylistViewModel::setActiveTrack(const trackId& tid)
+void PlaylistViewModel::setActiveTrack(const EntryId& tid)
 {
     QModelIndex old_index = getCurrentTrackIndex();
     m_active_track_id     = tid;
@@ -466,17 +466,17 @@ PlaybackQueueSnapshot PlaylistViewModel::groupShuffleQueueSnapshot() const
     return {m_group_shuffle_queue, version++};
 }
 
-trackId PlaylistViewModel::trackAt(int index) const
+EntryId PlaylistViewModel::trackAt(int index) const
 {
     if (index >= 0 && index < m_playback_queue.size())
         return m_playback_queue.at(index);
-    return trackId();
+    return EntryId();
 }
 
-trackId PlaylistViewModel::trackAt(const QModelIndex& index) const
+EntryId PlaylistViewModel::trackAt(const QModelIndex& index) const
 {
     if (!index.isValid())
-        return trackId();
+        return EntryId();
     Node* node = static_cast<Node*>(index.internalPointer());
     return node->id;
 }
@@ -489,7 +489,7 @@ QModelIndex PlaylistViewModel::getCurrentTrackIndex()
     return findTrackIndex(m_active_track_id);
 }
 
-QModelIndex PlaylistViewModel::findTrackIndex(const trackId& tid) const
+QModelIndex PlaylistViewModel::findTrackIndex(const EntryId& tid) const
 {
     if (tid.isNull() || !m_root) {
         return QModelIndex();
@@ -508,17 +508,17 @@ QModelIndex PlaylistViewModel::findTrackIndex(const trackId& tid) const
     return QModelIndex();
 }
 
-const QVector<trackId>& PlaylistViewModel::playbackQueue() const
+const QVector<EntryId>& PlaylistViewModel::playbackQueue() const
 {
     return m_playback_queue;
 }
 
-QVector<trackId> PlaylistViewModel::generateGroupShuffleQueue()
+QVector<EntryId> PlaylistViewModel::generateGroupShuffleQueue()
 {
     if (!m_root || m_root->children.isEmpty()) {
         return {};
     }
-    QVector<trackId> result;
+    QVector<EntryId> result;
     result.reserve(m_playback_queue.size());
 
     // Just copy, do not use reference
@@ -538,12 +538,12 @@ QVector<trackId> PlaylistViewModel::generateGroupShuffleQueue()
     return result;
 }
 
-QVector<trackId> PlaylistViewModel::generateSingleShuffleQueue()
+QVector<EntryId> PlaylistViewModel::generateSingleShuffleQueue()
 {
     if (!m_root || m_root->children.isEmpty()) {
         return {};
     }
-    QVector<trackId> result;
+    QVector<EntryId> result;
     result.reserve(m_playback_queue.size());
     result = m_playback_queue;
 

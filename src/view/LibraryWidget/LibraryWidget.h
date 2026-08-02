@@ -22,7 +22,7 @@ public:
     ~LibraryWidget();
 
     void setSongTreeModel(QAbstractItemModel* model);
-    void setPlaylists(const QVector<QPair<playlistId, QString>>& playlists);
+    void setPlaylists(const QVector<QPair<PlaylistId, QString>>& playlists);
 
     QTreeView* songTreeView() const;
     QHeaderView* songTreeHeader() const;
@@ -33,20 +33,20 @@ public:
     QString configSubKey() const override;
 
 signals:
-    void sgnImportFiles(const playlistId& pid = playlistId());
-    void sgnImportDir(const playlistId& pid = playlistId());
+    void sgnImportFiles(const PlaylistId& pid = PlaylistId());
+    void sgnImportDir(const PlaylistId& pid = PlaylistId());
 
     void sgnPlayTrackByModelIndex(const QModelIndex& index);
-    void sgnTrackPropertyRequested(trackId tid, QString filepath, TrackMetaData meta);
-    void sgnRemoveTrackRequested(trackId tid);
-    void sgnRenamePlaylist(playlistId id);
-    void sgnCopyPlaylist(playlistId id);
-    void sgnRemovePlaylist(playlistId id);
-    void sgnSwitchPlaylist(playlistId id);
+    void sgnTrackPropertyRequested(EntryId tid, QString filepath, TrackMetaData meta);
+    void sgnRemoveTrackRequested(EntryId tid);
+    void sgnRenamePlaylist(PlaylistId id);
+    void sgnCopyPlaylist(PlaylistId id);
+    void sgnRemovePlaylist(PlaylistId id);
+    void sgnSwitchPlaylist(PlaylistId id);
 
-    void sgnPlayTrack(playlistId pid, trackId tid);
+    void sgnPlayTrack(PlaylistId pid, EntryId tid);
 
-    void sgnSavePlaylist(playlistId id);
+    void sgnSavePlaylist(PlaylistId id);
 
 private:
     void initUI();

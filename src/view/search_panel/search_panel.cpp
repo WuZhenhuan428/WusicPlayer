@@ -83,7 +83,7 @@ SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget* parent) :
                     return;
                 }
 
-                const trackId id = m_search_model->trackIdAt(index.row());
+                const EntryId id = m_search_model->trackIdAt(index.row());
                 if (id.isNull()) {
                     return;
                 }

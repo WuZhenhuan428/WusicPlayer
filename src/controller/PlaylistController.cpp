@@ -69,9 +69,9 @@ PlaylistController::~PlaylistController() {}
 
 namespace
 {
-playlistId checkId(const PlaylistManager* manager, const playlistId& pid)
+PlaylistId checkId(const PlaylistManager* manager, const PlaylistId& pid)
 {
-    playlistId curr_pid;
+    PlaylistId curr_pid;
     auto curr_playlist = manager->m_repo->findPlaylistById(pid);
     if (nullptr != curr_playlist) {
         curr_pid = pid;
@@ -82,11 +82,11 @@ playlistId checkId(const PlaylistManager* manager, const playlistId& pid)
 }
 }; // namespace
 
-void PlaylistController::importFiles(const playlistId& pid)
+void PlaylistController::importFiles(const PlaylistId& pid)
 {
     if (!m_manager)
         return;
-    playlistId target_id = checkId(m_manager, pid);
+    PlaylistId target_id = checkId(m_manager, pid);
 
     QStringList files    = QFileDialog::getOpenFileNames(
         m_dialogParent, tr("Open Audio Files"), QString(),
@@ -98,11 +98,11 @@ void PlaylistController::importFiles(const playlistId& pid)
     }
 }
 
-void PlaylistController::importDir(const playlistId& pid)
+void PlaylistController::importDir(const PlaylistId& pid)
 {
     if (!m_manager)
         return;
-    playlistId target_id = checkId(m_manager, pid);
+    PlaylistId target_id = checkId(m_manager, pid);
 
     QString dir = QFileDialog::getExistingDirectory(m_dialogParent, tr("Open Directory"), QString(),
                                                     QFileDialog::ShowDirsOnly |
@@ -135,12 +135,12 @@ void PlaylistController::loadPlaylist()
     }
 }
 
-void PlaylistController::renamePlaylist(const playlistId& id)
+void PlaylistController::renamePlaylist(const PlaylistId& id)
 {
     if (!m_manager)
         return;
 
-    playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylistId() : id;
+    PlaylistId target_id = id.isNull() ? m_manager->getCurrentPlaylistId() : id;
     if (target_id.isNull())
         return;
     QString old_name = m_manager->getPlaylistById(target_id);
@@ -153,12 +153,12 @@ void PlaylistController::renamePlaylist(const playlistId& id)
     }
 }
 
-void PlaylistController::removePlaylist(const playlistId& id)
+void PlaylistController::removePlaylist(const PlaylistId& id)
 {
     if (!m_manager)
         return;
 
-    playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylistId() : id;
+    PlaylistId target_id = id.isNull() ? m_manager->getCurrentPlaylistId() : id;
     if (target_id.isNull())
         return;
 
@@ -171,12 +171,12 @@ void PlaylistController::removePlaylist(const playlistId& id)
     }
 }
 
-void PlaylistController::savePlaylist(const playlistId& id)
+void PlaylistController::savePlaylist(const PlaylistId& id)
 {
     if (!m_manager)
         return;
 
-    const playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylistId() : id;
+    const PlaylistId target_id = id.isNull() ? m_manager->getCurrentPlaylistId() : id;
     if (target_id.isNull())
         return;
 
@@ -197,18 +197,18 @@ void PlaylistController::savePlaylist(const playlistId& id)
     qDebug() << "[PLAYLIST] playlist save to" << filename;
 }
 
-void PlaylistController::copyPlaylist(const playlistId& id)
+void PlaylistController::copyPlaylist(const PlaylistId& id)
 {
     if (!m_manager)
         return;
 
-    const playlistId target_id = id.isNull() ? m_manager->getCurrentPlaylistId() : id;
+    const PlaylistId target_id = id.isNull() ? m_manager->getCurrentPlaylistId() : id;
     if (!target_id.isNull()) {
         m_manager->copyPlaylist(target_id);
     }
 }
 
-void PlaylistController::removeTrack(const trackId& id)
+void PlaylistController::removeTrack(const EntryId& id)
 {
     if (!m_manager || id.isNull()) {
         return;
@@ -241,7 +241,7 @@ void PlaylistController::play(int queueIndex)
 {
     m_manager->play(queueIndex);
 }
-void PlaylistController::switchToPlaylist(const playlistId& id)
+void PlaylistController::switchToPlaylist(const PlaylistId& id)
 {
     m_manager->switchToPlaylist(id);
 }
@@ -262,11 +262,11 @@ const QVector<std::shared_ptr<Playlist>> PlaylistController::playlists() const
 {
     return m_manager->getPlaylists();
 }
-playlistId PlaylistController::currentPlaylistId() const
+PlaylistId PlaylistController::currentPlaylistId() const
 {
     return m_manager->getCurrentPlaylistId();
 }
-trackId PlaylistController::currentTrackId() const
+EntryId PlaylistController::currentTrackId() const
 {
     return m_manager->getCurrentTrackId();
 }
@@ -280,7 +280,7 @@ const std::shared_ptr<Playlist> PlaylistController::current_playlist()
     return this->findPlaylistById(this->currentPlaylistId());
 }
 
-std::shared_ptr<Playlist> PlaylistController::findPlaylistById(playlistId pid)
+std::shared_ptr<Playlist> PlaylistController::findPlaylistById(PlaylistId pid)
 {
     if (pid.isNull()) {
         return nullptr;
@@ -348,8 +348,8 @@ void PlaylistController::loadFromJson(const QJsonObject& json)
         static_cast<PlayMode>(obj.value("play_mode").toInt(static_cast<int>(PlayMode::in_order)));
     this->setPlayMode(mode);
 
-    m_last_playlist_id = playlistId(obj.value("last_playlist_id").toString());
-    m_last_track_id    = trackId(obj.value("last_track_id").toString());
+    m_last_playlist_id = PlaylistId(obj.value("last_playlist_id").toString());
+    m_last_track_id    = EntryId(obj.value("last_track_id").toString());
 
     if (!m_last_playlist_id.isNull() && !this->findPlaylistById(m_last_playlist_id)) {
         qWarning() << "playlist" << m_last_playlist_id.toString() << "does not exist!";
@@ -394,12 +394,12 @@ QString PlaylistController::configSubKey() const
     return "playlist";
 }
 
-playlistId PlaylistController::lastPlaylistId() const
+PlaylistId PlaylistController::lastPlaylistId() const
 {
     return m_last_playlist_id;
 }
 
-trackId PlaylistController::lastTrackId() const
+EntryId PlaylistController::lastTrackId() const
 {
     return m_last_track_id;
 }

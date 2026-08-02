@@ -15,7 +15,7 @@
 #include <QRegularExpression>
 #include <QSet>
 
-TagEditWidget::TagEditWidget(TrackMetaData meta, trackId tid, QWidget* parent) :
+TagEditWidget::TagEditWidget(TrackMetaData meta, EntryId tid, QWidget* parent) :
     QWidget(parent), m_tid(tid)
 {
     this->initUI();

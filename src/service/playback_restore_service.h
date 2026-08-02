@@ -22,13 +22,13 @@ private:
     PlaybackController* m_playback_ctl = nullptr;
 
 private:
-    int findQueueIndexByTrackId(const trackId& tid);
+    int findQueueIndexByTrackId(const EntryId& tid);
     void finalizeRestoreWhenReady(int retry);
     void onCacheLoadFinished();
     void onModelReset();
 
-    playlistId m_pending_pid;
-    trackId m_pending_tid;
+    PlaylistId m_pending_pid;
+    EntryId m_pending_tid;
     int m_pending_pos_ms         = 0;
     bool m_pending_should_resume = false;
 

@@ -7,14 +7,6 @@
 #include <QUuid>
 #include <QVector>
 
-struct Track
-{
-    trackId tid;
-    QString filepath;
-    TrackMetaData meta;
-    Track() : tid(trackId::createUuid()) {}
-};
-
 class Playlist
 {
 public:
@@ -22,21 +14,21 @@ public:
     ~Playlist();
 
     // Playlist metadata
-    playlistId id() const;
+    PlaylistId id() const;
     QString name();
     void setPlaylistName(QString setname);
     void newUuid();
-    void newUuid(const playlistId& pid);
+    void newUuid(const PlaylistId& pid);
     size_t track_count();
 
     // Modify & Manage
     void clearList();
     Track addTrack(const QString& filepath);
-    Track addTrackWithId(const trackId& tid, const QString& filepath);
-    bool updateTrackMeta(const trackId& tid, const TrackMetaData& meta);
-    void removeTrack(const trackId& tid);
+    Track addTrackWithId(const EntryId& tid, const QString& filepath);
+    bool updateTrackMeta(const EntryId& tid, const TrackMetaData& meta);
+    void removeTrack(const EntryId& tid);
 
-    Track* findTrackByID(const trackId& tid);
+    Track* findTrackByID(const EntryId& tid);
 
     const QVector<Track>& getTracks() const;
 
@@ -46,5 +38,5 @@ public:
 private:
     QVector<Track> m_tracks;
     QString m_name;
-    playlistId m_pid;
+    PlaylistId m_pid;
 };

@@ -18,7 +18,7 @@ void PlaylistContext::setPlayMode(PlayMode mode)
     emit changedCurrentPlayMode(mode);
 }
 
-void PlaylistContext::setPlaylist(const playlistId& pid)
+void PlaylistContext::setPlaylist(const PlaylistId& pid)
 {
     if (this->m_current_playlist_id == pid) {
         return;
@@ -29,7 +29,7 @@ void PlaylistContext::setPlaylist(const playlistId& pid)
     emit changedCurrentListId(pid);
 }
 
-void PlaylistContext::setPlayTrack(const trackId& current)
+void PlaylistContext::setPlayTrack(const EntryId& current)
 {
     // 输入端应当提前进行合法性检查
     // 重复播放音轨应当从头开始播放，无需保证是同一个轨道
@@ -37,12 +37,12 @@ void PlaylistContext::setPlayTrack(const trackId& current)
     emit changedCurrentTrackId(current);
 }
 
-const playlistId& PlaylistContext::getPlaylistId()
+const PlaylistId& PlaylistContext::getPlaylistId()
 {
     return this->m_current_playlist_id;
 }
 
-const trackId& PlaylistContext::getPlayTrackId()
+const EntryId& PlaylistContext::getPlayTrackId()
 {
     return this->m_current_track_id;
 }
@@ -54,16 +54,16 @@ PlayMode PlaylistContext::getPlayMode()
 
 namespace PlaylistNavigator
 {
-trackId nextOfInOrder(const QVector<trackId>& queue, trackId current)
+EntryId nextOfInOrder(const QVector<EntryId>& queue, EntryId current)
 {
     int index = queue.indexOf(current);
     if (index != -1 && index < queue.size() - 1) {
         return queue.at(index + 1);
     }
-    return trackId();
+    return EntryId();
 }
 
-trackId nextOfLoop(const QVector<trackId>& queue, trackId current)
+EntryId nextOfLoop(const QVector<EntryId>& queue, EntryId current)
 {
     int index = queue.indexOf(current);
     if (index != -1) {
@@ -73,44 +73,44 @@ trackId nextOfLoop(const QVector<trackId>& queue, trackId current)
             return queue.at(0);
         }
     }
-    return trackId();
+    return EntryId();
 }
 
-trackId nextOfOutOfOrderTrack(const QVector<trackId>& queue, trackId current)
+EntryId nextOfOutOfOrderTrack(const QVector<EntryId>& queue, EntryId current)
 {
     int index = queue.indexOf(current);
     if (index != -1 && index <= queue.size() - 1) {
         return queue.at(index + 1);
     }
-    return trackId();
+    return EntryId();
 }
 
-trackId nextOfShuffle(const QVector<trackId>& queue)
+EntryId nextOfShuffle(const QVector<EntryId>& queue)
 {
     int index = generate_random_index(queue.size() - 1);
     return queue.at(index);
 }
 
-trackId nextOfOutOfOrderGroup(const QVector<trackId>& queue, trackId current)
+EntryId nextOfOutOfOrderGroup(const QVector<EntryId>& queue, EntryId current)
 {
     int index;
     index = queue.indexOf(current);
     if (index != -1 && index <= queue.size() - 1) {
         return queue.at(index + 1);
     }
-    return trackId();
+    return EntryId();
 }
 
-trackId previousOfInOrder(const QVector<trackId>& queue, trackId current)
+EntryId previousOfInOrder(const QVector<EntryId>& queue, EntryId current)
 {
     int index = queue.indexOf(current);
     if (index > 0) { // -1 and 0
         return queue.at(index - 1);
     }
-    return trackId();
+    return EntryId();
 }
 
-trackId previousOfLoop(const QVector<trackId>& queue, trackId current)
+EntryId previousOfLoop(const QVector<EntryId>& queue, EntryId current)
 {
     int index = queue.indexOf(current);
     if (index != -1) {
@@ -120,31 +120,31 @@ trackId previousOfLoop(const QVector<trackId>& queue, trackId current)
             return queue.at(queue.size() - 1);
         }
     }
-    return trackId();
+    return EntryId();
 }
 
-trackId previousOfShuffle(const QVector<trackId>& queue)
+EntryId previousOfShuffle(const QVector<EntryId>& queue)
 {
     int index = generate_random_index(queue.size() - 1);
     return queue.at(index);
 }
 
-trackId previousOfOutOfOrderTrack(const QVector<trackId>& queue, trackId current)
+EntryId previousOfOutOfOrderTrack(const QVector<EntryId>& queue, EntryId current)
 {
     int index = queue.indexOf(current);
     if (index > 0) {
         return queue.at(index - 1);
     }
-    return trackId();
+    return EntryId();
 }
 
-trackId previousOfOutOfOrderGroup(const QVector<trackId>& queue, trackId current)
+EntryId previousOfOutOfOrderGroup(const QVector<EntryId>& queue, EntryId current)
 {
     int index = queue.indexOf(current);
     if (index > 0) {
         return queue.at(index - 1);
     }
-    return trackId();
+    return EntryId();
 }
 
 size_t generate_random_index(size_t max_index)

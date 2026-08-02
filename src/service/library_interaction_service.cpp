@@ -37,7 +37,7 @@ void LibraryInteractionService::bind()
     connect(m_library_widget, &LibraryWidget::sgnCopyPlaylist, m_playlist_ctl,
             &PlaylistController::copyPlaylist);
     connect(m_library_widget, &LibraryWidget::sgnRemoveTrackRequested, this,
-            [this](const trackId& tid) {
+            [this](const EntryId& tid) {
                 if (tid.isNull()) {
                     return;
                 }
@@ -51,7 +51,7 @@ void LibraryInteractionService::bind()
                 auto* model = m_playlist_ctl->viewModel();
                 if (!model)
                     return;
-                trackId id = model->trackAt(index);
+                EntryId id = model->trackAt(index);
                 if (id.isNull())
                     return;
                 int queueIndex = model->playbackQueue().indexOf(id);
@@ -75,7 +75,7 @@ void LibraryInteractionService::bind()
     });
 
     connect(m_library_widget, &LibraryWidget::sgnTrackPropertyRequested, this,
-            [this](trackId tid, QString filepath, TrackMetaData meta) {
+            [this](EntryId tid, QString filepath, TrackMetaData meta) {
                 emit sgnTrackPropertyRequested(tid, filepath, meta);
             });
 
@@ -87,7 +87,7 @@ void LibraryInteractionService::bind()
 
 void LibraryInteractionService::refreshPlaylistView()
 {
-    QVector<QPair<playlistId, QString>> items;
+    QVector<QPair<PlaylistId, QString>> items;
     const auto& lists = m_playlist_ctl->playlists();
     items.reserve(static_cast<int>(lists.size()));
     for (const auto& list : lists) {

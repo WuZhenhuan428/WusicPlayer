@@ -9,7 +9,7 @@
 
 struct Node
 {
-    trackId id; // Track UUID. If null, it's a group node.
+    EntryId id; // Track UUID. If null, it's a group node.
     TrackMetaData meta;
     QString group_name;
     Node* parent = nullptr;
@@ -32,7 +32,7 @@ struct Node
 
 struct TrackEntry
 {
-    trackId id;
+    EntryId id;
     TrackMetaData meta;
 };
 
@@ -50,7 +50,7 @@ struct PlaylistLayout
 struct LayoutResult
 {
     Node* root;
-    QVector<trackId> playback_queue;
+    QVector<EntryId> playback_queue;
     QVector<TrackEntry> updated_meta;
 };
 

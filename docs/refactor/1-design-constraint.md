@@ -157,11 +157,13 @@ widget 前缀仅用于**局部作用域**, 最典型的是 `init_ui()` 内的局
 
 ## 4. 曲目身份设计
 
-1. **库内曲目身份**: 首次扫描时分配 UUID;规范化路径作为查找索引;库负责路径 ↔ UUID 双向解析
-2. **播放列表引用**: 播放列表条目引用库的 UUID;条目可带"外部条目"标志 (文件不在库中)
-3. **路径规范化**: 统一 canonical path (Windows 大小写不敏感、符号链接解析), 作为去重与匹配的基础
-4. **文件重命名检测**: 通过"路径变化但 size+mtime 一致"的启发式将 UUID 迁移到新路径, 播放列表引用不失效
-5. 对外 API (如 `next_track`) 只暴露 `trackId`, 路径由调用方按需解析
+> 身份类型统一 PascalCase 命名(自定义类型规则):`TrackId`(库级曲目身份)、`EntryId`(播放列表条目身份)、`PlaylistId`(播放列表身份)。旧 camelCase(`trackId`/`playlistId`)为设计失误,已在阶段 1 修正。
+
+1. **库内曲目身份**:首次扫描时分配 `TrackId`;规范化路径作为查找索引;库负责路径 ↔ `TrackId` 双向解析。
+2. **播放列表引用**:播放列表条目以 `EntryId` 为条目身份,引用库的 `TrackId`;条目可带"外部条目"标志(文件不在库中,`Track::source == TrackSource::external`)。
+3. **路径规范化**:统一 canonical path(Windows 大小写不敏感、符号链接解析),作为去重与匹配的基础;`Track::filepath` 强制规范化(由 `Track::from_filepath` 保证)。
+4. **文件重命名检测**:通过"路径变化但 size+mtime 一致"的启发式将 `TrackId` 迁移到新路径,播放列表引用不失效。
+5. 对外 API(如 `next_track`)只暴露 `EntryId`/`TrackId`,路径由调用方按需解析。
 
 ---
 

@@ -39,7 +39,7 @@ void PlaylistManager::createPlaylist()
     m_repo->createList();
 }
 
-void PlaylistManager::removePlaylist(const playlistId& to_remove_uuid)
+void PlaylistManager::removePlaylist(const PlaylistId& to_remove_uuid)
 {
     const auto& pl = m_repo->findPlaylistById(to_remove_uuid);
     if (!pl)
@@ -51,30 +51,30 @@ void PlaylistManager::removePlaylist(const playlistId& to_remove_uuid)
         if (!remaining.isEmpty()) {
             m_context->setPlaylist(remaining.first()->id());
         } else {
-            m_context->setPlaylist(playlistId());
+            m_context->setPlaylist(PlaylistId());
         }
     }
 }
 
-void PlaylistManager::copyPlaylist(const playlistId& pid)
+void PlaylistManager::copyPlaylist(const PlaylistId& pid)
 {
     m_repo->copyList(pid);
 }
 
 void PlaylistManager::loadPlaylist(const QString& playlist_path)
 {
-    playlistId new_id = m_repo->loadListBatched(playlist_path, 500);
+    PlaylistId new_id = m_repo->loadListBatched(playlist_path, 500);
     if (!new_id.isNull()) {
         m_context->setPlaylist(new_id);
     }
 }
 
-void PlaylistManager::renamePlaylist(const playlistId& src_pid, const QString dst_name)
+void PlaylistManager::renamePlaylist(const PlaylistId& src_pid, const QString dst_name)
 {
     m_repo->renameList(src_pid, dst_name);
 }
 
-void PlaylistManager::savePlaylist(const playlistId& pid, const QString& save_path)
+void PlaylistManager::savePlaylist(const PlaylistId& pid, const QString& save_path)
 {
     auto pl = m_repo->findPlaylistById(pid);
     if (!pl->isEmpty()) {
@@ -88,12 +88,12 @@ void PlaylistManager::loadCacheAfterShown()
     m_repo->loadCacheAsync();
 }
 
-void PlaylistManager::addTrack(const playlistId& pid, const QString& filepath)
+void PlaylistManager::addTrack(const PlaylistId& pid, const QString& filepath)
 {
     m_repo->addTrackToPlaylist(pid, filepath);
 }
 
-void PlaylistManager::removeTrack(const trackId& tid)
+void PlaylistManager::removeTrack(const EntryId& tid)
 {
     if (tid.isNull() || !m_repo || !m_context) {
         return;
@@ -113,7 +113,7 @@ void PlaylistManager::removeTrack(const trackId& tid)
     m_repo->saveListToCache(playlist);
 
     if (m_context->getPlayTrackId() == tid) {
-        m_context->setPlayTrack(trackId());
+        m_context->setPlayTrack(EntryId());
     }
 
     if (m_view) {
@@ -124,9 +124,9 @@ void PlaylistManager::removeTrack(const trackId& tid)
 }
 
 // a wrap of this->addTrack
-void PlaylistManager::addFolder(const playlistId& pid, const QString& directory)
+void PlaylistManager::addFolder(const PlaylistId& pid, const QString& directory)
 {
-    playlistId curr_pid = pid;
+    PlaylistId curr_pid = pid;
     if (pid.isNull()) {
         curr_pid = m_repo->createList();
         m_context->setPlaylist(curr_pid);
@@ -153,8 +153,8 @@ QString PlaylistManager::nextTrack(PlayMode mode)
     if (!pl) {
         return QString();
     }
-    trackId next_id = trackId();
-    trackId curr_id = m_context->getPlayTrackId();
+    EntryId next_id = EntryId();
+    EntryId curr_id = m_context->getPlayTrackId();
     PlaybackQueueSnapshot queue;
     switch (mode) {
     case PlayMode::in_order:
@@ -193,8 +193,8 @@ QString PlaylistManager::prevTrack(PlayMode mode)
         return QString();
     }
 
-    trackId prev_id = trackId();
-    trackId curr_id = m_context->getPlayTrackId();
+    EntryId prev_id = EntryId();
+    EntryId curr_id = m_context->getPlayTrackId();
     PlaybackQueueSnapshot queue;
     switch (mode) {
     case PlayMode::in_order:
@@ -234,7 +234,7 @@ PlaylistViewModel* PlaylistManager::getViewModel()
 
 void PlaylistManager::play(int index)
 {
-    trackId tid = m_view->trackAt(index);
+    EntryId tid = m_view->trackAt(index);
     m_context->setPlayTrack(tid);
 
     auto pid      = m_context->getPlaylistId();
@@ -250,7 +250,7 @@ void PlaylistManager::play(int index)
 
 QString PlaylistManager::getCurrentTrack() const
 {
-    trackId tid = m_context->getPlayTrackId();
+    EntryId tid = m_context->getPlayTrackId();
     auto pl     = m_repo->findPlaylistById(m_context->getPlaylistId());
     if (!pl) {
         return QString();
@@ -264,17 +264,17 @@ QString PlaylistManager::getCurrentTrack() const
 
 QString PlaylistManager::getCurrentPlaylistName() const
 {
-    playlistId pid = m_context->getPlaylistId();
+    PlaylistId pid = m_context->getPlaylistId();
     auto pl        = m_repo->findPlaylistById(pid);
     return pl->name();
 }
 
-const trackId& PlaylistManager::getCurrentTrackId() const
+const EntryId& PlaylistManager::getCurrentTrackId() const
 {
     return this->m_context->getPlayTrackId();
 }
 
-const playlistId& PlaylistManager::getCurrentPlaylistId() const
+const PlaylistId& PlaylistManager::getCurrentPlaylistId() const
 {
     return this->m_context->getPlaylistId();
 }
@@ -295,7 +295,7 @@ void PlaylistManager::retransmissionPlaylistChanged()
     emit playlistChanged();
 }
 
-void PlaylistManager::switchToPlaylist(const playlistId& pid)
+void PlaylistManager::switchToPlaylist(const PlaylistId& pid)
 {
     m_context->setPlaylist(pid);
 }
@@ -307,7 +307,7 @@ QVector<std::shared_ptr<Playlist>> PlaylistManager::getPlaylists()
 
 TrackMetaData PlaylistManager::getCurrentMetadata()
 {
-    trackId tid   = m_context->getPlayTrackId();
+    EntryId tid   = m_context->getPlayTrackId();
     auto playlist = m_repo->findPlaylistById(m_context->getPlaylistId());
 
     if (playlist) {
@@ -321,7 +321,7 @@ TrackMetaData PlaylistManager::getCurrentMetadata()
     return empty_meta;
 }
 
-QString PlaylistManager::getPlaylistById(const playlistId& pid) const
+QString PlaylistManager::getPlaylistById(const PlaylistId& pid) const
 {
     auto pl = m_repo->findPlaylistById(pid);
     if (!pl->isEmpty()) {

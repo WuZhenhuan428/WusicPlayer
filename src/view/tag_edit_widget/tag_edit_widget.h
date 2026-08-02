@@ -22,7 +22,7 @@ public:
      *  meta: 主要使用filepath
      *  tid: 用于写回时定位
      */
-    explicit TagEditWidget(TrackMetaData meta, trackId tid, QWidget* parent = nullptr);
+    explicit TagEditWidget(TrackMetaData meta, EntryId tid, QWidget* parent = nullptr);
     ~TagEditWidget();
 
 private: // methods
@@ -42,12 +42,12 @@ private: // methods
     void handleAddNewFiled();
 
 signals:
-    void sgnSaveTags(QMap<QString, QStringList> tags, trackId tid);
+    void sgnSaveTags(QMap<QString, QStringList> tags, EntryId tid);
 
 private: // data structure
     QStandardItemModel* m_table_model = nullptr;
     QMap<QString, QStringList> m_meta_buffer;
-    trackId m_tid;
+    EntryId m_tid;
 
 private: // ui widgets
     QVBoxLayout* m_vbl_main;

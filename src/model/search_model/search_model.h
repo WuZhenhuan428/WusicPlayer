@@ -54,7 +54,7 @@ public:
     void setBackend(ISearchBackend* backend);
     void clearResults();
 
-    trackId trackIdAt(int row) const;
+    EntryId trackIdAt(int row) const;
     SearchHint hintAt(int row) const;
     int totalHits() const;
     const SearchQuery& lastQuery() const;

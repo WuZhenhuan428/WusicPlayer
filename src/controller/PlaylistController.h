@@ -17,33 +17,33 @@ public:
                                 QObject* parent = nullptr);
     ~PlaylistController();
 
-    void importFiles(const playlistId& pid = playlistId());
-    void importDir(const playlistId& pid = playlistId());
+    void importFiles(const PlaylistId& pid = PlaylistId());
+    void importDir(const PlaylistId& pid = PlaylistId());
 
     void createNewPlaylist();
     void loadPlaylist();
-    void renamePlaylist(const playlistId& id = playlistId());
-    void removePlaylist(const playlistId& id = playlistId());
-    void savePlaylist(const playlistId& id = playlistId());
-    void copyPlaylist(const playlistId& id = playlistId());
-    void removeTrack(const trackId& id);
+    void renamePlaylist(const PlaylistId& id = PlaylistId());
+    void removePlaylist(const PlaylistId& id = PlaylistId());
+    void savePlaylist(const PlaylistId& id = PlaylistId());
+    void copyPlaylist(const PlaylistId& id = PlaylistId());
+    void removeTrack(const EntryId& id);
 
     auto viewModel() const -> decltype(std::declval<PlaylistManager*>()->getViewModel());
     QString nextTrack() const;
     QString prevTrack() const;
     void play(int queueIndex);
-    void switchToPlaylist(const playlistId& id);
+    void switchToPlaylist(const PlaylistId& id);
 
     void setPlayMode(PlayMode mode);
     PlayMode playMode() const;
 
     const QVector<std::shared_ptr<Playlist>> playlists() const;
-    playlistId currentPlaylistId() const;
-    trackId currentTrackId() const;
+    PlaylistId currentPlaylistId() const;
+    EntryId currentTrackId() const;
     const TrackMetaData currentMetadata() const;
     const std::shared_ptr<Playlist> current_playlist();
 
-    std::shared_ptr<Playlist> findPlaylistById(playlistId pid);
+    std::shared_ptr<Playlist> findPlaylistById(PlaylistId pid);
 
     void setGroupRules(const QVector<SortRule>& rules);
     void setSortRules(const QVector<SortRule>& rules);
@@ -55,8 +55,8 @@ public:
     QJsonObject saveToJson() override;
     QString configSubKey() const override;
 
-    playlistId lastPlaylistId() const;
-    trackId lastTrackId() const;
+    PlaylistId lastPlaylistId() const;
+    EntryId lastTrackId() const;
 
 signals:
     void playlistChanged();
@@ -70,6 +70,6 @@ public slots:
 private:
     PlaylistManager* m_manager = nullptr;
     QWidget* m_dialogParent    = nullptr;
-    playlistId m_last_playlist_id;
-    trackId m_last_track_id;
+    PlaylistId m_last_playlist_id;
+    EntryId m_last_track_id;
 };

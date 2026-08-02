@@ -53,17 +53,17 @@ private:
 class WPlayListWidgetItem : public QTreeWidgetItem
 {
 public:
-    WPlayListWidgetItem(QTreeWidget* parent, const QString& name, const playlistId& pid) :
+    WPlayListWidgetItem(QTreeWidget* parent, const QString& name, const PlaylistId& pid) :
         QTreeWidgetItem(parent, QStringList() << name), m_pid(pid)
     {}
 
-    playlistId id() const
+    PlaylistId id() const
     {
         return m_pid;
     }
 
 private:
-    playlistId m_pid;
+    PlaylistId m_pid;
 };
 
 class WInsertColumnDialog : public QDialog

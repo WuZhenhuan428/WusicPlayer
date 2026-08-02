@@ -43,7 +43,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist)
     QVector<Track> tracks = playlist.getTracks();
     for (const auto& t : tracks) {
         Node* node = new Node();
-        node->id   = t.tid;
+        node->id   = t.entry_id;
         if (t.meta.isValid) {
             node->meta = t.meta;
             if (node->meta.filepath.isEmpty()) {
@@ -59,7 +59,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist)
                 node->meta.title = QFileInfo(t.filepath).fileName();
             }
             node->meta = utils::audio::format(node->meta);
-            result.updated_meta.append({t.tid, node->meta});
+            result.updated_meta.append({t.entry_id, node->meta});
         }
         trackNodes.append(node);
     }

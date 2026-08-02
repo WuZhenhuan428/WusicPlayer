@@ -22,7 +22,7 @@ TagWritebackService::TagWritebackService(PlaylistController* playlist_ctl,
 
 TagWritebackService::~TagWritebackService() {}
 
-void TagWritebackService::requestTrackProperty(trackId tid, QString filepath, TrackMetaData meta)
+void TagWritebackService::requestTrackProperty(EntryId tid, QString filepath, TrackMetaData meta)
 {
     Q_UNUSED(filepath);
 
@@ -33,7 +33,7 @@ void TagWritebackService::requestTrackProperty(trackId tid, QString filepath, Tr
 
     connect(
         tag_edit_widget_, &TagEditWidget::sgnSaveTags, this,
-        [this](QMap<QString, QStringList> tags, trackId changedTid) {
+        [this](QMap<QString, QStringList> tags, EntryId changedTid) {
             // create snapshot
             auto curr_id           = m_playlist_ctl->currentTrackId();
             qint64 curr_pos_ms     = m_playback_ctl->position();
@@ -92,12 +92,12 @@ void TagWritebackService::requestTrackProperty(trackId tid, QString filepath, Tr
                                 }
 
                                 bool playlist_changed = false;
-                                QVector<trackId> to_update;
+                                QVector<EntryId> to_update;
                                 const auto& tracks = playlist->getTracks();
                                 for (const auto& track : tracks) {
                                     if (utils::path::normalize_path(track.filepath) ==
                                         target_normalized) {
-                                        to_update.push_back(track.tid);
+                                        to_update.push_back(track.entry_id);
                                     }
                                 }
 

@@ -39,14 +39,14 @@ InMemorySearchBackend::InMemorySearchBackend(PlaylistController* playlist_contro
     playlist_controller_(playlist_controller)
 {}
 
-void InMemorySearchBackend::warmup(const playlistId& pid)
+void InMemorySearchBackend::warmup(const PlaylistId& pid)
 {
     if (!playlist_controller_) {
         return;
     }
 
     if (pid.isNull()) {
-        const playlistId current = playlist_controller_->currentPlaylistId();
+        const PlaylistId current = playlist_controller_->currentPlaylistId();
         if (!current.isNull()) {
             rebuildIndex(current);
         }
@@ -56,7 +56,7 @@ void InMemorySearchBackend::warmup(const playlistId& pid)
     rebuildIndex(pid);
 }
 
-void InMemorySearchBackend::invalidate(const playlistId& pid)
+void InMemorySearchBackend::invalidate(const PlaylistId& pid)
 {
     if (pid.isNull()) {
         m_index_by_playlist.clear();
@@ -73,7 +73,7 @@ QVector<SearchHint> InMemorySearchBackend::search(const SearchQuery& query)
         return hits;
     }
 
-    const playlistId pid = resolvePid(query);
+    const PlaylistId pid = resolvePid(query);
     if (pid.isNull()) {
         return hits;
     }
@@ -115,18 +115,18 @@ QVector<SearchHint> InMemorySearchBackend::search(const SearchQuery& query)
     return hits;
 }
 
-playlistId InMemorySearchBackend::resolvePid(const SearchQuery& query) const
+PlaylistId InMemorySearchBackend::resolvePid(const SearchQuery& query) const
 {
     if (!query.pid.isNull()) {
         return query.pid;
     }
     if (!playlist_controller_) {
-        return playlistId{};
+        return PlaylistId{};
     }
     return playlist_controller_->currentPlaylistId();
 }
 
-void InMemorySearchBackend::rebuildIndex(const playlistId& pid)
+void InMemorySearchBackend::rebuildIndex(const PlaylistId& pid)
 {
     if (!playlist_controller_ || pid.isNull()) {
         return;
@@ -144,7 +144,7 @@ void InMemorySearchBackend::rebuildIndex(const playlistId& pid)
 
     for (const Track& track : tracks) {
         IndexedTrack indexed;
-        indexed.hint.track_id     = track.tid;
+        indexed.hint.entry_id     = track.entry_id;
         indexed.hint.title        = track.meta.title;
         indexed.hint.artist       = track.meta.artist;
         indexed.hint.album_artist = track.meta.album_artist;
@@ -163,7 +163,7 @@ void InMemorySearchBackend::rebuildIndex(const playlistId& pid)
     m_index_by_playlist.insert(pid, std::move(indexed_tracks));
 }
 
-bool InMemorySearchBackend::ensureIndexReady(const playlistId& pid)
+bool InMemorySearchBackend::ensureIndexReady(const PlaylistId& pid)
 {
     if (m_index_by_playlist.contains(pid)) {
         return true;

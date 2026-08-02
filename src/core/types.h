@@ -1,13 +1,17 @@
 #pragma once
 
 #include <QByteArray>
+#include <QFileInfo>
 #include <QHash>
 #include <QObject>
 #include <QString>
 #include <QUuid>
 
-using trackId    = QUuid;
-using playlistId = QUuid;
+#include "utils/path_utils.hpp"
+
+using EntryId    = QUuid; // 播放列表条目身份:播放列表内唯一
+using PlaylistId = QUuid; // 播放列表身份
+using TrackId    = QUuid; // 库级曲目身份:首次入库时由库分配(阶段 2 落地)
 
 enum class SortType
 {
@@ -59,6 +63,51 @@ struct TrackMetaData
     bool isValid = false;
 };
 
+enum class TrackSource
+{
+    external, // 外部条目:文件不在库中,元数据内联(当前所有条目的状态)
+    library   // 库条目:引用库中曲目(阶段 3 后出现)
+};
+
+/**
+ * @brief 曲目条目。音乐库与播放列表共用。
+ *
+ * - 库条目(source=library):entry_id 指向库级 TrackId,元数据由库维护
+ * - 外部条目(source=external):文件不在库中,元数据内联
+ */
+struct Track
+{
+    EntryId entry_id = EntryId::createUuid(); // 条目身份(播放列表内唯一)
+    TrackId library_track_id;                 // 库级身份;外部条目为空
+    TrackSource source = TrackSource::external;
+    QString filepath; // 规范化路径
+    TrackMetaData meta;
+    bool missing = false; // 文件缺失标记(阶段 3 使用)
+
+    // 新建外部条目(路径自动规范化)
+    static Track from_filepath(const QString& filepath)
+    {
+        Track t;
+        t.filepath      = utils::path::normalize_path(filepath);
+        t.meta.filepath = t.filepath;
+        t.meta.filename = QFileInfo(t.filepath).fileName();
+        t.meta.isValid  = false;
+        return t;
+    }
+
+    // 从缓存恢复外部条目(指定条目身份)
+    static Track from_entry(EntryId eid, const QString& filepath)
+    {
+        Track t;
+        t.entry_id      = eid;
+        t.filepath      = utils::path::normalize_path(filepath);
+        t.meta.filepath = t.filepath;
+        t.meta.filename = QFileInfo(t.filepath).fileName();
+        t.meta.isValid  = false;
+        return t;
+    }
+};
+
 struct TableColumn
 {
     QString headerName;
@@ -101,7 +150,7 @@ enum class PlayMode
 
 struct PlaybackQueueSnapshot
 {
-    QVector<trackId> queue;
+    QVector<EntryId> queue;
     qint64 version = 0;
 };
 

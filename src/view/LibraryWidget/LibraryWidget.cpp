@@ -86,7 +86,7 @@ void LibraryWidget::callSongContextMenu(const QPoint& pos)
     if (!model)
         return;
 
-    trackId tid = model->trackAt(index);
+    EntryId tid = model->trackAt(index);
     if (tid.isNull())
         return;
 
@@ -136,7 +136,7 @@ void LibraryWidget::callTreeContextMenu(const QPoint& pos)
     if (!playlist_item)
         return;
 
-    playlistId pid = playlist_item->id();
+    PlaylistId pid = playlist_item->id();
     QMenu menu(this);
     QAction* actAddTrack  = menu.addAction("Add track");
     QAction* actAddFolder = menu.addAction("Add folder");
@@ -210,7 +210,7 @@ void LibraryWidget::setSongTreeModel(QAbstractItemModel* model)
             Qt::UniqueConnection);
 }
 
-void LibraryWidget::setPlaylists(const QVector<QPair<playlistId, QString>>& playlists)
+void LibraryWidget::setPlaylists(const QVector<QPair<PlaylistId, QString>>& playlists)
 {
     this->m_playlist_tree->clear();
     for (const auto& list : playlists) {

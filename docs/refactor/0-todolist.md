@@ -13,11 +13,11 @@
 
 ## 阶段 2: 曲目身份改造(最底层,先做)
 
-- [ ] 引入库级曲目身份: 首次扫描分配 UUID,规范化路径作为查找索引
-- [ ] `core/types.h` 改造: `Track` 增加库引用字段,支持"外部条目"(不在库中的文件)
-- [ ] 路径规范化工具 (Windows 大小写不敏感、符号链接解析)
-- [ ] 播放列表缓存 `kSchemaVersion` 升级与迁移
-- [ ] 同步更新 `test/playlist` 测试
+- [x] 引入库级曲目身份:`TrackId`(库级)/ `EntryId`(条目级)/ `PlaylistId` 三类型分离,全库机械重命名完成(编译器兜底验证)
+- [x] `core/types.h` 改造:`Track` 上移至此,新增 `library_track_id` / `source` / `missing` 字段与静态工厂 `from_filepath` / `from_entry`
+- [x] 路径规范化:`Track::from_filepath` / `from_entry` 已强制 `normalize_path()`(步骤 1.2 的核心部分已随工厂落地;`path_utils` 的 `case_fold` 增强与 `loadList*` 入口规范化待补)
+- [ ] 播放列表缓存 `kSchemaVersion` 升级与迁移(步骤 1.4)
+- [ ] 同步更新 `test/playlist` 测试(步骤 1.5)
 
 ## 阶段 3: 新建音乐库模块 `model/library` + SQLite
 

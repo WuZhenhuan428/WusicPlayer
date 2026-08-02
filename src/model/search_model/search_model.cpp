@@ -65,12 +65,12 @@ void SearchModel::clearResults()
     endResetModel();
 }
 
-trackId SearchModel::trackIdAt(int row) const
+EntryId SearchModel::trackIdAt(int row) const
 {
     if (row < 0 || row >= m_search_hint.size()) {
-        return trackId{};
+        return EntryId{};
     }
-    return m_search_hint[row].track_id;
+    return m_search_hint[row].entry_id;
 }
 
 SearchHint SearchModel::hintAt(int row) const

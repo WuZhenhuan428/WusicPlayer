@@ -128,7 +128,7 @@ private:
 
 signals:
     void sgnLoadPlaylist();
-    void sgnCurrentPlaylistChanged(playlistId pid);
+    void sgnCurrentPlaylistChanged(PlaylistId pid);
     void sgnAboutToClose();
     void sgnOpenSearchPanelRequested();
     void sgnOpenSettingsPanelRequested();

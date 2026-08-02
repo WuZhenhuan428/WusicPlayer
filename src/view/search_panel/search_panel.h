@@ -35,7 +35,7 @@ public:
     QString configSubKey() const;
 
 signals:
-    void sgnRequestPlayTrack(const trackId& track_id);
+    void sgnRequestPlayTrack(const EntryId& track_id);
     void sgnStateSnapshot(const QByteArray& geometry, const QByteArray& header);
 
 protected:

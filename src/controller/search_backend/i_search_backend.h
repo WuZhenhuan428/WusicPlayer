@@ -7,7 +7,7 @@ class ISearchBackend
 public:
     virtual ~ISearchBackend()                                    = default;
 
-    virtual void warmup(const playlistId& pid)                   = 0;
-    virtual void invalidate(const playlistId& pid)               = 0;
+    virtual void warmup(const PlaylistId& pid)                   = 0;
+    virtual void invalidate(const PlaylistId& pid)               = 0;
     virtual QVector<SearchHint> search(const SearchQuery& query) = 0;
 };

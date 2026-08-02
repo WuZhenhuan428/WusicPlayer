@@ -7,7 +7,7 @@ class QString;
 
 struct SearchHint
 {
-    trackId track_id;
+    EntryId entry_id;
     QString title;
     QString artist;
     QString album_artist;
@@ -15,7 +15,6 @@ struct SearchHint
     int duration_s;
     unsigned char score;
 };
-
 
 enum class SearchQueryMode
 {
@@ -28,6 +27,6 @@ struct SearchQuery
 {
     QString keyword;
     SearchQueryMode mode = SearchQueryMode::Plain;
-    playlistId pid;
+    PlaylistId pid;
     bool case_sensitive = false;
 };
