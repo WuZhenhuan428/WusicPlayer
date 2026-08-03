@@ -426,9 +426,14 @@ void AppController::onOpenSettingsPanelRequested()
         settings_panel_->registerWidget(theme_settings_page_->getTitleItem(), theme_settings_page_);
     }
 
-    // 媒体库设置页(watched folders 唯一管理入口)
+    // 媒体库设置页(watched folders 唯一管理入口 + 添加解析策略配置)
     if (!library_settings_page_) {
         library_settings_page_ = new LibrarySettingsPage(library_manager_.get(), settings_panel_);
+        library_settings_page_->set_add_file_policy(playlist_controller_->addFilePolicy());
+        connect(library_settings_page_, &LibrarySettingsPage::sgnAddFilePolicyChanged, this,
+                [this](int policy) {
+                    playlist_controller_->setAddFilePolicy(static_cast<AddFilePolicy>(policy));
+                });
         settings_panel_->registerWidget(library_settings_page_->getTitleItem(),
                                         library_settings_page_);
     }

@@ -3,6 +3,7 @@
 #include "core/utils/audio.hpp"
 #include "core/utils/path.hpp"
 #include "model/library/library_manager.h"
+#include <QFileInfo>
 #include <QTimer>
 
 #include <optional>
@@ -92,8 +93,16 @@ void PlaylistManager::loadCacheAfterShown()
     m_repo->loadCacheAsync();
 }
 
-void PlaylistManager::addTrack(const PlaylistId& pid, const QString& filepath)
+void PlaylistManager::addTrack(const PlaylistId& pid, const QString& filepath, AddFilePolicy policy)
 {
+    // 单文件默认:仅外部文件;import_to_library 时把父目录注册到库(扫描后 upgrade 为库引用)
+    const AddFilePolicy eff = resolve_effective_policy(policy, AddFilePolicy::keep_external);
+    if (m_library && eff == AddFilePolicy::import_to_library) {
+        const QString norm = utils::path::normalize_path(filepath);
+        if (!m_library->track_by_path(norm).has_value()) {
+            m_library->add_watched_folder(QFileInfo(norm).absolutePath());
+        }
+    }
     m_repo->addTrackObject(pid, resolve_track(filepath));
 }
 
@@ -177,6 +186,26 @@ void PlaylistManager::set_library_manager(LibraryManager* lib)
     }
 }
 
+void PlaylistManager::set_add_file_policy(AddFilePolicy policy)
+{
+    m_add_file_policy = policy;
+}
+
+AddFilePolicy PlaylistManager::resolve_effective_policy(AddFilePolicy requested,
+                                                        AddFilePolicy by_operation_default) const
+{
+    if (requested != AddFilePolicy::by_operation) {
+        return requested; // 显式策略(import/external;ask 由上层展开,不应到达 model)
+    }
+    switch (m_add_file_policy) {
+    case AddFilePolicy::import_to_library:
+    case AddFilePolicy::keep_external:
+        return m_add_file_policy;
+    default: // by_operation / always_ask:按操作类型默认
+        return by_operation_default;
+    }
+}
+
 void PlaylistManager::on_library_changed()
 {
     if (!m_library) {
@@ -201,10 +230,12 @@ void PlaylistManager::on_library_changed()
 }
 
 // a wrap of this->addTrack
-void PlaylistManager::addFolder(const PlaylistId& pid, const QString& directory)
+void PlaylistManager::addFolder(const PlaylistId& pid, const QString& directory,
+                                AddFilePolicy policy)
 {
-    // 目录加入音乐库(异步扫描),让库可搜索到这些文件
-    if (m_library) {
+    // 文件夹添加默认同步入库:目录注册到库(异步扫描),未命中条目随后升级为库引用
+    const AddFilePolicy eff = resolve_effective_policy(policy, AddFilePolicy::import_to_library);
+    if (m_library && eff == AddFilePolicy::import_to_library) {
         m_library->add_watched_folder(directory);
     }
 

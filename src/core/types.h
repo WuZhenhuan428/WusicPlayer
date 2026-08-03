@@ -148,6 +148,22 @@ enum class PlayMode
     out_of_order_group
 };
 
+/**
+ * @brief 向播放列表添加未入库文件时的解析策略。
+ *
+ * by_operation:按操作类型(文件夹→同步入库,单文件→外部文件)
+ * import_to_library:未命中时把文件(父目录)注册到库,扫描后升级为库引用
+ * keep_external:保持外部文件(不强制入库)
+ * always_ask:每次询问(由 controller/UI 弹窗展开为 import/external)
+ */
+enum class AddFilePolicy
+{
+    by_operation = 0,
+    import_to_library,
+    keep_external,
+    always_ask
+};
+
 struct PlaybackQueueSnapshot
 {
     QVector<EntryId> queue;

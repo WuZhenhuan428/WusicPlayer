@@ -13,6 +13,21 @@ target_link_libraries(tb_playlist
 
 add_test(NAME tb_playlist COMMAND tb_playlist)
 
+# ======== tb_add_file_policy ========
+
+add_executable(tb_add_file_policy
+    playlist/tb_add_file_policy.cpp
+)
+
+target_link_libraries(tb_add_file_policy
+    PRIVATE
+        wusic_model
+        wusic_core
+        wusic_headers
+)
+
+add_test(NAME tb_add_file_policy COMMAND tb_add_file_policy)
+
 # ======== tb_library ========
 
 add_executable(tb_library

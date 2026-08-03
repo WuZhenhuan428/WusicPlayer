@@ -67,7 +67,7 @@
 
 - [x] **现在播放队列**(核心):设计见 [`4-playback-queue.md`](4-playback-queue.md);新增 `model/playback_queue/`(`QueueItem` 三态来源 / `PlaybackQueue` 容器+PlayMode 导航 / `PlaybackQueueService` 来源构建+JSON 持久化),与播放列表解耦;积累期纯新增不接线,切断点由 `sgn_play_requested` 接入播放。测试:`tb_playback_queue` 219 项断言(队列操作/当前项/导航/信号/持久化 round-trip/三种来源构建)
 - [x] **媒体库控件**:设计见 [`5-library-browser.md`](5-library-browser.md);集成进 `LibraryWidget` 左侧面板(播放列表树下方,垂直 splitter);`LibraryBrowseModel`(预设分类 artist/album/genre/folder/year + FTS5 搜索 + 分组树默认折叠)、`LibraryBrowserWidget`(分类下拉 + 设置按钮占位 + 配置按钮 + 防抖搜索 + 树)、设置面板 "Media Library" 页(watched folders 唯一管理入口);双击 → `PlaybackQueueService::play_library_track` 入队即播。DSL 自定义规则后续与主视图 SortRule 统一改造。测试:`tb_library_browse` 50 项断言(分组/平铺/Unknown 归组/搜索/后注入)
-- [ ] **播放列表解析策略 + 配置**:文件夹→同步入库、单文件→外部;未命中行为可配置/可覆盖
+- [x] **播放列表解析策略 + 配置**:`AddFilePolicy{by_operation,import_to_library,keep_external,always_ask}`;`PlaylistManager::addTrack/addFolder` 接受策略(by_operation 按操作类型:文件夹→同步入库、单文件→仅外部);import 时注册父目录/目录到库,扫描后 `upgradeExternalTracks` 自动升级为库引用;`PlaylistController` 决策(always_ask 弹窗)并持久化 `add_file_policy`(config key "playlist");设置面板 "Media Library" 页新增"添加未入库文件时"下拉。测试:`tb_add_file_policy`(keep_external/import/by_operation/全局策略/文件夹/库命中)17 项断言
 - [ ] **菜单栏清理**:功能归位各控件右键,菜单栏只留应用级操作
 - [ ] **智能播放列表**(保存的查询):特化视图实时反映库变化,替代手工维护;"整库播放列表"由库控件承担
 

@@ -86,14 +86,16 @@ void PlaylistController::importFiles(const PlaylistId& pid)
 {
     if (!m_manager)
         return;
-    PlaylistId target_id = checkId(m_manager, pid);
+    PlaylistId target_id    = checkId(m_manager, pid);
 
-    QStringList files    = QFileDialog::getOpenFileNames(
+    // 单文件默认仅外部文件;策略可配置/询问
+    const AddFilePolicy eff = resolvePolicy(AddFilePolicy::keep_external);
+    QStringList files       = QFileDialog::getOpenFileNames(
         m_dialogParent, tr("Open Audio Files"), QString(),
         tr("Audio Files (*.mp3 *.wav *.flac *.ogg *.m4a);;All Files (*)"));
     if (!files.isEmpty()) {
         for (const auto& file : files) {
-            m_manager->addTrack(target_id, file);
+            m_manager->addTrack(target_id, file, eff);
         }
     }
 }
@@ -102,13 +104,56 @@ void PlaylistController::importDir(const PlaylistId& pid)
 {
     if (!m_manager)
         return;
-    PlaylistId target_id = checkId(m_manager, pid);
+    PlaylistId target_id    = checkId(m_manager, pid);
 
+    // 文件夹默认同步入库(注册库根目录);策略可配置/询问
+    const AddFilePolicy eff = resolvePolicy(AddFilePolicy::import_to_library);
     QString dir = QFileDialog::getExistingDirectory(m_dialogParent, tr("Open Directory"), QString(),
                                                     QFileDialog::ShowDirsOnly |
                                                         QFileDialog::DontResolveSymlinks);
     if (!dir.isEmpty()) {
-        m_manager->addFolder(target_id, dir);
+        m_manager->addFolder(target_id, dir, eff);
+    }
+}
+
+void PlaylistController::setAddFilePolicy(AddFilePolicy policy)
+{
+    if (m_manager) {
+        m_manager->set_add_file_policy(policy);
+    }
+}
+
+AddFilePolicy PlaylistController::addFilePolicy() const
+{
+    return m_manager ? m_manager->add_file_policy() : AddFilePolicy::by_operation;
+}
+
+AddFilePolicy PlaylistController::resolvePolicy(AddFilePolicy by_operation_default) const
+{
+    if (!m_manager) {
+        return by_operation_default;
+    }
+    const AddFilePolicy cfg = m_manager->add_file_policy();
+    switch (cfg) {
+    case AddFilePolicy::import_to_library:
+    case AddFilePolicy::keep_external:
+        return cfg;
+    case AddFilePolicy::always_ask: {
+        const auto btn = QMessageBox::question(
+            m_dialogParent, tr("Add to Library"),
+            tr("File is not in the music library.\nAdd to library (library reference), or keep "
+               "as external file?"),
+            QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Yes);
+        if (btn == QMessageBox::Yes) {
+            return AddFilePolicy::import_to_library;
+        }
+        if (btn == QMessageBox::No) {
+            return AddFilePolicy::keep_external;
+        }
+        return by_operation_default; // Cancel:按操作类型默认
+    }
+    default: // by_operation
+        return by_operation_default;
     }
 }
 
@@ -355,6 +400,10 @@ void PlaylistController::loadFromJson(const QJsonObject& json)
         static_cast<PlayMode>(obj.value("play_mode").toInt(static_cast<int>(PlayMode::in_order)));
     this->setPlayMode(mode);
 
+    const AddFilePolicy policy = static_cast<AddFilePolicy>(
+        obj.value("add_file_policy").toInt(int(AddFilePolicy::by_operation)));
+    this->setAddFilePolicy(policy);
+
     m_last_playlist_id = PlaylistId(obj.value("last_playlist_id").toString());
     m_last_track_id    = EntryId(obj.value("last_track_id").toString());
 
@@ -386,6 +435,7 @@ QJsonObject PlaylistController::saveToJson()
     obj["sort_rules"]       = sort_array;
 
     obj["play_mode"]        = static_cast<int>(this->playMode());
+    obj["add_file_policy"]  = static_cast<int>(this->addFilePolicy());
 
     m_last_playlist_id      = this->currentPlaylistId();
     m_last_track_id         = this->currentTrackId();

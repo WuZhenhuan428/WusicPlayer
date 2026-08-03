@@ -38,6 +38,10 @@ public:
     void setPlayMode(PlayMode mode);
     PlayMode playMode() const;
 
+    // 全局默认解析策略(设置面板配置;持久化于本模块 config)
+    void setAddFilePolicy(AddFilePolicy policy);
+    AddFilePolicy addFilePolicy() const;
+
     const QVector<std::shared_ptr<Playlist>> playlists() const;
     PlaylistId currentPlaylistId() const;
     EntryId currentTrackId() const;
@@ -67,6 +71,10 @@ signals:
 
 public slots:
     void loadCacheAfterShown();
+
+private:
+    // 把全局策略展开为实际生效策略(always_ask 时弹窗询问)
+    AddFilePolicy resolvePolicy(AddFilePolicy by_operation_default) const;
 
 private:
     PlaylistManager* m_manager = nullptr;

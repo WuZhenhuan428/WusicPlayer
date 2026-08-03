@@ -50,10 +50,20 @@ public slots:
     void savePlaylist(const PlaylistId& pid, const QString& save_path);
     void loadCacheAfterShown();
 
-    void addTrack(const PlaylistId& pid, const QString& filepath);
-    void addFolder(const PlaylistId& pid, const QString& directory);
+    // policy 为解析策略;by_operation 时按全局配置 m_add_file_policy + 操作类型默认展开
+    void addTrack(const PlaylistId& pid, const QString& filepath,
+                  AddFilePolicy policy = AddFilePolicy::by_operation);
+    void addFolder(const PlaylistId& pid, const QString& directory,
+                   AddFilePolicy policy = AddFilePolicy::by_operation);
     void removeTrack(const EntryId& tid);
     void removeMissingTracks();
+
+    // 全局默认解析策略(设置面板配置;持久化由 PlaylistController 负责)
+    void set_add_file_policy(AddFilePolicy policy);
+    AddFilePolicy add_file_policy() const
+    {
+        return m_add_file_policy;
+    }
 
     QString nextTrack(PlayMode mode);
     QString prevTrack(PlayMode mode);
@@ -76,9 +86,13 @@ signals:
 
 private:
     Track resolve_track(const QString& filepath) const;
+    // 把请求策略展开为实际生效策略(by_operation → 全局配置 → 操作类型默认;ask 由上层展开)
+    AddFilePolicy resolve_effective_policy(AddFilePolicy requested,
+                                           AddFilePolicy by_operation_default) const;
 
 private:
-    LibraryManager* m_library = nullptr;
+    LibraryManager* m_library       = nullptr;
+    AddFilePolicy m_add_file_policy = AddFilePolicy::by_operation;
 
 private slots:
     void on_library_changed();
