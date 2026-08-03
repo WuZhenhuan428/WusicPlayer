@@ -65,8 +65,9 @@ public slots:
         return m_add_file_policy;
     }
 
-    QString nextTrack(PlayMode mode);
-    QString prevTrack(PlayMode mode);
+    // 返回下一/上一曲目的条目身份(EntryId);空表示无曲目可切
+    EntryId nextTrack(PlayMode mode);
+    EntryId prevTrack(PlayMode mode);
 
     void retransmissionPlaylistChanged();
     void switchToPlaylist(const PlaylistId& pid);

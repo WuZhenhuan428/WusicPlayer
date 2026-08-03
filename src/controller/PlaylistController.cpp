@@ -281,13 +281,29 @@ auto PlaylistController::viewModel() const
     return m_manager->getViewModel();
 }
 
-QString PlaylistController::nextTrack() const
+EntryId PlaylistController::nextTrack() const
 {
     return m_manager->nextTrack(m_manager->m_context->getPlayMode());
 }
-QString PlaylistController::prevTrack() const
+EntryId PlaylistController::prevTrack() const
 {
     return m_manager->prevTrack(m_manager->m_context->getPlayMode());
+}
+QString PlaylistController::trackFilePath(const EntryId& eid) const
+{
+    if (eid.isNull() || !m_manager) {
+        return QString();
+    }
+    const PlaylistId pid = m_manager->getCurrentPlaylistId();
+    if (pid.isNull()) {
+        return QString();
+    }
+    const auto playlist = m_manager->m_repo->findPlaylistById(pid);
+    if (!playlist) {
+        return QString();
+    }
+    const Track* track = playlist->findTrackByID(eid);
+    return track ? track->filepath : QString();
 }
 void PlaylistController::play(int queueIndex)
 {

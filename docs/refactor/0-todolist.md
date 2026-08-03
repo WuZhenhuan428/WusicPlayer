@@ -56,10 +56,10 @@
 
 ## 阶段 6: 拆分 AppController + 清理信号链
 
-- [ ] 抽取 `PanelCoordinator`(UI 面板开关、创建、生命周期)
-- [ ] `AppController` 降级为纯组合根(只负责 `new` + `connect`)
-- [ ] 清理 proxy signal 转发链(转发不超过一层)
-- [ ] API 改造:`next_track` / `prev_track` 返回 `trackId` 而非 filepath 等
+- [x] 抽取 `PanelCoordinator`(UI 面板开关、创建、生命周期):见 [`6-appcontroller-split.md`](6-appcontroller-split.md);设置/搜索/EQ/快捷键面板与子页(歌词/主题/媒体库/快捷键)全部移交,懒创建 + QPointer 复用;依赖 view 组件,置于顶层可执行目标(不可入 wusic_controller 库,避免 view→controller 循环依赖)
+- [x] `AppController` 降级为纯组合根(只负责 `new` + `connect`):683 → 388 行;保留核心接线/菜单处理/配置/状态栏
+- [x] 清理 proxy signal 转发链:移除 `LibraryInteractionService::sgnTrackPropertyRequested` 死转发(无消费方,TagWriteback 已由 AppController 直连 SongTableView);删除 `AppController::tag_edit_widget_` 死成员;面板打开信号(MainWindow/LibraryBrowserWidget/SidePanel)直连 PanelCoordinator
+- [x] API 改造:`PlaylistManager::nextTrack/prevTrack` 与 `PlaylistController::nextTrack/prevTrack` 返回条目身份 `EntryId`(不再返回 filepath;导航+`setPlayTrack` 逻辑保留);新增 `PlaylistController::trackFilePath(EntryId)` 由播放层解析路径(为空则忽略);`PlaybackService` 上/下曲与自然结束 3 处改为「身份 → 解析 → 播放」。说明:返回 `EntryId` 而非库级 `TrackId`(播放列表上下文,外部条目无库级身份)。测试:`tb_playlist` 补 nextTrack/prevTrack 身份与导航断言;`tb_search_backend` 补 trackFilePath 解析
 
 ## 阶段 7+: 媒体库交互体系(设计见 `3-interaction-design.md`)
 

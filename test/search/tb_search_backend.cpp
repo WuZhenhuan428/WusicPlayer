@@ -131,6 +131,11 @@ static void test_search_current_playlist(QCoreApplication& app)
     if (hits.size() == 1) {
         CHECK(hits[0].filepath == norm(music_dir.path() + "/other.mp3"));
     }
+    // 阶段6:条目身份 → 播放路径解析(播放经身份而非 filepath)
+    const auto& pl_tracks = pm.m_repo->findPlaylistById(pid)->getTracks();
+    CHECK(!pl_tracks.isEmpty());
+    CHECK(pc.trackFilePath(pl_tracks[0].entry_id) == norm(music_dir.path() + "/song one.mp3"));
+    CHECK(pc.trackFilePath(EntryId::createUuid()).isEmpty());
 }
 
 int main(int argc, char* argv[])

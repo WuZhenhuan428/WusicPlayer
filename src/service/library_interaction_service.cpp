@@ -67,11 +67,6 @@ void LibraryInteractionService::bind()
                     m_playlist_ctl->play(queueIndex);
                 }
             });
-    connect(m_song_table_view, &SongTableView::sgnTrackPropertyRequested, this,
-            [this](EntryId tid, QString filepath, TrackMetaData meta) {
-                emit sgnTrackPropertyRequested(tid, filepath, meta);
-            });
-
     connect(m_playlist_ctl, &PlaylistController::playlistChanged, this,
             &LibraryInteractionService::refreshPlaylistView);
 

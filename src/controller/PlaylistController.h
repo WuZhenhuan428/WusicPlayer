@@ -30,8 +30,11 @@ public:
     void removeMissingTracks();
 
     auto viewModel() const -> decltype(std::declval<PlaylistManager*>()->getViewModel());
-    QString nextTrack() const;
-    QString prevTrack() const;
+    // 返回下一/上一曲目的条目身份(EntryId);空表示无曲目可切
+    EntryId nextTrack() const;
+    EntryId prevTrack() const;
+    // 条目身份 → 播放路径(当前播放列表;找不到返回空)
+    QString trackFilePath(const EntryId& eid) const;
     void play(int queueIndex);
     void switchToPlaylist(const PlaylistId& id);
 

@@ -260,15 +260,10 @@ void PlaylistManager::addFolder(const PlaylistId& pid, const QString& directory,
     }
 }
 
-QString PlaylistManager::nextTrack(PlayMode mode)
+EntryId PlaylistManager::nextTrack(PlayMode mode)
 {
-    auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
-    if (!pl) {
-        return QString();
-    }
     EntryId next_id = EntryId();
     EntryId curr_id = m_context->getPlayTrackId();
-    PlaybackQueueSnapshot queue;
     switch (mode) {
     case PlayMode::in_order:
         next_id = PlaylistNavigator::nextOfInOrder(m_view->playbackQueueSnapshot().queue, curr_id);
@@ -291,24 +286,14 @@ QString PlaylistManager::nextTrack(PlayMode mode)
 
     if (!next_id.isNull()) {
         m_context->setPlayTrack(next_id);
-        auto track = pl->findTrackByID(next_id);
-        if (track) {
-            return track->filepath;
-        }
     }
-    return QString();
+    return next_id;
 }
 
-QString PlaylistManager::prevTrack(PlayMode mode)
+EntryId PlaylistManager::prevTrack(PlayMode mode)
 {
-    auto pl = m_repo->findPlaylistById(m_context->getPlaylistId());
-    if (!pl) {
-        return QString();
-    }
-
     EntryId prev_id = EntryId();
     EntryId curr_id = m_context->getPlayTrackId();
-    PlaybackQueueSnapshot queue;
     switch (mode) {
     case PlayMode::in_order:
         prev_id =
@@ -332,12 +317,8 @@ QString PlaylistManager::prevTrack(PlayMode mode)
 
     if (!prev_id.isNull()) {
         m_context->setPlayTrack(prev_id);
-        auto track = pl->findTrackByID(prev_id);
-        if (track) {
-            return track->filepath;
-        }
     }
-    return QString();
+    return prev_id;
 }
 
 PlaylistViewModel* PlaylistManager::getViewModel()

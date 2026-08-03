@@ -66,26 +66,35 @@ void PlaybackService::bind()
             &WControlBar::updateMuteButton);
 
     connect(m_control_bar, &WControlBar::sgnBtnNextClicked, this, [this]() {
-        QString nextTrack = m_playlist_ctl->nextTrack();
-        if (!nextTrack.isEmpty()) {
+        const EntryId next_id = m_playlist_ctl->nextTrack();
+        if (!next_id.isNull()) {
             locate_on_next_play_request_ = true;
-            main_window_->playTrackInUi(nextTrack);
+            const QString path           = m_playlist_ctl->trackFilePath(next_id);
+            if (!path.isEmpty()) {
+                main_window_->playTrackInUi(path);
+            }
         }
     });
 
     connect(m_control_bar, &WControlBar::sgnBtnPrevClicked, this, [this]() {
-        QString prevTrack = m_playlist_ctl->prevTrack();
-        if (!prevTrack.isEmpty()) {
+        const EntryId prev_id = m_playlist_ctl->prevTrack();
+        if (!prev_id.isNull()) {
             locate_on_next_play_request_ = true;
-            main_window_->playTrackInUi(prevTrack);
+            const QString path           = m_playlist_ctl->trackFilePath(prev_id);
+            if (!path.isEmpty()) {
+                main_window_->playTrackInUi(path);
+            }
         }
     });
 
     connect(m_playback_ctl, &PlaybackController::sgnPlaybackNatualEnd, this, [this]() {
-        QString nextTrack = m_playlist_ctl->nextTrack();
-        if (!nextTrack.isEmpty()) {
+        const EntryId next_id = m_playlist_ctl->nextTrack();
+        if (!next_id.isNull()) {
             locate_on_next_play_request_ = true;
-            main_window_->playTrackInUi(nextTrack);
+            const QString path           = m_playlist_ctl->trackFilePath(next_id);
+            if (!path.isEmpty()) {
+                main_window_->playTrackInUi(path);
+            }
         }
     });
 

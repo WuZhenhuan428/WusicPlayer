@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/types.h"
 #include <QObject>
 
 class PlaybackController;
@@ -20,9 +19,6 @@ public:
     ~LibraryInteractionService();
 
     void bind();
-
-signals:
-    void sgnTrackPropertyRequested(EntryId tid, QString filepath, TrackMetaData meta);
 
 private:
     void refreshPlaylistView();

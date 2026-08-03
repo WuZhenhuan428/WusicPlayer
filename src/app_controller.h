@@ -7,11 +7,6 @@
 #include <QVector>
 #include <memory>
 
-class QListWidgetItem;
-class SearchPanel;
-class SettingsPanel;
-class ShortcutsPanel;
-class ShortcutsController;
 class PlaylistManager;
 class PlaylistController;
 class InMemorySearchBackend;
@@ -19,21 +14,15 @@ class InMemorySearchBackend;
 class PlaybackController;
 class MainWindow;
 class StatusBarController;
-
-class LyricsSettingPanel;
-class TagEditWidget;
-class EQWidget;
+class PanelCoordinator;
 
 class PlaybackService;
 class PlaybackRestoreService;
 class LibraryInteractionService;
 class TagWritebackService;
 class ThemeService;
-class ThemeSettingsPage;
 class LibraryManager;
-class LibrarySearchBackend;
 class PlaybackQueueService;
-class LibrarySettingsPage;
 
 class AppController : public QObject
 {
@@ -44,9 +33,6 @@ public:
 
     void showMainWindow();
 
-protected:
-    bool eventFilter(QObject* obj, QEvent* event) override;
-
 private:
     void initializeCoreConnections();
     void locateCurrentTrackInView();
@@ -55,22 +41,12 @@ private:
     void handleRemoveColumnRequested();
     void handleShowAboutMessagebox();
     void handleShowDesktopLyricsRequested();
-    void handleOpenEQRequested();
 
     void configureDesktopLyricsWindowRelation();
-    void ensureSettingsPanel();
-    void ensureShortcutsController();
-    void ensureShortcutsPage();
-    void registerDefaultShortcuts();
-    void ensureSearchPanel();
     void initializeConfig();
     void saveConfig();
 
     void setup_status_bar_connections();
-
-private slots:
-    void onOpenSettingsPanelRequested();
-    void onOpenSearchPanelRequested();
 
 private:
     PlaybackController* playback_controller_ = nullptr;
@@ -87,17 +63,8 @@ private:
     std::unique_ptr<TagWritebackService> tag_writeback_service_;
     std::unique_ptr<ThemeService> theme_service_;
     std::unique_ptr<PlaybackQueueService> playback_queue_service_;
+    std::unique_ptr<PanelCoordinator> panel_coordinator_;
 
-    QPointer<SettingsPanel> settings_panel_;
-    QPointer<ShortcutsPanel> shortcuts_panel_;
-    QPointer<ShortcutsController> shortcuts_controller_;
-    QPointer<SearchPanel> search_panel_;
-    QPointer<LyricsSettingPanel> lyrics_settings_panel_;
-    QPointer<ThemeSettingsPage> theme_settings_page_;
-    QPointer<LibrarySettingsPage> library_settings_page_;
-    QPointer<TagEditWidget> tag_edit_widget_;
-    QPointer<EQWidget> eq_widget_;
-    bool has_shortcuts_registered_    = false;
     bool has_saved_config_on_exit_    = false;
     bool locate_on_next_play_request_ = false;
     QMetaObject::Connection lyrics_follow_conn_;

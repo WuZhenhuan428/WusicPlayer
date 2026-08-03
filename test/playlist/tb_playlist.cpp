@@ -385,6 +385,42 @@ static void test_remove_last_playlist()
     CHECK(!pm.getCurrentMetadata().isValid); // 空元数据
 }
 
+/* ---- nextTrack/prevTrack 返回条目身份(阶段6:身份而非 filepath) ---- */
+static void test_next_prev_track_id()
+{
+    PlaylistManager pm;
+    pm.createPlaylist();
+    auto pls = pm.getPlaylists();
+    CHECK(pls.size() == 1);
+    if (pls.isEmpty()) {
+        return;
+    }
+    const PlaylistId pid = pls.first()->id();
+    pm.switchToPlaylist(pid);
+    pm.addTrack(pid, "/mnt/next/1.mp3");
+    pm.addTrack(pid, "/mnt/next/2.mp3");
+    pm.getViewModel()->rebuild(); // 同步构建播放队列
+
+    const auto& tracks = pls.first()->getTracks();
+    CHECK(tracks.size() == 2);
+    pm.m_context->setPlayTrack(tracks[0].entry_id);
+
+    // in_order:第一首 → 第二首
+    const EntryId next = pm.nextTrack(PlayMode::in_order);
+    CHECK(next == tracks[1].entry_id);
+
+    // 第二首 → 第一首
+    const EntryId prev = pm.prevTrack(PlayMode::in_order);
+    CHECK(prev == tracks[0].entry_id);
+
+    // 首部不回绕:返回空
+    const EntryId none = pm.prevTrack(PlayMode::in_order);
+    CHECK(none.isNull());
+
+    // 当前项已被更新(m_context 副作用)
+    CHECK(pm.m_context->getPlayTrackId() == tracks[0].entry_id);
+}
+
 int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
@@ -399,6 +435,7 @@ int main(int argc, char* argv[])
     test_library_ref_and_missing();
     test_upgrade_external();
     test_remove_last_playlist();
+    test_next_prev_track_id();
 
     std::printf("== tb_playlist: %d checks, %d failures ==\n", g_checks, g_failures);
     return g_failures == 0 ? 0 : 1;
