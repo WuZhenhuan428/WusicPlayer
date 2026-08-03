@@ -9,6 +9,8 @@
 #include <QUuid>
 #include <QVector>
 
+class LibraryManager;
+
 struct PlaylistInfo
 {
     PlaylistId id;
@@ -51,6 +53,7 @@ public slots:
     void addTrack(const PlaylistId& pid, const QString& filepath);
     void addFolder(const PlaylistId& pid, const QString& directory);
     void removeTrack(const EntryId& tid);
+    void removeMissingTracks();
 
     QString nextTrack(PlayMode mode);
     QString prevTrack(PlayMode mode);
@@ -59,6 +62,9 @@ public slots:
     void switchToPlaylist(const PlaylistId& pid);
 
     void play(int index);
+
+    // 注入音乐库(非拥有,可空);库变更时自动刷新库引用条目的元数据
+    void set_library_manager(LibraryManager* lib);
 
 signals:
     void requestPlay(const QString& filepath);
@@ -69,4 +75,11 @@ signals:
     void playlistLoadFinished(const PlaylistId& pid);
 
 private:
+    Track resolve_track(const QString& filepath) const;
+
+private:
+    LibraryManager* m_library = nullptr;
+
+private slots:
+    void on_library_changed();
 };

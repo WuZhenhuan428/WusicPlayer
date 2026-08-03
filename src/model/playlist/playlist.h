@@ -1,11 +1,15 @@
 #pragma once
 
 #include "core/types.h"
+#include "model/library/library_track.h"
 
 #include <QDebug>
 #include <QString>
 #include <QUuid>
 #include <QVector>
+
+#include <functional>
+#include <optional>
 
 class Playlist
 {
@@ -27,6 +31,14 @@ public:
     Track addTrackWithId(const EntryId& tid, const QString& filepath);
     void addTrackObject(const Track& track); // 直接加入已构造好的 Track(反序列化用)
     bool updateTrackMeta(const EntryId& tid, const TrackMetaData& meta);
+    bool setTrackMissing(const EntryId& eid, bool missing);
+    // 用库解析器刷新所有库引用条目(source==library)的元数据/缺失标记;返回更新的条目数
+    int refreshLibraryTracks(
+        const std::function<std::optional<LibraryTrack>(const TrackId&)>& resolver);
+    // 将路径已在库中的外部条目升级为库引用条目(库变更后调用);返回升级数
+    int upgradeExternalTracks(
+        const std::function<std::optional<LibraryTrack>(const QString& path)>& resolver);
+    int removeMissingTracks();
     void removeTrack(const EntryId& tid);
 
     // 非拥有:返回指针生命周期由所属 Playlist 管理,Playlist 未被修改/析构前有效;调用方不得 delete

@@ -65,6 +65,72 @@ bool Playlist::updateTrackMeta(const EntryId& tid, const TrackMetaData& meta)
     return false;
 }
 
+bool Playlist::setTrackMissing(const EntryId& eid, bool missing)
+{
+    for (auto& t : m_tracks) {
+        if (t.entry_id == eid) {
+            t.missing = missing;
+            return true;
+        }
+    }
+    return false;
+}
+
+int Playlist::refreshLibraryTracks(
+    const std::function<std::optional<LibraryTrack>(const TrackId&)>& resolver)
+{
+    int updated = 0;
+    for (auto& t : m_tracks) {
+        if (t.source != TrackSource::library) {
+            continue;
+        }
+        const auto lib = resolver(t.library_track_id);
+        if (lib) {
+            t.meta    = lib->meta;
+            t.missing = lib->missing;
+        } else {
+            t.missing = true; // 库中已无该曲目 → 标记缺失
+        }
+        ++updated;
+    }
+    return updated;
+}
+
+int Playlist::upgradeExternalTracks(
+    const std::function<std::optional<LibraryTrack>(const QString& path)>& resolver)
+{
+    int upgraded = 0;
+    for (auto& t : m_tracks) {
+        if (t.source == TrackSource::library) {
+            continue;
+        }
+        const auto lib = resolver(t.filepath);
+        if (!lib) {
+            continue;
+        }
+        t.source           = TrackSource::library;
+        t.library_track_id = lib->track_id;
+        t.meta             = lib->meta;
+        t.missing          = lib->missing;
+        ++upgraded;
+    }
+    return upgraded;
+}
+
+int Playlist::removeMissingTracks()
+{
+    int removed = 0;
+    for (auto it = m_tracks.begin(); it != m_tracks.end();) {
+        if (it->missing) {
+            it = m_tracks.erase(it);
+            ++removed;
+        } else {
+            ++it;
+        }
+    }
+    return removed;
+}
+
 /**
  * @brief: 查找并删除音轨
  * @note: 如果删除当前音轨, 则暂停播放

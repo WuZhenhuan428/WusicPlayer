@@ -35,7 +35,10 @@ public:
     QString configSubKey() const;
 
 signals:
-    void sgnRequestPlayTrack(const EntryId& track_id);
+    // 双击结果:优先携带 filepath(播放列表条目/外部条目直接播放)
+    void sgnRequestPlayFile(const QString& filepath);
+    // 库级曲目身份(库引用条目,经库解析播放)
+    void sgnRequestPlayTrack(const TrackId& track_id);
     void sgnStateSnapshot(const QByteArray& geometry, const QByteArray& header);
 
 protected:

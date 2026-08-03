@@ -2,6 +2,7 @@
 
 #include "core/ConfigManager/IConfigurable.h"
 #include "core/types.h"
+#include "view/LibraryWidget/LibraryBrowserWidget.h"
 
 #include <QAbstractItemModel>
 #include <QByteArray>
@@ -14,6 +15,9 @@
 #include <QTreeWidget>
 #include <QWidget>
 
+class LibraryManager;
+class PlaybackQueueService;
+
 class LibraryWidget : public QWidget, public IConfigurable
 {
     Q_OBJECT
@@ -23,6 +27,14 @@ public:
 
     void setSongTreeModel(QAbstractItemModel* model);
     void setPlaylists(const QVector<QPair<PlaylistId, QString>>& playlists);
+
+    // 媒体库控件依赖注入(非拥有,可空)
+    void setLibraryManager(LibraryManager* lib);
+    void setPlaybackQueueService(PlaybackQueueService* svc);
+    LibraryBrowserWidget* libraryBrowser() const
+    {
+        return m_library_browser;
+    }
 
     QTreeView* songTreeView() const;
     QHeaderView* songTreeHeader() const;
@@ -39,6 +51,7 @@ signals:
     void sgnPlayTrackByModelIndex(const QModelIndex& index);
     void sgnTrackPropertyRequested(EntryId tid, QString filepath, TrackMetaData meta);
     void sgnRemoveTrackRequested(EntryId tid);
+    void sgnRemoveMissingTracksRequested();
     void sgnRenamePlaylist(PlaylistId id);
     void sgnCopyPlaylist(PlaylistId id);
     void sgnRemovePlaylist(PlaylistId id);
@@ -47,6 +60,10 @@ signals:
     void sgnPlayTrack(PlaylistId pid, EntryId tid);
 
     void sgnSavePlaylist(PlaylistId id);
+
+    // 媒体库控件转发信号
+    void sgnLibraryPlayRequested(const TrackId& track_id);
+    void sgnOpenLibrarySettingsRequested();
 
 private:
     void initUI();
@@ -60,7 +77,9 @@ private slots:
 private:
     QTreeView* m_song_tree_view;
     QSplitter* m_main_splitter;
+    QSplitter* m_left_splitter; // 左侧:播放列表树(上)+ 媒体库控件(下)
     QTreeWidget* m_playlist_tree;
+    LibraryBrowserWidget* m_library_browser = nullptr;
     QHeaderView* m_song_tree_view_header;
 
     QHBoxLayout* m_main_layout;

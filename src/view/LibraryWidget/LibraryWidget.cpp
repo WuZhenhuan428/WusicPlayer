@@ -18,6 +18,20 @@ LibraryWidget::LibraryWidget(QAbstractItemModel* song_model, QWidget* parent) : 
 
 LibraryWidget::~LibraryWidget() {}
 
+void LibraryWidget::setLibraryManager(LibraryManager* lib)
+{
+    if (m_library_browser) {
+        m_library_browser->set_library_manager(lib);
+    }
+}
+
+void LibraryWidget::setPlaybackQueueService(PlaybackQueueService* svc)
+{
+    if (m_library_browser) {
+        m_library_browser->set_playback_queue_service(svc);
+    }
+}
+
 void LibraryWidget::initConnections()
 {
     connect(m_playlist_tree, &QTreeWidget::customContextMenuRequested, this,
@@ -71,6 +85,12 @@ void LibraryWidget::initConnections()
                 });
                 menu.exec(m_song_tree_view_header->mapToGlobal(pos));
             });
+
+    // 媒体库控件转发信号
+    connect(m_library_browser, &LibraryBrowserWidget::sgnPlayRequested, this,
+            &LibraryWidget::sgnLibraryPlayRequested);
+    connect(m_library_browser, &LibraryBrowserWidget::sgnOpenLibrarySettingsRequested, this,
+            &LibraryWidget::sgnOpenLibrarySettingsRequested);
 }
 
 void LibraryWidget::callSongContextMenu(const QPoint& pos)
@@ -98,8 +118,9 @@ void LibraryWidget::callSongContextMenu(const QPoint& pos)
     const QString path       = meta.filepath;
 
     QMenu menu(this);
-    QAction* actPlay   = menu.addAction("&Play");
-    QAction* actRemove = menu.addAction("&Remove");
+    QAction* actPlay          = menu.addAction("&Play");
+    QAction* actRemove        = menu.addAction("&Remove");
+    QAction* actRemoveMissing = menu.addAction("Remove &Missing Tracks");
     menu.addSeparator();
     QAction* actOpen = menu.addAction("&Open in file explorer");
     QAction* actProp = menu.addAction("Property");
@@ -121,6 +142,9 @@ void LibraryWidget::callSongContextMenu(const QPoint& pos)
 
     connect(actRemove, &QAction::triggered, this,
             [this, tid]() { emit sgnRemoveTrackRequested(tid); });
+
+    connect(actRemoveMissing, &QAction::triggered, this,
+            &LibraryWidget::sgnRemoveMissingTracksRequested);
 
     menu.exec(m_song_tree_view->viewport()->mapToGlobal(pos));
 }
@@ -185,8 +209,17 @@ void LibraryWidget::initUI()
     m_song_tree_view->setRootIsDecorated(false);
     m_song_tree_view->setIndentation(0);
 
+    // 左侧:播放列表树(上)+ 媒体库控件(下,可折叠)
+    m_library_browser = new LibraryBrowserWidget;
+    m_left_splitter   = new QSplitter(Qt::Vertical, this);
+    m_left_splitter->addWidget(m_playlist_tree);
+    m_left_splitter->addWidget(m_library_browser);
+    m_left_splitter->setStretchFactor(0, 3);
+    m_left_splitter->setStretchFactor(1, 2);
+    m_left_splitter->setChildrenCollapsible(true);
+
     m_main_splitter = new QSplitter(Qt::Horizontal, this);
-    m_main_splitter->addWidget(m_playlist_tree);
+    m_main_splitter->addWidget(m_left_splitter);
     m_main_splitter->addWidget(m_song_tree_view);
     m_main_splitter->setStretchFactor(0, 1);
     m_main_splitter->setStretchFactor(1, 3);
@@ -254,6 +287,9 @@ void LibraryWidget::loadFromJson(const QJsonObject& json)
         QByteArray::fromBase64(obj.value("splitter_state").toString().toUtf8()));
     m_main_splitter->setOrientation(
         static_cast<Qt::Orientation>(obj.value("splitter_orientation").toInt()));
+    // 左侧垂直 splitter:播放列表树与媒体库控件之间的比例
+    m_left_splitter->restoreState(
+        QByteArray::fromBase64(obj.value("left_splitter_state").toString().toUtf8()));
 }
 
 QJsonObject LibraryWidget::saveToJson()
@@ -263,6 +299,7 @@ QJsonObject LibraryWidget::saveToJson()
         QString::fromUtf8(m_song_tree_view_header->saveState().toBase64());
     obj["splitter_state"]       = QString::fromUtf8(m_main_splitter->saveState().toBase64());
     obj["splitter_orientation"] = static_cast<int>(m_main_splitter->orientation());
+    obj["left_splitter_state"]  = QString::fromUtf8(m_left_splitter->saveState().toBase64());
     return obj;
 }
 

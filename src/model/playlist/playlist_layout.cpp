@@ -42,8 +42,9 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist)
     QVector<Node*> trackNodes;
     QVector<Track> tracks = playlist.getTracks();
     for (const auto& t : tracks) {
-        Node* node = new Node();
-        node->id   = t.entry_id;
+        Node* node    = new Node();
+        node->id      = t.entry_id;
+        node->missing = t.missing;
         if (t.meta.isValid) {
             node->meta = t.meta;
             if (node->meta.filepath.isEmpty()) {

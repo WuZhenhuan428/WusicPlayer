@@ -126,7 +126,7 @@ void PlaylistRepo::loadCacheAsync()
         if (!self) {
             return;
         }
-        QVector<std::shared_ptr<Playlist>> loaded = self->loadCacheFromDiskToVector();
+        auto loaded = self->loadCacheFromDiskToVector();
         if (!self) {
             return;
         }
@@ -136,11 +136,19 @@ void PlaylistRepo::loadCacheAsync()
                 if (!self) {
                     return;
                 }
-                if (loaded.isEmpty()) {
+                QVector<std::shared_ptr<Playlist>> lists;
+                lists.reserve(loaded.size());
+                for (const auto& entry : loaded) {
+                    lists.append(entry.first);
+                    if (entry.second) {
+                        self->saveListToCache(entry.first); // 旧格式重写为新格式
+                    }
+                }
+                if (lists.isEmpty()) {
                     emit self->cacheLoadFinished(self->m_list.size());
                     return;
                 }
-                self->m_list += loaded;
+                self->m_list += lists;
                 emit self->playlistChanged();
                 emit self->cacheLoadFinished(self->m_list.size());
             },
@@ -190,8 +198,13 @@ bool PlaylistRepo::writeJsonPlaylist(QIODevice& device,
 }
 
 bool PlaylistRepo::loadJsonPlaylist(const QByteArray& data, const QString& fallbackName,
-                                    std::shared_ptr<Playlist>& out_playlist) const
+                                    std::shared_ptr<Playlist>& out_playlist,
+                                    bool* out_legacy_format) const
 {
+    if (out_legacy_format) {
+        *out_legacy_format = false;
+    }
+
     QJsonParseError parseError;
     QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
     if (parseError.error != QJsonParseError::NoError || !doc.isObject()) {
@@ -225,6 +238,13 @@ bool PlaylistRepo::loadJsonPlaylist(const QByteArray& data, const QString& fallb
             continue;
         }
         EntryId tid = EntryId(obj.value("entry_id").toString());
+        if (tid.isNull()) {
+            // 旧格式回退:阶段 1 前字段名为 "id",语义即条目身份,复用保持身份稳定
+            tid = EntryId(obj.value("id").toString());
+        }
+        if (obj.contains("id") && !obj.contains("entry_id") && out_legacy_format) {
+            *out_legacy_format = true;
+        }
         Track t  = tid.isNull() ? Track::from_filepath(filepath) : Track::from_entry(tid, filepath);
         t.source = obj.value("source").toString() == "library" ? TrackSource::library
                                                                : TrackSource::external;
@@ -248,16 +268,24 @@ bool PlaylistRepo::loadJsonPlaylist(const QByteArray& data, const QString& fallb
 
 void PlaylistRepo::loadCacheFromDisk()
 {
-    QVector<std::shared_ptr<Playlist>> loaded = loadCacheFromDiskToVector();
-    if (!loaded.isEmpty()) {
-        m_list += loaded;
+    const auto loaded = loadCacheFromDiskToVector();
+    QVector<std::shared_ptr<Playlist>> lists;
+    lists.reserve(loaded.size());
+    for (const auto& entry : loaded) {
+        lists.append(entry.first);
+        if (entry.second) {
+            saveListToCache(entry.first); // 旧格式一次性重写为新格式,稳定条目身份
+        }
+    }
+    if (!lists.isEmpty()) {
+        m_list += lists;
         emit playlistChanged();
     }
 }
 
-QVector<std::shared_ptr<Playlist>> PlaylistRepo::loadCacheFromDiskToVector() const
+QVector<std::pair<std::shared_ptr<Playlist>, bool>> PlaylistRepo::loadCacheFromDiskToVector() const
 {
-    QVector<std::shared_ptr<Playlist>> loaded;
+    QVector<std::pair<std::shared_ptr<Playlist>, bool>> loaded;
     if (m_cache_dir.isEmpty()) {
         return loaded;
     }
@@ -285,10 +313,11 @@ QVector<std::shared_ptr<Playlist>> PlaylistRepo::loadCacheFromDiskToVector() con
         auto playlist   = std::make_shared<Playlist>();
         QFileInfo fileInfo(filepath);
         QString fallbackName = fileInfo.baseName();
-        if (!loadJsonPlaylist(data, fallbackName, playlist)) {
+        bool legacy_format   = false;
+        if (!loadJsonPlaylist(data, fallbackName, playlist, &legacy_format)) {
             continue;
         }
-        loaded.push_back(playlist);
+        loaded.push_back({playlist, legacy_format});
     }
 
     return loaded;
@@ -403,6 +432,10 @@ PlaylistId PlaylistRepo::loadListBatched(const QString& filepath, int batch_size
                     continue;
                 }
                 EntryId tid = EntryId(obj.value("entry_id").toString());
+                if (tid.isNull()) {
+                    // 旧格式回退:阶段 1 前字段名为 "id"
+                    tid = EntryId(obj.value("id").toString());
+                }
                 LoadEntry entry;
                 entry.id       = tid;
                 entry.filepath = trackPath;
@@ -602,6 +635,32 @@ void PlaylistRepo::addTracksToPlaylist(const PlaylistId& pid, const QStringList&
 
     for (const auto& filepath : filepaths) {
         src->addTrack(filepath);
+    }
+    saveListToCache(src);
+    emit playlistChanged();
+}
+
+void PlaylistRepo::addTrackObject(const PlaylistId& pid, const Track& track)
+{
+    std::shared_ptr<Playlist> src = findPlaylistById(pid);
+    if (!src) {
+        qDebug() << "[WARNING] Playlist id " << pid.toString() << "not found";
+        return;
+    }
+    src->addTrackObject(track);
+    saveListToCache(src);
+    emit playlistChanged();
+}
+
+void PlaylistRepo::addTrackObjects(const PlaylistId& pid, const QVector<Track>& tracks)
+{
+    std::shared_ptr<Playlist> src = findPlaylistById(pid);
+    if (!src) {
+        qDebug() << "[WARNING] Playlist id " << pid.toString() << "not found";
+        return;
+    }
+    for (const auto& track : tracks) {
+        src->addTrackObject(track);
     }
     saveListToCache(src);
     emit playlistChanged();

@@ -1,0 +1,181 @@
+#include "LibraryBrowserWidget.h"
+
+#include "model/library/library_manager.h"
+#include "model/playback_queue/playback_queue_service.h"
+
+#include <QComboBox>
+#include <QHBoxLayout>
+#include <QHeaderView>
+#include <QJsonObject>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QTreeView>
+#include <QVBoxLayout>
+
+LibraryBrowserWidget::LibraryBrowserWidget(QWidget* parent) : QWidget(parent)
+{
+    initUI();
+    initConnections();
+}
+
+void LibraryBrowserWidget::initUI()
+{
+    m_cb_grouping = new QComboBox;
+    m_cb_grouping->addItem(tr("Artist"), int(LibraryGrouping::artist));
+    m_cb_grouping->addItem(tr("Album"), int(LibraryGrouping::album));
+    m_cb_grouping->addItem(tr("Genre"), int(LibraryGrouping::genre));
+    m_cb_grouping->addItem(tr("Folder"), int(LibraryGrouping::folder));
+    m_cb_grouping->addItem(tr("Year"), int(LibraryGrouping::year));
+    m_cb_grouping->addItem(tr("None"), int(LibraryGrouping::none));
+
+    m_btn_settings = new QPushButton(tr("设置"));
+    m_btn_settings->setEnabled(false); // DSL 自定义规则后续统一改造
+    m_btn_settings->setToolTip(tr("分类设置(DSL 自定义规则,后续版本)"));
+
+    m_btn_config = new QPushButton(tr("配置"));
+    m_btn_config->setToolTip(tr("打开设置面板-媒体库(添加媒体库路径的唯一入口)"));
+
+    auto* top = new QHBoxLayout;
+    top->setContentsMargins(0, 0, 0, 0);
+    top->setSpacing(2);
+    top->addWidget(m_cb_grouping, 1);
+    top->addWidget(m_btn_settings);
+    top->addWidget(m_btn_config);
+
+    m_le_keyword = new QLineEdit;
+    m_le_keyword->setPlaceholderText(tr("搜索媒体库(FTS5)..."));
+
+    m_tree = new QTreeView;
+    m_tree->setAlternatingRowColors(true);
+    m_tree->setUniformRowHeights(true);
+    m_tree->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    m_tree->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_tree->header()->setStretchLastSection(true);
+    m_tree->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+    m_tree->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    m_tree->header()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    m_tree->header()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+
+    auto* vbl = new QVBoxLayout(this);
+    vbl->setContentsMargins(2, 2, 2, 2);
+    vbl->setSpacing(2);
+    vbl->addLayout(top);
+    vbl->addWidget(m_le_keyword);
+    vbl->addWidget(m_tree, 1);
+
+    m_model = new LibraryBrowseModel(nullptr, this);
+    m_tree->setModel(m_model);
+
+    m_tim_input = new QTimer(this);
+    m_tim_input->setSingleShot(true);
+    m_tim_input->setInterval(200);
+}
+
+void LibraryBrowserWidget::initConnections()
+{
+    connect(m_cb_grouping, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            &LibraryBrowserWidget::onGroupingChanged);
+    connect(m_le_keyword, &QLineEdit::textChanged, this, &LibraryBrowserWidget::onKeywordChanged);
+    connect(m_tim_input, &QTimer::timeout, this, [this]() {
+        if (m_model != nullptr) {
+            m_model->set_keyword(m_le_keyword->text());
+        }
+    });
+    connect(m_btn_config, &QPushButton::clicked, this,
+            &LibraryBrowserWidget::sgnOpenLibrarySettingsRequested);
+    connect(m_tree, &QTreeView::doubleClicked, this, &LibraryBrowserWidget::onDoubleClicked);
+}
+
+void LibraryBrowserWidget::set_library_manager(LibraryManager* lib)
+{
+    m_lib = lib;
+    if (m_model != nullptr) {
+        m_model->set_library(lib);
+    }
+}
+
+void LibraryBrowserWidget::set_playback_queue_service(PlaybackQueueService* svc)
+{
+    m_queue_svc = svc;
+}
+
+void LibraryBrowserWidget::onGroupingChanged(int index)
+{
+    if (m_model == nullptr) {
+        return;
+    }
+    const int g = m_cb_grouping->itemData(index).toInt();
+    m_model->set_grouping(static_cast<LibraryGrouping>(g));
+}
+
+void LibraryBrowserWidget::loadFromJson(const QJsonObject& json)
+{
+    const QJsonObject obj = json.value(this->configSubKey()).toObject();
+
+    // 分类(先恢复模型分组,再同步下拉框,避免触发多余重建)
+    if (m_model != nullptr) {
+        const int g = obj.value("grouping").toInt(int(LibraryGrouping::artist));
+        m_model->set_grouping(static_cast<LibraryGrouping>(g));
+        const int idx = m_cb_grouping->findData(g);
+        if (idx >= 0) {
+            m_cb_grouping->setCurrentIndex(idx);
+        }
+    }
+
+    // 关键字(直接设置模型;QLineEdit 仅展示)
+    const QString keyword = obj.value("keyword").toString();
+    m_le_keyword->setText(keyword);
+    if (m_model != nullptr) {
+        m_model->set_keyword(keyword);
+    }
+
+    // 树表头状态(列宽/顺序/可见性)
+    const QByteArray state =
+        QByteArray::fromBase64(obj.value("tree_header_state").toString().toUtf8());
+    if (!state.isEmpty()) {
+        m_tree->header()->restoreState(state);
+    }
+}
+
+QJsonObject LibraryBrowserWidget::saveToJson()
+{
+    QJsonObject obj;
+    obj["grouping"] = int(m_model != nullptr ? m_model->grouping() : LibraryGrouping::artist);
+    obj["keyword"]  = m_le_keyword->text();
+    obj["tree_header_state"] = QString::fromUtf8(m_tree->header()->saveState().toBase64());
+    return obj;
+}
+
+QString LibraryBrowserWidget::configSubKey() const
+{
+    return "library_browser";
+}
+
+void LibraryBrowserWidget::onKeywordChanged(const QString& keyword)
+{
+    Q_UNUSED(keyword);
+    m_tim_input->start(); // 防抖
+}
+
+void LibraryBrowserWidget::onDoubleClicked(const QModelIndex& index)
+{
+    if (m_model == nullptr || !index.isValid()) {
+        return;
+    }
+    if (index.parent().isValid()) {
+        // 曲目行 → 入队即播
+        const std::optional<TrackId> tid = m_model->track_id_at(index);
+        if (!tid.has_value()) {
+            return;
+        }
+        if (m_queue_svc != nullptr) {
+            m_queue_svc->play_library_track(*tid);
+        } else {
+            emit sgnPlayRequested(*tid);
+        }
+        return;
+    }
+    // 分组节点 → 展开/折叠
+    const bool expanded = m_tree->isExpanded(index);
+    m_tree->setExpanded(index, !expanded);
+}

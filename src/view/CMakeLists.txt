@@ -4,6 +4,8 @@ add_library(wusic_view STATIC
 
     LibraryWidget/LibraryWidget.cpp
     LibraryWidget/LibraryWidget.h
+    LibraryWidget/LibraryBrowserWidget.cpp
+    LibraryWidget/LibraryBrowserWidget.h
 
     playlist/playlist_widgets.cpp
     playlist/playlist_widgets.h
@@ -40,6 +42,10 @@ add_library(wusic_view STATIC
 
     SettingsPanel/ThemeSettingsPage/ThemeSettingsPage.cpp
     SettingsPanel/ThemeSettingsPage/ThemeSettingsPage.h
+
+    SettingsPanel/library_settings_page.cpp
+    SettingsPanel/library_settings_page.h
+
     dialogs/hsv_dialog/color_preview_item.cpp
     dialogs/hsv_dialog/color_preview_item.h
     dialogs/hsv_dialog/hsv_dialog.cpp

@@ -27,6 +27,7 @@ public:
     void savePlaylist(const PlaylistId& id = PlaylistId());
     void copyPlaylist(const PlaylistId& id = PlaylistId());
     void removeTrack(const EntryId& id);
+    void removeMissingTracks();
 
     auto viewModel() const -> decltype(std::declval<PlaylistManager*>()->getViewModel());
     QString nextTrack() const;

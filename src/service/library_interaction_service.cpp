@@ -46,6 +46,8 @@ void LibraryInteractionService::bind()
                 }
                 m_playlist_ctl->removeTrack(tid);
             });
+    connect(m_library_widget, &LibraryWidget::sgnRemoveMissingTracksRequested, m_playlist_ctl,
+            &PlaylistController::removeMissingTracks);
     connect(m_library_widget, &LibraryWidget::sgnPlayTrackByModelIndex, this,
             [this](const QModelIndex& index) {
                 auto* model = m_playlist_ctl->viewModel();

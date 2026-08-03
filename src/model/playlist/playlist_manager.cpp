@@ -1,7 +1,11 @@
 #include "playlist_manager.h"
 
 #include "core/utils/audio.hpp"
+#include "core/utils/path.hpp"
+#include "model/library/library_manager.h"
 #include <QTimer>
+
+#include <optional>
 
 PlaylistManager::PlaylistManager(QObject* parent) : QObject(parent)
 {
@@ -90,7 +94,26 @@ void PlaylistManager::loadCacheAfterShown()
 
 void PlaylistManager::addTrack(const PlaylistId& pid, const QString& filepath)
 {
-    m_repo->addTrackToPlaylist(pid, filepath);
+    m_repo->addTrackObject(pid, resolve_track(filepath));
+}
+
+// 通过音乐库解析曲目:库中有则引用库条目(元数据走库缓存);否则作为外部条目
+Track PlaylistManager::resolve_track(const QString& filepath) const
+{
+    const QString norm = utils::path::normalize_path(filepath);
+    if (m_library) {
+        const auto lib = m_library->track_by_path(norm);
+        if (lib) {
+            Track t;
+            t.source           = TrackSource::library;
+            t.library_track_id = lib->track_id;
+            t.filepath         = lib->filepath;
+            t.meta             = lib->meta;
+            t.missing          = lib->missing;
+            return t;
+        }
+    }
+    return Track::from_filepath(filepath); // 外部条目(不强制入库)
 }
 
 void PlaylistManager::removeTrack(const EntryId& tid)
@@ -123,9 +146,68 @@ void PlaylistManager::removeTrack(const EntryId& tid)
     emit playlistChanged();
 }
 
+void PlaylistManager::removeMissingTracks()
+{
+    auto playlist = m_repo->findPlaylistById(m_context->getPlaylistId());
+    if (!playlist) {
+        return;
+    }
+    if (playlist->removeMissingTracks() == 0) {
+        return;
+    }
+    m_repo->saveListToCache(playlist);
+    if (m_view) {
+        m_view->rebuildAsync();
+    }
+    emit playlistChanged();
+}
+
+void PlaylistManager::set_library_manager(LibraryManager* lib)
+{
+    if (m_library == lib) {
+        return;
+    }
+    if (m_library) {
+        disconnect(m_library, nullptr, this, nullptr);
+    }
+    m_library = lib;
+    if (m_library) {
+        connect(m_library, &LibraryManager::sgn_library_changed, this,
+                &PlaylistManager::on_library_changed);
+    }
+}
+
+void PlaylistManager::on_library_changed()
+{
+    if (!m_library) {
+        return;
+    }
+    bool changed = false;
+    for (const auto& pl : m_repo->getLists()) {
+        const int refreshed = pl->refreshLibraryTracks(
+            [this](const TrackId& id) { return m_library->track_by_id(id); });
+        const int upgraded = pl->upgradeExternalTracks(
+            [this](const QString& path) { return m_library->track_by_path(path); });
+        if (refreshed > 0 || upgraded > 0) {
+            changed = true;
+        }
+    }
+    if (changed) {
+        if (m_view) {
+            m_view->rebuildAsync();
+        }
+        emit playlistChanged();
+    }
+}
+
 // a wrap of this->addTrack
 void PlaylistManager::addFolder(const PlaylistId& pid, const QString& directory)
 {
+    // 目录加入音乐库(异步扫描),让库可搜索到这些文件
+    if (m_library) {
+        m_library->add_watched_folder(directory);
+    }
+
     PlaylistId curr_pid = pid;
     if (pid.isNull()) {
         curr_pid = m_repo->createList();
@@ -133,17 +215,17 @@ void PlaylistManager::addFolder(const PlaylistId& pid, const QString& directory)
     }
 
     const auto& files = utils::audio::find_all(directory);
-    QStringList tracks_to_add;
+    QVector<Track> tracks_to_add;
     tracks_to_add.reserve(static_cast<int>(files.size()));
 
     for (const auto& file : files) {
         if (utils::audio::is_audio_file(file)) {
-            tracks_to_add.append(utils::audio::from_fs_path(file));
+            tracks_to_add.append(resolve_track(utils::audio::from_fs_path(file)));
         }
     }
 
     if (!tracks_to_add.isEmpty()) {
-        m_repo->addTracksToPlaylist(curr_pid, tracks_to_add);
+        m_repo->addTrackObjects(curr_pid, tracks_to_add);
     }
 }
 
@@ -266,7 +348,7 @@ QString PlaylistManager::getCurrentPlaylistName() const
 {
     PlaylistId pid = m_context->getPlaylistId();
     auto pl        = m_repo->findPlaylistById(pid);
-    return pl->name();
+    return pl ? pl->name() : QString();
 }
 
 const EntryId& PlaylistManager::getCurrentTrackId() const
@@ -324,8 +406,8 @@ TrackMetaData PlaylistManager::getCurrentMetadata()
 QString PlaylistManager::getPlaylistById(const PlaylistId& pid) const
 {
     auto pl = m_repo->findPlaylistById(pid);
-    if (!pl->isEmpty()) {
-        return pl->name();
+    if (!pl || pl->isEmpty()) {
+        return QString();
     }
-    return QString();
+    return pl->name();
 }

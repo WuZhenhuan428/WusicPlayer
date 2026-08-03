@@ -12,6 +12,7 @@ struct Node
     EntryId id; // Track UUID. If null, it's a group node.
     TrackMetaData meta;
     QString group_name;
+    bool missing = false; // 文件缺失标记(库引用条目)
     Node* parent = nullptr;
     QVector<Node*> children;
 

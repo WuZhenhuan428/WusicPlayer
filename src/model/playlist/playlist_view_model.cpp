@@ -1,5 +1,6 @@
 #include "playlist_view_model.h"
 
+#include <QColor>
 #include <QFileInfo>
 #include <QPointer>
 #include <QRegularExpression>
@@ -371,6 +372,11 @@ QVariant PlaylistViewModel::data(const QModelIndex& index, int role) const
     }
     if (role == Qt::TextAlignmentRole && index.column() == 0) {
         return int(Qt::AlignLeft | Qt::AlignVCenter);
+    }
+
+    // 缺失文件置灰
+    if (role == Qt::ForegroundRole && !is_group && node->missing) {
+        return QColor(128, 128, 128);
     }
 
     if (role == Qt::DisplayRole) {

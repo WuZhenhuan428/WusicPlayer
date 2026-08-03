@@ -144,7 +144,10 @@ void InMemorySearchBackend::rebuildIndex(const PlaylistId& pid)
 
     for (const Track& track : tracks) {
         IndexedTrack indexed;
-        indexed.hint.entry_id     = track.entry_id;
+        // 阶段 5 后 track_id 为库级身份:库引用条目填库 id,外部条目留空
+        indexed.hint.track_id     = track.library_track_id;
+        // filepath 为播放依据(所有条目都有;AppController 据此直接播放)
+        indexed.hint.filepath     = track.filepath;
         indexed.hint.title        = track.meta.title;
         indexed.hint.artist       = track.meta.artist;
         indexed.hint.album_artist = track.meta.album_artist;

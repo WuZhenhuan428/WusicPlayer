@@ -1,5 +1,7 @@
 #include "core/utils/path.hpp"
+#include "model/library/library_track.h"
 #include "model/playlist/playlist.h"
+#include "model/playlist/playlist_manager.h"
 #include "model/playlist/playlist_repo.h"
 
 #include <QCoreApplication>
@@ -13,6 +15,7 @@
 #include <QTimer>
 
 #include <cstdio>
+#include <optional>
 
 static int g_checks   = 0;
 static int g_failures = 0;
@@ -233,7 +236,7 @@ static void test_repo_load_batched()
     }
 }
 
-/* ---- 旧格式降级(缺 entry_id → 重新分配身份) ---- */
+/* ---- 旧格式缓存(缺 entry_id):回退复用旧 "id" 保持身份稳定 ---- */
 static void test_legacy_format_degrades()
 {
     QTemporaryDir dir;
@@ -272,9 +275,114 @@ static void test_legacy_format_degrades()
     CHECK(pl->track_count() == 1u);
     const QVector<Track>& tr = pl->getTracks();
     CHECK(!tr[0].entry_id.isNull());
-    CHECK(tr[0].entry_id != EntryId("11111111-2222-3333-4444-555555555555")); // 已重新分配
+    // 旧格式 "id" 语义即条目身份:复用而非重新分配,保证恢复播放等引用不失效
+    CHECK(tr[0].entry_id == EntryId("11111111-2222-3333-4444-555555555555"));
     CHECK(tr[0].filepath == utils::path::normalize_path("/music/legacy.mp3"));
     CHECK(tr[0].source == TrackSource::external);
+}
+
+/* ---- 外部条目升级为库引用条目 ---- */
+static void test_upgrade_external()
+{
+    Playlist pl("upgrade");
+    Track ext = pl.addTrack("/lib/now_in_lib.mp3");
+    CHECK(ext.source == TrackSource::external);
+
+    const TrackId lib_id = TrackId::createUuid();
+    const int upgraded =
+        pl.upgradeExternalTracks([&](const QString& path) -> std::optional<LibraryTrack> {
+            if (path == utils::path::normalize_path("/lib/now_in_lib.mp3")) {
+                LibraryTrack lt;
+                lt.track_id     = lib_id;
+                lt.filepath     = path;
+                lt.meta.title   = "In Library";
+                lt.meta.isValid = true;
+                return lt;
+            }
+            return std::nullopt;
+        });
+    CHECK(upgraded == 1);
+    const Track* t = pl.findTrackByID(ext.entry_id);
+    CHECK(t != nullptr);
+    if (t) {
+        CHECK(t->source == TrackSource::library);
+        CHECK(t->library_track_id == lib_id);
+        CHECK(t->meta.title == "In Library");
+    }
+
+    // 路径不在库中 → 不升级
+    const int upgraded2 = pl.upgradeExternalTracks(
+        [](const QString&) -> std::optional<LibraryTrack> { return std::nullopt; });
+    CHECK(upgraded2 == 0);
+    CHECK(pl.findTrackByID(ext.entry_id)->source == TrackSource::library); // 已升级,保持
+}
+
+/* ---- 库引用条目:刷新与缺失处理 ---- */
+static void test_library_ref_and_missing()
+{
+    Playlist pl("ref");
+
+    // 库引用条目
+    Track lib_track;
+    lib_track.source           = TrackSource::library;
+    lib_track.library_track_id = TrackId::createUuid();
+    lib_track.filepath         = "/lib/1.mp3";
+    lib_track.meta.title       = "Old";
+    lib_track.meta.isValid     = true;
+    pl.addTrackObject(lib_track);
+
+    // 外部条目(标记缺失)
+    Track ext = pl.addTrack("/ext/missing.mp3");
+    CHECK(pl.setTrackMissing(ext.entry_id, true));
+    CHECK(pl.findTrackByID(ext.entry_id)->missing);
+
+    // refreshLibraryTracks:仅刷新库引用条目;解析器返回 nullopt 表示库中已无
+    int updated = pl.refreshLibraryTracks([&](const TrackId& id) -> std::optional<LibraryTrack> {
+        if (id == lib_track.library_track_id) {
+            LibraryTrack lt;
+            lt.track_id     = id;
+            lt.filepath     = "/lib/1.mp3";
+            lt.missing      = true; // 库中标记缺失
+            lt.meta.title   = "New";
+            lt.meta.isValid = true;
+            return lt;
+        }
+        return std::nullopt;
+    });
+    CHECK(updated == 1); // 外部条目不参与刷新
+    CHECK(pl.track_count() == 2);
+    const Track* t = pl.findTrackByID(lib_track.entry_id);
+    CHECK(t != nullptr);
+    if (t) {
+        CHECK(t->meta.title == "New");
+        CHECK(t->missing); // 库的缺失标记已同步
+    }
+    CHECK(pl.track_count() == 2);
+
+    // 移除缺失条目(库引用条目 + 外部条目都被移除)
+    int removed = pl.removeMissingTracks();
+    CHECK(removed == 2);
+    CHECK(pl.track_count() == 0);
+    CHECK(pl.isEmpty());
+}
+
+/* ---- 删除最后一个播放列表(回归:曾因空指针解引用崩溃) ---- */
+static void test_remove_last_playlist()
+{
+    PlaylistManager pm;
+    pm.createPlaylist();
+    auto playlists = pm.getPlaylists();
+    CHECK(playlists.size() == 1);
+    const PlaylistId pid = playlists.last()->id();
+    pm.switchToPlaylist(pid);
+
+    pm.removePlaylist(pid); // 删除最后一个列表,不应崩溃
+    CHECK(pm.getPlaylists().isEmpty());
+    CHECK(pm.getCurrentPlaylistId().isNull());
+    CHECK(pm.getCurrentPlaylistName().isEmpty()); // 空列表名
+    CHECK(pm.getPlaylistById(pid).isEmpty());     // 不存在的列表
+    CHECK(pm.getCurrentTrack().isEmpty());
+    CHECK(!pm.getCurrentMetadata().isValid); // 空元数据
 }
 
 int main(int argc, char* argv[])
@@ -288,6 +396,9 @@ int main(int argc, char* argv[])
     test_repo_roundtrip();
     test_repo_load_batched();
     test_legacy_format_degrades();
+    test_library_ref_and_missing();
+    test_upgrade_external();
+    test_remove_last_playlist();
 
     std::printf("== tb_playlist: %d checks, %d failures ==\n", g_checks, g_failures);
     return g_failures == 0 ? 0 : 1;

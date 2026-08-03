@@ -83,11 +83,16 @@ SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget* parent) :
                     return;
                 }
 
-                const EntryId id = m_search_model->trackIdAt(index.row());
-                if (id.isNull()) {
+                const SearchHint hint = m_search_model->hintAt(index.row());
+                if (!hint.filepath.isEmpty()) {
+                    // 播放列表条目 / 外部条目:直接按路径播放(定位回当前列表)
+                    emit sgnRequestPlayFile(hint.filepath);
                     return;
                 }
-                emit sgnRequestPlayTrack(id);
+                const TrackId id = hint.track_id;
+                if (!id.isNull()) {
+                    emit sgnRequestPlayTrack(id);
+                }
             });
 
     if (m_search_result_tree_view->header()) {

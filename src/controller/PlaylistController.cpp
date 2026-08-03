@@ -223,6 +223,13 @@ void PlaylistController::removeTrack(const EntryId& id)
     }
 }
 
+void PlaylistController::removeMissingTracks()
+{
+    if (m_manager) {
+        m_manager->removeMissingTracks();
+    }
+}
+
 auto PlaylistController::viewModel() const
     -> decltype(std::declval<PlaylistManager*>()->getViewModel())
 {

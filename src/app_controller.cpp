@@ -9,6 +9,8 @@
 #include "core/ConfigManager/IConfigurable.h"
 #include "core/types.h"
 #include "model/ShortcutsViewModel/shortcuts_types.hpp"
+#include "model/library/library_manager.h"
+#include "model/playback_queue/playback_queue_service.h"
 #include "model/playlist/playlist_manager.h"
 #include "service/library_interaction_service.h"
 #include "service/playback_restore_service.h"
@@ -19,6 +21,7 @@
 #include "view/SettingsPanel/SettingsPanel.h"
 #include "view/SettingsPanel/ShortcutsPanel/ShortcutsPanel.h"
 #include "view/SettingsPanel/ThemeSettingsPage/ThemeSettingsPage.h"
+#include "view/SettingsPanel/library_settings_page.h"
 #include "view/SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.h"
 #include "view/eq_widget/eq_widget.h"
 #include "view/playlist/playlist_widgets.h"
@@ -26,13 +29,14 @@
 
 #include <QAbstractItemModel>
 #include <QAbstractItemView>
-#include <QCoreApplication>
+#include <QDir>
 #include <QFileInfo>
 #include <QJsonObject>
 #include <QKeySequence>
 #include <QListWidgetItem>
 #include <QMessageBox>
 #include <QShortcut>
+#include <QStandardPaths>
 #include <QString>
 #include <QThread>
 #include <QTimer>
@@ -45,6 +49,8 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
     playlist_manager_(std::make_unique<PlaylistManager>()),
     playlist_controller_(
         std::make_unique<PlaylistController>(playlist_manager_.get(), nullptr, this)),
+    library_manager_(std::make_unique<LibraryManager>()),
+    // 搜索面板:搜索当前播放列表(数据库 FTS5 仅媒体库控件使用)
     search_backend_(std::make_unique<InMemorySearchBackend>(playlist_controller_.get())),
     main_window_(std::make_unique<MainWindow>(playback_controller_, playlist_controller_.get())),
     status_bar_controller_(std::make_unique<StatusBarController>(main_window_->statusBar(), this)),
@@ -57,8 +63,24 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
     tag_writeback_service_(
         std::make_unique<TagWritebackService>(playlist_controller_.get(), playback_controller_,
                                               playlist_manager_.get(), main_window_.get(), this)),
-    theme_service_(std::make_unique<ThemeService>(this))
+    theme_service_(std::make_unique<ThemeService>(this)),
+    playback_queue_service_(std::make_unique<PlaybackQueueService>(this))
 {
+    // 现在播放队列:注入数据源(积累期,媒体库控件入队即播)
+    playback_queue_service_->set_playlist_manager(playlist_manager_.get());
+    playback_queue_service_->set_library_manager(library_manager_.get());
+    // 媒体库控件(左侧播放列表下方):注入库与队列服务
+    main_window_->libraryPanel()->setLibraryManager(library_manager_.get());
+    main_window_->libraryPanel()->setPlaybackQueueService(playback_queue_service_.get());
+
+    // 音乐库:注入播放列表(解析曲目引用)、初始化数据库、启动初始扫描
+    playlist_manager_->set_library_manager(library_manager_.get());
+    const QString data_dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir().mkpath(data_dir);
+    if (library_manager_->initialize(data_dir + "/library.db")) {
+        library_manager_->start_scan();
+    }
+
     ensureShortcutsController();
     initializeConfig();
     playback_restore_service_->restore();
@@ -99,6 +121,19 @@ void AppController::initializeCoreConnections()
     playback_service_->bind();
     connect(playback_service_.get(), &PlaybackService::sgnLocateCurrentTrack, this,
             &AppController::locateCurrentTrackInView);
+
+    // 媒体库控件:双击曲目 → 队列入队即播(积累期经 playTrackInUi 播放)
+    connect(playback_queue_service_.get(), &PlaybackQueueService::sgn_play_requested, this,
+            [this](const QueueItem& item) { main_window_->playTrackInUi(item.filepath); });
+    connect(
+        libraryPanel, &LibraryWidget::sgnLibraryPlayRequested, this,
+        [this](const TrackId& track_id) { playback_queue_service_->play_library_track(track_id); });
+    connect(libraryPanel, &LibraryWidget::sgnOpenLibrarySettingsRequested, this, [this]() {
+        onOpenSettingsPanelRequested();
+        if (settings_panel_) {
+            settings_panel_->switchToPageByTitle("Media Library");
+        }
+    });
 
     library_interaction_serivce_->bind();
     connect(libraryPanel, &LibraryWidget::sgnTrackPropertyRequested, tag_writeback_service_.get(),
@@ -283,6 +318,10 @@ void AppController::initializeConfig()
         if (main_window_->libraryPanel()) {
             cm.registerModule(main_window_->libraryPanel());
             qDebug() << "[CONFIG] register library panel";
+            if (main_window_->libraryPanel()->libraryBrowser()) {
+                cm.registerModule(main_window_->libraryPanel()->libraryBrowser());
+                qDebug() << "[CONFIG] register library browser";
+            }
         }
         if (main_window_->desktopLyricsWidget()) {
             cm.registerModule(main_window_->desktopLyricsWidget());
@@ -385,6 +424,13 @@ void AppController::onOpenSettingsPanelRequested()
     if (!theme_settings_page_) {
         theme_settings_page_ = new ThemeSettingsPage(theme_service_.get(), settings_panel_);
         settings_panel_->registerWidget(theme_settings_page_->getTitleItem(), theme_settings_page_);
+    }
+
+    // 媒体库设置页(watched folders 唯一管理入口)
+    if (!library_settings_page_) {
+        library_settings_page_ = new LibrarySettingsPage(library_manager_.get(), settings_panel_);
+        settings_panel_->registerWidget(library_settings_page_->getTitleItem(),
+                                        library_settings_page_);
     }
 
     settings_panel_->show();
@@ -555,21 +601,24 @@ void AppController::ensureSearchPanel()
                 }
             });
 
-    connect(search_panel_, &SearchPanel::sgnRequestPlayTrack, main_window_.get(),
-            [this](const EntryId& id) {
-                auto* model = playlist_controller_->viewModel();
-                if (!model)
+    // 双击结果:播放列表条目/外部条目直接按路径播放(定位回当前列表)
+    connect(search_panel_, &SearchPanel::sgnRequestPlayFile, main_window_.get(),
+            [this](const QString& filepath) {
+                if (filepath.isEmpty())
                     return;
+                emit playlist_controller_->requestPlay(filepath);
+            });
+
+    // 库级曲目身份(库引用条目兜底):经库解析后播放
+    connect(search_panel_, &SearchPanel::sgnRequestPlayTrack, main_window_.get(),
+            [this](const TrackId& id) {
                 if (id.isNull())
                     return;
-
-                int queueIndex = model->playbackQueue().indexOf(id);
-                if (queueIndex >= 0) {
-                    locate_on_next_play_request_ = true;
-                    playlist_controller_->play(queueIndex);
-
-                    this->locateCurrentTrackInView();
-                }
+                const auto lib_track = library_manager_->track_by_id(id);
+                if (!lib_track || lib_track->missing)
+                    return;
+                // 库曲目不在播放列表中,直接按路径播放
+                emit playlist_controller_->requestPlay(lib_track->filepath);
             });
 
     connect(search_panel_, &QObject::destroyed, this, [this]() { search_panel_ = nullptr; });
@@ -611,25 +660,25 @@ void AppController::setup_status_bar_connections()
     connect(
         playlist_controller_.get(), &PlaylistController::cacheLoadFinished, this,
         [this]() {
-            std::string tracks =
-                std::format("{} track(s)", playlist_controller_->current_playlist()->track_count());
-            status_bar_controller_->register_item("playlist_track_num", tracks.c_str());
+            // 播放列表可能为空(如删除最后一个列表),需空指针保护
+            auto show_track_count = [this]() {
+                const auto pl = playlist_controller_->current_playlist();
+                const std::string tracks =
+                    pl ? std::format("{} track(s)", pl->track_count()) : "0 track(s)";
+                status_bar_controller_->update_item_by_id("playlist_track_num", tracks.c_str());
+            };
+            {
+                const auto pl = playlist_controller_->current_playlist();
+                const std::string tracks =
+                    pl ? std::format("{} track(s)", pl->track_count()) : "0 track(s)";
+                status_bar_controller_->register_item("playlist_track_num", tracks.c_str());
+            }
             // 双击列表项目时触发 &LibraryWidget::sgnSwitchPlaylist
             // CRUD 时触发 `&PlaylistController::playlistChanged`
             connect(playlist_controller_.get(), &PlaylistController::playlistChanged, this,
-                    [this]() {
-                        std::string tracks = std::format(
-                            "{} track(s)", playlist_controller_->current_playlist()->track_count());
-                        this->status_bar_controller_->update_item_by_id("playlist_track_num",
-                                                                        tracks.c_str());
-                    });
+                    show_track_count);
             connect(main_window_.get()->libraryPanel(), &LibraryWidget::sgnSwitchPlaylist, this,
-                    [this]() {
-                        std::string tracks = std::format(
-                            "{} track(s)", playlist_controller_->current_playlist()->track_count());
-                        this->status_bar_controller_->update_item_by_id("playlist_track_num",
-                                                                        tracks.c_str());
-                    });
+                    show_track_count);
         },
         Qt::SingleShotConnection);
 }

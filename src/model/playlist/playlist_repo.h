@@ -7,7 +7,9 @@
 #include <QString>
 #include <QUuid>
 #include <QVector>
+
 #include <memory>
+#include <utility>
 
 class PlaylistRepo : public QObject
 {
@@ -29,6 +31,8 @@ public:
     std::shared_ptr<Playlist> findPlaylistById(const PlaylistId& pid);
     void addTrackToPlaylist(const PlaylistId& pid, const QString& filepath);
     void addTracksToPlaylist(const PlaylistId& pid, const QStringList& filepaths);
+    void addTrackObject(const PlaylistId& pid, const Track& track);
+    void addTrackObjects(const PlaylistId& pid, const QVector<Track>& tracks);
     bool isEmpty();
     const QVector<std::shared_ptr<Playlist>>& getLists();
 
@@ -47,9 +51,10 @@ signals:
 private:
     QString cacheFilePath(const PlaylistId& pid) const;
     void loadCacheFromDisk();
-    QVector<std::shared_ptr<Playlist>> loadCacheFromDiskToVector() const;
+    QVector<std::pair<std::shared_ptr<Playlist>, bool>> loadCacheFromDiskToVector() const;
     bool loadJsonPlaylist(const QByteArray& data, const QString& fallbackName,
-                          std::shared_ptr<Playlist>& out_playlist) const;
+                          std::shared_ptr<Playlist>& out_playlist,
+                          bool* out_legacy_format = nullptr) const;
     bool writeJsonPlaylist(QIODevice& device, const std::shared_ptr<Playlist>& playlist) const;
 
     QVector<std::shared_ptr<Playlist>> m_list;
