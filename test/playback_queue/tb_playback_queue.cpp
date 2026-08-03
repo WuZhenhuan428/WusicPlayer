@@ -390,15 +390,15 @@ static void test_service_external()
 static void test_service_playlist_entry()
 {
     PlaylistManager pm;
-    pm.createPlaylist();
-    auto pls = pm.getPlaylists();
+    pm.create_playlist();
+    auto pls = pm.get_playlists();
     CHECK(!pls.isEmpty());
     if (pls.isEmpty()) {
         return;
     }
     const PlaylistId pid = pls.first()->id();
-    pm.addTrack(pid, "/mnt/music/playlist_song.mp3");
-    const auto& tracks = pls.first()->getTracks();
+    pm.add_track(pid, "/mnt/music/playlist_song.mp3");
+    const auto& tracks = pls.first()->get_tracks();
     CHECK(!tracks.isEmpty());
     if (tracks.isEmpty()) {
         return;

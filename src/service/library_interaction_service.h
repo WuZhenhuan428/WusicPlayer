@@ -21,7 +21,7 @@ public:
     void bind();
 
 private:
-    void refreshPlaylistView();
+    void refresh_playlist_view();
 
 private:
     PlaylistTreeWidget* m_playlist_tree_widget;

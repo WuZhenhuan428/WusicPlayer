@@ -1,4 +1,4 @@
-#include "controller/PlaylistController.h"
+#include "controller/playlist_controller.h"
 #include "controller/search_backend/in_memory_search_backend.h"
 #include "core/search_types.h"
 #include "core/utils/path.hpp"
@@ -75,24 +75,24 @@ static void test_search_current_playlist(QCoreApplication& app)
     // 播放列表:两首库引用条目 + 一首外部条目(内联 meta)
     PlaylistManager pm;
     pm.set_library_manager(&lib);
-    pm.createPlaylist();
-    auto playlists = pm.getPlaylists();
+    pm.create_playlist();
+    auto playlists = pm.get_playlists();
     CHECK(playlists.size() == 1);
     if (playlists.isEmpty()) {
         return;
     }
     const PlaylistId pid = playlists.first()->id();
-    pm.addTrack(pid, music_dir.path() + "/song one.mp3");
-    pm.addTrack(pid, music_dir.path() + "/other.mp3");
+    pm.add_track(pid, music_dir.path() + "/song one.mp3");
+    pm.add_track(pid, music_dir.path() + "/other.mp3");
 
     Track ext        = Track::from_filepath("/mnt/music/ext song.mp3");
     ext.meta.title   = "Ext Song";
     ext.meta.artist  = "Artist";
     ext.meta.isValid = true;
-    pm.m_repo->findPlaylistById(pid)->addTrackObject(ext);
+    pm.m_repo->find_playlist_by_id(pid)->add_track_object(ext);
 
     PlaylistController pc(&pm, nullptr, &app);
-    pc.switchToPlaylist(pid); // 设置当前列表(resolvePid 无显式 pid 时使用)
+    pc.switch_to_playlist(pid); // 设置当前列表(resolve_pid 无显式 pid 时使用)
     InMemorySearchBackend backend(&pc);
     backend.warmup(pid);
 
@@ -132,10 +132,10 @@ static void test_search_current_playlist(QCoreApplication& app)
         CHECK(hits[0].filepath == norm(music_dir.path() + "/other.mp3"));
     }
     // 阶段6:条目身份 → 播放路径解析(播放经身份而非 filepath)
-    const auto& pl_tracks = pm.m_repo->findPlaylistById(pid)->getTracks();
+    const auto& pl_tracks = pm.m_repo->find_playlist_by_id(pid)->get_tracks();
     CHECK(!pl_tracks.isEmpty());
-    CHECK(pc.trackFilePath(pl_tracks[0].entry_id) == norm(music_dir.path() + "/song one.mp3"));
-    CHECK(pc.trackFilePath(EntryId::createUuid()).isEmpty());
+    CHECK(pc.track_file_path(pl_tracks[0].entry_id) == norm(music_dir.path() + "/song one.mp3"));
+    CHECK(pc.track_file_path(EntryId::createUuid()).isEmpty());
 }
 
 int main(int argc, char* argv[])

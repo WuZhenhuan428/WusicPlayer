@@ -36,26 +36,26 @@ public:
     ~PanelCoordinator() override;
 
     // 懒创建并返回快捷键控制器(供配置注册)
-    ShortcutsController* shortcutsController();
+    ShortcutsController* shortcuts_controller();
 
     // 设置/快捷键/搜索面板的 sub config 写入(应用退出时调用)
-    void savePanelConfigs();
+    void save_panel_configs();
 
 public slots:
-    void openSettingsPanel();                          // 默认页
-    void openSettingsPanelPage(const QString& title);  // 指定页(如 "Media Library"/"Lyrics")
-    void openSearchPanel();
-    void openEQWidget();
+    void open_settings_panel();                          // 默认页
+    void open_settings_panel_page(const QString& title);  // 指定页(如 "Media Library"/"Lyrics")
+    void open_search_panel();
+    void open_eq_widget();
 
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override;
 
 private:
-    void ensureSettingsPanel();
-    void ensureShortcutsController();
-    void ensureShortcutsPage();
-    void registerDefaultShortcuts();
-    void ensureSearchPanel();
+    void ensure_settings_panel();
+    void ensure_shortcuts_controller();
+    void ensure_shortcuts_page();
+    void register_default_shortcuts();
+    void ensure_search_panel();
 
     // ---- 非拥有依赖 ----
     MainWindow* main_window_            = nullptr;

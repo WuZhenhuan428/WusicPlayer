@@ -1,8 +1,8 @@
-#include "theme_settings_model.h"
+#include "model/theme_settings_model.h"
 
 ThemeSettingsModel::ThemeSettingsModel(QObject* parent) : QAbstractTableModel(parent) {}
 
-void ThemeSettingsModel::setEntries(const QVector<ThemeEntry>& entries)
+void ThemeSettingsModel::set_entries(const QVector<ThemeEntry>& entries)
 {
     beginResetModel();
     m_entries = entries;

@@ -34,7 +34,7 @@ QSize HSVPalette::sizeHint() const
     return QSize(outer_radius * 2, outer_radius * 2);
 }
 
-hsv_t HSVPalette::getHsv()
+hsv_t HSVPalette::get_hsv()
 {
     if (!m_has_cursor) {
         return hsv_t{};
@@ -42,7 +42,7 @@ hsv_t HSVPalette::getHsv()
     return hsv_t{m_hue, m_saturation, m_value};
 }
 
-rgb_t HSVPalette::getRgb()
+rgb_t HSVPalette::get_rgb()
 {
     if (!m_has_cursor) {
         return rgb_t{};
@@ -51,7 +51,7 @@ rgb_t HSVPalette::getRgb()
     return hsv_to_rgb(hsv);
 }
 
-bool HSVPalette::setHsv(hsv_t hsv)
+bool HSVPalette::set_hsv(hsv_t hsv)
 {
     if (hsv.h < 0.0 || hsv.h > 360.0 || hsv.s < 0.0 || hsv.s > 100.0 || hsv.v < 0.0 ||
         hsv.v > 100.0) {
@@ -64,20 +64,20 @@ bool HSVPalette::setHsv(hsv_t hsv)
 
     m_cursor_rgb = hsv_to_rgb(hsv);
     m_has_cursor = true;
-    updateCursor();
+    update_cursor();
     this->update();
     return true;
 }
 
-bool HSVPalette::setRgb(rgb_t rgb)
+bool HSVPalette::set_rgb(rgb_t rgb)
 {
-    if (setHsv(rgb_to_hsv(rgb))) {
+    if (set_hsv(rgb_to_hsv(rgb))) {
         return true;
     }
     return false;
 }
 
-void HSVPalette::updateCursor()
+void HSVPalette::update_cursor()
 {
     const double x = left + (m_saturation / 100.0) * (right - left);
     const double y = bottom - (m_value / 100.0) * (bottom - top);
@@ -88,17 +88,17 @@ void HSVPalette::updateCursor()
         std::lround(std::clamp(y, static_cast<double>(top), static_cast<double>(bottom))));
 }
 
-void HSVPalette::setInnerRadius(uint radius)
+void HSVPalette::set_inner_radius(uint radius)
 {
     inner_radius = radius;
 }
 
-void HSVPalette::setOuterRadius(uint radius)
+void HSVPalette::set_outer_radius(uint radius)
 {
     outer_radius = radius;
 }
 
-bool HSVPalette::isInHueRing(uint x, uint y)
+bool HSVPalette::is_in_hue_ring(uint x, uint y)
 {
     float dist = distance(x, y, outer_radius, outer_radius);
     if (dist >= inner_radius && dist <= outer_radius) {
@@ -107,7 +107,7 @@ bool HSVPalette::isInHueRing(uint x, uint y)
     return false;
 }
 
-bool HSVPalette::isInRect(uint x, uint y)
+bool HSVPalette::is_in_rect(uint x, uint y)
 {
     if ((x >= (center - half_width)) && (x <= (center + half_width))) {
         if ((y >= (center - half_width)) && (y <= (center + half_width))) {
@@ -117,7 +117,7 @@ bool HSVPalette::isInRect(uint x, uint y)
     return false;
 }
 
-void HSVPalette::paintHueRing(QPainter* painter)
+void HSVPalette::paint_hue_ring(QPainter* painter)
 {
     if (!m_cache_hue_ring_valid) {
         m_cache_hue_ring =
@@ -129,8 +129,8 @@ void HSVPalette::paintHueRing(QPainter* painter)
             for (uint x = 0; x < outer_radius * 2; x++) {
                 rgb_t hue_rgb;
                 unsigned char alpha;
-                if (isInHueRing(x, y)) {
-                    float hue = coordToHue(x, y);
+                if (is_in_hue_ring(x, y)) {
+                    float hue = coord_to_hue(x, y);
 
                     hsv_t hsv = {.h = hue, .s = 100.0, .v = 100.0};
                     hue_rgb   = hsv_to_rgb(hsv);
@@ -154,7 +154,7 @@ void HSVPalette::paintHueRing(QPainter* painter)
     m_cache_rect_valid = false;
 }
 
-double HSVPalette::coordToHue(uint x, uint y)
+double HSVPalette::coord_to_hue(uint x, uint y)
 {
     const float dx      = static_cast<float>(x) - static_cast<float>(outer_radius);
     const float dy      = static_cast<float>(y) - static_cast<float>(outer_radius);
@@ -169,7 +169,7 @@ double HSVPalette::coordToHue(uint x, uint y)
     return angle_d;
 }
 
-double HSVPalette::coordToSaturation(uint x)
+double HSVPalette::coord_to_saturation(uint x)
 {
     if (right <= left)
         return 0.0;
@@ -177,7 +177,7 @@ double HSVPalette::coordToSaturation(uint x)
     return std::clamp(s, 0.0, 100.0);
 }
 
-double HSVPalette::coordToValue(uint y)
+double HSVPalette::coord_to_value(uint y)
 {
     if (bottom <= top)
         return 0.0;
@@ -185,7 +185,7 @@ double HSVPalette::coordToValue(uint y)
     return std::clamp(v, 0.0, 100.0);
 }
 
-void HSVPalette::paintRect(QPainter* painter)
+void HSVPalette::paint_rect(QPainter* painter)
 {
     if (!m_cache_rect_valid) {
         m_cache_rect_valid = true;
@@ -197,11 +197,11 @@ void HSVPalette::paintRect(QPainter* painter)
 
         for (uint x = 0; x < outer_radius * 2; x++) {
             for (uint y = 0; y < outer_radius * 2; y++) {
-                if (isInRect(x, y)) {
+                if (is_in_rect(x, y)) {
                     hsv_t hsv;
                     hsv.h          = m_hue;
-                    hsv.s          = coordToSaturation(x);
-                    hsv.v          = coordToValue(y);
+                    hsv.s          = coord_to_saturation(x);
+                    hsv.v          = coord_to_value(y);
                     rgb_t rect_rgb = hsv_to_rgb((hsv));
 
                     rect_painter.setPen(QColor(rect_rgb.r, rect_rgb.g, rect_rgb.b, 0xFF));
@@ -216,7 +216,7 @@ void HSVPalette::paintRect(QPainter* painter)
     painter->drawImage(target, m_cache_rect, source);
 }
 
-void HSVPalette::paintCursor(QPainter* painter)
+void HSVPalette::paint_cursor(QPainter* painter)
 {
     if (!m_has_cursor) {
         return;
@@ -237,9 +237,9 @@ void HSVPalette::paintEvent(QPaintEvent*)
 {
     QPainter painter(this);
 
-    this->paintRect(&painter);
-    this->paintCursor(&painter);
-    this->paintHueRing(&painter);
+    this->paint_rect(&painter);
+    this->paint_cursor(&painter);
+    this->paint_hue_ring(&painter);
 }
 
 void HSVPalette::mousePressEvent(QMouseEvent* event)
@@ -247,18 +247,18 @@ void HSVPalette::mousePressEvent(QMouseEvent* event)
     if (event->button() == Qt::LeftButton) {
         int x = event->pos().x();
         int y = event->pos().y();
-        if (isInHueRing(x, y)) {
-            m_hue        = coordToHue(x, y);
+        if (is_in_hue_ring(x, y)) {
+            m_hue        = coord_to_hue(x, y);
             rgb_t rgb    = hsv_to_rgb(hsv_t{m_hue, m_saturation, m_value});
             m_cursor_rgb = rgb;
             m_has_cursor = true;
-            updateCursor();
+            update_cursor();
 
             drag_ring_mode = true;
             drag_rect_mode = false;
-        } else if (isInRect(x, y)) {
-            m_saturation = coordToSaturation(x);
-            m_value      = coordToValue(y);
+        } else if (is_in_rect(x, y)) {
+            m_saturation = coord_to_saturation(x);
+            m_value      = coord_to_value(y);
             hsv_t hsv;
             hsv.h          = m_hue;
             hsv.s          = m_saturation;
@@ -285,7 +285,7 @@ void HSVPalette::mouseMoveEvent(QMouseEvent* event)
         int x = event->pos().x();
         int y = event->pos().y();
         if (drag_ring_mode) {
-            m_hue        = coordToHue(x, y);
+            m_hue        = coord_to_hue(x, y);
 
             rgb_t rgb    = hsv_to_rgb(hsv_t{m_hue, m_saturation, m_value});
             m_cursor_rgb = rgb;
@@ -294,8 +294,8 @@ void HSVPalette::mouseMoveEvent(QMouseEvent* event)
             this->update();
         }
         if (drag_rect_mode) {
-            m_saturation = coordToSaturation(static_cast<uint>(x));
-            m_value      = coordToValue(static_cast<uint>(y));
+            m_saturation = coord_to_saturation(static_cast<uint>(x));
+            m_value      = coord_to_value(static_cast<uint>(y));
 
             m_cursor_x   = static_cast<uint>(std::clamp(static_cast<float>(x), left, right));
             m_cursor_y   = static_cast<uint>(std::clamp(static_cast<float>(y), top, bottom));

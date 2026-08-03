@@ -1,9 +1,9 @@
 #pragma once
 
 #include "core/types.h"
-#include "playlist.h"
-#include "playlist_layout.h"
-#include "playlist_repo.h"
+#include "model/playlist/playlist.h"
+#include "model/playlist/playlist_layout.h"
+#include "model/playlist/playlist_repo.h"
 
 #include <QAbstractTableModel>
 #include <QHash>
@@ -24,21 +24,21 @@ public:
     ~PlaylistViewModel();
 
     void rebuild();
-    void rebuildAsync();
+    void rebuild_async();
 
     /* ==== Context & Repo 绑定 ==== */
-    void setPlaylist(const PlaylistId& pid);
-    void setSortExpression(const QString& expression);
-    void setGroupRules(const QVector<SortRule>& rules);
-    void setSortRules(const QVector<SortRule>& rules);
-    const QVector<SortRule> groupRules() const;
-    const QVector<SortRule> sortRules() const;
+    void set_playlist(const PlaylistId& pid);
+    void set_sort_expression(const QString& expression);
+    void set_group_rules(const QVector<SortRule>& rules);
+    void set_sort_rules(const QVector<SortRule>& rules);
+    const QVector<SortRule> group_rules() const;
+    const QVector<SortRule> sort_rules() const;
 
     /**
      * @attention default group rule = title or filename if title does not exist
      */
-    void setSingleGrouping(SortRule rule);
-    void setActiveTrack(const EntryId& tid);
+    void set_single_grouping(SortRule rule);
+    void set_active_track(const EntryId& tid);
     void clear();
 
     /* ==== View视图数据访问 ====*/
@@ -60,34 +60,34 @@ public:
 
     // Helper to get logic data
     PlaybackQueueSnapshot
-    playbackQueueSnapshot() const; // return value but not ptr because use rebuildAsync()
-    PlaybackQueueSnapshot singleShuffleQueueSnapshot() const;
-    PlaybackQueueSnapshot groupShuffleQueueSnapshot() const;
-    EntryId trackAt(int index) const; // Still useful for linear queue access
-    EntryId trackAt(const QModelIndex& index) const;
-    QModelIndex getCurrentTrackIndex();
-    const QVector<EntryId>& playbackQueue() const;
+    playback_queue_snapshot() const; // return value but not ptr because use rebuild_async()
+    PlaybackQueueSnapshot single_shuffle_queue_snapshot() const;
+    PlaybackQueueSnapshot group_shuffle_queue_snapshot() const;
+    EntryId track_at(int index) const; // Still useful for linear queue access
+    EntryId track_at(const QModelIndex& index) const;
+    QModelIndex get_current_track_index();
+    const QVector<EntryId>& playback_queue() const;
 
-    const Playlist& resolvePlaylist();
+    const Playlist& resolve_playlist();
 
     /* ==== Dynamic Column Management ==== */
-    void insertColumn(int index, const TableColumn& column);
-    void removeColumn(int index);
-    void setColumns(const QVector<TableColumn>& columns);
-    const QVector<TableColumn>& getColumns() const;
+    void insert_column(int index, const TableColumn& column);
+    void remove_column(int index);
+    void set_columns(const QVector<TableColumn>& columns);
+    const QVector<TableColumn>& get_columns() const;
 
     /* ==== 播放顺序辅助（用于Player） ==== */
-    QVector<EntryId> generateGroupShuffleQueue();
-    QVector<EntryId> generateSingleShuffleQueue();
+    QVector<EntryId> generate_group_shuffle_queue();
+    QVector<EntryId> generate_single_shuffle_queue();
 
 private:
     QVector<TableColumn> m_columns;
-    void initDefaultColumns();
+    void init_default_columns();
 
-    QModelIndex findTrackIndex(const EntryId& tid) const;
+    QModelIndex find_track_index(const EntryId& tid) const;
     QPersistentModelIndex m_active_track_index;
 
-    void scheduleBatchRebuild();
+    void schedule_batch_rebuild();
 
 signals:
     void changedPlaybackQueue();

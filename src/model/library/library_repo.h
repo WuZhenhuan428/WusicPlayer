@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/search_types.h"
-#include "library_track.h"
+#include "model/library/library_track.h"
 
 #include <QObject>
 #include <QSqlDatabase>

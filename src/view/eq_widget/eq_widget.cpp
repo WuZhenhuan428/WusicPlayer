@@ -1,4 +1,4 @@
-#include "eq_widget.h"
+#include "view/eq_widget/eq_widget.h"
 
 #include "core/player/config.h"
 

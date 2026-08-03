@@ -1,4 +1,4 @@
-#include "playback_service.h"
+#include "service/playback_service.h"
 
 PlaybackService::PlaybackService(MainWindow* main_window, PlaybackController* playback_ctl,
                                  PlaylistController* playlist_ctl, QObject* parent) :
@@ -6,7 +6,7 @@ PlaybackService::PlaybackService(MainWindow* main_window, PlaybackController* pl
     m_playlist_ctl(playlist_ctl)
 {
     assert(main_window_ && m_playback_ctl && m_playlist_ctl);
-    m_control_bar = main_window_->controlBarWidget();
+    m_control_bar = main_window_->control_bar_widget();
     assert(m_control_bar);
 }
 
@@ -18,8 +18,8 @@ void PlaybackService::bind()
         return;
     }
     connect(main_window_, &MainWindow::sgnPlayTrackRequested, this,
-            &PlaybackService::handlePlayTrackRequest);
-    connect(m_control_bar, &WControlBar::sgnBtnPlayPauseClicked, m_playback_ctl,
+            &PlaybackService::handle_play_track_request);
+    connect(m_control_bar, &ControlBar::sgnBtnPlayPauseClicked, m_playback_ctl,
             [this](bool is_request_play) {
                 if (is_request_play) {
                     m_playback_ctl->play();
@@ -27,79 +27,79 @@ void PlaybackService::bind()
                     m_playback_ctl->pause();
                 }
             });
-    connect(m_control_bar, &WControlBar::sgnBtnStopClicked, m_playback_ctl,
+    connect(m_control_bar, &ControlBar::sgnBtnStopClicked, m_playback_ctl,
             &PlaybackController::stop);
-    connect(m_control_bar, &WControlBar::sgnBtnMuteClicked, m_playback_ctl,
-            &PlaybackController::flipMute);
-    connect(m_control_bar, &WControlBar::sgnInOrder, this,
-            [this]() { m_playlist_ctl->setPlayMode(PlayMode::in_order); });
-    connect(m_control_bar, &WControlBar::sgnLoop, this,
-            [this]() { m_playlist_ctl->setPlayMode(PlayMode::loop); });
-    connect(m_control_bar, &WControlBar::sgnShuffle, this,
-            [this]() { m_playlist_ctl->setPlayMode(PlayMode::shuffle); });
-    connect(m_control_bar, &WControlBar::sgnOutOfOrderTrack, this,
-            [this]() { m_playlist_ctl->setPlayMode(PlayMode::out_of_order_track); });
-    connect(m_control_bar, &WControlBar::sgnOutOfOrderGroup, this,
-            [this]() { m_playlist_ctl->setPlayMode(PlayMode::out_of_order_group); });
-    connect(m_control_bar, &WControlBar::sgnSliderPositionReleased, this,
-            [this](int percent) { m_playback_ctl->setPosition(percent * 1000); });
-    connect(m_control_bar, &WControlBar::sgnSliderVolumeReleased, m_playback_ctl,
-            &PlaybackController::setVolume);
-    connect(m_control_bar, &WControlBar::sgnSliderVolumeMoved, m_playback_ctl,
-            &PlaybackController::setVolume);
-    connect(m_control_bar, &WControlBar::sgnSelectDeviceId, m_playback_ctl,
-            &PlaybackController::setDeviceById);
+    connect(m_control_bar, &ControlBar::sgnBtnMuteClicked, m_playback_ctl,
+            &PlaybackController::flip_mute);
+    connect(m_control_bar, &ControlBar::sgnInOrder, this,
+            [this]() { m_playlist_ctl->set_play_mode(PlayMode::in_order); });
+    connect(m_control_bar, &ControlBar::sgnLoop, this,
+            [this]() { m_playlist_ctl->set_play_mode(PlayMode::loop); });
+    connect(m_control_bar, &ControlBar::sgnShuffle, this,
+            [this]() { m_playlist_ctl->set_play_mode(PlayMode::shuffle); });
+    connect(m_control_bar, &ControlBar::sgnOutOfOrderTrack, this,
+            [this]() { m_playlist_ctl->set_play_mode(PlayMode::out_of_order_track); });
+    connect(m_control_bar, &ControlBar::sgnOutOfOrderGroup, this,
+            [this]() { m_playlist_ctl->set_play_mode(PlayMode::out_of_order_group); });
+    connect(m_control_bar, &ControlBar::sgnSliderPositionReleased, this,
+            [this](int percent) { m_playback_ctl->set_position(percent * 1000); });
+    connect(m_control_bar, &ControlBar::sgnSliderVolumeReleased, m_playback_ctl,
+            &PlaybackController::set_volume);
+    connect(m_control_bar, &ControlBar::sgnSliderVolumeMoved, m_playback_ctl,
+            &PlaybackController::set_volume);
+    connect(m_control_bar, &ControlBar::sgnSelectDeviceId, m_playback_ctl,
+            &PlaybackController::set_device_by_id);
 
-    connect(m_playback_ctl, &PlaybackController::sgnDevicesChanged, m_control_bar,
-            &WControlBar::setDevice);
-    connect(m_playback_ctl, &PlaybackController::sgnPositionChanged, m_control_bar,
-            &WControlBar::updatePosition);
-    connect(m_playback_ctl, &PlaybackController::sgnPlaybackStateChanged, m_control_bar,
-            &WControlBar::updateButtonStatus);
-    connect(m_playback_ctl, &PlaybackController::sgnDurationChanged, m_control_bar,
-            &WControlBar::updateDuration);
-    connect(m_playlist_ctl, &PlaylistController::playModeChanged, this,
-            [this](PlayMode mode) { m_control_bar->setPlayMode(mode); });
-    connect(m_playback_ctl, &PlaybackController::sgnVolumeChanged, m_control_bar,
-            &WControlBar::updateVolumeSlider);
-    connect(m_playback_ctl, &PlaybackController::sgnMuteChanged, m_control_bar,
-            &WControlBar::updateMuteButton);
+    connect(m_playback_ctl, &PlaybackController::sgn_devices_changed, m_control_bar,
+            &ControlBar::set_device);
+    connect(m_playback_ctl, &PlaybackController::sgn_position_changed, m_control_bar,
+            &ControlBar::update_position);
+    connect(m_playback_ctl, &PlaybackController::sgn_playback_state_changed, m_control_bar,
+            &ControlBar::update_button_status);
+    connect(m_playback_ctl, &PlaybackController::sgn_duration_changed, m_control_bar,
+            &ControlBar::update_duration);
+    connect(m_playlist_ctl, &PlaylistController::sgn_play_mode_changed, this,
+            [this](PlayMode mode) { m_control_bar->set_play_mode(mode); });
+    connect(m_playback_ctl, &PlaybackController::sgn_volume_changed, m_control_bar,
+            &ControlBar::update_volume_slider);
+    connect(m_playback_ctl, &PlaybackController::sgn_mute_changed, m_control_bar,
+            &ControlBar::update_mute_button);
 
-    connect(m_control_bar, &WControlBar::sgnBtnNextClicked, this, [this]() {
-        const EntryId next_id = m_playlist_ctl->nextTrack();
+    connect(m_control_bar, &ControlBar::sgnBtnNextClicked, this, [this]() {
+        const EntryId next_id = m_playlist_ctl->next_track();
         if (!next_id.isNull()) {
             locate_on_next_play_request_ = true;
-            const QString path           = m_playlist_ctl->trackFilePath(next_id);
+            const QString path           = m_playlist_ctl->track_file_path(next_id);
             if (!path.isEmpty()) {
-                main_window_->playTrackInUi(path);
+                main_window_->play_track_in_ui(path);
             }
         }
     });
 
-    connect(m_control_bar, &WControlBar::sgnBtnPrevClicked, this, [this]() {
-        const EntryId prev_id = m_playlist_ctl->prevTrack();
+    connect(m_control_bar, &ControlBar::sgnBtnPrevClicked, this, [this]() {
+        const EntryId prev_id = m_playlist_ctl->prev_track();
         if (!prev_id.isNull()) {
             locate_on_next_play_request_ = true;
-            const QString path           = m_playlist_ctl->trackFilePath(prev_id);
+            const QString path           = m_playlist_ctl->track_file_path(prev_id);
             if (!path.isEmpty()) {
-                main_window_->playTrackInUi(path);
+                main_window_->play_track_in_ui(path);
             }
         }
     });
 
-    connect(m_playback_ctl, &PlaybackController::sgnPlaybackNatualEnd, this, [this]() {
-        const EntryId next_id = m_playlist_ctl->nextTrack();
+    connect(m_playback_ctl, &PlaybackController::sgn_playback_natural_end, this, [this]() {
+        const EntryId next_id = m_playlist_ctl->next_track();
         if (!next_id.isNull()) {
             locate_on_next_play_request_ = true;
-            const QString path           = m_playlist_ctl->trackFilePath(next_id);
+            const QString path           = m_playlist_ctl->track_file_path(next_id);
             if (!path.isEmpty()) {
-                main_window_->playTrackInUi(path);
+                main_window_->play_track_in_ui(path);
             }
         }
     });
 
-    connect(m_playlist_ctl, &PlaylistController::requestPlay, this,
-            [this](const QString& filepath) { main_window_->playTrackInUi(filepath); });
+    connect(m_playlist_ctl, &PlaylistController::sgn_request_play, this,
+            [this](const QString& filepath) { main_window_->play_track_in_ui(filepath); });
 
     m_bound = true;
 }
@@ -108,24 +108,24 @@ void PlaybackService::start() {}
 
 void PlaybackService::shutdown() {}
 
-void PlaybackService::handlePlayTrackRequest(const QString& filepath)
+void PlaybackService::handle_play_track_request(const QString& filepath)
 {
     if (filepath.isEmpty()) {
         locate_on_next_play_request_ = false;
         return;
     }
 
-    auto* sidePanel = main_window_->sidePanel();
+    auto* side_panel = main_window_->side_panel();
 
     m_playback_ctl->read(filepath);
-    sidePanel->loadCover(filepath);
+    side_panel->load_cover(filepath);
 
     if (locate_on_next_play_request_) {
         emit sgnLocateCurrentTrack();
     }
     locate_on_next_play_request_ = false;
 
-    TrackMetaData meta           = m_playlist_ctl->currentMetadata();
-    sidePanel->loadLyrics(meta);
-    sidePanel->loadMetaData(meta);
+    TrackMetaData meta           = m_playlist_ctl->current_metadata();
+    side_panel->load_lyrics(meta);
+    side_panel->load_meta_data(meta);
 }

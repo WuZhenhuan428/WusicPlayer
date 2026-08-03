@@ -241,7 +241,7 @@ static void test_manager_scan()
     CHECK(mgr2.track_by_path(p).has_value());
 }
 
-/* ---- 播放列表-音乐库集成:addTrack 通过库解析 ---- */
+/* ---- 播放列表-音乐库集成:add_track 通过库解析 ---- */
 static void test_playlist_library_resolution()
 {
     QTemporaryDir data_dir;
@@ -271,15 +271,15 @@ static void test_playlist_library_resolution()
 
     PlaylistManager pm;
     pm.set_library_manager(&lib);
-    pm.createPlaylist();
-    auto playlists = pm.getPlaylists();
+    pm.create_playlist();
+    auto playlists = pm.get_playlists();
     CHECK(playlists.size() == 1);
     const PlaylistId pid = playlists.last()->id();
 
     // 库内文件 → 库引用条目(元数据走库缓存)
     const QString f1     = music_dir.path() + "/r1.mp3";
-    pm.addTrack(pid, f1);
-    auto tracks = playlists.last()->getTracks();
+    pm.add_track(pid, f1);
+    auto tracks = playlists.last()->get_tracks();
     CHECK(tracks.size() == 1);
     CHECK(tracks[0].source == TrackSource::library);
     CHECK(!tracks[0].library_track_id.isNull());
@@ -288,8 +288,8 @@ static void test_playlist_library_resolution()
 
     // 库外文件 → 外部条目(不强制入库)
     const QString f3 = make_audio_file(music_dir.path(), "external.mp3");
-    pm.addTrack(pid, f3);
-    tracks = playlists.last()->getTracks();
+    pm.add_track(pid, f3);
+    tracks = playlists.last()->get_tracks();
     CHECK(tracks.size() == 2);
     CHECK(tracks[1].source == TrackSource::external);
     CHECK(tracks[1].library_track_id.isNull());
@@ -346,7 +346,7 @@ static void test_search_backend()
     CHECK(hints.isEmpty());
 }
 
-/* ---- addFolder 触发库扫描(搜索依赖库被填充) ---- */
+/* ---- add_folder 触发库扫描(搜索依赖库被填充) ---- */
 static void test_add_folder_populates_library()
 {
     QTemporaryDir data_dir;
@@ -371,19 +371,19 @@ static void test_add_folder_populates_library()
 
     PlaylistManager pm;
     pm.set_library_manager(&lib);
-    pm.createPlaylist();
-    auto playlists = pm.getPlaylists();
+    pm.create_playlist();
+    auto playlists = pm.get_playlists();
     CHECK(playlists.size() == 1);
     const PlaylistId pid = playlists.last()->id();
 
-    // addFolder 应同时把目录加入库监控并触发扫描
-    pm.addFolder(pid, music_dir.path());
+    // add_folder 应同时把目录加入库监控并触发扫描
+    pm.add_folder(pid, music_dir.path());
     loop.exec();
     CHECK(lib_scanned);
     CHECK(lib.track_count() == 2); // 库被填充 → 搜索可用
 
     // 库扫描完成后,播放列表外部条目升级为库引用
-    const auto& tracks = playlists.last()->getTracks();
+    const auto& tracks = playlists.last()->get_tracks();
     CHECK(tracks.size() == 2);
     for (const auto& t : tracks) {
         CHECK(t.source == TrackSource::library);

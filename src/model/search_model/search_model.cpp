@@ -1,4 +1,4 @@
-#include "search_model.h"
+#include "model/search_model/search_model.h"
 
 #include "controller/search_backend/i_search_backend.h"
 #include <utility>
@@ -28,44 +28,44 @@ SearchModel::SearchModel(ISearchBackend* backend, QObject* parent) :
 
 SearchModel::~SearchModel() {}
 
-void SearchModel::searchRequest(SearchQuery query)
+void SearchModel::search_request(SearchQuery query)
 {
     m_last_query = std::move(query);
 
     if (m_last_query.keyword.trimmed().isEmpty()) {
-        clearResults();
+        clear_results();
         return;
     }
 
     if (!m_backend) {
-        clearResults();
+        clear_results();
         return;
     }
 
     const QVector<SearchHint> results = m_backend->search(m_last_query);
-    setResults(results);
+    set_results(results);
 }
 
-void SearchModel::setResults(const QVector<SearchHint>& results)
+void SearchModel::set_results(const QVector<SearchHint>& results)
 {
     beginResetModel();
     m_search_hint = results;
     endResetModel();
 }
 
-void SearchModel::setBackend(ISearchBackend* backend)
+void SearchModel::set_backend(ISearchBackend* backend)
 {
     m_backend = backend;
 }
 
-void SearchModel::clearResults()
+void SearchModel::clear_results()
 {
     beginResetModel();
     m_search_hint.clear();
     endResetModel();
 }
 
-TrackId SearchModel::trackIdAt(int row) const
+TrackId SearchModel::track_id_at(int row) const
 {
     if (row < 0 || row >= m_search_hint.size()) {
         return TrackId{};
@@ -73,7 +73,7 @@ TrackId SearchModel::trackIdAt(int row) const
     return m_search_hint[row].track_id;
 }
 
-SearchHint SearchModel::hintAt(int row) const
+SearchHint SearchModel::hint_at(int row) const
 {
     if (row < 0 || row >= m_search_hint.size()) {
         return SearchHint{};
@@ -81,12 +81,12 @@ SearchHint SearchModel::hintAt(int row) const
     return m_search_hint[row];
 }
 
-int SearchModel::totalHits() const
+int SearchModel::total_hits() const
 {
     return m_search_hint.size();
 }
 
-const SearchQuery& SearchModel::lastQuery() const
+const SearchQuery& SearchModel::last_query() const
 {
     return m_last_query;
 }

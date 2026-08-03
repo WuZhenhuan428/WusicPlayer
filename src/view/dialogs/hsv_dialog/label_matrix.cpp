@@ -58,7 +58,7 @@ LabelMatrix::LabelMatrix(QWidget* parent) : QWidget(parent)
         const int number = str.toInt();
         int num_clamped  = std::clamp(number, 0x00, 0xFF);
         m_rgb.r          = num_clamped;
-        updateHSV();
+        update_hsv();
         emit sgnEditColor(m_hsv);
     });
 
@@ -66,7 +66,7 @@ LabelMatrix::LabelMatrix(QWidget* parent) : QWidget(parent)
         const int number = str.toInt();
         int num_clamped  = std::clamp(number, 0x00, 0xFF);
         m_rgb.g          = num_clamped;
-        updateHSV();
+        update_hsv();
         emit sgnEditColor(m_hsv);
     });
 
@@ -74,7 +74,7 @@ LabelMatrix::LabelMatrix(QWidget* parent) : QWidget(parent)
         const int number = str.toInt();
         int num_clamped  = std::clamp(number, 0x00, 0xFF);
         m_rgb.b          = num_clamped;
-        updateHSV();
+        update_hsv();
         emit sgnEditColor(m_hsv);
     });
 
@@ -82,7 +82,7 @@ LabelMatrix::LabelMatrix(QWidget* parent) : QWidget(parent)
         const double number = str.toInt();
         double num_clamped  = std::clamp(number, 0.0, 360.0);
         m_hsv.h             = num_clamped;
-        updateRGB();
+        update_rgb();
         emit sgnEditColor(m_hsv);
     });
 
@@ -90,7 +90,7 @@ LabelMatrix::LabelMatrix(QWidget* parent) : QWidget(parent)
         const double number = str.toInt();
         double num_clamped  = std::clamp(number, 0.0, 100.0);
         m_hsv.s             = num_clamped;
-        updateRGB();
+        update_rgb();
         emit sgnEditColor(m_hsv);
     });
 
@@ -98,12 +98,12 @@ LabelMatrix::LabelMatrix(QWidget* parent) : QWidget(parent)
         const double number = str.toInt();
         double num_clamped  = std::clamp(number, 0.0, 100.0);
         m_hsv.v             = num_clamped;
-        updateRGB();
+        update_rgb();
         emit sgnEditColor(m_hsv);
     });
 }
 
-void LabelMatrix::setHSV(hsv_t hsv)
+void LabelMatrix::set_hsv(hsv_t hsv)
 {
     m_leH->setText(QString::number((hsv.h)));
     m_leS->setText(QString::number((hsv.s)));
@@ -115,12 +115,12 @@ void LabelMatrix::setHSV(hsv_t hsv)
     m_leB->setText(QString::number((rgb.b)));
 }
 
-void LabelMatrix::updateRGB()
+void LabelMatrix::update_rgb()
 {
     m_rgb = hsv_to_rgb(m_hsv);
 }
 
-void LabelMatrix::updateHSV()
+void LabelMatrix::update_hsv()
 {
     m_hsv = rgb_to_hsv(m_rgb);
 }

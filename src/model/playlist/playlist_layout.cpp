@@ -13,8 +13,8 @@ createComparator(const QVector<SortRule>& rules)
 {
     return [rules](const Node* a, const Node* b) -> bool {
         for (const auto& rule : rules) {
-            QVariant valA = PlaylistLayoutBuilder::getMetaDataValue(a->meta, rule.type);
-            QVariant valB = PlaylistLayoutBuilder::getMetaDataValue(b->meta, rule.type);
+            QVariant valA = PlaylistLayoutBuilder::get_metadata_value(a->meta, rule.type);
+            QVariant valB = PlaylistLayoutBuilder::get_metadata_value(b->meta, rule.type);
 
             int cmp       = 0;
             if (valA.typeId() == QMetaType::Int) {
@@ -40,7 +40,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist)
 
     // get tracks' metadata
     QVector<Node*> trackNodes;
-    QVector<Track> tracks = playlist.getTracks();
+    QVector<Track> tracks = playlist.get_tracks();
     for (const auto& t : tracks) {
         Node* node    = new Node();
         node->id      = t.entry_id;
@@ -84,7 +84,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist)
 
             QMap<QString, QVector<Node*>> buckets;
             for (Node* node : nodes) {
-                QString key = getMetaDataValue(node->meta, current_sort_rule.type).toString();
+                QString key = get_metadata_value(node->meta, current_sort_rule.type).toString();
                 // @note: utils::audio::parse_to_local_meta()将对内容进行格式化, if表达式将废弃
                 if (key.isEmpty())
                     key = "unknown";
@@ -127,7 +127,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist)
     return result;
 }
 
-void PlaylistLayoutBuilder::updateSort(SortRule rule, bool overrideExisting)
+void PlaylistLayoutBuilder::update_sort(SortRule rule, bool overrideExisting)
 {
     if (overrideExisting) {
         m_group_rules.clear();
@@ -157,7 +157,7 @@ void PlaylistLayoutBuilder::updateSort(SortRule rule, bool overrideExisting)
     }
 }
 
-void PlaylistLayoutBuilder::setGroupRule(const QVector<SortRule>& group_rule)
+void PlaylistLayoutBuilder::set_group_rule(const QVector<SortRule>& group_rule)
 {
     this->m_group_rules.clear();
     if (group_rule.isEmpty()) {
@@ -169,7 +169,7 @@ void PlaylistLayoutBuilder::setGroupRule(const QVector<SortRule>& group_rule)
     }
 }
 
-void PlaylistLayoutBuilder::setSortRule(const QVector<SortRule>& sort_rule)
+void PlaylistLayoutBuilder::set_sort_rule(const QVector<SortRule>& sort_rule)
 {
     this->m_sort_rules.clear();
     if (sort_rule.isEmpty()) {
@@ -181,17 +181,17 @@ void PlaylistLayoutBuilder::setSortRule(const QVector<SortRule>& sort_rule)
     }
 }
 
-const QVector<SortRule> PlaylistLayoutBuilder::sortRules() const
+const QVector<SortRule> PlaylistLayoutBuilder::sort_rules() const
 {
     return this->m_sort_rules;
 }
 
-const QVector<SortRule> PlaylistLayoutBuilder::groupRules() const
+const QVector<SortRule> PlaylistLayoutBuilder::group_rules() const
 {
     return this->m_group_rules;
 }
 
-QVariant PlaylistLayoutBuilder::getMetaDataValue(const TrackMetaData& meta, SortType type)
+QVariant PlaylistLayoutBuilder::get_metadata_value(const TrackMetaData& meta, SortType type)
 {
     static const QHash<SortType, QString TrackMetaData::*> strMap{
         {SortType::album, &TrackMetaData::album},

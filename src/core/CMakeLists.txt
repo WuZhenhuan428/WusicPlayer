@@ -7,31 +7,30 @@ add_library(wusic_core STATIC
     utils/audio.hpp
     utils/path.hpp
 
-    ConfigManager/ConfigManager.h
-    ConfigManager/ConfigManager.cpp
-    ConfigManager/IConfigurable.h
+    config_manager/config_manager.h
+    config_manager/config_manager.cpp
+    config_manager/i_configurable.h
 
-    theme/ThemePalette.h
-    theme/WusicProxyStyle.h
-    theme/WusicProxyStyle.cpp
-    theme/ThemeManager.h
-    theme/ThemeManager.cpp
-    theme/builtin/WusicDarkPalette.h
-    theme/builtin/WusicLightPalette.h
-    theme/plugin/IThemePlugin.h
+    theme/theme_palette.h
+    theme/wusic_proxy_style.h
+    theme/wusic_proxy_style.cpp
+    theme/theme_manager.h
+    theme/theme_manager.cpp
+    theme/builtin/wusic_dark_palette.h
+    theme/builtin/wusic_light_palette.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../include/plugin/i_theme_plugin.h
 
-    LyricsFetcher/lyrics_manager.h
-    LyricsFetcher/lyrics_manager.cpp
+    lyrics_fetcher/lyrics_manager.h
+    lyrics_fetcher/lyrics_manager.cpp
 
-    LyricsFetcher/netease_qt6.h
-    LyricsFetcher/netease_qt6.cpp
+    lyrics_fetcher/netease_qt6.h
+    lyrics_fetcher/netease_qt6.cpp
 
     player/config.h
     player/decoder.cpp
     player/decoder.h
     player/device.cpp
     player/device.h
-    player/miniaudio.h
     player/miniaudio_impl.c
     player/player.cpp
     player/player_engine.cpp

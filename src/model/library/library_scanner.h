@@ -1,6 +1,6 @@
 #pragma once
 
-#include "library_track.h"
+#include "model/library/library_track.h"
 
 #include <QHash>
 #include <QObject>

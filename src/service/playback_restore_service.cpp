@@ -1,7 +1,7 @@
-#include "playback_restore_service.h"
+#include "service/playback_restore_service.h"
 
-#include "controller/PlaybackController.h"
-#include "controller/PlaylistController.h"
+#include "controller/playback_controller.h"
+#include "controller/playlist_controller.h"
 
 PlaybackRestoreService::PlaybackRestoreService(PlaylistController* playlist_ctl,
                                                PlaybackController* playback_ctl, QObject* parent) :
@@ -22,30 +22,30 @@ void PlaybackRestoreService::restore()
     if (m_restored == true)
         return;
 
-    m_pending_pid           = m_playlist_ctl->lastPlaylistId();
-    m_pending_tid           = m_playlist_ctl->lastTrackId();
-    m_pending_pos_ms        = m_playback_ctl->lastPositionMs();
-    m_pending_should_resume = m_playback_ctl->lastWasPlaying();
+    m_pending_pid           = m_playlist_ctl->last_playlist_id();
+    m_pending_tid           = m_playlist_ctl->last_track_id();
+    m_pending_pos_ms        = m_playback_ctl->last_position_ms();
+    m_pending_should_resume = m_playback_ctl->last_was_playing();
 
     if (m_pending_pid.isNull())
         return;
 
-    connect(m_playlist_ctl, &PlaylistController::cacheLoadFinished, this,
-            &PlaybackRestoreService::onCacheLoadFinished, Qt::SingleShotConnection);
+    connect(m_playlist_ctl, &PlaylistController::sgn_cache_load_finished, this,
+            &PlaybackRestoreService::on_cache_load_finished, Qt::SingleShotConnection);
 
     m_restored = true;
 }
 
-int PlaybackRestoreService::findQueueIndexByTrackId(const EntryId& tid)
+int PlaybackRestoreService::find_queue_index_by_track_id(const EntryId& tid)
 {
-    if (tid.isNull() || !m_playlist_ctl->viewModel()) {
+    if (tid.isNull() || !m_playlist_ctl->view_model()) {
         return -1;
     }
-    const auto& queue = m_playlist_ctl->viewModel()->playbackQueue();
+    const auto& queue = m_playlist_ctl->view_model()->playback_queue();
     return queue.indexOf(tid);
 }
 
-void PlaybackRestoreService::finalizeRestoreWhenReady(int retry)
+void PlaybackRestoreService::finalize_restore_when_ready(int retry)
 {
     if (retry > 30) {
         return;
@@ -54,35 +54,35 @@ void PlaybackRestoreService::finalizeRestoreWhenReady(int retry)
     const PlayingState curr_state = m_playback_ctl->state();
     if (curr_state == PlayingState::PLAYING || curr_state == PlayingState::PAUSE) {
         if (m_pending_pos_ms > 0) {
-            m_playback_ctl->setPosition(m_pending_pos_ms);
+            m_playback_ctl->set_position(m_pending_pos_ms);
         }
         if (!m_pending_should_resume) {
             m_playback_ctl->pause();
         }
         return;
     }
-    QTimer::singleShot(50, this, [this, retry]() { finalizeRestoreWhenReady(retry + 1); });
+    QTimer::singleShot(50, this, [this, retry]() { finalize_restore_when_ready(retry + 1); });
 }
 
-void PlaybackRestoreService::onCacheLoadFinished()
+void PlaybackRestoreService::on_cache_load_finished()
 {
     if (m_pending_pid.isNull())
         return;
 
-    m_playlist_ctl->switchToPlaylist(m_pending_pid);
-    connect(m_playlist_ctl->viewModel(), &QAbstractItemModel::modelReset, this,
-            &PlaybackRestoreService::onModelReset, Qt::SingleShotConnection);
+    m_playlist_ctl->switch_to_playlist(m_pending_pid);
+    connect(m_playlist_ctl->view_model(), &QAbstractItemModel::modelReset, this,
+            &PlaybackRestoreService::on_model_reset, Qt::SingleShotConnection);
 }
 
-void PlaybackRestoreService::onModelReset()
+void PlaybackRestoreService::on_model_reset()
 {
     if (m_pending_tid.isNull()) {
         qDebug() << "PlaybackRestoreService: m_pending_tid.isNull()";
         return;
     }
-    const int queue_index = findQueueIndexByTrackId(m_pending_tid);
+    const int queue_index = find_queue_index_by_track_id(m_pending_tid);
     if (queue_index < 0)
         return;
     m_playlist_ctl->play(queue_index);
-    QTimer::singleShot(0, this, [this]() { finalizeRestoreWhenReady(0); });
+    QTimer::singleShot(0, this, [this]() { finalize_restore_when_ready(0); });
 }

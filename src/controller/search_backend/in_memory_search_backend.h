@@ -1,6 +1,6 @@
 #pragma once
 
-#include "i_search_backend.h"
+#include "controller/search_backend/i_search_backend.h"
 
 #include <QHash>
 #include <QString>
@@ -28,14 +28,14 @@ private:
         QString album_norm;
     };
 
-    PlaylistId resolvePid(const SearchQuery& query) const;
-    void rebuildIndex(const PlaylistId& pid);
-    bool ensureIndexReady(const PlaylistId& pid);
+    PlaylistId resolve_pid(const SearchQuery& query) const;
+    void rebuild_index(const PlaylistId& pid);
+    bool ensure_index_ready(const PlaylistId& pid);
 
     static QString normalize(const QString& text);
-    static bool fuzzyMatch(const QString& text, const QString& pattern);
-    int scoreTrack(const IndexedTrack& track, const SearchQuery& query,
-                   const QString& keyword_norm) const;
+    static bool fuzzy_match(const QString& text, const QString& pattern);
+    int score_track(const IndexedTrack& track, const SearchQuery& query,
+                    const QString& keyword_norm) const;
 
 private:
     PlaylistController* playlist_controller_ = nullptr;

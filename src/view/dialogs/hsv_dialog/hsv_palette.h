@@ -16,14 +16,14 @@ public:
     explicit HSVPalette(uint inner_radius, uint outer_radius, QWidget* parent = nullptr);
     ~HSVPalette();
 
-    void setInnerRadius(uint radius);
-    void setOuterRadius(uint radius);
+    void set_inner_radius(uint radius);
+    void set_outer_radius(uint radius);
 
-    bool setHsv(hsv_t hsv);
-    bool setRgb(rgb_t rgb);
+    bool set_hsv(hsv_t hsv);
+    bool set_rgb(rgb_t rgb);
 
-    hsv_t getHsv();
-    rgb_t getRgb();
+    hsv_t get_hsv();
+    rgb_t get_rgb();
 
 protected:
     QSize sizeHint() const override;
@@ -33,17 +33,17 @@ protected:
     void mouseReleaseEvent(QMouseEvent* event) override;
 
 private:
-    void paintHueRing(QPainter* painter);
-    void paintRect(QPainter* painter);
-    void paintCursor(QPainter* painter);
+    void paint_hue_ring(QPainter* painter);
+    void paint_rect(QPainter* painter);
+    void paint_cursor(QPainter* painter);
 
-    bool isInHueRing(uint x, uint y);
-    bool isInRect(uint x, uint y);
-    double coordToHue(uint x, uint y);
-    double coordToSaturation(uint x);
-    double coordToValue(uint y);
+    bool is_in_hue_ring(uint x, uint y);
+    bool is_in_rect(uint x, uint y);
+    double coord_to_hue(uint x, uint y);
+    double coord_to_saturation(uint x);
+    double coord_to_value(uint y);
 
-    void updateCursor();
+    void update_cursor();
 
 private:
     uint inner_radius;

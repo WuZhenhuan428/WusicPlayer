@@ -23,7 +23,7 @@ public:
         QWidget* parent    = nullptr);
     ~FontSelectDialog() = default;
 
-    QFont selectFont();
+    QFont select_font();
 
 private: // data structure & functions
     void init_UI();

@@ -1,15 +1,15 @@
 add_library(wusic_view STATIC
-    MainWindow.cpp
-    MainWindow.h
+    main_window.cpp
+    main_window.h
 
-    library_browser/LibraryBrowserWidget.cpp
-    library_browser/LibraryBrowserWidget.h
+    library_browser/library_browser_widget.cpp
+    library_browser/library_browser_widget.h
 
-    playlist_tree/PlaylistTreeWidget.cpp
-    playlist_tree/PlaylistTreeWidget.h
+    playlist_tree/playlist_tree_widget.cpp
+    playlist_tree/playlist_tree_widget.h
 
-    song_table/SongTableView.cpp
-    song_table/SongTableView.h
+    song_table/song_table_view.cpp
+    song_table/song_table_view.h
 
     playlist/playlist_widgets.cpp
     playlist/playlist_widgets.h
@@ -17,38 +17,38 @@ add_library(wusic_view STATIC
     search_panel/search_panel.cpp
     search_panel/search_panel.h
 
-    SidePanel/ElidedLabel.h
-    SidePanel/SidePanel.cpp
-    SidePanel/SidePanel.h
-    SidePanel/LyricsSearchWidget.cpp
-    SidePanel/LyricsSearchWidget.h
-    SidePanel/WLyricsModel.cpp
-    SidePanel/WLyricsModel.h
-    SidePanel/WLyricsPanel.cpp
-    SidePanel/WLyricsPanel.h
+    side_panel/elided_label.h
+    side_panel/side_panel.cpp
+    side_panel/side_panel.h
+    side_panel/lyrics_search_widget.cpp
+    side_panel/lyrics_search_widget.h
+    side_panel/w_lyrics_model.cpp
+    side_panel/w_lyrics_model.h
+    side_panel/w_lyrics_panel.cpp
+    side_panel/w_lyrics_panel.h
 
-    WControlBar/WControlBar.cpp
-    WControlBar/WControlBar.h
-    WControlBar/wtimeprogress.cpp
-    WControlBar/wtimeprogress.h
+    control_bar/control_bar.cpp
+    control_bar/control_bar.h
+    control_bar/time_progress.cpp
+    control_bar/time_progress.h
 
-    DesktopLyricsWidget/DesktopLyricsWidget.cpp
-    DesktopLyricsWidget/DesktopLyricsWidget.h
+    desktop_lyrics_widget/desktop_lyrics_widget.cpp
+    desktop_lyrics_widget/desktop_lyrics_widget.h
 
-    SettingsPanel/SettingsPanel.cpp
-    SettingsPanel/SettingsPanel.h
+    settings_panel/settings_panel.cpp
+    settings_panel/settings_panel.h
 
-    SettingsPanel/ShortcutsPanel/ShortcutsPanel.cpp
-    SettingsPanel/ShortcutsPanel/ShortcutsPanel.h
+    settings_panel/shortcuts_panel/shortcuts_panel.cpp
+    settings_panel/shortcuts_panel/shortcuts_panel.h
 
-    SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.cpp
-    SettingsPanel/lyrics_setting_panel/lyrics_setting_panel.h
+    settings_panel/lyrics_setting_panel/lyrics_setting_panel.cpp
+    settings_panel/lyrics_setting_panel/lyrics_setting_panel.h
 
-    SettingsPanel/ThemeSettingsPage/ThemeSettingsPage.cpp
-    SettingsPanel/ThemeSettingsPage/ThemeSettingsPage.h
+    settings_panel/theme_settings_page/theme_settings_page.cpp
+    settings_panel/theme_settings_page/theme_settings_page.h
 
-    SettingsPanel/library_settings_page.cpp
-    SettingsPanel/library_settings_page.h
+    settings_panel/library_settings_page.cpp
+    settings_panel/library_settings_page.h
 
     dialogs/hsv_dialog/color_preview_item.cpp
     dialogs/hsv_dialog/color_preview_item.h

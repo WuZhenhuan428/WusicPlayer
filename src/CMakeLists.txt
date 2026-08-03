@@ -1,5 +1,13 @@
+# wusic_headers: 统一的 include 路径
+#  - src/            : 内部头(与 cpp Side-By-Side)
+#  - ../include      : 对外使用的公共头
+#  - ../thirdparty/headeronly : 手动管理的 header-only 第三方库(如 miniaudio.h)
 add_library(wusic_headers INTERFACE)
-target_include_directories(wusic_headers INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(wusic_headers INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/headeronly
+)
 
 add_subdirectory(core)
 add_subdirectory(model)

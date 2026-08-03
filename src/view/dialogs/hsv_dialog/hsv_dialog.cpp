@@ -1,4 +1,4 @@
-#include "hsv_dialog.h"
+#include "view/dialogs/hsv_dialog/hsv_dialog.h"
 
 #include <QStyle>
 
@@ -40,21 +40,21 @@ HSVDialog::HSVDialog(rgb_t curr_rgb, QWidget* parent) : QDialog(parent)
     this->setLayout(m_main_layout);
     this->setMinimumSize(outer_radius * 2 + label_width, outer_radius * 2 + 60);
 
-    m_hsv_palette->setHsv(hsv_t{0.0f, 50.0f, 50.0f});
-    m_hsv_palette->setRgb(m_current_color);
-    m_color_preview->setInitialColor(m_current_color);
+    m_hsv_palette->set_hsv(hsv_t{0.0f, 50.0f, 50.0f});
+    m_hsv_palette->set_rgb(m_current_color);
+    m_color_preview->set_initial_color(m_current_color);
 
-    connect(m_hsv_palette, &HSVPalette::sgnHSVChanged, m_label_matrix, &LabelMatrix::setHSV);
-    connect(m_label_matrix, &LabelMatrix::sgnEditColor, m_hsv_palette, &HSVPalette::setHsv);
+    connect(m_hsv_palette, &HSVPalette::sgnHSVChanged, m_label_matrix, &LabelMatrix::set_hsv);
+    connect(m_label_matrix, &LabelMatrix::sgnEditColor, m_hsv_palette, &HSVPalette::set_hsv);
     connect(m_hsv_palette, &HSVPalette::sgnMouseMovingColor, m_color_preview,
-            &ColorPreviewItem::updateCurrColor);
+            &ColorPreviewItem::update_curr_color);
     connect(m_hsv_palette, &HSVPalette::sgnMouseReleaseColor, m_color_preview,
-            &ColorPreviewItem::updateColor);
+            &ColorPreviewItem::update_color);
 
     connect(m_btn_apply, &QPushButton::clicked, this,
-            [this]() { m_current_color = m_hsv_palette->getRgb(); });
+            [this]() { m_current_color = m_hsv_palette->get_rgb(); });
     connect(m_btn_ok, &QPushButton::clicked, this, [this]() {
-        m_current_color = m_hsv_palette->getRgb();
+        m_current_color = m_hsv_palette->get_rgb();
         this->accept();
     });
     connect(m_btn_cancel, &QPushButton::clicked, this, [this]() { this->reject(); });
@@ -62,7 +62,7 @@ HSVDialog::HSVDialog(rgb_t curr_rgb, QWidget* parent) : QDialog(parent)
 
 HSVDialog::~HSVDialog() {}
 
-rgb_t HSVDialog::getColor()
+rgb_t HSVDialog::get_color()
 {
     return m_current_color;
 }

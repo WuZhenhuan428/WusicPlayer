@@ -1,10 +1,10 @@
-#include "tag_writeback_service.h"
+#include "service/tag_writeback_service.h"
 
-#include "controller/PlaybackController.h"
-#include "controller/PlaylistController.h"
+#include "controller/playback_controller.h"
+#include "controller/playlist_controller.h"
 #include "core/utils/audio.hpp"
 #include "core/utils/path.hpp"
-#include "view/MainWindow.h"
+#include "view/main_window.h"
 #include "view/tag_edit_widget/tag_edit_widget.h"
 
 #include <QString>
@@ -22,7 +22,7 @@ TagWritebackService::TagWritebackService(PlaylistController* playlist_ctl,
 
 TagWritebackService::~TagWritebackService() {}
 
-void TagWritebackService::requestTrackProperty(EntryId tid, QString filepath, TrackMetaData meta)
+void TagWritebackService::request_track_property(EntryId tid, QString filepath, TrackMetaData meta)
 {
     Q_UNUSED(filepath);
 
@@ -35,7 +35,7 @@ void TagWritebackService::requestTrackProperty(EntryId tid, QString filepath, Tr
         tag_edit_widget_, &TagEditWidget::sgnSaveTags, this,
         [this](QMap<QString, QStringList> tags, EntryId changedTid) {
             // create snapshot
-            auto curr_id           = m_playlist_ctl->currentTrackId();
+            auto curr_id           = m_playlist_ctl->current_track_id();
             qint64 curr_pos_ms     = m_playback_ctl->position();
             PlayingState old_state = m_playback_ctl->state();
 
@@ -47,16 +47,16 @@ void TagWritebackService::requestTrackProperty(EntryId tid, QString filepath, Tr
 
             // confirm filepath
             QString target_filepath;
-            auto playlist = m_playlist_ctl->findPlaylistById(m_playlist_ctl->currentPlaylistId());
+            auto playlist = m_playlist_ctl->find_playlist_by_id(m_playlist_ctl->current_playlist_id());
             if (playlist) {
-                const Track* track = playlist->findTrackByID(changedTid);
+                const Track* track = playlist->find_track_by_id(changedTid);
                 if (track) {
                     target_filepath = track->filepath;
                 }
             }
 
             if (target_filepath.isEmpty()) {
-                target_filepath = m_playlist_ctl->currentMetadata().filepath;
+                target_filepath = m_playlist_ctl->current_metadata().filepath;
             }
 
             // work:
@@ -93,7 +93,7 @@ void TagWritebackService::requestTrackProperty(EntryId tid, QString filepath, Tr
 
                                 bool playlist_changed = false;
                                 QVector<EntryId> to_update;
-                                const auto& tracks = playlist->getTracks();
+                                const auto& tracks = playlist->get_tracks();
                                 for (const auto& track : tracks) {
                                     if (utils::path::normalize_path(track.filepath) ==
                                         target_normalized) {
@@ -102,7 +102,7 @@ void TagWritebackService::requestTrackProperty(EntryId tid, QString filepath, Tr
                                 }
 
                                 for (const auto& tid : to_update) {
-                                    if (playlist->updateTrackMeta(tid, refreshed)) {
+                                    if (playlist->update_track_meta(tid, refreshed)) {
                                         playlist_changed = true;
                                         ++updated_tracks;
                                     }
@@ -110,32 +110,32 @@ void TagWritebackService::requestTrackProperty(EntryId tid, QString filepath, Tr
 
                                 if (playlist_changed && self->playlist_manager_ &&
                                     self->playlist_manager_->m_repo) {
-                                    self->playlist_manager_->m_repo->saveListToCache(playlist);
+                                    self->playlist_manager_->m_repo->save_list_to_cache(playlist);
                                 }
                             }
 
-                            auto* model = self->m_playlist_ctl->viewModel();
+                            auto* model = self->m_playlist_ctl->view_model();
                             if (model && updated_tracks > 0) {
-                                model->rebuildAsync();
+                                model->rebuild_async();
                             }
 
                             if (curr_id == changedTid) {
-                                auto* sidePanel =
-                                    self->main_window_ ? self->main_window_->sidePanel() : nullptr;
-                                if (sidePanel) {
-                                    sidePanel->loadLyrics(refreshed);
-                                    sidePanel->loadMetaData(refreshed);
+                                auto* side_panel =
+                                    self->main_window_ ? self->main_window_->side_panel() : nullptr;
+                                if (side_panel) {
+                                    side_panel->load_lyrics(refreshed);
+                                    side_panel->load_meta_data(refreshed);
                                 }
                             }
                         }
 
                         if (curr_id == changedTid) {
-                            auto* model = self->m_playlist_ctl->viewModel();
+                            auto* model = self->m_playlist_ctl->view_model();
                             if (!model) {
                                 return;
                             }
 
-                            int queue_index = model->playbackQueue().indexOf(changedTid);
+                            int queue_index = model->playback_queue().indexOf(changedTid);
                             if (queue_index >= 0) {
                                 self->m_playlist_ctl->play(queue_index);
                             }
@@ -143,7 +143,7 @@ void TagWritebackService::requestTrackProperty(EntryId tid, QString filepath, Tr
                                 self->m_playback_ctl->pause();
                             }
 
-                            self->m_playback_ctl->setPosition(curr_pos_ms);
+                            self->m_playback_ctl->set_position(curr_pos_ms);
                         }
                     },
                     Qt::QueuedConnection);

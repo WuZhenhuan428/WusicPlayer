@@ -1,11 +1,11 @@
 #pragma once
 
 #include "core/search_types.h"
-#include "library.h"
-#include "library_file_watcher.h"
-#include "library_repo.h"
-#include "library_scanner.h"
-#include "library_track.h"
+#include "model/library/library.h"
+#include "model/library/library_file_watcher.h"
+#include "model/library/library_repo.h"
+#include "model/library/library_scanner.h"
+#include "model/library/library_track.h"
 
 #include <QObject>
 #include <QThread>

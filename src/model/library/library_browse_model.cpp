@@ -1,4 +1,4 @@
-#include "library_browse_model.h"
+#include "model/library/library_browse_model.h"
 
 #include "core/search_types.h"
 #include "model/library/library_manager.h"

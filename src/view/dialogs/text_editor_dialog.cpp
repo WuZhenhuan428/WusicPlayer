@@ -1,18 +1,18 @@
-#include "text_editor_dialog.h"
+#include "view/dialogs/text_editor_dialog.h"
 
 #include <QFileDialog>
 #include <QTextCharFormat>
 
 TextEditorDialog::TextEditorDialog(const QString& string, QWidget* parent) : QWidget(parent)
 {
-    this->initUI();
-    this->initConnections();
-    this->setContent(string);
+    this->init_ui();
+    this->init_connections();
+    this->set_content(string);
 }
 
 TextEditorDialog::~TextEditorDialog() {}
 
-void TextEditorDialog::initUI()
+void TextEditorDialog::init_ui()
 {
     m_btn_import_file = new QPushButton("Import file", this);
     m_btn_save_as     = new QPushButton("Save as", this);
@@ -51,7 +51,7 @@ void TextEditorDialog::initUI()
     this->setLayout(m_vbl_main);
 }
 
-void TextEditorDialog::initConnections()
+void TextEditorDialog::init_connections()
 {
     // setup push buttons
     connect(m_btn_import_file, &QPushButton::clicked, this, [this]() {
@@ -118,7 +118,7 @@ void TextEditorDialog::initConnections()
             [applyEditorFont](const QFont&) { applyEditorFont(); });
 }
 
-bool TextEditorDialog::setContent(const QString& str)
+bool TextEditorDialog::set_content(const QString& str)
 {
     if (m_text_editor) {
         m_text_editor->setPlainText(str);

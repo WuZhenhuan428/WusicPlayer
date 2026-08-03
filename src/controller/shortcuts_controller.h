@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core/ConfigManager/IConfigurable.h"
-#include "model/ShortcutsViewModel/shortcuts_types.hpp"
-#include "model/ShortcutsViewModel/shortcuts_view_model.hpp"
+#include "core/config_manager/i_configurable.h"
+#include "model/shortcuts_view_model/shortcuts_types.hpp"
+#include "model/shortcuts_view_model/shortcuts_view_model.hpp"
 
 #include <QHash>
 #include <QObject>
@@ -21,36 +21,37 @@ public:
     explicit ShortcutsController(QObject* parent = nullptr);
     ~ShortcutsController() override = default;
 
-    void registerAction(const ShortcutDescriptor& desc, ShortcutHandler handler,
-                        QObject* parent = nullptr);
-    void registerOperation(ShortcutActionId action_id, const QString& display_name,
-                           ShortcutScope scope, const QKeySequence& default_key,
-                           ShortcutHandler handler, QObject* owner = nullptr, bool editable = true);
-    void unregisterAction(ShortcutActionId action_id);
-    bool setShortcut(ShortcutActionId action_id, const QKeySequence& seq);
-    void enableAction(ShortcutActionId action_id, bool enabled);
+    void register_action(const ShortcutDescriptor& desc, ShortcutHandler handler,
+                         QObject* parent = nullptr);
+    void register_operation(ShortcutActionId action_id, const QString& display_name,
+                            ShortcutScope scope, const QKeySequence& default_key,
+                            ShortcutHandler handler, QObject* owner = nullptr,
+                            bool editable = true);
+    void unregister_action(ShortcutActionId action_id);
+    bool set_shortcut(ShortcutActionId action_id, const QKeySequence& seq);
+    void enable_action(ShortcutActionId action_id, bool enabled);
     void rebind(ShortcutActionId action_id);
-    void rebindAll();
-    void resetAllToDefault();
-    void setScopeHost(ShortcutScope scope, QWidget* host);
+    void rebind_all();
+    void reset_all_to_default();
+    void set_scope_host(ShortcutScope scope, QWidget* host);
     QVector<ShortcutBinding> bindings() const;
-    void applyBindings(const QVector<ShortcutBinding>& bindings);
+    void apply_bindings(const QVector<ShortcutBinding>& bindings);
 
-    ShortcutsViewModel* viewModel() const;
+    ShortcutsViewModel* view_model() const;
 
-    void loadFromJson(const QJsonObject& json) override;
-    QJsonObject saveToJson() override;
-    QString configSubKey() const override;
+    void load_from_json(const QJsonObject& json) override;
+    QJsonObject save_to_json() override;
+    QString config_sub_key() const override;
 
 signals:
-    void sgnShortcutUpdated(ShortcutActionId action_id, const QKeySequence& seq);
+    void sgn_shortcut_updated(ShortcutActionId action_id, const QKeySequence& seq);
 
 private slots:
-    void onBindingChanged(ShortcutActionId action_id, const QKeySequence& new_key);
+    void on_binding_changed(ShortcutActionId action_id, const QKeySequence& new_key);
 
 private:
-    void rebuildViewModel();
-    QWidget* resolveScopeHost(ShortcutScope scope, QObject* owner) const;
+    void rebuild_view_model();
+    QWidget* resolve_scope_host(ShortcutScope scope, QObject* owner) const;
 
     QHash<ShortcutActionId, ShortcutDescriptor> m_descMap;
     QHash<ShortcutActionId, ShortcutHandler> m_handleMap;

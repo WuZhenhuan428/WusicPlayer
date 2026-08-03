@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/types.h"
-#include "playback_queue.h"
+#include "model/playback_queue/playback_queue.h"
 
 #include <QObject>
 #include <QString>

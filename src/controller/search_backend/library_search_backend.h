@@ -1,6 +1,6 @@
 #pragma once
 
-#include "i_search_backend.h"
+#include "controller/search_backend/i_search_backend.h"
 
 #include <QVector>
 

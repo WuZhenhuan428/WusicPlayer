@@ -1,4 +1,4 @@
-#include "font_select_dialog.h"
+#include "view/dialogs/font_select_dialog.h"
 
 #include <QDebug>
 #include <QStyle>
@@ -18,7 +18,7 @@ FontSelectDialog::FontSelectDialog(QFont default_font, QWidget* parent) : QDialo
     this->setMinimumSize(800, 500);
 }
 
-QFont FontSelectDialog::selectFont()
+QFont FontSelectDialog::select_font()
 {
     QFont font = QFontDatabase::font(m_family, m_style, m_size);
     return font;

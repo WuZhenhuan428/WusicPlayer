@@ -28,23 +28,23 @@ class AppController : public QObject
 {
     Q_OBJECT
 public:
-    explicit AppController(PlaybackController* playbackController, QObject* parent = nullptr);
+    explicit AppController(PlaybackController* playback_controller, QObject* parent = nullptr);
     ~AppController() override;
 
-    void showMainWindow();
+    void show_main_window();
 
 private:
-    void initializeCoreConnections();
-    void locateCurrentTrackInView();
-    void handleSetSortRuleRequested();
-    void handleInsertColumnRequested();
-    void handleRemoveColumnRequested();
-    void handleShowAboutMessagebox();
-    void handleShowDesktopLyricsRequested();
+    void initialize_core_connections();
+    void locate_current_track_in_view();
+    void handle_set_sort_rule_requested();
+    void handle_insert_column_requested();
+    void handle_remove_column_requested();
+    void handle_show_about_messagebox();
+    void handle_show_desktop_lyrics_requested();
 
-    void configureDesktopLyricsWindowRelation();
-    void initializeConfig();
-    void saveConfig();
+    void configure_desktop_lyrics_window_relation();
+    void initialize_config();
+    void save_config();
 
     void setup_status_bar_connections();
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/types.h"
-#include "playlist.h"
+#include "model/playlist/playlist.h"
 
 #include <QString>
 #include <QUuid>
@@ -60,19 +60,19 @@ class PlaylistLayoutBuilder
 public:
     LayoutResult build(const Playlist& playlist);
 
-    void setGroupRule(const QVector<SortRule>& group_rule);
-    void setSortRule(const QVector<SortRule>& sort_rule);
-    const QVector<SortRule> sortRules() const;
-    const QVector<SortRule> groupRules() const;
+    void set_group_rule(const QVector<SortRule>& group_rule);
+    void set_sort_rule(const QVector<SortRule>& sort_rule);
+    const QVector<SortRule> sort_rules() const;
+    const QVector<SortRule> group_rules() const;
 
     /**
      * @brief Auxiliary: used to handle event such as table header was clicked
      * @param overrideExisting true=override, false=append
      * @note only one SortRule for group is supported
      */
-    void updateSort(SortRule rule, bool overrideExisting = false);
+    void update_sort(SortRule rule, bool overrideExisting = false);
 
-    static QVariant getMetaDataValue(const TrackMetaData& mata, SortType type);
+    static QVariant get_metadata_value(const TrackMetaData& mata, SortType type);
 
 private:
     QVector<SortRule> m_group_rules;

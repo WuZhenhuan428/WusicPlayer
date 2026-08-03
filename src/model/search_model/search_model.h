@@ -10,10 +10,10 @@ class ISearchBackend;
 
 /*
 一些简单的思路，也是问题：
-1. 主列表建立完成之后会自动调用PlaylistViewModel::saveListToCache() ==>
-PlaylistRepo::writeJsonPlaylist()，
+1. 主列表建立完成之后会自动调用PlaylistViewModel::save_list_to_cache() ==>
+PlaylistRepo::write_json_playlist()，
    因此~/.local/share/WusicPlayer/<playlist_id>.json的缓存文件一定存在。
-2. 搜索策略：PlaylistViewModel::rebuildAsync() 的行为记忆不清楚，根据以下几种可能进行选择：
+2. 搜索策略：PlaylistViewModel::rebuild_async() 的行为记忆不清楚，根据以下几种可能进行选择：
     1. 每次启动一定更新缓存：
         可以在建立主视图完成后发送信号，通知搜索面板允许开始搜索，在此之前先等待（时间不会太久）
     2. 检测到有本地缓存则直接加载：
@@ -49,15 +49,15 @@ public:
     explicit SearchModel(ISearchBackend* backend = nullptr, QObject* parent = nullptr);
     ~SearchModel();
 
-    void searchRequest(SearchQuery query);
-    void setResults(const QVector<SearchHint>& results);
-    void setBackend(ISearchBackend* backend);
-    void clearResults();
+    void search_request(SearchQuery query);
+    void set_results(const QVector<SearchHint>& results);
+    void set_backend(ISearchBackend* backend);
+    void clear_results();
 
-    TrackId trackIdAt(int row) const;
-    SearchHint hintAt(int row) const;
-    int totalHits() const;
-    const SearchQuery& lastQuery() const;
+    TrackId track_id_at(int row) const;
+    SearchHint hint_at(int row) const;
+    int total_hits() const;
+    const SearchQuery& last_query() const;
 
     QModelIndex index(int row, int column,
                       const QModelIndex& parent = QModelIndex()) const override;

@@ -71,9 +71,9 @@ class WInsertColumnDialog : public QDialog
 public:
     explicit WInsertColumnDialog();
     ~WInsertColumnDialog();
-    TableColumn getRule();
-    void setIndex(int index);
-    void setMaxIndex(int index);
+    TableColumn get_rule();
+    void set_index(int index);
+    void set_max_index(int index);
     int index() const;
 
 private:
@@ -103,8 +103,8 @@ public:
     explicit WColumnIndexDialog(const QString& title, const QString& prompt,
                                 QWidget* parent = nullptr);
     ~WColumnIndexDialog();
-    void setIndex(int index);
-    void setMaxIndex(int index);
+    void set_index(int index);
+    void set_max_index(int index);
     int index() const;
 
 private:

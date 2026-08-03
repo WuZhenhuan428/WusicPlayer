@@ -1,4 +1,4 @@
-#include "playlist_widgets.h"
+#include "view/playlist/playlist_widgets.h"
 
 #include <limits>
 
@@ -113,14 +113,14 @@ WInsertColumnDialog::WInsertColumnDialog()
 
 WInsertColumnDialog::~WInsertColumnDialog() {}
 
-void WInsertColumnDialog::setIndex(int index)
+void WInsertColumnDialog::set_index(int index)
 {
     if (txtIndex) {
         txtIndex->setText(QString::number(index));
     }
 }
 
-void WInsertColumnDialog::setMaxIndex(int index)
+void WInsertColumnDialog::set_max_index(int index)
 {
     m_maxIndex = index;
 }
@@ -132,7 +132,7 @@ int WInsertColumnDialog::index() const
     return ok ? value : 0;
 }
 
-TableColumn WInsertColumnDialog::getRule()
+TableColumn WInsertColumnDialog::get_rule()
 {
     TableColumn retval;
     retval.headerName = txtTitle->text();
@@ -191,14 +191,14 @@ WColumnIndexDialog::WColumnIndexDialog(const QString& title, const QString& prom
 
 WColumnIndexDialog::~WColumnIndexDialog() {}
 
-void WColumnIndexDialog::setIndex(int index)
+void WColumnIndexDialog::set_index(int index)
 {
     if (txtIndex) {
         txtIndex->setText(QString::number(index));
     }
 }
 
-void WColumnIndexDialog::setMaxIndex(int index)
+void WColumnIndexDialog::set_max_index(int index)
 {
     m_maxIndex = index;
 }

@@ -1,4 +1,4 @@
-#include "playback_queue_service.h"
+#include "model/playback_queue/playback_queue_service.h"
 
 #include "core/utils/path.hpp"
 #include "model/library/library_manager.h"
@@ -120,11 +120,11 @@ bool PlaybackQueueService::enqueue_playlist_entry(const PlaylistId& pid, const E
     if (m_playlist_mgr == nullptr) {
         return false;
     }
-    for (const auto& pl : m_playlist_mgr->getPlaylists()) {
+    for (const auto& pl : m_playlist_mgr->get_playlists()) {
         if (pl->id() != pid) {
             continue;
         }
-        const Track* track = pl->findTrackByID(eid);
+        const Track* track = pl->find_track_by_id(eid);
         if (track == nullptr) {
             return false;
         }

@@ -1,4 +1,4 @@
-#include "playlist_view_model.h"
+#include "model/playlist/playlist_view_model.h"
 
 #include <QColor>
 #include <QFileInfo>
@@ -11,24 +11,24 @@
 PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo, QObject* parent) :
     QAbstractItemModel(parent), m_repo(repo)
 {
-    initDefaultColumns();
+    init_default_columns();
     m_root                = new Node();
     m_batch_rebuild_timer = new QTimer(this);
     m_batch_rebuild_timer->setSingleShot(true);
     m_batch_rebuild_timer->setInterval(60);
-    connect(m_batch_rebuild_timer, &QTimer::timeout, this, &PlaylistViewModel::rebuildAsync);
+    connect(m_batch_rebuild_timer, &QTimer::timeout, this, &PlaylistViewModel::rebuild_async);
     if (m_repo) {
-        connect(m_repo, &PlaylistRepo::playlistChanged, this, &PlaylistViewModel::rebuildAsync);
+        connect(m_repo, &PlaylistRepo::sgn_playlist_changed, this, &PlaylistViewModel::rebuild_async);
         connect(m_repo, &PlaylistRepo::playlistBatchLoaded, this,
                 [this](const PlaylistId& playlist_id, int, int) {
                     if (playlist_id == m_pid) {
-                        scheduleBatchRebuild();
+                        schedule_batch_rebuild();
                     }
                 });
     }
 }
 
-void PlaylistViewModel::initDefaultColumns()
+void PlaylistViewModel::init_default_columns()
 {
     m_columns = {{"", SortType::not_sorted},    {"Disc", SortType::disc_number},
                  {"#", SortType::track_number}, {"Title", SortType::title},
@@ -41,7 +41,7 @@ PlaylistViewModel::~PlaylistViewModel()
     delete m_root;
 }
 
-void PlaylistViewModel::scheduleBatchRebuild()
+void PlaylistViewModel::schedule_batch_rebuild()
 {
     if (!m_batch_rebuild_timer) {
         return;
@@ -51,11 +51,11 @@ void PlaylistViewModel::scheduleBatchRebuild()
     }
 }
 
-const Playlist& PlaylistViewModel::resolvePlaylist()
+const Playlist& PlaylistViewModel::resolve_playlist()
 {
     // Warning: This might crash if playlist is not found!
-    // Prefer using findPlaylistById directly with check.
-    return *(m_repo->findPlaylistById(m_pid));
+    // Prefer using find_playlist_by_id directly with check.
+    return *(m_repo->find_playlist_by_id(m_pid));
 }
 
 void PlaylistViewModel::rebuild()
@@ -69,17 +69,17 @@ void PlaylistViewModel::rebuild()
         m_root = new Node();
         m_playback_queue.clear();
         endResetModel();
-        m_active_track_index = QPersistentModelIndex(findTrackIndex(m_active_track_id));
+        m_active_track_index = QPersistentModelIndex(find_track_index(m_active_track_id));
         return;
     }
 
     // Fix: Check pointer validity to avoid Core Dump
-    auto playlist_ptr = m_repo->findPlaylistById(m_pid);
+    auto playlist_ptr = m_repo->find_playlist_by_id(m_pid);
     if (!playlist_ptr) {
         m_root = new Node();
         m_playback_queue.clear();
         endResetModel();
-        m_active_track_index = QPersistentModelIndex(findTrackIndex(m_active_track_id));
+        m_active_track_index = QPersistentModelIndex(find_track_index(m_active_track_id));
         return;
     }
 
@@ -89,23 +89,23 @@ void PlaylistViewModel::rebuild()
 
     if (!layout.updated_meta.isEmpty()) {
         for (const auto& entry : layout.updated_meta) {
-            playlist_ptr->updateTrackMeta(entry.id, entry.meta);
+            playlist_ptr->update_track_meta(entry.id, entry.meta);
         }
-        m_repo->saveListToCache(playlist_ptr);
+        m_repo->save_list_to_cache(playlist_ptr);
     }
 
     m_root                 = layout.root;
     m_playback_queue       = layout.playback_queue;
-    m_single_shuffle_queue = generateSingleShuffleQueue();
-    m_group_shuffle_queue  = generateGroupShuffleQueue();
+    m_single_shuffle_queue = generate_single_shuffle_queue();
+    m_group_shuffle_queue  = generate_group_shuffle_queue();
 
     endResetModel();
-    m_active_track_index = QPersistentModelIndex(findTrackIndex(m_active_track_id));
+    m_active_track_index = QPersistentModelIndex(find_track_index(m_active_track_id));
     qDebug() << "[INFO] rebuild finished. Queue size:" << m_playback_queue.size();
     emit changedPlaybackQueue();
 }
 
-void PlaylistViewModel::rebuildAsync()
+void PlaylistViewModel::rebuild_async()
 {
     const int token = ++m_rebuild_token;
 
@@ -115,18 +115,18 @@ void PlaylistViewModel::rebuildAsync()
         m_root = new Node();
         m_playback_queue.clear();
         endResetModel();
-        m_active_track_index = QPersistentModelIndex(findTrackIndex(m_active_track_id));
+        m_active_track_index = QPersistentModelIndex(find_track_index(m_active_track_id));
         return;
     }
 
-    auto playlistPtr = m_repo->findPlaylistById(m_pid);
+    auto playlistPtr = m_repo->find_playlist_by_id(m_pid);
     if (!playlistPtr) {
         beginResetModel();
         delete m_root;
         m_root = new Node();
         m_playback_queue.clear();
         endResetModel();
-        m_active_track_index = QPersistentModelIndex(findTrackIndex(m_active_track_id));
+        m_active_track_index = QPersistentModelIndex(find_track_index(m_active_track_id));
         return;
     }
 
@@ -161,19 +161,19 @@ void PlaylistViewModel::rebuildAsync()
                 delete self->m_root;
                 self->m_root                 = layout.root;
                 self->m_playback_queue       = layout.playback_queue;
-                self->m_single_shuffle_queue = self->generateSingleShuffleQueue();
-                self->m_group_shuffle_queue  = self->generateGroupShuffleQueue();
+                self->m_single_shuffle_queue = self->generate_single_shuffle_queue();
+                self->m_group_shuffle_queue  = self->generate_group_shuffle_queue();
                 self->endResetModel();
                 self->m_active_track_index =
-                    QPersistentModelIndex(self->findTrackIndex(self->m_active_track_id));
+                    QPersistentModelIndex(self->find_track_index(self->m_active_track_id));
 
                 auto playlistPtr =
-                    self->m_repo ? self->m_repo->findPlaylistById(self->m_pid) : nullptr;
+                    self->m_repo ? self->m_repo->find_playlist_by_id(self->m_pid) : nullptr;
                 if (playlistPtr && !layout.updated_meta.isEmpty()) {
                     for (const auto& entry : layout.updated_meta) {
-                        playlistPtr->updateTrackMeta(entry.id, entry.meta);
+                        playlistPtr->update_track_meta(entry.id, entry.meta);
                     }
-                    self->m_repo->saveListToCache(playlistPtr);
+                    self->m_repo->save_list_to_cache(playlistPtr);
                 }
                 emit self->changedPlaybackQueue();
             },
@@ -184,16 +184,16 @@ void PlaylistViewModel::rebuildAsync()
     worker->start();
 }
 
-void PlaylistViewModel::setPlaylist(const PlaylistId& pid)
+void PlaylistViewModel::set_playlist(const PlaylistId& pid)
 {
     if (m_pid == pid) {
         return;
     }
     m_pid = pid;
-    this->rebuildAsync();
+    this->rebuild_async();
 }
 
-void PlaylistViewModel::setSortExpression(const QString& expression)
+void PlaylistViewModel::set_sort_expression(const QString& expression)
 {
     QStringList splited_exp = expression.split("|", Qt::SkipEmptyParts);
     QString group_expression;
@@ -263,25 +263,25 @@ void PlaylistViewModel::setSortExpression(const QString& expression)
         sort_rule.append(rule);
     }
 
-    m_layout_builder.setGroupRule(group_rule);
-    m_layout_builder.setSortRule(sort_rule);
+    m_layout_builder.set_group_rule(group_rule);
+    m_layout_builder.set_sort_rule(sort_rule);
 
-    this->rebuildAsync();
+    this->rebuild_async();
 }
 
-void PlaylistViewModel::setSingleGrouping(SortRule rule)
+void PlaylistViewModel::set_single_grouping(SortRule rule)
 {
-    m_layout_builder.updateSort(rule, false);
-    this->rebuildAsync();
+    m_layout_builder.update_sort(rule, false);
+    this->rebuild_async();
 }
 
-void PlaylistViewModel::setActiveTrack(const EntryId& tid)
+void PlaylistViewModel::set_active_track(const EntryId& tid)
 {
-    QModelIndex old_index = getCurrentTrackIndex();
+    QModelIndex old_index = get_current_track_index();
     m_active_track_id     = tid;
-    m_active_track_index  = QPersistentModelIndex(findTrackIndex(tid));
+    m_active_track_index  = QPersistentModelIndex(find_track_index(tid));
 
-    QModelIndex new_index = getCurrentTrackIndex();
+    QModelIndex new_index = get_current_track_index();
 
     auto emitRowChanged   = [this](const QModelIndex& index) {
         if (!index.isValid())
@@ -415,7 +415,7 @@ QVariant PlaylistViewModel::data(const QModelIndex& index, int role) const
         }
 
         // Default meta data retrieval
-        QVariant val = PlaylistLayoutBuilder::getMetaDataValue(d, col.sortType);
+        QVariant val = PlaylistLayoutBuilder::get_metadata_value(d, col.sortType);
         if (val.isValid())
             return val;
         return QVariant();
@@ -448,38 +448,38 @@ void PlaylistViewModel::sort(int column, Qt::SortOrder order)
     rule.type  = type;
     rule.order = order;
 
-    m_layout_builder.setSortRule({rule});
-    rebuildAsync();
+    m_layout_builder.set_sort_rule({rule});
+    rebuild_async();
 }
 
 /* ==== Helpers ==== */
 
-PlaybackQueueSnapshot PlaylistViewModel::playbackQueueSnapshot() const
+PlaybackQueueSnapshot PlaylistViewModel::playback_queue_snapshot() const
 {
     static int version = 0;
     return {m_playback_queue, version++};
 }
 
-PlaybackQueueSnapshot PlaylistViewModel::singleShuffleQueueSnapshot() const
+PlaybackQueueSnapshot PlaylistViewModel::single_shuffle_queue_snapshot() const
 {
     static int version = 0;
     return {m_single_shuffle_queue, version++};
 }
 
-PlaybackQueueSnapshot PlaylistViewModel::groupShuffleQueueSnapshot() const
+PlaybackQueueSnapshot PlaylistViewModel::group_shuffle_queue_snapshot() const
 {
     static int version = 0;
     return {m_group_shuffle_queue, version++};
 }
 
-EntryId PlaylistViewModel::trackAt(int index) const
+EntryId PlaylistViewModel::track_at(int index) const
 {
     if (index >= 0 && index < m_playback_queue.size())
         return m_playback_queue.at(index);
     return EntryId();
 }
 
-EntryId PlaylistViewModel::trackAt(const QModelIndex& index) const
+EntryId PlaylistViewModel::track_at(const QModelIndex& index) const
 {
     if (!index.isValid())
         return EntryId();
@@ -487,15 +487,15 @@ EntryId PlaylistViewModel::trackAt(const QModelIndex& index) const
     return node->id;
 }
 
-QModelIndex PlaylistViewModel::getCurrentTrackIndex()
+QModelIndex PlaylistViewModel::get_current_track_index()
 {
     if (m_active_track_index.isValid()) {
         return m_active_track_index;
     }
-    return findTrackIndex(m_active_track_id);
+    return find_track_index(m_active_track_id);
 }
 
-QModelIndex PlaylistViewModel::findTrackIndex(const EntryId& tid) const
+QModelIndex PlaylistViewModel::find_track_index(const EntryId& tid) const
 {
     if (tid.isNull() || !m_root) {
         return QModelIndex();
@@ -514,12 +514,12 @@ QModelIndex PlaylistViewModel::findTrackIndex(const EntryId& tid) const
     return QModelIndex();
 }
 
-const QVector<EntryId>& PlaylistViewModel::playbackQueue() const
+const QVector<EntryId>& PlaylistViewModel::playback_queue() const
 {
     return m_playback_queue;
 }
 
-QVector<EntryId> PlaylistViewModel::generateGroupShuffleQueue()
+QVector<EntryId> PlaylistViewModel::generate_group_shuffle_queue()
 {
     if (!m_root || m_root->children.isEmpty()) {
         return {};
@@ -544,7 +544,7 @@ QVector<EntryId> PlaylistViewModel::generateGroupShuffleQueue()
     return result;
 }
 
-QVector<EntryId> PlaylistViewModel::generateSingleShuffleQueue()
+QVector<EntryId> PlaylistViewModel::generate_single_shuffle_queue()
 {
     if (!m_root || m_root->children.isEmpty()) {
         return {};
@@ -564,7 +564,7 @@ QVector<EntryId> PlaylistViewModel::generateSingleShuffleQueue()
 
 /* ==== Dynamic Column Management ==== */
 
-void PlaylistViewModel::insertColumn(int index, const TableColumn& column)
+void PlaylistViewModel::insert_column(int index, const TableColumn& column)
 {
     if (index < 0 || index > m_columns.size())
         return;
@@ -573,7 +573,7 @@ void PlaylistViewModel::insertColumn(int index, const TableColumn& column)
     endInsertColumns();
 }
 
-void PlaylistViewModel::removeColumn(int index)
+void PlaylistViewModel::remove_column(int index)
 {
     if (index < 0 || index >= m_columns.size())
         return;
@@ -582,34 +582,34 @@ void PlaylistViewModel::removeColumn(int index)
     endRemoveColumns();
 }
 
-void PlaylistViewModel::setColumns(const QVector<TableColumn>& columns)
+void PlaylistViewModel::set_columns(const QVector<TableColumn>& columns)
 {
     beginResetModel();
     m_columns = columns;
     endResetModel();
 }
 
-const QVector<TableColumn>& PlaylistViewModel::getColumns() const
+const QVector<TableColumn>& PlaylistViewModel::get_columns() const
 {
     return m_columns;
 }
 
-void PlaylistViewModel::setGroupRules(const QVector<SortRule>& rules)
+void PlaylistViewModel::set_group_rules(const QVector<SortRule>& rules)
 {
-    m_layout_builder.setGroupRule(rules);
+    m_layout_builder.set_group_rule(rules);
 }
 
-void PlaylistViewModel::setSortRules(const QVector<SortRule>& rules)
+void PlaylistViewModel::set_sort_rules(const QVector<SortRule>& rules)
 {
-    m_layout_builder.setSortRule(rules);
+    m_layout_builder.set_sort_rule(rules);
 }
 
-const QVector<SortRule> PlaylistViewModel::groupRules() const
+const QVector<SortRule> PlaylistViewModel::group_rules() const
 {
-    return m_layout_builder.groupRules();
+    return m_layout_builder.group_rules();
 }
 
-const QVector<SortRule> PlaylistViewModel::sortRules() const
+const QVector<SortRule> PlaylistViewModel::sort_rules() const
 {
-    return m_layout_builder.sortRules();
+    return m_layout_builder.sort_rules();
 }

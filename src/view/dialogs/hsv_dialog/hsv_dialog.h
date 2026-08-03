@@ -1,8 +1,8 @@
 #pragma once
 
-#include "color_preview_item.h"
-#include "hsv_palette.h"
-#include "label_matrix.h"
+#include "view/dialogs/hsv_dialog/color_preview_item.h"
+#include "view/dialogs/hsv_dialog/hsv_palette.h"
+#include "view/dialogs/hsv_dialog/label_matrix.h"
 
 #include <QDialog>
 #include <QHBoxLayout>
@@ -19,7 +19,7 @@ public:
     explicit HSVDialog(rgb_t curr_rgb, QWidget* parent = nullptr);
     ~HSVDialog();
 
-    rgb_t getColor();
+    rgb_t get_color();
 
 private:
     rgb_t m_current_color;

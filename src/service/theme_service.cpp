@@ -1,23 +1,23 @@
-#include "theme_service.h"
+#include "service/theme_service.h"
 
-#include "core/theme/ThemeManager.h"
+#include "core/theme/theme_manager.h"
 #include "model/theme_settings_model.h"
 
 ThemeService::ThemeService(QObject* parent) :
     QObject(parent), m_model(std::make_unique<ThemeSettingsModel>(this))
 {
     // 监听外部主题变更（如其他地方调用了 applyXxxTheme）
-    connect(&ThemeManager::instance(), &ThemeManager::themeChanged, this,
-            [this]() { emit currentThemeChanged(ThemeManager::instance().currentThemeName()); });
+    connect(&ThemeManager::instance(), &ThemeManager::sgn_theme_changed, this,
+            [this]() { emit sgn_current_theme_changed(ThemeManager::instance().current_theme_name()); });
 }
 
-void ThemeService::scanThemes()
+void ThemeService::scan_themes()
 {
     QVector<ThemeEntry> entries;
     auto& tm = ThemeManager::instance();
 
     // 系统主题（无法可靠检测明暗，统一标为 false）
-    for (const auto& key : tm.systemThemes()) {
+    for (const auto& key : tm.system_themes()) {
         ThemeEntry e;
         e.name   = key;
         e.source = QStringLiteral("System");
@@ -27,8 +27,8 @@ void ThemeService::scanThemes()
     }
 
     // 内置主题——从注册的调色板读取 isDark
-    for (const auto& name : tm.builtinThemes()) {
-        const auto* pal = tm.paletteByName(name);
+    for (const auto& name : tm.builtin_themes()) {
+        const auto* pal = tm.palette_by_name(name);
         ThemeEntry e;
         e.name   = name;
         e.source = QStringLiteral("Builtin");
@@ -38,7 +38,7 @@ void ThemeService::scanThemes()
     }
 
     // 外部主题——仅名称已知，元信息在插件内部
-    for (const auto& name : tm.externalThemes()) {
+    for (const auto& name : tm.external_themes()) {
         ThemeEntry e;
         e.name   = name;
         e.source = QStringLiteral("External");
@@ -47,10 +47,10 @@ void ThemeService::scanThemes()
         entries.append(e);
     }
 
-    m_model->setEntries(entries);
+    m_model->set_entries(entries);
 }
 
-void ThemeService::applyTheme(int row)
+void ThemeService::apply_theme(int row)
 {
     const auto& entries = m_model->entries();
     if (row < 0 || row >= entries.size())
@@ -60,14 +60,14 @@ void ThemeService::applyTheme(int row)
     auto& tm      = ThemeManager::instance();
 
     if (e.source == QStringLiteral("System")) {
-        tm.applySystemTheme(e.name);
+        tm.apply_system_theme(e.name);
     } else if (e.source == QStringLiteral("Builtin")) {
-        tm.applyBuiltinTheme(e.name);
+        tm.apply_builtin_theme(e.name);
     } else if (e.source == QStringLiteral("External")) {
-        tm.applyExternalTheme(e.name);
+        tm.apply_external_theme(e.name);
     }
 
-    emit currentThemeChanged(e.name);
+    emit sgn_current_theme_changed(e.name);
 }
 
 ThemeSettingsModel* ThemeService::model() const
@@ -75,13 +75,13 @@ ThemeSettingsModel* ThemeService::model() const
     return m_model.get();
 }
 
-QString ThemeService::currentThemeName() const
+QString ThemeService::current_theme_name() const
 {
-    return ThemeManager::instance().currentThemeName();
+    return ThemeManager::instance().current_theme_name();
 }
 
-void ThemeService::rescanExternalPlugins(const QString& dir)
+void ThemeService::rescan_external_plugins(const QString& dir)
 {
-    ThemeManager::instance().scanExternalPlugins(dir);
-    scanThemes(); // 刷新模型
+    ThemeManager::instance().scan_external_plugins(dir);
+    scan_themes(); // 刷新模型
 }

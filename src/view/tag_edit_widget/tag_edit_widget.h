@@ -26,20 +26,20 @@ public:
     ~TagEditWidget();
 
 private: // methods
-    void initUI();
-    void initUIProperties(const QString& filepath);
-    void initConnections();
-    void initTableModel(TrackMetaData meta);
+    void init_ui();
+    void init_ui_properties(const QString& filepath);
+    void init_connections();
+    void init_table_model(TrackMetaData meta);
 
-    void handleSaveTags();
-    void handleShowMenu(const QPoint& pos);
+    void handle_save_tags();
+    void handle_show_menu(const QPoint& pos);
 
-    QString keyToName(const QString& key);
-    QString nameToKey(const QString& name);
+    QString key_to_name(const QString& key);
+    QString name_to_key(const QString& name);
 
-    void handleEditItem(QModelIndex index);
-    void handleDeleteItem(QModelIndex index);
-    void handleAddNewFiled();
+    void handle_edit_item(QModelIndex index);
+    void handle_delete_item(QModelIndex index);
+    void handle_add_new_field();
 
 signals:
     void sgnSaveTags(QMap<QString, QStringList> tags, EntryId tid);

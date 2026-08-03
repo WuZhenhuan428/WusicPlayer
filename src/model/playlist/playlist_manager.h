@@ -1,8 +1,8 @@
 #pragma once
 
-#include "playlist_context.h"
-#include "playlist_repo.h"
-#include "playlist_view_model.h"
+#include "model/playlist/playlist_context.h"
+#include "model/playlist/playlist_repo.h"
+#include "model/playlist/playlist_view_model.h"
 
 #include <QObject>
 #include <QString>
@@ -30,33 +30,33 @@ public:
     ~PlaylistManager();
 
 public:
-    PlaylistViewModel* getViewModel();
-    QString getCurrentTrack() const;
-    QString getCurrentPlaylistName() const;
-    const EntryId& getCurrentTrackId() const;
-    const PlaylistId& getCurrentPlaylistId() const;
-    QVector<PlaylistInfo> getAllPlaylists();
-    QVector<std::shared_ptr<Playlist>> getPlaylists();
-    TrackMetaData getCurrentMetadata();
-    QString getPlaylistById(const PlaylistId& pid) const;
+    PlaylistViewModel* get_view_model();
+    QString get_current_track() const;
+    QString get_current_playlist_name() const;
+    const EntryId& get_current_track_id() const;
+    const PlaylistId& get_current_playlist_id() const;
+    QVector<PlaylistInfo> get_all_playlists();
+    QVector<std::shared_ptr<Playlist>> get_playlists();
+    TrackMetaData get_current_metadata();
+    QString get_playlist_by_id(const PlaylistId& pid) const;
 
 public slots:
     // receive signals from UI
-    void createPlaylist();
-    void removePlaylist(const PlaylistId& to_remove_uuid);
-    void copyPlaylist(const PlaylistId& pid);
-    void loadPlaylist(const QString& playlist_path);
-    void renamePlaylist(const PlaylistId& src_pid, const QString dst_name);
-    void savePlaylist(const PlaylistId& pid, const QString& save_path);
-    void loadCacheAfterShown();
+    void create_playlist();
+    void remove_playlist(const PlaylistId& to_remove_uuid);
+    void copy_playlist(const PlaylistId& pid);
+    void load_playlist(const QString& playlist_path);
+    void rename_playlist(const PlaylistId& src_pid, const QString dst_name);
+    void save_playlist(const PlaylistId& pid, const QString& save_path);
+    void load_cache_after_shown();
 
     // policy 为解析策略;by_operation 时按全局配置 m_add_file_policy + 操作类型默认展开
-    void addTrack(const PlaylistId& pid, const QString& filepath,
+    void add_track(const PlaylistId& pid, const QString& filepath,
                   AddFilePolicy policy = AddFilePolicy::by_operation);
-    void addFolder(const PlaylistId& pid, const QString& directory,
+    void add_folder(const PlaylistId& pid, const QString& directory,
                    AddFilePolicy policy = AddFilePolicy::by_operation);
-    void removeTrack(const EntryId& tid);
-    void removeMissingTracks();
+    void remove_track(const EntryId& tid);
+    void remove_missing_tracks();
 
     // 全局默认解析策略(设置面板配置;持久化由 PlaylistController 负责)
     void set_add_file_policy(AddFilePolicy policy);
@@ -66,11 +66,11 @@ public slots:
     }
 
     // 返回下一/上一曲目的条目身份(EntryId);空表示无曲目可切
-    EntryId nextTrack(PlayMode mode);
-    EntryId prevTrack(PlayMode mode);
+    EntryId next_track(PlayMode mode);
+    EntryId prev_track(PlayMode mode);
 
-    void retransmissionPlaylistChanged();
-    void switchToPlaylist(const PlaylistId& pid);
+    void retransmission_playlist_changed();
+    void switch_to_playlist(const PlaylistId& pid);
 
     void play(int index);
 
@@ -78,12 +78,12 @@ public slots:
     void set_library_manager(LibraryManager* lib);
 
 signals:
-    void requestPlay(const QString& filepath);
-    void playlistChanged();
-    void cacheLoadStarted();
-    void cacheLoadFinished(int playlistCount);
-    void playlistLoadStarted(const PlaylistId& pid, int total_count);
-    void playlistLoadFinished(const PlaylistId& pid);
+    void sgn_request_play(const QString& filepath);
+    void sgn_playlist_changed();
+    void sgn_cache_load_started();
+    void sgn_cache_load_finished(int playlistCount);
+    void sgn_playlist_load_started(const PlaylistId& pid, int total_count);
+    void sgn_playlist_load_finished(const PlaylistId& pid);
 
 private:
     Track resolve_track(const QString& filepath) const;

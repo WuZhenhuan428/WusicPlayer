@@ -1,4 +1,4 @@
-#include "tag_edit_widget.h"
+#include "view/tag_edit_widget/tag_edit_widget.h"
 
 #include "core/utils/audio.hpp"
 #include "new_tag_item_dialog.h"
@@ -18,15 +18,15 @@
 TagEditWidget::TagEditWidget(TrackMetaData meta, EntryId tid, QWidget* parent) :
     QWidget(parent), m_tid(tid)
 {
-    this->initUI();
-    this->initUIProperties(meta.filepath);
-    this->initConnections();
-    this->initTableModel(meta);
+    this->init_ui();
+    this->init_ui_properties(meta.filepath);
+    this->init_connections();
+    this->init_table_model(meta);
 }
 
 TagEditWidget::~TagEditWidget() {}
 
-void TagEditWidget::initUI()
+void TagEditWidget::init_ui()
 {
     m_hbl_filepath = new QHBoxLayout();
     m_lb_filepath  = new QLabel("Location: ", this);
@@ -55,7 +55,7 @@ void TagEditWidget::initUI()
     this->setMinimumSize(800, 600);
 }
 
-void TagEditWidget::initUIProperties(const QString& filepath)
+void TagEditWidget::init_ui_properties(const QString& filepath)
 {
     m_le_filepath->setText(filepath);
     m_le_filepath->setReadOnly(true);
@@ -67,7 +67,7 @@ void TagEditWidget::initUIProperties(const QString& filepath)
     m_table_metadata->verticalHeader()->setVisible(false);
 }
 
-void TagEditWidget::initConnections()
+void TagEditWidget::init_connections()
 {
     connect(m_btn_help, &QPushButton::clicked, this, [this]() {
         QMessageBox* msb = new QMessageBox(this);
@@ -79,13 +79,13 @@ void TagEditWidget::initConnections()
         msb->show();
     });
     connect(m_btn_cancel, &QPushButton::clicked, this, &QWidget::close);
-    connect(m_btn_ok, &QPushButton::clicked, this, &TagEditWidget::handleSaveTags);
+    connect(m_btn_ok, &QPushButton::clicked, this, &TagEditWidget::handle_save_tags);
 
     connect(m_table_metadata, &QTableView::customContextMenuRequested, this,
-            &TagEditWidget::handleShowMenu);
+            &TagEditWidget::handle_show_menu);
 }
 
-void TagEditWidget::handleShowMenu(const QPoint& pos)
+void TagEditWidget::handle_show_menu(const QPoint& pos)
 {
     QModelIndex index = this->m_table_metadata->indexAt(pos);
     QMenu menu(this);
@@ -95,19 +95,19 @@ void TagEditWidget::handleShowMenu(const QPoint& pos)
         QAction* act_edit   = menu.addAction("Edit");
         QAction* act_delete = menu.addAction("Delete");
 
-        connect(act_edit, &QAction::triggered, this, [this, index]() { handleEditItem(index); });
+        connect(act_edit, &QAction::triggered, this, [this, index]() { handle_edit_item(index); });
         connect(act_delete, &QAction::triggered, this,
-                [this, index]() { handleDeleteItem(index); });
+                [this, index]() { handle_delete_item(index); });
     }
 
     // all cases:
     QAction* act_add = menu.addAction("Add new filed");
 
-    connect(act_add, &QAction::triggered, this, [this]() { handleAddNewFiled(); });
+    connect(act_add, &QAction::triggered, this, [this]() { handle_add_new_field(); });
     menu.exec(this->m_table_metadata->viewport()->mapToGlobal(pos));
 }
 
-void TagEditWidget::handleSaveTags()
+void TagEditWidget::handle_save_tags()
 {
     if (!m_table_model) {
         qDebug() << "[TagEdit]: table_model does not exist!";
@@ -125,7 +125,7 @@ void TagEditWidget::handleSaveTags()
             prop_str = m_table_model->data(prop_index).toString();
         }
 
-        const QString tag_key = nameToKey(prop_str);
+        const QString tag_key = name_to_key(prop_str);
         if (tag_key.isEmpty()) {
             continue;
         }
@@ -149,7 +149,7 @@ void TagEditWidget::handleSaveTags()
     // Explicitly submit removed keys so writeback can erase them from file tags.
     QSet<QString> original_keys;
     for (auto it = m_meta_buffer.constBegin(); it != m_meta_buffer.constEnd(); ++it) {
-        const QString key = nameToKey(it.key());
+        const QString key = name_to_key(it.key());
         if (!key.isEmpty()) {
             original_keys.insert(key);
         }
@@ -164,7 +164,7 @@ void TagEditWidget::handleSaveTags()
     this->close();
 }
 
-void TagEditWidget::handleEditItem(QModelIndex index)
+void TagEditWidget::handle_edit_item(QModelIndex index)
 {
     if (!m_table_model || !index.isValid()) {
         return;
@@ -178,7 +178,7 @@ void TagEditWidget::handleEditItem(QModelIndex index)
         prop_key = m_table_model->data(prop_index, Qt::DisplayRole).toString();
     }
 
-    if (nameToKey(prop_key) == "LYRICS") {
+    if (name_to_key(prop_key) == "LYRICS") {
         const QString text       = m_table_model->data(value_index, Qt::DisplayRole).toString();
 
         TextEditorDialog* dialog = new TextEditorDialog(text, this);
@@ -200,20 +200,20 @@ void TagEditWidget::handleEditItem(QModelIndex index)
     m_table_metadata->edit(value_index);
 }
 
-void TagEditWidget::handleDeleteItem(QModelIndex index)
+void TagEditWidget::handle_delete_item(QModelIndex index)
 {
     this->m_table_model->removeRow(index.row());
     this->m_table_metadata->update();
 }
 
-void TagEditWidget::handleAddNewFiled()
+void TagEditWidget::handle_add_new_field()
 {
     // open a new dialog, select a default property.
     // if select `other`, then input title in a QLineEdit
     // then press `OK` button to create new item
     QStringList list;
     for (int i = 0; i < m_table_model->rowCount(); ++i) {
-        QString key = nameToKey(m_table_model->item(i)->data().toString());
+        QString key = name_to_key(m_table_model->item(i)->data().toString());
         list << key;
         // qDebug() << key; // OK
     }
@@ -229,20 +229,20 @@ void TagEditWidget::handleAddNewFiled()
                     return;
                 }
 
-                const QString key = nameToKey(result.first);
+                const QString key = name_to_key(result.first);
                 if (key.isEmpty()) {
                     return;
                 }
 
                 for (int row = 0; row < m_table_model->rowCount(); ++row) {
                     const QString existing_key =
-                        nameToKey(m_table_model->item(row, 0)->data(Qt::UserRole + 1).toString());
+                        name_to_key(m_table_model->item(row, 0)->data(Qt::UserRole + 1).toString());
                     if (existing_key == key) {
                         return;
                     }
                 }
 
-                QStandardItem* prop = new QStandardItem(keyToName(key));
+                QStandardItem* prop = new QStandardItem(key_to_name(key));
                 prop->setData(key, Qt::UserRole + 1);
                 prop->setEditable(false);
 
@@ -263,7 +263,7 @@ void TagEditWidget::handleAddNewFiled()
     return;
 }
 
-void TagEditWidget::initTableModel(TrackMetaData meta)
+void TagEditWidget::init_table_model(TrackMetaData meta)
 {
 
     m_meta_buffer.clear();
@@ -293,7 +293,7 @@ void TagEditWidget::initTableModel(TrackMetaData meta)
 
     int index = 0;
     for (auto it = m_meta_buffer.begin(); it != m_meta_buffer.end(); ++it) {
-        QStandardItem* prop = new QStandardItem(keyToName(it.key()));
+        QStandardItem* prop = new QStandardItem(key_to_name(it.key()));
         prop->setData(it.key(), Qt::UserRole + 1);
         prop->setEditable(false);
         QStandardItem* value = new QStandardItem(firstValue({it.key()}));
@@ -303,7 +303,7 @@ void TagEditWidget::initTableModel(TrackMetaData meta)
     }
 }
 
-QString TagEditWidget::keyToName(const QString& key)
+QString TagEditWidget::key_to_name(const QString& key)
 {
     /* key = TagLib property, value = name (QString) */
     static QMap<QString, QString> map = {{"ALBUM", tr("Album")},
@@ -327,7 +327,7 @@ QString TagEditWidget::keyToName(const QString& key)
     }
 }
 
-QString TagEditWidget::nameToKey(const QString& name)
+QString TagEditWidget::name_to_key(const QString& name)
 {
     QString trimmed = name.trimmed();
     if (trimmed.startsWith('<') && trimmed.endsWith('>') && trimmed.size() > 2) {

@@ -57,8 +57,8 @@ static void test_single_file_policy()
     LibraryManager lib;
     CHECK(lib.initialize(data_dir.filePath("lib.db")));
     pm.set_library_manager(&lib);
-    pm.createPlaylist();
-    auto playlists = pm.getPlaylists();
+    pm.create_playlist();
+    auto playlists = pm.get_playlists();
     CHECK(playlists.size() == 1);
     if (playlists.isEmpty()) {
         return;
@@ -68,9 +68,9 @@ static void test_single_file_policy()
     // keep_external:未命中 → 外部条目,不注册父目录
     const QString f1     = music_dir.path() + "/external song.mp3";
     make_audio_file(music_dir.path(), "external song.mp3");
-    pm.addTrack(pid, f1, AddFilePolicy::keep_external);
+    pm.add_track(pid, f1, AddFilePolicy::keep_external);
     CHECK(lib.watched_folders().isEmpty());
-    auto tracks = playlists.first()->getTracks();
+    auto tracks = playlists.first()->get_tracks();
     CHECK(tracks.size() == 1);
     CHECK(tracks[0].source == TrackSource::external);
     CHECK(tracks[0].filepath == norm(f1));
@@ -78,18 +78,18 @@ static void test_single_file_policy()
     // import_to_library:未命中 → 注册父目录(库扫描完成后 upgrade 为库引用)
     const QString f2 = music_dir.path() + "/sub/imported.mp3";
     make_audio_file(music_dir.path() + "/sub", "imported.mp3");
-    pm.addTrack(pid, f2, AddFilePolicy::import_to_library);
+    pm.add_track(pid, f2, AddFilePolicy::import_to_library);
     CHECK(lib.watched_folders().contains(norm(music_dir.path() + "/sub")));
-    tracks = playlists.first()->getTracks();
+    tracks = playlists.first()->get_tracks();
     CHECK(tracks.size() == 2);
     CHECK(tracks[1].source == TrackSource::external); // 扫描未完成 → 仍为外部条目
 
     // by_operation(全局默认 by_operation):单文件 → 仅外部,不注册
     const QString f3 = music_dir.path() + "/plain.mp3";
     make_audio_file(music_dir.path(), "plain.mp3");
-    pm.addTrack(pid, f3, AddFilePolicy::by_operation);
+    pm.add_track(pid, f3, AddFilePolicy::by_operation);
     CHECK(lib.watched_folders().size() == 1); // 只有 sub
-    tracks = playlists.first()->getTracks();
+    tracks = playlists.first()->get_tracks();
     CHECK(tracks.size() == 3);
     CHECK(tracks[2].source == TrackSource::external);
 }
@@ -109,8 +109,8 @@ static void test_global_policy_and_folder()
     LibraryManager lib;
     CHECK(lib.initialize(data_dir.filePath("lib.db")));
     pm.set_library_manager(&lib);
-    pm.createPlaylist();
-    auto playlists = pm.getPlaylists();
+    pm.create_playlist();
+    auto playlists = pm.get_playlists();
     CHECK(playlists.size() == 1);
     if (playlists.isEmpty()) {
         return;
@@ -121,22 +121,22 @@ static void test_global_policy_and_folder()
     pm.set_add_file_policy(AddFilePolicy::import_to_library);
     CHECK(pm.add_file_policy() == AddFilePolicy::import_to_library);
     make_audio_file(music_dir.path(), "a.mp3");
-    pm.addTrack(pid, music_dir.path() + "/a.mp3", AddFilePolicy::by_operation);
+    pm.add_track(pid, music_dir.path() + "/a.mp3", AddFilePolicy::by_operation);
     CHECK(lib.watched_folders().contains(norm(music_dir.path())));
 
-    // addFolder keep_external:不注册目录,文件作为外部条目
+    // add_folder keep_external:不注册目录,文件作为外部条目
     make_audio_file(music_dir.path() + "/dir2", "b.mp3");
-    pm.addFolder(pid, music_dir.path() + "/dir2", AddFilePolicy::keep_external);
+    pm.add_folder(pid, music_dir.path() + "/dir2", AddFilePolicy::keep_external);
     CHECK(!lib.watched_folders().contains(norm(music_dir.path() + "/dir2")));
-    auto tracks = playlists.first()->getTracks();
+    auto tracks = playlists.first()->get_tracks();
     CHECK(tracks.size() == 2);
     CHECK(tracks[1].source == TrackSource::external);
 
-    // addFolder import_to_library:注册目录
+    // add_folder import_to_library:注册目录
     make_audio_file(music_dir.path() + "/dir3", "c.mp3");
-    pm.addFolder(pid, music_dir.path() + "/dir3", AddFilePolicy::import_to_library);
+    pm.add_folder(pid, music_dir.path() + "/dir3", AddFilePolicy::import_to_library);
     CHECK(lib.watched_folders().contains(norm(music_dir.path() + "/dir3")));
-    tracks = playlists.first()->getTracks();
+    tracks = playlists.first()->get_tracks();
     CHECK(tracks.size() == 3);
 }
 
@@ -168,8 +168,8 @@ static void test_library_hit_policy()
 
     PlaylistManager pm;
     pm.set_library_manager(&lib);
-    pm.createPlaylist();
-    auto playlists = pm.getPlaylists();
+    pm.create_playlist();
+    auto playlists = pm.get_playlists();
     CHECK(playlists.size() == 1);
     if (playlists.isEmpty()) {
         return;
@@ -177,8 +177,8 @@ static void test_library_hit_policy()
     const PlaylistId pid = playlists.first()->id();
 
     // keep_external 下命中库 → 仍为库引用
-    pm.addTrack(pid, music_dir.path() + "/in lib.mp3", AddFilePolicy::keep_external);
-    auto tracks = playlists.first()->getTracks();
+    pm.add_track(pid, music_dir.path() + "/in lib.mp3", AddFilePolicy::keep_external);
+    auto tracks = playlists.first()->get_tracks();
     CHECK(tracks.size() == 1);
     CHECK(tracks[0].source == TrackSource::library);
     CHECK(!tracks[0].library_track_id.isNull());

@@ -14,7 +14,7 @@ QSize ColorPreviewItem::sizeHint() const
     return QSize(m_width, m_height);
 }
 
-void ColorPreviewItem::setInitialColor(rgb_t rgb)
+void ColorPreviewItem::set_initial_color(rgb_t rgb)
 {
     m_last_confirmed_rgb = rgb;
     m_cached_rgb         = rgb;
@@ -22,7 +22,7 @@ void ColorPreviewItem::setInitialColor(rgb_t rgb)
     this->update();
 }
 
-void ColorPreviewItem::updateColor(rgb_t rgb)
+void ColorPreviewItem::update_color(rgb_t rgb)
 {
     m_cached_rgb         = m_last_confirmed_rgb;
     m_last_confirmed_rgb = rgb;
@@ -30,7 +30,7 @@ void ColorPreviewItem::updateColor(rgb_t rgb)
     this->update();
 }
 
-void ColorPreviewItem::updateCurrColor(rgb_t rgb)
+void ColorPreviewItem::update_curr_color(rgb_t rgb)
 {
     m_new_rgb = rgb;
     this->update();

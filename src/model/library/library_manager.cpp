@@ -1,4 +1,4 @@
-#include "library_manager.h"
+#include "model/library/library_manager.h"
 
 #include "core/utils/path.hpp"
 

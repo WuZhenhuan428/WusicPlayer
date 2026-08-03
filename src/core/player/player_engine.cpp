@@ -1,4 +1,4 @@
-#include "player_engine.h"
+#include "core/player/player_engine.h"
 
 #include <chrono>
 #include <thread>
@@ -24,7 +24,7 @@ PlayerEngine::~PlayerEngine()
     }
 }
 
-bool PlayerEngine::startDevice()
+bool PlayerEngine::start_device()
 {
     if (!m_device->start()) {
         printf("ma_device_start\n");
@@ -46,7 +46,7 @@ std::unordered_map<std::string, std::string> PlayerEngine::metadata()
     return m_decoder->metadata();
 }
 
-void PlayerEngine::setWatcdog()
+void PlayerEngine::set_watchdog()
 {
     m_watchdog = std::thread([this]() {
         bool has_notified = false;
@@ -75,7 +75,7 @@ void PlayerEngine::setWatcdog()
     });
 }
 
-void PlayerEngine::setUrl(const std::string& url)
+void PlayerEngine::set_url(const std::string& url)
 {
     m_buffer->clear();
     bool was_paused = (m_state == PlayingState::PAUSE);
@@ -146,7 +146,7 @@ void PlayerEngine::stop()
     }
 }
 
-void PlayerEngine::setVolume(float volume)
+void PlayerEngine::set_volume(float volume)
 {
     if (volume < 0 || volume > 1.0f) {
         printf("Volume must be in range from 0 to 1\n");
@@ -179,7 +179,7 @@ void PlayerEngine::seek(int64_t pos_ms)
     }
 }
 
-void PlayerEngine::setPlaybackFinishedCallback(std::function<void(StopReason)> func)
+void PlayerEngine::set_playback_finished_callback(std::function<void(StopReason)> func)
 {
     m_playback_callback = func;
 }
@@ -189,7 +189,7 @@ PlayerEngine::PlayingState PlayerEngine::state()
     return m_state;
 }
 
-void PlayerEngine::setEQ(gains_t gains)
+void PlayerEngine::set_eq(gains_t gains)
 {
     m_pending_gains = gains;
     if (m_decoder) {
@@ -202,7 +202,7 @@ size_t PlayerEngine::get_recent_audio_frames(F32StereoFrame* out_buffer, size_t 
     return m_device->get_recent_audio_frames(out_buffer, count);
 }
 
-std::vector<std::string> PlayerEngine::outputDevices() const
+std::vector<std::string> PlayerEngine::output_devices() const
 {
     if (!m_device) {
         return {};
@@ -210,7 +210,7 @@ std::vector<std::string> PlayerEngine::outputDevices() const
     return m_device->list_playback_devices();
 }
 
-std::string PlayerEngine::currentOutputDeviceName() const
+std::string PlayerEngine::current_output_device_name() const
 {
     if (!m_device) {
         return {};
@@ -218,7 +218,7 @@ std::string PlayerEngine::currentOutputDeviceName() const
     return m_device->current_playback_device_name();
 }
 
-bool PlayerEngine::setOutputDeviceByName(const std::string& name)
+bool PlayerEngine::set_output_device_by_name(const std::string& name)
 {
     if (!m_device) {
         return false;

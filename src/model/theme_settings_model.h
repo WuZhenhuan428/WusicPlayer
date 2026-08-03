@@ -14,7 +14,7 @@ struct ThemeEntry
 };
 
 /// 主题浏览模型——展示所有可用主题（含系统/内置/外部）。
-/// 数据由 ThemeService::scanThemes() 填充。
+/// 数据由 ThemeService::scan_themes() 填充。
 class ThemeSettingsModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -34,7 +34,7 @@ public:
 
     explicit ThemeSettingsModel(QObject* parent = nullptr);
 
-    void setEntries(const QVector<ThemeEntry>& entries);
+    void set_entries(const QVector<ThemeEntry>& entries);
     const QVector<ThemeEntry>& entries() const
     {
         return m_entries;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config.h"
+#include "core/player/config.h"
 #include "miniaudio.h"
 #include "ring_buffer.hpp"
 

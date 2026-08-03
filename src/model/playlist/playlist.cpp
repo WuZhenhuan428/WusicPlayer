@@ -1,4 +1,4 @@
-#include "playlist.h"
+#include "model/playlist/playlist.h"
 
 #include <QFileInfo>
 
@@ -20,7 +20,7 @@ Playlist::~Playlist()
 /**
  * @brief: 清除列表内容并回收空间
  */
-void Playlist::clearList()
+void Playlist::clear_list()
 {
     m_tracks.clear();
     m_tracks.shrink_to_fit();
@@ -29,26 +29,26 @@ void Playlist::clearList()
  * @brief: 添加音轨, 原来为空时自动指向第一首
  * @return: 所添加音轨的Uuid
  */
-Track Playlist::addTrack(const QString& filepath)
+Track Playlist::add_track(const QString& filepath)
 {
     Track t = Track::from_filepath(filepath);
-    addTrackObject(t);
+    add_track_object(t);
     return t;
 }
 
-Track Playlist::addTrackWithId(const EntryId& tid, const QString& filepath)
+Track Playlist::add_track_with_id(const EntryId& tid, const QString& filepath)
 {
     Track t = Track::from_entry(tid, filepath);
-    addTrackObject(t);
+    add_track_object(t);
     return t;
 }
 
-void Playlist::addTrackObject(const Track& track)
+void Playlist::add_track_object(const Track& track)
 {
     m_tracks.emplace_back(track);
 }
 
-bool Playlist::updateTrackMeta(const EntryId& tid, const TrackMetaData& meta)
+bool Playlist::update_track_meta(const EntryId& tid, const TrackMetaData& meta)
 {
     for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
         if (it->entry_id == tid) {
@@ -65,7 +65,7 @@ bool Playlist::updateTrackMeta(const EntryId& tid, const TrackMetaData& meta)
     return false;
 }
 
-bool Playlist::setTrackMissing(const EntryId& eid, bool missing)
+bool Playlist::set_track_missing(const EntryId& eid, bool missing)
 {
     for (auto& t : m_tracks) {
         if (t.entry_id == eid) {
@@ -76,7 +76,7 @@ bool Playlist::setTrackMissing(const EntryId& eid, bool missing)
     return false;
 }
 
-int Playlist::refreshLibraryTracks(
+int Playlist::refresh_library_tracks(
     const std::function<std::optional<LibraryTrack>(const TrackId&)>& resolver)
 {
     int updated = 0;
@@ -96,7 +96,7 @@ int Playlist::refreshLibraryTracks(
     return updated;
 }
 
-int Playlist::upgradeExternalTracks(
+int Playlist::upgrade_external_tracks(
     const std::function<std::optional<LibraryTrack>(const QString& path)>& resolver)
 {
     int upgraded = 0;
@@ -117,7 +117,7 @@ int Playlist::upgradeExternalTracks(
     return upgraded;
 }
 
-int Playlist::removeMissingTracks()
+int Playlist::remove_missing_tracks()
 {
     int removed = 0;
     for (auto it = m_tracks.begin(); it != m_tracks.end();) {
@@ -135,7 +135,7 @@ int Playlist::removeMissingTracks()
  * @brief: 查找并删除音轨
  * @note: 如果删除当前音轨, 则暂停播放
  */
-void Playlist::removeTrack(const EntryId& tid)
+void Playlist::remove_track(const EntryId& tid)
 {
     for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
         if (it->entry_id == tid) {
@@ -169,22 +169,22 @@ QString Playlist::name()
     return m_name;
 }
 
-void Playlist::setPlaylistName(QString setname)
+void Playlist::set_playlist_name(QString setname)
 {
     m_name = setname;
 }
 
-void Playlist::newUuid()
+void Playlist::new_uuid()
 {
     m_pid = PlaylistId::createUuid();
 }
 
-void Playlist::newUuid(const PlaylistId& pid)
+void Playlist::new_uuid(const PlaylistId& pid)
 {
     m_pid = pid;
 }
 
-const Track* Playlist::findTrackByID(const EntryId& eid) const
+const Track* Playlist::find_track_by_id(const EntryId& eid) const
 {
     for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
         if (it->entry_id == eid) {
@@ -196,7 +196,7 @@ const Track* Playlist::findTrackByID(const EntryId& eid) const
     return nullptr;
 }
 
-const QVector<Track>& Playlist::getTracks() const
+const QVector<Track>& Playlist::get_tracks() const
 {
     return m_tracks;
 }

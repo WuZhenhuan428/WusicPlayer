@@ -39,10 +39,10 @@ public:
     explicit TextEditorDialog(const QString& string, QWidget* parent = nullptr);
     ~TextEditorDialog();
 
-    void initUI();
-    void initConnections();
+    void init_ui();
+    void init_connections();
 
-    bool setContent(const QString& str);
+    bool set_content(const QString& str);
 
 signals:
     void sgnText(const QString& text);

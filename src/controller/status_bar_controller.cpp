@@ -1,4 +1,4 @@
-#include "status_bar_controller.h"
+#include "controller/status_bar_controller.h"
 
 #include <QPointer>
 

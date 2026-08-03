@@ -20,7 +20,7 @@ public:
                                  QObject* parent);
     ~TagWritebackService();
 
-    void requestTrackProperty(EntryId tid, QString filepath, TrackMetaData meta);
+    void request_track_property(EntryId tid, QString filepath, TrackMetaData meta);
 
 private:
     PlaylistController* m_playlist_ctl;

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "config.h"
+#include "core/player/config.h"
 #include "core/player_types.h"
-#include "decoder.h"
-#include "device.h"
-#include "ring_buffer.hpp"
+#include "core/player/decoder.h"
+#include "core/player/device.h"
+#include "core/player/ring_buffer.hpp"
 
 #include <atomic>
 #include <functional>
@@ -33,28 +33,28 @@ public:
     PlayerEngine();
     ~PlayerEngine();
 
-    // use this function before setUrl()
-    bool startDevice();
+    // use this function before set_url()
+    bool start_device();
 
-    void setWatcdog();
+    void set_watchdog();
     // local filepath only
-    void setUrl(const std::string& url);
+    void set_url(const std::string& url);
     void resume();
     void pause();
     void stop();
     PlayerEngine::PlayingState state();
     void seek(int64_t pos_ms);
-    void setVolume(float volume);
-    void setEQ(gains_t gains);
+    void set_volume(float volume);
+    void set_eq(gains_t gains);
     const gains_t gains() const;
     std::unordered_map<std::string, std::string> metadata();
     float volume();
     int64_t position();
-    void setPlaybackFinishedCallback(std::function<void(StopReason)> func);
+    void set_playback_finished_callback(std::function<void(StopReason)> func);
     size_t get_recent_audio_frames(F32StereoFrame* out_buffer, size_t count);
-    std::vector<std::string> outputDevices() const;
-    std::string currentOutputDeviceName() const;
-    bool setOutputDeviceByName(const std::string& name);
+    std::vector<std::string> output_devices() const;
+    std::string current_output_device_name() const;
+    bool set_output_device_by_name(const std::string& name);
 
 private:
     std::unique_ptr<Decoder> m_decoder = nullptr;
@@ -69,7 +69,7 @@ private:
 
     std::atomic<PlayingState> m_state;
 
-    // Cached EQ gains — applied to Decoder when it is created (setUrl),
+    // Cached EQ gains — applied to Decoder when it is created (set_url),
     // so EQ config loaded before any audio file can still take effect.
     gains_t m_pending_gains = {};
 };

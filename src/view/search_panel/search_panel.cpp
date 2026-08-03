@@ -1,7 +1,7 @@
-#include "search_panel.h"
+#include "view/search_panel/search_panel.h"
 
 #include "controller/search_backend/i_search_backend.h"
-#include "core/ConfigManager/ConfigManager.h"
+#include "core/config_manager/config_manager.h"
 #include "core/search_types.h"
 #include "model/search_model/search_model.h"
 
@@ -51,8 +51,8 @@ SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget* parent) :
     m_tim_input->setInterval(150);
 
     // load configurations
-    QJsonObject config_obj = m_cfg_mgr->readSubConfig(this->configSubKey());
-    this->loadFromJson(config_obj);
+    QJsonObject config_obj = m_cfg_mgr->read_sub_config(this->config_sub_key());
+    this->load_from_json(config_obj);
 
     connect(m_le_keyword, &QLineEdit::textChanged, this, [this](const QString& keyword) {
         Q_UNUSED(keyword);
@@ -67,7 +67,7 @@ SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget* parent) :
         SearchQuery query;
         query.keyword = m_le_keyword->text();
         query.mode    = static_cast<SearchQueryMode>(m_cb_mode->currentData().toInt());
-        m_search_model->searchRequest(std::move(query));
+        m_search_model->search_request(std::move(query));
     });
 
     connect(m_cb_mode, &QComboBox::currentIndexChanged, this, [this](int) {
@@ -83,7 +83,7 @@ SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget* parent) :
                     return;
                 }
 
-                const SearchHint hint = m_search_model->hintAt(index.row());
+                const SearchHint hint = m_search_model->hint_at(index.row());
                 if (!hint.filepath.isEmpty()) {
                     // 播放列表条目 / 外部条目:直接按路径播放(定位回当前列表)
                     emit sgnRequestPlayFile(hint.filepath);
@@ -97,26 +97,26 @@ SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget* parent) :
 
     if (m_search_result_tree_view->header()) {
         connect(m_search_result_tree_view->header(), &QHeaderView::customContextMenuRequested, this,
-                &SearchPanel::showHeaderContextMenu);
+                &SearchPanel::show_header_context_menu);
     }
 }
 
 SearchPanel::~SearchPanel() {}
 
-void SearchPanel::setSearchBackend(ISearchBackend* backend)
+void SearchPanel::set_search_backend(ISearchBackend* backend)
 {
     if (!m_search_model) {
         return;
     }
-    m_search_model->setBackend(backend);
+    m_search_model->set_backend(backend);
 }
 
-QTreeView* SearchPanel::getView() const
+QTreeView* SearchPanel::get_view() const
 {
     return this->m_search_result_tree_view;
 }
 
-void SearchPanel::applyHeaderStateDeferred(const QByteArray& state)
+void SearchPanel::apply_header_state_deferred(const QByteArray& state)
 {
     if (state.isEmpty())
         return;
@@ -130,7 +130,7 @@ void SearchPanel::applyHeaderStateDeferred(const QByteArray& state)
 
 void SearchPanel::closeEvent(QCloseEvent* event)
 {
-    m_cfg_mgr->writeSubConfig(this->configSubKey(), this->saveToJson());
+    m_cfg_mgr->write_sub_config(this->config_sub_key(), this->save_to_json());
     QWidget::closeEvent(event);
 }
 
@@ -148,7 +148,7 @@ void SearchPanel::keyPressEvent(QKeyEvent* event)
     }
 }
 
-void SearchPanel::showHeaderContextMenu(const QPoint& pos)
+void SearchPanel::show_header_context_menu(const QPoint& pos)
 {
     if (!m_search_result_tree_view || !m_search_result_tree_view->header() || !m_search_model) {
         return;
@@ -177,7 +177,7 @@ void SearchPanel::showHeaderContextMenu(const QPoint& pos)
             }
 
             QHeaderView* local_header = m_search_result_tree_view->header();
-            if (!checked && !hasOtherVisibleColumns(logical_index)) {
+            if (!checked && !has_other_visible_columns(logical_index)) {
                 return;
             }
 
@@ -188,7 +188,7 @@ void SearchPanel::showHeaderContextMenu(const QPoint& pos)
     menu.exec(header->mapToGlobal(pos));
 }
 
-bool SearchPanel::hasOtherVisibleColumns(int column_to_hide) const
+bool SearchPanel::has_other_visible_columns(int column_to_hide) const
 {
     if (!m_search_result_tree_view || !m_search_result_tree_view->header() || !m_search_model) {
         return false;
@@ -207,7 +207,7 @@ bool SearchPanel::hasOtherVisibleColumns(int column_to_hide) const
     return false;
 }
 
-void SearchPanel::loadFromJson(const QJsonObject& json)
+void SearchPanel::load_from_json(const QJsonObject& json)
 {
     const QByteArray geometry = QByteArray::fromBase64(json.value("geometry").toString().toUtf8());
     if (!geometry.isEmpty()) {
@@ -222,7 +222,7 @@ void SearchPanel::loadFromJson(const QJsonObject& json)
     }
 }
 
-QJsonObject SearchPanel::saveToJson()
+QJsonObject SearchPanel::save_to_json()
 {
     QJsonObject obj;
     obj["geometry"] = QString::fromUtf8(this->saveGeometry().toBase64());
@@ -231,7 +231,7 @@ QJsonObject SearchPanel::saveToJson()
     return obj;
 }
 
-QString SearchPanel::configSubKey() const
+QString SearchPanel::config_sub_key() const
 {
     return "search_panel";
 }

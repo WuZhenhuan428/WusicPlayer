@@ -25,14 +25,14 @@ public:
     explicit SearchPanel(ConfigManager* cfg_mgr, QWidget* parent = nullptr);
     ~SearchPanel();
 
-    void setSearchBackend(class ISearchBackend* backend);
-    QTreeView* getView() const;
-    void applyHeaderStateDeferred(const QByteArray& state);
+    void set_search_backend(class ISearchBackend* backend);
+    QTreeView* get_view() const;
+    void apply_header_state_deferred(const QByteArray& state);
 
     // config S/L, temporary
-    void loadFromJson(const QJsonObject& json);
-    QJsonObject saveToJson();
-    QString configSubKey() const;
+    void load_from_json(const QJsonObject& json);
+    QJsonObject save_to_json();
+    QString config_sub_key() const;
 
 signals:
     // 双击结果:优先携带 filepath(播放列表条目/外部条目直接播放)
@@ -47,8 +47,8 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
 
 private:
-    void showHeaderContextMenu(const QPoint& pos);
-    bool hasOtherVisibleColumns(int column_to_hide) const;
+    void show_header_context_menu(const QPoint& pos);
+    bool has_other_visible_columns(int column_to_hide) const;
 
 private:
     QLineEdit* m_le_keyword;

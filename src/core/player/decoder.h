@@ -10,7 +10,7 @@ extern "C" {
 #include <libavutil/opt.h>
 }
 
-#include "config.h"
+#include "core/player/config.h"
 #include "core/player_types.h"
 #include "ring_buffer.hpp"
 

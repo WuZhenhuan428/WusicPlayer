@@ -1,9 +1,9 @@
 #pragma once
 
-#include "controller/PlaybackController.h"
-#include "controller/PlaylistController.h"
-#include "view/MainWindow.h"
-#include "view/WControlBar/WControlBar.h"
+#include "controller/playback_controller.h"
+#include "controller/playlist_controller.h"
+#include "view/control_bar/control_bar.h"
+#include "view/main_window.h"
 
 #include <QObject>
 #include <QWidget>
@@ -31,14 +31,14 @@ signals:
     void sgnLocateCurrentTrack();
 
 private:
-    void handlePlayTrackRequest(const QString& filepath);
+    void handle_play_track_request(const QString& filepath);
 
 private:
     // just "borrow" a "pointer_view", so use raw pointer is safe
     MainWindow* main_window_           = nullptr;
     PlaybackController* m_playback_ctl = nullptr;
     PlaylistController* m_playlist_ctl = nullptr;
-    WControlBar* m_control_bar         = nullptr;
+    ControlBar* m_control_bar          = nullptr;
 
     bool locate_on_next_play_request_  = false;
     bool m_bound                       = false;

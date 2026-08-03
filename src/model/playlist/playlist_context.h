@@ -20,18 +20,18 @@ public:
     ~PlaylistContext();
 
 public:
-    void setPlayMode(PlayMode mode);
-    void setPlaylist(const PlaylistId& pid);
-    void setPlayTrack(const EntryId& tid);
+    void set_play_mode(PlayMode mode);
+    void set_playlist(const PlaylistId& pid);
+    void set_play_track(const EntryId& tid);
 
-    const PlaylistId& getPlaylistId();
-    const EntryId& getPlayTrackId();
-    PlayMode getPlayMode();
+    const PlaylistId& get_playlist_id();
+    const EntryId& get_play_track_id();
+    PlayMode get_play_mode();
 
 signals:
-    void changedCurrentListId(const PlaylistId& pid);
-    void changedCurrentTrackId(const EntryId& tid);
-    void changedCurrentPlayMode(const PlayMode& mode);
+    void sgn_current_list_changed(const PlaylistId& pid);
+    void sgn_current_track_changed(const EntryId& tid);
+    void sgn_current_play_mode_changed(const PlayMode& mode);
 
 private:
     PlaylistId m_current_playlist_id;
@@ -41,16 +41,16 @@ private:
 
 namespace PlaylistNavigator
 {
-EntryId nextOfInOrder(const QVector<EntryId>& queue, EntryId current);
-EntryId nextOfLoop(const QVector<EntryId>& queue, EntryId current);
-EntryId nextOfOutOfOrderTrack(const QVector<EntryId>& queue, EntryId current);
-EntryId nextOfShuffle(const QVector<EntryId>& queue);
-EntryId nextOfOutOfOrderGroup(const QVector<EntryId>& queue, EntryId current);
+EntryId next_of_in_order(const QVector<EntryId>& queue, EntryId current);
+EntryId next_of_loop(const QVector<EntryId>& queue, EntryId current);
+EntryId next_of_out_of_order_track(const QVector<EntryId>& queue, EntryId current);
+EntryId next_of_shuffle(const QVector<EntryId>& queue);
+EntryId next_of_out_of_order_group(const QVector<EntryId>& queue, EntryId current);
 
-EntryId previousOfInOrder(const QVector<EntryId>& queue, EntryId current);
-EntryId previousOfLoop(const QVector<EntryId>& queue, EntryId current);
-EntryId previousOfOutOfOrderTrack(const QVector<EntryId>& queue, EntryId current);
-EntryId previousOfShuffle(const QVector<EntryId>& queue);
-EntryId previousOfOutOfOrderGroup(const QVector<EntryId>& queue, EntryId current);
+EntryId previous_of_in_order(const QVector<EntryId>& queue, EntryId current);
+EntryId previous_of_loop(const QVector<EntryId>& queue, EntryId current);
+EntryId previous_of_out_of_order_track(const QVector<EntryId>& queue, EntryId current);
+EntryId previous_of_shuffle(const QVector<EntryId>& queue);
+EntryId previous_of_out_of_order_group(const QVector<EntryId>& queue, EntryId current);
 size_t generate_random_index(size_t max_index);
 }; // namespace PlaylistNavigator

@@ -14,9 +14,9 @@ public:
     explicit ColorPreviewItem(int height, int width, QWidget* parent);
     ~ColorPreviewItem() = default;
 
-    void setInitialColor(rgb_t rgb);
-    void updateColor(rgb_t rgb);
-    void updateCurrColor(rgb_t rgb);
+    void set_initial_color(rgb_t rgb);
+    void update_color(rgb_t rgb);
+    void update_curr_color(rgb_t rgb);
 
 protected:
     void paintEvent(QPaintEvent*) override;

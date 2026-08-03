@@ -12,23 +12,23 @@ public:
     explicit ThemeService(QObject* parent = nullptr);
 
     /// 扫描所有可用主题并更新模型
-    void scanThemes();
+    void scan_themes();
 
     /// 应用模型中的第 row 行主题
-    void applyTheme(int row);
+    void apply_theme(int row);
 
     /// 获取模型（供 QTableView 绑定）
     ThemeSettingsModel* model() const;
 
     /// 当前主题名称
-    QString currentThemeName() const;
+    QString current_theme_name() const;
 
     /// 扫描外部插件目录
-    void rescanExternalPlugins(const QString& dir);
+    void rescan_external_plugins(const QString& dir);
 
 signals:
     /// 当前主题变更（无论是外部触发还是本服务内切换）
-    void currentThemeChanged(const QString& name);
+    void sgn_current_theme_changed(const QString& name);
 
 private:
     std::unique_ptr<ThemeSettingsModel> m_model;

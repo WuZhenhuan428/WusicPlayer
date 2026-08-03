@@ -16,7 +16,7 @@ public:
     explicit LabelMatrix(QWidget* parent);
     ~LabelMatrix() = default;
 
-    void setHSV(hsv_t hsv);
+    void set_hsv(hsv_t hsv);
 
 private:
     QLabel* m_lbR;
@@ -40,8 +40,8 @@ private:
     hsv_t m_hsv;
 
 private:
-    void updateRGB(); // when hsv changed
-    void updateHSV(); // when rgb changed
+    void update_rgb(); // when hsv changed
+    void update_hsv(); // when rgb changed
 
 signals:
     void sgnEditColor(hsv_t hsv);

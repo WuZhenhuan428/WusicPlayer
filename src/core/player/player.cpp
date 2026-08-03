@@ -1,4 +1,4 @@
-#include "player.h"
+#include "core/player/player.h"
 
 #include <QDebug>
 #include <QMetaObject>
@@ -9,35 +9,35 @@ Player::Player(QObject* parent) :
     QObject(parent), m_player_engine(std::make_unique<PlayerEngine>()),
     m_media_devices(new QMediaDevices(this)), m_min_db(-50.0)
 {
-    if (!m_player_engine->startDevice()) {
+    if (!m_player_engine->start_device()) {
         return;
     }
 
-    m_player_engine->setPlaybackFinishedCallback([this](PlayerEngine::StopReason reason) {
+    m_player_engine->set_playback_finished_callback([this](PlayerEngine::StopReason reason) {
         QMetaObject::invokeMethod(
             this,
             [this, reason]() {
                 if (reason == PlayerEngine::StopReason::NATURAL_EOF) {
-                    emit stateChanged(m_player_engine->state());
-                    emit sgnPlaybackNatualEnd();
+                    emit sgn_state_changed(m_player_engine->state());
+                    emit sgn_playback_natural_end();
                 } /*else ...  */
             },
             Qt::QueuedConnection);
     });
-    m_player_engine->setWatcdog();
+    m_player_engine->set_watchdog();
 
-    refreshDeviceCache();
+    refresh_device_cache();
     connect(m_media_devices, &QMediaDevices::audioOutputsChanged, this, [this]() {
         const QByteArray old_id = m_current_output_id;
         qInfo() << "[AUDIO] audioOutputsChanged triggered. old_id=" << old_id;
-        refreshDeviceCache();
+        refresh_device_cache();
         qInfo() << "[AUDIO] refreshed outputs count=" << m_audio_devices.size()
                 << "current_id=" << m_current_output_id;
 
         if (m_audio_devices.isEmpty()) {
             m_current_output_id.clear();
             qWarning() << "[AUDIO] no available output devices after hot-plug.";
-            emit deviceChanged(QAudioDevice());
+            emit sgn_device_changed(QAudioDevice());
             return;
         }
 
@@ -56,7 +56,7 @@ Player::Player(QObject* parent) :
                 if (!m_preferred_output_id.isEmpty() && dev.id() == m_preferred_output_id) {
                     preferred_exists = true;
                     qInfo() << "[AUDIO] restoring preferred device:" << dev.description();
-                    setOutputDevice(dev);
+                    set_output_device(dev);
                     break;
                 }
             }
@@ -64,13 +64,13 @@ Player::Player(QObject* parent) :
             if (!preferred_exists) {
                 qInfo() << "[AUDIO] preferred device unavailable. fallback to:"
                         << m_audio_devices.first().description();
-                setOutputDevice(m_audio_devices.first());
+                set_output_device(m_audio_devices.first());
             }
             return;
         }
 
-        qInfo() << "[AUDIO] output device still valid:" << currentOutputDevice().description();
-        emit deviceChanged(currentOutputDevice());
+        qInfo() << "[AUDIO] output device still valid:" << current_output_device().description();
+        emit sgn_device_changed(current_output_device());
     });
 
     m_position_timer = new QTimer(this);
@@ -81,7 +81,7 @@ Player::Player(QObject* parent) :
         }
         const PlayingState curr_state = m_player_engine->state();
         if (curr_state == PlayingState::PLAYING || curr_state == PlayingState::PAUSE) {
-            emit positionChanged(this->position());
+            emit sgn_position_changed(this->position());
         }
     });
     m_position_timer->start();
@@ -104,15 +104,15 @@ void Player::read(const QString& filepath)
 
     m_loaded_track_path = filepath;
 
-    m_player_engine->setUrl(filepath.toStdString());
+    m_player_engine->set_url(filepath.toStdString());
     m_player_engine->resume();
     const auto meta  = m_player_engine->metadata();
     auto duration_it = meta.find("DURATION_MS");
     if (duration_it != meta.end()) {
-        emit durationChanged(QString::fromStdString(duration_it->second).toLongLong());
+        emit sgn_duration_changed(QString::fromStdString(duration_it->second).toLongLong());
     }
-    emit stateChanged(m_player_engine->state());
-    emit positionChanged(this->position());
+    emit sgn_state_changed(m_player_engine->state());
+    emit sgn_position_changed(this->position());
 }
 
 void Player::play()
@@ -124,21 +124,21 @@ void Player::play()
     if (m_player_engine->state() == PlayingState::STOP) {
         if (m_loaded_track_path.isEmpty()) {
             qInfo() << "[AUDIO] play ignored: no loaded track while in STOP state.";
-            emit stateChanged(m_player_engine->state());
-            emit positionChanged(0);
+            emit sgn_state_changed(m_player_engine->state());
+            emit sgn_position_changed(0);
             return;
         }
 
-        m_player_engine->setUrl(m_loaded_track_path.toStdString());
+        m_player_engine->set_url(m_loaded_track_path.toStdString());
         const auto meta  = m_player_engine->metadata();
         auto duration_it = meta.find("DURATION_MS");
         if (duration_it != meta.end()) {
-            emit durationChanged(QString::fromStdString(duration_it->second).toLongLong());
+            emit sgn_duration_changed(QString::fromStdString(duration_it->second).toLongLong());
         }
     }
 
     m_player_engine->resume();
-    emit stateChanged(m_player_engine->state());
+    emit sgn_state_changed(m_player_engine->state());
 }
 
 void Player::pause()
@@ -147,18 +147,18 @@ void Player::pause()
         return;
     }
     m_player_engine->pause();
-    emit stateChanged(m_player_engine->state());
+    emit sgn_state_changed(m_player_engine->state());
 }
 
-// stateChanged & positionChanged仅用于改变控制栏按键状态
+// sgn_state_changed & sgn_position_changed仅用于改变控制栏按键状态
 void Player::stop()
 {
     if (!m_player_engine) {
         return;
     }
 
-    emit stateChanged(PlayingState::STOP);
-    emit positionChanged(0);
+    emit sgn_state_changed(PlayingState::STOP);
+    emit sgn_position_changed(0);
 
     const PlayingState prev_state = m_player_engine->state();
     if (prev_state == PlayingState::STOP) {
@@ -173,46 +173,46 @@ void Player::seek(qint64 pos_ms)
         return;
     }
     m_player_engine->seek((int64_t)pos_ms);
-    emit positionChanged(this->position());
+    emit sgn_position_changed(this->position());
 }
 
-bool Player::muted()
+bool Player::is_muted()
 {
     return m_is_mute;
 }
 
-void Player::setMute(bool mute)
+void Player::set_mute(bool mute)
 {
     if (!m_player_engine || m_is_mute == mute) {
         return;
     }
 
     if (m_is_mute) { // && mute = off (recover)
-        m_player_engine->setVolume(m_old_volume);
+        m_player_engine->set_volume(m_old_volume);
     } else { // mute = on (mute)
         m_old_volume = m_player_engine->volume();
-        m_player_engine->setVolume(0.0f);
+        m_player_engine->set_volume(0.0f);
     }
 
     m_is_mute = mute;
 }
 
-void Player::setVolume(float vol)
+void Player::set_volume(float vol)
 {
     if (!m_player_engine) {
         return;
     }
 
     const double normalized = std::clamp(static_cast<double>(vol) / 100.0, 0.0, 1.0);
-    double audio_gain       = this->mapSliderToVolume(normalized, m_min_db);
-    m_player_engine->setVolume((float)audio_gain);
+    double audio_gain       = this->map_slider_to_volume(normalized, m_min_db);
+    m_player_engine->set_volume((float)audio_gain);
 
     if (!m_is_mute) {
         m_old_volume = static_cast<float>(audio_gain);
     }
 }
 
-double Player::mapSliderToVolume(double value, double min_db)
+double Player::map_slider_to_volume(double value, double min_db)
 {
     if (value <= 0.0) {
         return 0.0;
@@ -239,32 +239,32 @@ qint64 Player::position() const
     return (qint64)(m_player_engine->position());
 }
 
-void Player::setOutputDevice(const QAudioDevice& device)
+void Player::set_output_device(const QAudioDevice& device)
 {
     if (!m_player_engine || device.isNull()) {
-        qWarning() << "[AUDIO] setOutputDevice ignored. m_player_engine/device invalid.";
+        qWarning() << "[AUDIO] set_output_device ignored. m_player_engine/device invalid.";
         return;
     }
 
     qInfo() << "[AUDIO] switching output device to" << device.description() << "id=" << device.id();
 
-    const bool ok = m_player_engine->setOutputDeviceByName(device.description().toStdString());
+    const bool ok = m_player_engine->set_output_device_by_name(device.description().toStdString());
     if (!ok) {
         qWarning() << "[AUDIO] backend switch failed for" << device.description();
         return;
     }
 
     m_preferred_output_id = device.id();
-    refreshDeviceCache();
-    qInfo() << "[AUDIO] output switch applied. active=" << currentOutputDevice().description()
-            << "id=" << currentOutputDevice().id();
-    emit deviceChanged(currentOutputDevice());
+    refresh_device_cache();
+    qInfo() << "[AUDIO] output switch applied. active=" << current_output_device().description()
+            << "id=" << current_output_device().id();
+    emit sgn_device_changed(current_output_device());
 }
 
-void Player::setOutputDeviceById(const QByteArray& id)
+void Player::set_output_device_by_id(const QByteArray& id)
 {
     if (id.isEmpty()) {
-        qWarning() << "[AUDIO] setOutputDeviceById ignored. empty id.";
+        qWarning() << "[AUDIO] set_output_device_by_id ignored. empty id.";
         return;
     }
 
@@ -272,7 +272,7 @@ void Player::setOutputDeviceById(const QByteArray& id)
 
     for (const auto& dev : m_audio_devices) {
         if (dev.id() == id) {
-            setOutputDevice(dev);
+            set_output_device(dev);
             return;
         }
     }
@@ -285,7 +285,7 @@ QList<QAudioDevice> Player::devices() const
     return m_audio_devices;
 }
 
-QAudioDevice Player::currentOutputDevice() const
+QAudioDevice Player::current_output_device() const
 {
     for (const auto& dev : m_audio_devices) {
         if (dev.id() == m_current_output_id) {
@@ -300,16 +300,16 @@ QAudioDevice Player::currentOutputDevice() const
     return {};
 }
 
-void Player::refreshDeviceCache()
+void Player::refresh_device_cache()
 {
     m_audio_devices = QMediaDevices::audioOutputs();
     if (m_audio_devices.isEmpty() || !m_player_engine) {
-        qWarning() << "[AUDIO] refreshDeviceCache got empty list or null m_player_engine.";
+        qWarning() << "[AUDIO] refresh_device_cache got empty list or null m_player_engine.";
         m_current_output_id.clear();
         return;
     }
 
-    const std::string active_name = m_player_engine->currentOutputDeviceName();
+    const std::string active_name = m_player_engine->current_output_device_name();
     for (const auto& dev : m_audio_devices) {
         if (dev.description().toStdString() == active_name) {
             m_current_output_id = dev.id();
@@ -334,9 +334,9 @@ void Player::refreshDeviceCache()
             << m_audio_devices.first().description();
 }
 
-void Player::setEQ(gains_t gains)
+void Player::set_eq(gains_t gains)
 {
-    m_player_engine->setEQ(gains);
+    m_player_engine->set_eq(gains);
 }
 
 float Player::volume() const

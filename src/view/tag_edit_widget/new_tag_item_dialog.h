@@ -24,11 +24,11 @@ signals:
     void sgnResult(const QPair<QString, QString>& result);
 
 private:
-    void initUI();
-    void initConnections();
-    bool checkRepetition();
-    QString nameToKey(const QString& name);
-    void saveResult();
+    void init_ui();
+    void init_connections();
+    bool check_repetition();
+    QString name_to_key(const QString& name);
+    void save_result();
 
     // bool verify_prop(QString property);
 private:

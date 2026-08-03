@@ -1,6 +1,6 @@
-#include "in_memory_search_backend.h"
+#include "controller/search_backend/in_memory_search_backend.h"
 
-#include "controller/PlaylistController.h"
+#include "controller/playlist_controller.h"
 #include "model/playlist/playlist.h"
 
 #include <algorithm>
@@ -14,7 +14,7 @@ struct RankedHit
     int score = -1;
 };
 
-bool byScoreDesc(const RankedHit& lhs, const RankedHit& rhs)
+bool by_score_desc(const RankedHit& lhs, const RankedHit& rhs)
 {
     if (lhs.score != rhs.score) {
         return lhs.score > rhs.score;
@@ -22,7 +22,7 @@ bool byScoreDesc(const RankedHit& lhs, const RankedHit& rhs)
     return lhs.hint.title.localeAwareCompare(rhs.hint.title) < 0;
 }
 
-int clampScore(int score)
+int clamp_score(int score)
 {
     if (score < 0) {
         return 0;
@@ -46,14 +46,14 @@ void InMemorySearchBackend::warmup(const PlaylistId& pid)
     }
 
     if (pid.isNull()) {
-        const PlaylistId current = playlist_controller_->currentPlaylistId();
+        const PlaylistId current = playlist_controller_->current_playlist_id();
         if (!current.isNull()) {
-            rebuildIndex(current);
+            rebuild_index(current);
         }
         return;
     }
 
-    rebuildIndex(pid);
+    rebuild_index(pid);
 }
 
 void InMemorySearchBackend::invalidate(const PlaylistId& pid)
@@ -73,11 +73,11 @@ QVector<SearchHint> InMemorySearchBackend::search(const SearchQuery& query)
         return hits;
     }
 
-    const PlaylistId pid = resolvePid(query);
+    const PlaylistId pid = resolve_pid(query);
     if (pid.isNull()) {
         return hits;
     }
-    if (!ensureIndexReady(pid)) {
+    if (!ensure_index_ready(pid)) {
         return hits;
     }
 
@@ -93,7 +93,7 @@ QVector<SearchHint> InMemorySearchBackend::search(const SearchQuery& query)
     ranked_hits.reserve(index.size());
 
     for (const IndexedTrack& track : index) {
-        const int score = scoreTrack(track, query, keyword_norm);
+        const int score = score_track(track, query, keyword_norm);
         if (score < 0) {
             continue;
         }
@@ -101,11 +101,11 @@ QVector<SearchHint> InMemorySearchBackend::search(const SearchQuery& query)
         RankedHit ranked;
         ranked.hint       = track.hint;
         ranked.score      = score;
-        ranked.hint.score = static_cast<unsigned char>(clampScore(score));
+        ranked.hint.score = static_cast<unsigned char>(clamp_score(score));
         ranked_hits.push_back(std::move(ranked));
     }
 
-    std::sort(ranked_hits.begin(), ranked_hits.end(), byScoreDesc);
+    std::sort(ranked_hits.begin(), ranked_hits.end(), by_score_desc);
 
     hits.reserve(ranked_hits.size());
     for (const RankedHit& ranked_hit : ranked_hits) {
@@ -115,7 +115,7 @@ QVector<SearchHint> InMemorySearchBackend::search(const SearchQuery& query)
     return hits;
 }
 
-PlaylistId InMemorySearchBackend::resolvePid(const SearchQuery& query) const
+PlaylistId InMemorySearchBackend::resolve_pid(const SearchQuery& query) const
 {
     if (!query.pid.isNull()) {
         return query.pid;
@@ -123,23 +123,23 @@ PlaylistId InMemorySearchBackend::resolvePid(const SearchQuery& query) const
     if (!playlist_controller_) {
         return PlaylistId{};
     }
-    return playlist_controller_->currentPlaylistId();
+    return playlist_controller_->current_playlist_id();
 }
 
-void InMemorySearchBackend::rebuildIndex(const PlaylistId& pid)
+void InMemorySearchBackend::rebuild_index(const PlaylistId& pid)
 {
     if (!playlist_controller_ || pid.isNull()) {
         return;
     }
 
-    std::shared_ptr<Playlist> playlist = playlist_controller_->findPlaylistById(pid);
+    std::shared_ptr<Playlist> playlist = playlist_controller_->find_playlist_by_id(pid);
     if (!playlist) {
         m_index_by_playlist.remove(pid);
         return;
     }
 
     QVector<IndexedTrack> indexed_tracks;
-    const QVector<Track>& tracks = playlist->getTracks();
+    const QVector<Track>& tracks = playlist->get_tracks();
     indexed_tracks.reserve(tracks.size());
 
     for (const Track& track : tracks) {
@@ -166,13 +166,13 @@ void InMemorySearchBackend::rebuildIndex(const PlaylistId& pid)
     m_index_by_playlist.insert(pid, std::move(indexed_tracks));
 }
 
-bool InMemorySearchBackend::ensureIndexReady(const PlaylistId& pid)
+bool InMemorySearchBackend::ensure_index_ready(const PlaylistId& pid)
 {
     if (m_index_by_playlist.contains(pid)) {
         return true;
     }
 
-    rebuildIndex(pid);
+    rebuild_index(pid);
     return m_index_by_playlist.contains(pid);
 }
 
@@ -181,7 +181,7 @@ QString InMemorySearchBackend::normalize(const QString& text)
     return text.trimmed().toCaseFolded();
 }
 
-bool InMemorySearchBackend::fuzzyMatch(const QString& text, const QString& pattern)
+bool InMemorySearchBackend::fuzzy_match(const QString& text, const QString& pattern)
 {
     if (pattern.isEmpty()) {
         return true;
@@ -200,8 +200,8 @@ bool InMemorySearchBackend::fuzzyMatch(const QString& text, const QString& patte
     return false;
 }
 
-int InMemorySearchBackend::scoreTrack(const IndexedTrack& track, const SearchQuery& query,
-                                      const QString& keyword_norm) const
+int InMemorySearchBackend::score_track(const IndexedTrack& track, const SearchQuery& query,
+                                       const QString& keyword_norm) const
 {
     const bool case_sensitive  = query.case_sensitive;
     const QString keyword      = case_sensitive ? query.keyword.trimmed() : keyword_norm;
@@ -237,13 +237,13 @@ int InMemorySearchBackend::scoreTrack(const IndexedTrack& track, const SearchQue
 
     case SearchQueryMode::Fuzzy: {
         int score = -1;
-        if (fuzzyMatch(title, keyword))
+        if (fuzzy_match(title, keyword))
             score = std::max(score, 85);
-        if (fuzzyMatch(artist, keyword))
+        if (fuzzy_match(artist, keyword))
             score = std::max(score, 70);
-        if (fuzzyMatch(album_artist, keyword))
+        if (fuzzy_match(album_artist, keyword))
             score = std::max(score, 65);
-        if (fuzzyMatch(album, keyword))
+        if (fuzzy_match(album, keyword))
             score = std::max(score, 60);
         return score;
     }

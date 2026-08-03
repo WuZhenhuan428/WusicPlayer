@@ -5,13 +5,13 @@
 NewTagItemDialog::NewTagItemDialog(QStringList existed_props, QWidget* parent) :
     QWidget(parent), m_existed_props(existed_props)
 {
-    this->initUI();
-    this->initConnections();
+    this->init_ui();
+    this->init_connections();
 }
 
 NewTagItemDialog::~NewTagItemDialog() {}
 
-void NewTagItemDialog::initUI()
+void NewTagItemDialog::init_ui()
 {
     m_lb_type  = new QLabel("Type: ", this);
     m_cb_type  = new QComboBox(this);
@@ -53,10 +53,10 @@ void NewTagItemDialog::initUI()
     m_le_other->setEnabled(false);
 }
 
-void NewTagItemDialog::initConnections()
+void NewTagItemDialog::init_connections()
 {
     connect(m_cb_type, &QComboBox::currentTextChanged, this, [this](const QString& str) {
-        QString key = nameToKey(str);
+        QString key = name_to_key(str);
         if (key == "OTHER") {
             m_le_other->setEnabled(true);
             m_le_other->setFocus();
@@ -77,8 +77,8 @@ void NewTagItemDialog::initConnections()
     });
 
     connect(m_btn_apply, &QPushButton::clicked, this, [this]() {
-        if (checkRepetition()) {
-            saveResult();
+        if (check_repetition()) {
+            save_result();
             emit sgnResult(m_result);
             this->close();
         } else {
@@ -95,16 +95,16 @@ void NewTagItemDialog::initConnections()
     connect(m_btn_cancel, &QPushButton::clicked, this, [this]() { this->close(); });
 }
 
-bool NewTagItemDialog::checkRepetition()
+bool NewTagItemDialog::check_repetition()
 {
-    QString current_key = nameToKey(m_cb_type->currentText());
+    QString current_key = name_to_key(m_cb_type->currentText());
 
     if (m_existed_props.contains(current_key)) {
         return false;
     } else if (current_key == "OTHER") {
         QString key = m_le_other->text().trimmed();
         // if other type in common types
-        if (m_existed_props.contains(nameToKey(key)) || key.isEmpty()) {
+        if (m_existed_props.contains(name_to_key(key)) || key.isEmpty()) {
             return false;
         }
     }
@@ -113,17 +113,17 @@ bool NewTagItemDialog::checkRepetition()
     return true;
 }
 
-void NewTagItemDialog::saveResult()
+void NewTagItemDialog::save_result()
 {
-    if (nameToKey(m_cb_type->currentText()) == "OTHER") {
-        m_result.first = nameToKey(m_le_other->text());
+    if (name_to_key(m_cb_type->currentText()) == "OTHER") {
+        m_result.first = name_to_key(m_le_other->text());
     } else {
-        m_result.first = nameToKey(m_cb_type->currentText());
+        m_result.first = name_to_key(m_cb_type->currentText());
     }
     m_result.second = m_le_value->text().trimmed();
 }
 
-QString NewTagItemDialog::nameToKey(const QString& name)
+QString NewTagItemDialog::name_to_key(const QString& name)
 {
     // stolen from TagEditWidget ^^;
     QString trimmed = name.trimmed();

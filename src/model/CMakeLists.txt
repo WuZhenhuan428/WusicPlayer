@@ -32,9 +32,9 @@ add_library(wusic_model STATIC
     playlist/playlist_view_model.cpp
     playlist/playlist_view_model.h
 
-    ShortcutsViewModel/shortcuts_view_model.cpp
-    ShortcutsViewModel/shortcuts_view_model.hpp
-    ShortcutsViewModel/shortcuts_types.hpp
+    shortcuts_view_model/shortcuts_view_model.cpp
+    shortcuts_view_model/shortcuts_view_model.hpp
+    shortcuts_view_model/shortcuts_types.hpp
 
     search_model/search_model.cpp
     search_model/search_model.h

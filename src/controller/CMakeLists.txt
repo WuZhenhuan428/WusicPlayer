@@ -1,9 +1,9 @@
 add_library(wusic_controller STATIC
-    PlaybackController.h
-    PlaybackController.cpp
+    playback_controller.h
+    playback_controller.cpp
 
-    PlaylistController.h
-    PlaylistController.cpp
+    playlist_controller.h
+    playlist_controller.cpp
 
     search_backend/i_search_backend.h
     search_backend/library_search_backend.h
