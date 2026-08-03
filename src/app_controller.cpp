@@ -59,7 +59,8 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
     playback_restore_service_(std::make_unique<PlaybackRestoreService>(playlist_controller_.get(),
                                                                        playback_controller_, this)),
     library_interaction_serivce_(std::make_unique<LibraryInteractionService>(
-        main_window_->libraryPanel(), playback_controller_, playlist_controller_.get(), this)),
+        main_window_->playlistTreeWidget(), main_window_->songTableView(), playback_controller_,
+        playlist_controller_.get(), this)),
     tag_writeback_service_(
         std::make_unique<TagWritebackService>(playlist_controller_.get(), playback_controller_,
                                               playlist_manager_.get(), main_window_.get(), this)),
@@ -70,8 +71,8 @@ AppController::AppController(PlaybackController* playbackController, QObject* pa
     playback_queue_service_->set_playlist_manager(playlist_manager_.get());
     playback_queue_service_->set_library_manager(library_manager_.get());
     // 媒体库控件(左侧播放列表下方):注入库与队列服务
-    main_window_->libraryPanel()->setLibraryManager(library_manager_.get());
-    main_window_->libraryPanel()->setPlaybackQueueService(playback_queue_service_.get());
+    main_window_->libraryBrowser()->set_library_manager(library_manager_.get());
+    main_window_->libraryBrowser()->set_playback_queue_service(playback_queue_service_.get());
 
     // 音乐库:注入播放列表(解析曲目引用)、初始化数据库、启动初始扫描
     playlist_manager_->set_library_manager(library_manager_.get());
@@ -114,7 +115,8 @@ void AppController::initializeCoreConnections()
 {
     PlaylistController* playlistController = playlist_controller_.get();
     PlaybackController* playbackController = playback_controller_;
-    LibraryWidget* libraryPanel            = main_window_->libraryPanel();
+    LibraryBrowserWidget* libraryBrowser   = main_window_->libraryBrowser();
+    SongTableView* songTableView           = main_window_->songTableView();
     SidePanel* sidePanel                   = main_window_->sidePanel();
     // DesktopLyricsWidget* desktopLyrics = main_window_->desktopLyricsWidget();
 
@@ -126,9 +128,9 @@ void AppController::initializeCoreConnections()
     connect(playback_queue_service_.get(), &PlaybackQueueService::sgn_play_requested, this,
             [this](const QueueItem& item) { main_window_->playTrackInUi(item.filepath); });
     connect(
-        libraryPanel, &LibraryWidget::sgnLibraryPlayRequested, this,
+        libraryBrowser, &LibraryBrowserWidget::sgnPlayRequested, this,
         [this](const TrackId& track_id) { playback_queue_service_->play_library_track(track_id); });
-    connect(libraryPanel, &LibraryWidget::sgnOpenLibrarySettingsRequested, this, [this]() {
+    connect(libraryBrowser, &LibraryBrowserWidget::sgnOpenLibrarySettingsRequested, this, [this]() {
         onOpenSettingsPanelRequested();
         if (settings_panel_) {
             settings_panel_->switchToPageByTitle("Media Library");
@@ -136,7 +138,7 @@ void AppController::initializeCoreConnections()
     });
 
     library_interaction_serivce_->bind();
-    connect(libraryPanel, &LibraryWidget::sgnTrackPropertyRequested, tag_writeback_service_.get(),
+    connect(songTableView, &SongTableView::sgnTrackPropertyRequested, tag_writeback_service_.get(),
             &TagWritebackService::requestTrackProperty);
 
     auto* lyricsModel = qobject_cast<WLyricsModel*>(sidePanel->getLyricsPanel()->model());
@@ -184,14 +186,6 @@ void AppController::initializeCoreConnections()
             &PlaylistController::createNewPlaylist);
     connect(main_window_.get(), &MainWindow::sgnLoadPlaylist, playlistController,
             &PlaylistController::loadPlaylist);
-    connect(main_window_.get(), &MainWindow::sgnCopyPlaylistRequested, this,
-            [playlistController]() { playlistController->copyPlaylist(); });
-    connect(main_window_.get(), &MainWindow::sgnRenamePlaylistRequested, this,
-            [playlistController]() { playlistController->renamePlaylist(); });
-    connect(main_window_.get(), &MainWindow::sgnRemovePlaylistRequested, this,
-            [playlistController]() { playlistController->removePlaylist(); });
-    connect(main_window_.get(), &MainWindow::sgnSavePlaylistRequested, this,
-            [playlistController]() { playlistController->savePlaylist(); });
     connect(main_window_.get(), &MainWindow::sgnSetSortRuleRequested, this,
             &AppController::handleSetSortRuleRequested);
     connect(main_window_.get(), &MainWindow::sgnInsertColumnRequested, this,
@@ -203,7 +197,7 @@ void AppController::initializeCoreConnections()
     connect(main_window_.get(), &MainWindow::sgnOpenEQWidgetRequested, this,
             &AppController::handleOpenEQRequested);
 
-    auto* locateShortcut = new QShortcut(QKeySequence(Qt::Key_Tab), libraryPanel->songTreeView());
+    auto* locateShortcut = new QShortcut(QKeySequence(Qt::Key_Tab), songTableView->treeView());
     locateShortcut->setContext(Qt::WidgetShortcut);
     connect(locateShortcut, &QShortcut::activated, this, [this]() { locateCurrentTrackInView(); });
 }
@@ -211,12 +205,12 @@ void AppController::initializeCoreConnections()
 void AppController::locateCurrentTrackInView()
 {
     auto* playlistController = playlist_controller_.get();
-    auto* libraryPanel       = main_window_ ? main_window_->libraryPanel() : nullptr;
-    if (!playlistController || !libraryPanel) {
+    auto* songTableView      = main_window_ ? main_window_->songTableView() : nullptr;
+    if (!playlistController || !songTableView) {
         return;
     }
 
-    auto* view  = libraryPanel->songTreeView();
+    auto* view  = songTableView->treeView();
     auto* model = playlistController->viewModel();
     if (!view || !model) {
         return;
@@ -315,13 +309,13 @@ void AppController::initializeConfig()
     if (main_window_) {
         cm.registerModule(main_window_.get());
         qDebug() << "[CONFIG] register main window";
-        if (main_window_->libraryPanel()) {
-            cm.registerModule(main_window_->libraryPanel());
-            qDebug() << "[CONFIG] register library panel";
-            if (main_window_->libraryPanel()->libraryBrowser()) {
-                cm.registerModule(main_window_->libraryPanel()->libraryBrowser());
-                qDebug() << "[CONFIG] register library browser";
-            }
+        if (main_window_->songTableView()) {
+            cm.registerModule(main_window_->songTableView());
+            qDebug() << "[CONFIG] register song table view";
+        }
+        if (main_window_->libraryBrowser()) {
+            cm.registerModule(main_window_->libraryBrowser());
+            qDebug() << "[CONFIG] register library browser";
         }
         if (main_window_->desktopLyricsWidget()) {
             cm.registerModule(main_window_->desktopLyricsWidget());
@@ -678,12 +672,12 @@ void AppController::setup_status_bar_connections()
                     pl ? std::format("{} track(s)", pl->track_count()) : "0 track(s)";
                 status_bar_controller_->register_item("playlist_track_num", tracks.c_str());
             }
-            // 双击列表项目时触发 &LibraryWidget::sgnSwitchPlaylist
+            // 双击列表项目时触发 &PlaylistTreeWidget::sgnSwitchPlaylist
             // CRUD 时触发 `&PlaylistController::playlistChanged`
             connect(playlist_controller_.get(), &PlaylistController::playlistChanged, this,
                     show_track_count);
-            connect(main_window_.get()->libraryPanel(), &LibraryWidget::sgnSwitchPlaylist, this,
-                    show_track_count);
+            connect(main_window_.get()->playlistTreeWidget(),
+                    &PlaylistTreeWidget::sgnSwitchPlaylist, this, show_track_count);
         },
         Qt::SingleShotConnection);
 }

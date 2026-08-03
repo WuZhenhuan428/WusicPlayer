@@ -68,7 +68,7 @@
 - [x] **现在播放队列**(核心):设计见 [`4-playback-queue.md`](4-playback-queue.md);新增 `model/playback_queue/`(`QueueItem` 三态来源 / `PlaybackQueue` 容器+PlayMode 导航 / `PlaybackQueueService` 来源构建+JSON 持久化),与播放列表解耦;积累期纯新增不接线,切断点由 `sgn_play_requested` 接入播放。测试:`tb_playback_queue` 219 项断言(队列操作/当前项/导航/信号/持久化 round-trip/三种来源构建)
 - [x] **媒体库控件**:设计见 [`5-library-browser.md`](5-library-browser.md);集成进 `LibraryWidget` 左侧面板(播放列表树下方,垂直 splitter);`LibraryBrowseModel`(预设分类 artist/album/genre/folder/year + FTS5 搜索 + 分组树默认折叠)、`LibraryBrowserWidget`(分类下拉 + 设置按钮占位 + 配置按钮 + 防抖搜索 + 树)、设置面板 "Media Library" 页(watched folders 唯一管理入口);双击 → `PlaybackQueueService::play_library_track` 入队即播。DSL 自定义规则后续与主视图 SortRule 统一改造。测试:`tb_library_browse` 50 项断言(分组/平铺/Unknown 归组/搜索/后注入)
 - [x] **播放列表解析策略 + 配置**:`AddFilePolicy{by_operation,import_to_library,keep_external,always_ask}`;`PlaylistManager::addTrack/addFolder` 接受策略(by_operation 按操作类型:文件夹→同步入库、单文件→仅外部);import 时注册父目录/目录到库,扫描后 `upgradeExternalTracks` 自动升级为库引用;`PlaylistController` 决策(always_ask 弹窗)并持久化 `add_file_policy`(config key "playlist");设置面板 "Media Library" 页新增"添加未入库文件时"下拉。测试:`tb_add_file_policy`(keep_external/import/by_operation/全局策略/文件夹/库命中)17 项断言
-- [ ] **菜单栏清理**:功能归位各控件右键,菜单栏只留应用级操作
+- [~] **菜单栏清理**(第一步完成):移除与播放列表右键重复的 File 菜单项(Save/Copy/Rename/Remove current playlist,右键经 `LibraryInteractionService` 已接线);移除死代码 Help→Manual(从未连接);修复 View 菜单助记符冲突("Set sort rule (&R)" vs "Remove a column (&R)");同步清理 MainWindow 信号(`sgnSave/Copy/Rename/RemovePlaylistRequested`)与 AppController 对应连接。剩余(待各控件右键功能完善后):View 排序/列管理→播放列表右键、文件添加→媒体库控件右键、Playback EQ 归位
 - [ ] **智能播放列表**(保存的查询):特化视图实时反映库变化,替代手工维护;"整库播放列表"由库控件承担
 
 ## 媒体库控件补充:持久化 + 搜索面板职责切分
@@ -78,6 +78,8 @@
 
 ## 跨阶段
 
+- [x] **拆分 LibraryWidget**(组合根化):原 `LibraryWidget` 糅合播放列表导航/媒体库浏览/歌曲表三职责,已拆为 `view/playlist_tree/PlaylistTreeWidget`(列表树+双击切换+CRUD 右键)、`view/song_table/SongTableView`(歌曲表+列管理+播放右键+表头持久化)、`view/library_browser/LibraryBrowserWidget`(已有,已从 `LibraryWidget/` 目录迁出,旧目录删除);由 `MainWindow::buildCentralArea` 直接组合(左垂直:播放列表树+库控件;主水平:左+歌曲表);`LibraryWidget` 已删除;`LibraryInteractionService` 改注入两控件;`AppController` 全部 libraryPanel 引用迁移直连;splitter 状态持久化归 MainWindow("window"),表头归 SongTableView("song_table_view")
+- [x] **修复布局回归(上中下排列)**:根因=`MainWindow::loadFromJson` 恢复 `splitter_orientation` 时 `toInt()` 默认 0,而 `Qt::Horizontal=1`/`Qt::Vertical=2`,配置缺失时强转出无效方向(QSplitter 按垂直处理)→ 主 splitter 变垂直。修复=`toInt(Qt::Horizontal)` 默认 + 仅当值为 1/2 时 `setOrientation`
 - [ ] 全库 clang-format 格式化(已有 `.clang-format`,迁移完成后统一执行)
 - [ ] 存量命名迁移: 函数/方法/变量 -> snake_case; 信号 -> `sgn_` 前缀;Qt 虚函数覆写除外
 - [ ] 存量 widget 成员 -> 缩写前缀(如 `le_`、`btn_`),并尽量局部化到 `init_ui()`

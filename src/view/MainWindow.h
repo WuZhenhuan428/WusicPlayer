@@ -4,9 +4,11 @@
 #include "controller/PlaylistController.h"
 #include "core/ConfigManager/IConfigurable.h"
 #include "view/DesktopLyricsWidget/DesktopLyricsWidget.h"
-#include "view/LibraryWidget/LibraryWidget.h"
 #include "view/SidePanel/SidePanel.h"
 #include "view/WControlBar/WControlBar.h"
+#include "view/library_browser/LibraryBrowserWidget.h"
+#include "view/playlist_tree/PlaylistTreeWidget.h"
+#include "view/song_table/SongTableView.h"
 
 #include <QAction>
 #include <QByteArray>
@@ -46,7 +48,9 @@ public:
     // widget getter
     PlaylistController* playlistController() const;
     PlaybackController* playbackController() const;
-    LibraryWidget* libraryPanel() const;
+    PlaylistTreeWidget* playlistTreeWidget() const;
+    LibraryBrowserWidget* libraryBrowser() const;
+    SongTableView* songTableView() const;
     SidePanel* sidePanel() const;
     WControlBar* controlBarWidget() const;
     DesktopLyricsWidget* desktopLyricsWidget() const;
@@ -90,10 +94,6 @@ private:
     QAction* m_act_add_folder;
     QAction* m_act_new_playlist;
     QAction* m_act_load_playlist;
-    QAction* m_act_copy_playlist;
-    QAction* m_act_rename_playlist;
-    QAction* m_act_remove_playlist;
-    QAction* m_act_save_playlist;
     QAction* m_act_exit;
 
     // menu View
@@ -111,16 +111,19 @@ private:
 
     // menu Help
     QMenu* m_menu_help;
-    QAction* m_act_manual;
     QAction* m_act_about;
 
     // menu Settings
     QMenu* m_menu_settings;
     QAction* m_act_settings;
 
-    // center window
-    LibraryWidget* m_library_panel = nullptr;
-    SidePanel* m_side_panel        = nullptr;
+    // center window:组合三个内容控件 + 歌词面板
+    PlaylistTreeWidget* m_playlist_tree_widget = nullptr; // 左上方:播放列表导航
+    LibraryBrowserWidget* m_library_browser    = nullptr; // 左下方:媒体库浏览
+    SongTableView* m_song_table_view           = nullptr; // 右侧:当前播放列表歌曲表
+    QSplitter* m_left_splitter                 = nullptr; // 左:播放列表树(上)+ 库控件(下)
+    QSplitter* m_main_splitter                 = nullptr; // 主:左 + 歌曲表
+    SidePanel* m_side_panel                    = nullptr;
     QWidget* m_center_widget;
     QHBoxLayout* m_hbl_centre;
 
@@ -135,10 +138,6 @@ signals:
     void sgnImportFilesRequested();
     void sgnImportFolderRequested();
     void sgnCreatePlaylistRequested();
-    void sgnCopyPlaylistRequested();
-    void sgnRenamePlaylistRequested();
-    void sgnRemovePlaylistRequested();
-    void sgnSavePlaylistRequested();
     void sgnPlayTrackRequested(const QString& filepath);
     void sgnSetSortRuleRequested();
     void sgnInsertColumnRequested();

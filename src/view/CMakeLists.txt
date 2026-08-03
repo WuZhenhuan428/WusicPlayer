@@ -2,10 +2,14 @@ add_library(wusic_view STATIC
     MainWindow.cpp
     MainWindow.h
 
-    LibraryWidget/LibraryWidget.cpp
-    LibraryWidget/LibraryWidget.h
-    LibraryWidget/LibraryBrowserWidget.cpp
-    LibraryWidget/LibraryBrowserWidget.h
+    library_browser/LibraryBrowserWidget.cpp
+    library_browser/LibraryBrowserWidget.h
+
+    playlist_tree/PlaylistTreeWidget.cpp
+    playlist_tree/PlaylistTreeWidget.h
+
+    song_table/SongTableView.cpp
+    song_table/SongTableView.h
 
     playlist/playlist_widgets.cpp
     playlist/playlist_widgets.h
