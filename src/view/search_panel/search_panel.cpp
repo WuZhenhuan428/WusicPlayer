@@ -54,10 +54,8 @@ SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget* parent) :
     QJsonObject config_obj = m_cfg_mgr->read_sub_config(this->config_sub_key());
     this->load_from_json(config_obj);
 
-    connect(m_le_keyword, &QLineEdit::textChanged, this, [this](const QString& keyword) {
-        Q_UNUSED(keyword);
-        m_tim_input->start();
-    });
+    connect(m_le_keyword, &QLineEdit::textChanged, this,
+            [this]([[maybe_unused]] const QString& keyword) { m_tim_input->start(); });
 
     connect(m_tim_input, &QTimer::timeout, this, [this]() {
         if (!m_search_model) {

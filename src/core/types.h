@@ -13,6 +13,14 @@ using EntryId    = QUuid; // 播放列表条目身份:播放列表内唯一
 using PlaylistId = QUuid; // 播放列表身份
 using TrackId    = QUuid; // 库级曲目身份:首次入库时由库分配(阶段 2 落地)
 
+namespace wusic
+{
+// 拖拽 MIME 类型:库曲目拖拽(TrackId JSON 数组)
+inline constexpr char kLibraryTracksMime[]   = "application/x-wusic-library-tracks";
+// 拖拽 MIME 类型:播放列表条目拖拽(JSON: {src, ids:[EntryId]});列表→列表
+inline constexpr char kPlaylistEntriesMime[] = "application/x-wusic-playlist-entries";
+} // namespace wusic
+
 enum class SortType
 {
     not_sorted = 0,

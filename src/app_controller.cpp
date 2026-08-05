@@ -127,6 +127,46 @@ void AppController::initialize_core_connections()
     connect(
         library_browser, &LibraryBrowserWidget::sgnPlayRequested, this,
         [this](const TrackId& track_id) { playback_queue_service_->play_library_track(track_id); });
+    connect(library_browser, &LibraryBrowserWidget::sgnPlayTracksRequested, this,
+            [this](const QVector<TrackId>& track_ids) {
+                for (const TrackId& tid : track_ids) {
+                    playback_queue_service_->play_library_track(tid);
+                }
+            });
+    connect(library_browser, &LibraryBrowserWidget::sgnAddTracksToPlaylist, this,
+            [this](const PlaylistId& dst_pid, const QVector<TrackId>& track_ids) {
+                playlist_controller_->add_library_tracks(dst_pid, track_ids);
+            });
+    connect(library_browser, &LibraryBrowserWidget::sgnRefreshLibraryRequested, this,
+            [this]() { library_manager_->start_scan(); });
+    // 媒体库拖入播放列表树 → 添加到对应列表;拖入歌曲表 → 添加到当前列表
+    connect(main_window_->playlist_tree_widget(), &PlaylistTreeWidget::sgnLibraryTracksDropped,
+            this, [this](const PlaylistId& pid, const QVector<TrackId>& track_ids) {
+                playlist_controller_->add_library_tracks(pid, track_ids);
+            });
+    // 播放列表条目拖入播放列表树 → 复制到目标列表(列表→列表)
+    connect(main_window_->playlist_tree_widget(), &PlaylistTreeWidget::sgnPlaylistEntriesDropped,
+            this,
+            [this](const PlaylistId& src_pid, const PlaylistId& dst_pid,
+                   const QVector<EntryId>& entry_ids) {
+                playlist_controller_->copy_tracks_to_playlist(src_pid, entry_ids, dst_pid);
+            });
+    connect(song_table_view, &SongTableView::sgnLibraryTracksDropped, this,
+            [this](const QVector<TrackId>& track_ids) {
+                playlist_controller_->add_library_tracks(
+                    playlist_controller_->current_playlist_id(), track_ids);
+            });
+    // Add to Playlist 目标列表(含当前列表,库曲目可入任意列表)
+    library_browser->set_playlist_list_provider([this]() {
+        QVector<QPair<PlaylistId, QString>> lists;
+        const auto all = playlist_controller_->playlists();
+        for (const auto& pl : all) {
+            if (pl) {
+                lists.push_back({pl->id(), pl->name()});
+            }
+        }
+        return lists;
+    });
     connect(library_browser, &LibraryBrowserWidget::sgnOpenLibrarySettingsRequested, this,
             [this]() { panel_coordinator_->open_settings_panel_page("Media Library"); });
 
@@ -168,10 +208,6 @@ void AppController::initialize_core_connections()
                 });
     }
 
-    connect(main_window_.get(), &MainWindow::sgnImportFilesRequested, this,
-            [playlist_controller]() { playlist_controller->import_files(); });
-    connect(main_window_.get(), &MainWindow::sgnImportFolderRequested, this,
-            [playlist_controller]() { playlist_controller->import_dir(); });
     connect(main_window_.get(), &MainWindow::sgnCreatePlaylistRequested, playlist_controller,
             &PlaylistController::create_new_playlist);
     connect(main_window_.get(), &MainWindow::sgnLoadPlaylist, playlist_controller,

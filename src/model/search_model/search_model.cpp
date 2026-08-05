@@ -102,9 +102,8 @@ QModelIndex SearchModel::index(int row, int column, const QModelIndex& parent) c
     return createIndex(row, column);
 }
 
-QModelIndex SearchModel::parent(const QModelIndex& child) const
+QModelIndex SearchModel::parent([[maybe_unused]] const QModelIndex& child) const
 {
-    Q_UNUSED(child);
     return QModelIndex{};
 }
 

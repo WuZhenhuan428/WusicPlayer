@@ -199,6 +199,18 @@ void PlaylistController::rename_playlist(const PlaylistId& id)
     }
 }
 
+void PlaylistController::rename_playlist(const PlaylistId& id, const QString& new_name)
+{
+    if (!m_manager || new_name.trimmed().isEmpty()) {
+        return;
+    }
+    const PlaylistId target_id = id.isNull() ? m_manager->get_current_playlist_id() : id;
+    if (target_id.isNull()) {
+        return;
+    }
+    m_manager->rename_playlist(target_id, new_name.trimmed());
+}
+
 void PlaylistController::remove_playlist(const PlaylistId& id)
 {
     if (!m_manager)
@@ -266,6 +278,56 @@ void PlaylistController::remove_track(const EntryId& id)
 
     if (btn == QMessageBox::Yes) {
         m_manager->remove_track(id);
+    }
+}
+
+int PlaylistController::add_library_tracks(const PlaylistId& pid, const QVector<TrackId>& track_ids)
+{
+    return m_manager ? m_manager->add_library_tracks(pid, track_ids) : 0;
+}
+
+bool PlaylistController::locate_filepath(const QString& filepath)
+{
+    if (!m_manager || filepath.isEmpty()) {
+        return false;
+    }
+    const auto pl = current_playlist();
+    if (!pl) {
+        return false;
+    }
+    const Track* track = pl->find_track_by_filepath(filepath);
+    if (!track) {
+        return false;
+    }
+    // 仅更新 context(play_track → view 高亮/元数据同步);不播放,由调用方统一播放
+    m_manager->set_current_track(track->entry_id);
+    return true;
+}
+
+void PlaylistController::remove_tracks(const QVector<EntryId>& ids)
+{
+    // 批量移除:不逐个弹窗确认(单选仍走带确认的 remove_track)
+    if (!m_manager) {
+        return;
+    }
+    for (const EntryId& id : ids) {
+        if (!id.isNull()) {
+            m_manager->remove_track(id);
+        }
+    }
+}
+
+int PlaylistController::copy_tracks_to_playlist(const PlaylistId& src_pid,
+                                                const QVector<EntryId>& entry_ids,
+                                                const PlaylistId& dst_pid)
+{
+    return m_manager ? m_manager->copy_tracks_to_playlist(src_pid, entry_ids, dst_pid) : 0;
+}
+
+void PlaylistController::reorder_playlists(const QVector<PlaylistId>& ordered_ids)
+{
+    if (m_manager) {
+        m_manager->reorder_playlists(ordered_ids);
     }
 }
 

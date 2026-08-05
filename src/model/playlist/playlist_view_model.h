@@ -7,6 +7,7 @@
 
 #include <QAbstractTableModel>
 #include <QHash>
+#include <QMimeData>
 #include <QModelIndex>
 #include <QPersistentModelIndex>
 #include <QStringList>
@@ -57,6 +58,11 @@ public:
      * @todo map column to SortType
      */
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+
+    // 拖拽源:列表→列表(携带源列表 id 与选中条目 id,JSON 序列化)
+    Qt::ItemFlags flags(const QModelIndex& index) const override;
+    QStringList mimeTypes() const override;
+    QMimeData* mimeData(const QModelIndexList& indexes) const override;
 
     // Helper to get logic data
     PlaybackQueueSnapshot

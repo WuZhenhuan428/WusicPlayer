@@ -2,6 +2,10 @@
 
 #include <QColor>
 #include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QMimeData>
 #include <QPointer>
 #include <QRegularExpression>
 #include <QThread>
@@ -18,7 +22,8 @@ PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo, QObject* parent) :
     m_batch_rebuild_timer->setInterval(60);
     connect(m_batch_rebuild_timer, &QTimer::timeout, this, &PlaylistViewModel::rebuild_async);
     if (m_repo) {
-        connect(m_repo, &PlaylistRepo::sgn_playlist_changed, this, &PlaylistViewModel::rebuild_async);
+        connect(m_repo, &PlaylistRepo::sgn_playlist_changed, this,
+                &PlaylistViewModel::rebuild_async);
         connect(m_repo, &PlaylistRepo::playlistBatchLoaded, this,
                 [this](const PlaylistId& playlist_id, int, int) {
                     if (playlist_id == m_pid) {
@@ -353,9 +358,8 @@ int PlaylistViewModel::rowCount(const QModelIndex& parent) const
     return parentNode->children.size();
 }
 
-int PlaylistViewModel::columnCount(const QModelIndex& parent) const
+int PlaylistViewModel::columnCount([[maybe_unused]] const QModelIndex& parent) const
 {
-    Q_UNUSED(parent);
     return m_columns.size();
 }
 
@@ -485,6 +489,49 @@ EntryId PlaylistViewModel::track_at(const QModelIndex& index) const
         return EntryId();
     Node* node = static_cast<Node*>(index.internalPointer());
     return node->id;
+}
+
+Qt::ItemFlags PlaylistViewModel::flags(const QModelIndex& index) const
+{
+    Qt::ItemFlags f = QAbstractItemModel::flags(index);
+    if (index.isValid()) {
+        f |= Qt::ItemIsDragEnabled;
+    }
+    return f;
+}
+
+QStringList PlaylistViewModel::mimeTypes() const
+{
+    return {QString::fromLatin1(wusic::kPlaylistEntriesMime)};
+}
+
+QMimeData* PlaylistViewModel::mimeData(const QModelIndexList& indexes) const
+{
+    // 收集选中曲目(过滤组节点:id 为空)
+    QVector<EntryId> ids;
+    for (const QModelIndex& index : indexes) {
+        if (!index.isValid()) {
+            continue;
+        }
+        auto* node = static_cast<Node*>(index.internalPointer());
+        if (node && !node->id.isNull() && !ids.contains(node->id)) {
+            ids.push_back(node->id);
+        }
+    }
+    if (ids.isEmpty()) {
+        return nullptr;
+    }
+    QJsonArray arr;
+    for (const EntryId& id : ids) {
+        arr.append(id.toString(QUuid::WithoutBraces));
+    }
+    QJsonObject root;
+    root["src"] = m_pid.toString(QUuid::WithoutBraces);
+    root["ids"] = arr;
+    auto* mime  = new QMimeData;
+    mime->setData(QString::fromLatin1(wusic::kPlaylistEntriesMime),
+                  QJsonDocument(root).toJson(QJsonDocument::Compact));
+    return mime;
 }
 
 QModelIndex PlaylistViewModel::get_current_track_index()

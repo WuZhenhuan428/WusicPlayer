@@ -22,12 +22,23 @@ public:
 
     void create_new_playlist();
     void load_playlist();
+    // 弹窗重命名(保留)
     void rename_playlist(const PlaylistId& id = PlaylistId());
+    // 直接改名(内联编辑提交)
+    void rename_playlist(const PlaylistId& id, const QString& new_name);
     void remove_playlist(const PlaylistId& id = PlaylistId());
     void save_playlist(const PlaylistId& id = PlaylistId());
     void copy_playlist(const PlaylistId& id = PlaylistId());
+    // 按给定顺序重排播放列表(拖动排序)
+    void reorder_playlists(const QVector<PlaylistId>& ordered_ids);
     void remove_track(const EntryId& id);
+    void remove_tracks(const QVector<EntryId>& ids);
     void remove_missing_tracks();
+    // 将库曲目(按 TrackId)添加到指定列表;返回成功添加的条目数
+    int add_library_tracks(const PlaylistId& pid, const QVector<TrackId>& track_ids);
+    // 将 src_pid 列表中的若干条目复制到 dst_pid 列表;返回成功添加的条目数
+    int copy_tracks_to_playlist(const PlaylistId& src_pid, const QVector<EntryId>& entry_ids,
+                                const PlaylistId& dst_pid);
 
     auto view_model() const -> decltype(std::declval<PlaylistManager*>()->get_view_model());
     // 返回下一/上一曲目的条目身份(EntryId);空表示无曲目可切
@@ -36,6 +47,9 @@ public:
     // 条目身份 → 播放路径(当前播放列表;找不到返回空)
     QString track_file_path(const EntryId& eid) const;
     void play(int queueIndex);
+    // 在当前播放列表中按路径定位并设置 context(play_track);找到返回 true(供定位同步),
+    // 找不到(库直播/外部/不在列表)返回 false。不触发播放,由调用方统一播放。
+    bool locate_filepath(const QString& filepath);
     void switch_to_playlist(const PlaylistId& id);
 
     void set_play_mode(PlayMode mode);

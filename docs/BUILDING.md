@@ -1,13 +1,14 @@
-# Building WusicPlayer
+# WusicPlayer 构建
 
-## Prerequisites (All Platforms)
+## 要求 (所有平台)
 
-- **CMake** ≥ 3.21
-- **Ninja** (recommended) or Make
-- **Git** (for submodules)
+- **Qt** ≥ 6.5
+- **CMake** ≥ 3.24 (使用了 C++23)
+- **Ninja** (推荐使用) 或 Make
+- **Git** (用于获取 submodule)
 - **pkg-config** (Linux / MSYS2 / Homebrew)
 
-### Clone & submodules
+### 部署源代码 (git clone & git submodule)
 ```bash
 git clone --recurse-submodules https://github.com/your/wusicplayer.git
 # or if already cloned:
@@ -18,21 +19,21 @@ git submodule update --init --recursive
 
 ## Windows (MSVC)
 
-### 1. Install Qt 6.5+
-Download from https://www.qt.io/download and install the MSVC 64-bit version.
-Make sure to select `Qt Multimedia` and `Qt SVG` modules.
+### 1. 安装 Qt 6.5+
+从 [Qt 官网](https://www.qt.io/download) 安装 MSVC 64-bit 版本.
+使用了以下 Qt 组件: `Core`, `Widgets`, `Multimedia`, `Network`, `Svg`, `Sql`
 
-### 2. Install FFmpeg (pre-built shared libs)
-Download "full build shared" from https://github.com/BtbN/FFmpeg-Builds/releases.
-Extract to e.g. `C:\ffmpeg`.
+### 2. 安装 FFmpeg (预编译库)
+从[github](https://github.com/BtbN/FFmpeg-Builds/releases)下载 "full build shared" 版本.
+解压到任意文件夹, 例如 `C:\ffmpeg`.
 
-### 3. Install OpenSSL (optional, for network features)
+### 3. 安装 OpenSSL (可选)
 ```
 winget install ShiningLight.OpenSSL
 ```
-Or download from https://slproweb.com/products/Win32OpenSSL.html.
+或者从网站下载: [slproweb.com](https://slproweb.com/products/Win32OpenSSL.html).
 
-### 4. Build
+### 4. 编译
 ```powershell
 # From a Developer Command Prompt for VS or after running vcvars64.bat
 $env:CMAKE_PREFIX_PATH = "C:/Qt/6.x.x/msvc2022_64"
@@ -42,14 +43,14 @@ cmake --preset debug -DCMAKE_PREFIX_PATH="$env:CMAKE_PREFIX_PATH" -DFFMPEG_ROOT=
 cmake --build --preset debug
 ```
 
-### 5. Run (bundle DLLs)
-After building, copy the following DLLs next to the executable:
-- `Qt6Core.dll`, `Qt6Widgets.dll`, `Qt6Multimedia.dll`, `Qt6Svg.dll`, `Qt6Network.dll` (from Qt bin/)
-- `avcodec-*.dll`, `avformat-*.dll`, `avutil-*.dll`, `avfilter-*.dll` (from FFmpeg bin/)
-- `libcrypto-3-x64.dll`, `libssl-3-x64.dll` (from OpenSSL bin/)
-- All Qt `platforms/`, `styles/`, `imageformats/` plugin DLLs
+### 5. 运行 (打包 DLL 动态运行库)
+编译后复制以下 dll 文件到编译生成位置
+- `Qt6Core.dll`, `Qt6Widgets.dll`, `Qt6Multimedia.dll`, `Qt6Svg.dll`, `Qt6Network.dll` (Qt bin/)
+- `avcodec-*.dll`, `avformat-*.dll`, `avutil-*.dll`, `avfilter-*.dll` (FFmpeg bin/)
+- `libcrypto-3-x64.dll`, `libssl-3-x64.dll` (OpenSSL bin/)
+- 所有的 Qt `platforms/`, `styles/`, `imageformats/` 插件 DLL.
 
-Or use `windeployqt`:
+或者使用 `windeployqt`:
 ```powershell
 windeployqt --release build/debug/WusicPlayer.exe
 ```
@@ -58,17 +59,18 @@ windeployqt --release build/debug/WusicPlayer.exe
 
 ## Windows (MSYS2 MinGW)
 
-### 1. Install MSYS2
-Download from https://www.msys2.org/.
+### 1. 安装 MSYS2
+[MSYS2 官网](https://www.msys2.org/)
 
-### 2. Install dependencies
-Open **MSYS2 MINGW64** terminal:
+### 2. 安装依赖
+打开 **MSYS2 MINGW64** 终端:
 ```bash
 pacman -Syu
 pacman -S \
     mingw-w64-x86_64-qt6-base \
     mingw-w64-x86_64-qt6-multimedia \
     mingw-w64-x86_64-qt6-svg \
+    mingw-w64-x86_64-qt6-sql \
     mingw-w64-x86_64-ffmpeg \
     mingw-w64-x86_64-taglib \
     mingw-w64-x86_64-openssl \
@@ -79,7 +81,7 @@ pacman -S \
     mingw-w64-x86_64-pkgconf
 ```
 
-### 3. Build
+### 3. 编译
 ```bash
 cmake --preset debug
 cmake --build --preset debug
@@ -89,16 +91,15 @@ cmake --build --preset debug
 
 ## Linux (Debian/Ubuntu)
 
-### 1. Install dependencies
+### 1. 安装依赖
 ```bash
-sudo apt install \
-    qt6-base-dev qt6-multimedia-dev qt6-svg-dev \
+sudo apt install qt6-base-dev qt6-multimedia-dev qt6-svg-dev \
     libavcodec-dev libavformat-dev libavutil-dev libavfilter-dev \
     libtag1-dev libssl-dev zlib1g-dev \
     ninja-build pkgconf git
 ```
 
-### 2. Build
+### 2. 编译
 ```bash
 cmake --preset debug
 cmake --build --preset debug
@@ -108,12 +109,12 @@ cmake --build --preset debug
 
 ## macOS
 
-### 1. Install dependencies
+### 1. 安装依赖
 ```bash
 brew install qt@6 ffmpeg taglib openssl zlib ninja pkgconf
 ```
 
-### 2. Build
+### 2. 编译
 ```bash
 cmake --preset debug \
     -DCMAKE_PREFIX_PATH="$(brew --prefix qt@6)" \
@@ -123,12 +124,12 @@ cmake --build --preset debug
 
 ---
 
-## CMake Options
+## CMake 选项
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `WUSIC_BUILD_TESTS` | `ON` | Build unit tests |
-| `WUSIC_ENABLE_GPROF` | `OFF` | Enable gprof profiling (GCC only) |
-| `CMAKE_PREFIX_PATH` | — | Qt installation prefix |
-| `FFMPEG_ROOT` | — | FFmpeg installation prefix (mainly for Windows) |
-| `CMAKE_BUILD_TYPE` | — | `Debug` / `Release` / `RelWithDebInfo` |
+| 选项                 | 默认    | 描述                                   |
+|----------------------|---------|----------------------------------------|
+| `WUSIC_BUILD_TESTS`  | `ON`    | 编译单元测试                           |
+| `WUSIC_ENABLE_GPROF` | `OFF`   | 启用 gprof 性能分析 (GCC only)         |
+| `CMAKE_PREFIX_PATH`  | —       | Qt 安装路径                            |
+| `FFMPEG_ROOT`        | —       | FFmpeg 安装路径 (主要用于 Windows)     |
+| `CMAKE_BUILD_TYPE`   | —       | `Debug` / `Release` / `RelWithDebInfo` |

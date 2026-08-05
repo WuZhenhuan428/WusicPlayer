@@ -81,8 +81,6 @@ void MainWindow::init_connection()
 void MainWindow::init_menu_connections()
 {
     connect(m_act_open_file, &QAction::triggered, this, &MainWindow::on_open_file);
-    connect(m_act_add_file, &QAction::triggered, this, &MainWindow::sgnImportFilesRequested);
-    connect(m_act_add_folder, &QAction::triggered, this, &MainWindow::sgnImportFolderRequested);
     connect(m_act_new_playlist, &QAction::triggered, this, &MainWindow::sgnCreatePlaylistRequested);
     connect(m_act_load_playlist, &QAction::triggered, this, &MainWindow::sgnLoadPlaylist);
 
@@ -125,15 +123,10 @@ void MainWindow::build_menu_bar()
 
     m_menu_file         = new QMenu("&File", m_menubar_main);
     m_act_open_file     = new QAction("&Open", m_menu_file);
-    m_act_add_file      = new QAction("Add file", m_menu_file);
-    m_act_add_folder    = new QAction("Add folder", m_menu_file);
     m_act_new_playlist  = new QAction("New playlist", m_menu_file);
     m_act_load_playlist = new QAction("&Load playlist", m_menu_file);
     m_act_exit          = new QAction("&Exit", m_menu_file);
     m_menu_file->addAction(m_act_open_file);
-    m_menu_file->addSeparator();
-    m_menu_file->addAction(m_act_add_file);
-    m_menu_file->addAction(m_act_add_folder);
     m_menu_file->addSeparator();
     m_menu_file->addAction(m_act_new_playlist);
     m_menu_file->addAction(m_act_load_playlist);

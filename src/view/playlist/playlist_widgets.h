@@ -55,7 +55,10 @@ class WPlayListWidgetItem : public QTreeWidgetItem
 public:
     WPlayListWidgetItem(QTreeWidget* parent, const QString& name, const PlaylistId& pid) :
         QTreeWidgetItem(parent, QStringList() << name), m_pid(pid)
-    {}
+    {
+        // 支持"选中后单击"内联重命名(SelectedClicked 编辑触发器)
+        setFlags(flags() | Qt::ItemIsEditable);
+    }
 
     PlaylistId id() const
     {

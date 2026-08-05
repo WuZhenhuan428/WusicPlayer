@@ -21,7 +21,8 @@ PlaylistManager::PlaylistManager(QObject* parent) : QObject(parent)
 
     connect(m_repo, &PlaylistRepo::sgn_playlist_changed, this,
             &PlaylistManager::retransmission_playlist_changed);
-    connect(m_repo, &PlaylistRepo::sgn_cache_load_started, this, &PlaylistManager::sgn_cache_load_started);
+    connect(m_repo, &PlaylistRepo::sgn_cache_load_started, this,
+            &PlaylistManager::sgn_cache_load_started);
     connect(m_repo, &PlaylistRepo::sgn_playlist_load_started, this,
             &PlaylistManager::sgn_playlist_load_started);
     connect(m_repo, &PlaylistRepo::sgn_playlist_load_finished, this,
@@ -66,6 +67,13 @@ void PlaylistManager::copy_playlist(const PlaylistId& pid)
     m_repo->copy_list(pid);
 }
 
+void PlaylistManager::reorder_playlists(const QVector<PlaylistId>& ordered_ids)
+{
+    if (m_repo) {
+        m_repo->reorder_lists(ordered_ids);
+    }
+}
+
 void PlaylistManager::load_playlist(const QString& playlist_path)
 {
     PlaylistId new_id = m_repo->load_list_batched(playlist_path, 500);
@@ -93,7 +101,8 @@ void PlaylistManager::load_cache_after_shown()
     m_repo->load_cache_async();
 }
 
-void PlaylistManager::add_track(const PlaylistId& pid, const QString& filepath, AddFilePolicy policy)
+void PlaylistManager::add_track(const PlaylistId& pid, const QString& filepath,
+                                AddFilePolicy policy)
 {
     // 单文件默认:仅外部文件;import_to_library 时把父目录注册到库(扫描后 upgrade 为库引用)
     const AddFilePolicy eff = resolve_effective_policy(policy, AddFilePolicy::keep_external);
@@ -123,6 +132,70 @@ Track PlaylistManager::resolve_track(const QString& filepath) const
         }
     }
     return Track::from_filepath(filepath); // 外部条目(不强制入库)
+}
+
+int PlaylistManager::add_library_tracks(const PlaylistId& pid, const QVector<TrackId>& track_ids)
+{
+    if (track_ids.isEmpty() || !m_repo) {
+        return 0;
+    }
+    QVector<Track> tracks;
+    tracks.reserve(track_ids.size());
+    for (const TrackId& tid : track_ids) {
+        if (tid.isNull()) {
+            continue;
+        }
+        // 库曲目:优先走库解析(元数据由库维护);库未注入时按 TrackId 直查
+        const auto lib = m_library ? m_library->track_by_id(tid) : std::nullopt;
+        if (lib) {
+            Track t;
+            t.source           = TrackSource::library;
+            t.library_track_id = lib->track_id;
+            t.filepath         = lib->filepath;
+            t.meta             = lib->meta;
+            t.missing          = lib->missing;
+            tracks.push_back(t);
+        } else {
+            qWarning() << "[PlaylistManager] add_library_tracks: TrackId not in library"
+                       << tid.toString();
+        }
+    }
+    if (tracks.isEmpty()) {
+        return 0;
+    }
+    m_repo->add_track_objects(pid, tracks);
+    return tracks.size();
+}
+
+int PlaylistManager::copy_tracks_to_playlist(const PlaylistId& src_pid,
+                                             const QVector<EntryId>& entry_ids,
+                                             const PlaylistId& dst_pid)
+{
+    if (entry_ids.isEmpty() || !m_repo || src_pid == dst_pid) {
+        return 0;
+    }
+    auto src = m_repo->find_playlist_by_id(src_pid);
+    auto dst = m_repo->find_playlist_by_id(dst_pid);
+    if (!src || !dst) {
+        return 0;
+    }
+    QVector<Track> tracks;
+    tracks.reserve(entry_ids.size());
+    for (const EntryId& eid : entry_ids) {
+        const Track* src_track = src->find_track_by_id(eid);
+        if (!src_track) {
+            continue;
+        }
+        // 复制条目:保留来源(库引用/外部)与元数据,生成新的条目身份
+        Track copy    = *src_track;
+        copy.entry_id = EntryId::createUuid();
+        tracks.push_back(copy);
+    }
+    if (tracks.isEmpty()) {
+        return 0;
+    }
+    m_repo->add_track_objects(dst_pid, tracks);
+    return tracks.size();
 }
 
 void PlaylistManager::remove_track(const EntryId& tid)
@@ -231,7 +304,7 @@ void PlaylistManager::on_library_changed()
 
 // a wrap of this->add_track
 void PlaylistManager::add_folder(const PlaylistId& pid, const QString& directory,
-                                AddFilePolicy policy)
+                                 AddFilePolicy policy)
 {
     // 文件夹添加默认同步入库:目录注册到库(异步扫描),未命中条目随后升级为库引用
     const AddFilePolicy eff = resolve_effective_policy(policy, AddFilePolicy::import_to_library);
@@ -266,7 +339,8 @@ EntryId PlaylistManager::next_track(PlayMode mode)
     EntryId curr_id = m_context->get_play_track_id();
     switch (mode) {
     case PlayMode::in_order:
-        next_id = PlaylistNavigator::next_of_in_order(m_view->playback_queue_snapshot().queue, curr_id);
+        next_id =
+            PlaylistNavigator::next_of_in_order(m_view->playback_queue_snapshot().queue, curr_id);
         break;
     case PlayMode::loop:
         next_id = PlaylistNavigator::next_of_loop(m_view->playback_queue_snapshot().queue, curr_id);
@@ -296,11 +370,12 @@ EntryId PlaylistManager::prev_track(PlayMode mode)
     EntryId curr_id = m_context->get_play_track_id();
     switch (mode) {
     case PlayMode::in_order:
-        prev_id =
-            PlaylistNavigator::previous_of_in_order(m_view->playback_queue_snapshot().queue, curr_id);
+        prev_id = PlaylistNavigator::previous_of_in_order(m_view->playback_queue_snapshot().queue,
+                                                          curr_id);
         break;
     case PlayMode::loop:
-        prev_id = PlaylistNavigator::previous_of_loop(m_view->playback_queue_snapshot().queue, curr_id);
+        prev_id =
+            PlaylistNavigator::previous_of_loop(m_view->playback_queue_snapshot().queue, curr_id);
         break;
     case PlayMode::shuffle:
         prev_id = PlaylistNavigator::previous_of_shuffle(m_view->playback_queue_snapshot().queue);
@@ -340,6 +415,11 @@ void PlaylistManager::play(int index)
     if (t) {
         emit sgn_request_play(t->filepath);
     }
+}
+
+void PlaylistManager::set_current_track(const EntryId& tid)
+{
+    m_context->set_play_track(tid);
 }
 
 QString PlaylistManager::get_current_track() const

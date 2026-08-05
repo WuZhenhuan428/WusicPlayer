@@ -4,6 +4,8 @@
 #include "model/library/library_track.h"
 
 #include <QAbstractItemModel>
+#include <QMimeData>
+#include <QStringList>
 #include <QVector>
 
 class LibraryManager;
@@ -60,6 +62,8 @@ public:
 
     // 叶节点 → 库级曲目身份;分组节点 / 无效索引返回 nullopt
     std::optional<TrackId> track_id_at(const QModelIndex& index) const;
+    // 收集索引集合对应的库曲目身份:曲目行直接取;分组行展开为该组全部曲目
+    QVector<TrackId> collect_track_ids(const QModelIndexList& indexes) const;
 
     // QAbstractItemModel 接口
     QModelIndex index(int row, int column,
@@ -68,6 +72,11 @@ public:
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+
+    // 拖拽源:对外提供库曲目 TrackId 列表(JSON 序列化)
+    Qt::ItemFlags flags(const QModelIndex& index) const override;
+    QStringList mimeTypes() const override;
+    QMimeData* mimeData(const QModelIndexList& indexes) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
 private:

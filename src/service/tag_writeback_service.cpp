@@ -22,10 +22,9 @@ TagWritebackService::TagWritebackService(PlaylistController* playlist_ctl,
 
 TagWritebackService::~TagWritebackService() {}
 
-void TagWritebackService::request_track_property(EntryId tid, QString filepath, TrackMetaData meta)
+void TagWritebackService::request_track_property(EntryId tid, [[maybe_unused]] QString filepath,
+                                                 TrackMetaData meta)
 {
-    Q_UNUSED(filepath);
-
     if (tag_edit_widget_) {
         tag_edit_widget_.clear();
     }
@@ -47,7 +46,8 @@ void TagWritebackService::request_track_property(EntryId tid, QString filepath, 
 
             // confirm filepath
             QString target_filepath;
-            auto playlist = m_playlist_ctl->find_playlist_by_id(m_playlist_ctl->current_playlist_id());
+            auto playlist =
+                m_playlist_ctl->find_playlist_by_id(m_playlist_ctl->current_playlist_id());
             if (playlist) {
                 const Track* track = playlist->find_track_by_id(changedTid);
                 if (track) {

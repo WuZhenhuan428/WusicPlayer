@@ -4,6 +4,9 @@
 #include "model/library/library_manager.h"
 
 #include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QMimeData>
 
 #include <algorithm>
 
@@ -137,6 +140,82 @@ std::optional<TrackId> LibraryBrowseModel::track_id_at(const QModelIndex& index)
     return tracks.at(r).track_id;
 }
 
+QVector<TrackId> LibraryBrowseModel::collect_track_ids(const QModelIndexList& indexes) const
+{
+    QVector<TrackId> result;
+    for (const QModelIndex& index : indexes) {
+        if (!index.isValid()) {
+            continue;
+        }
+        if (const auto tid = track_id_at(index)) {
+            if (!result.contains(*tid)) {
+                result.push_back(*tid);
+            }
+            continue;
+        }
+        // 分组节点:展开为该组全部曲目
+        const quintptr id = quintptr(index.internalId());
+        if (!is_leaf(id)) {
+            const int g = group_row(id);
+            if (g >= 0 && g < m_groups.size()) {
+                for (const LibraryTrack& t : m_groups.at(g).tracks) {
+                    if (!result.contains(t.track_id)) {
+                        result.push_back(t.track_id);
+                    }
+                }
+            }
+        }
+    }
+    return result;
+}
+
+Qt::ItemFlags LibraryBrowseModel::flags(const QModelIndex& index) const
+{
+    Qt::ItemFlags f = QAbstractItemModel::flags(index);
+    if (index.isValid()) {
+        f |= Qt::ItemIsDragEnabled;
+    }
+    return f;
+}
+
+QStringList LibraryBrowseModel::mimeTypes() const
+{
+    return {QString::fromLatin1(wusic::kLibraryTracksMime)};
+}
+
+QMimeData* LibraryBrowseModel::mimeData(const QModelIndexList& indexes) const
+{
+    // 多选混合语义:全组节点 或 全曲目行 有效;混合 → 拒绝并记录日志
+    bool has_group = false;
+    bool has_leaf  = false;
+    for (const QModelIndex& index : indexes) {
+        if (!index.isValid()) {
+            continue;
+        }
+        if (index.parent().isValid()) {
+            has_leaf = true;
+        } else {
+            has_group = true;
+        }
+    }
+    if (has_group && has_leaf) {
+        qWarning() << "[LibraryBrowseModel] mixed drag selection (group + track) rejected";
+        return nullptr;
+    }
+    const QVector<TrackId> tids = collect_track_ids(indexes);
+    if (tids.isEmpty()) {
+        return nullptr;
+    }
+    QJsonArray arr;
+    for (const TrackId& tid : tids) {
+        arr.append(tid.toString(QUuid::WithoutBraces));
+    }
+    auto* mime = new QMimeData;
+    mime->setData(QString::fromLatin1(wusic::kLibraryTracksMime),
+                  QJsonDocument(arr).toJson(QJsonDocument::Compact));
+    return mime;
+}
+
 QModelIndex LibraryBrowseModel::index(int row, int column, const QModelIndex& parent) const
 {
     if (row < 0 || column < 0 || column >= columnCount(parent)) {
@@ -164,9 +243,9 @@ QModelIndex LibraryBrowseModel::parent(const QModelIndex& child) const
     if (!is_leaf(id)) {
         return {}; // 分组节点 → 根
     }
-    int g = 0, r = 0;
+    int g                  = 0;
+    [[maybe_unused]] int r = 0;
     decode_leaf(id, &g, &r);
-    Q_UNUSED(r);
     if (g < 0 || g >= m_groups.size()) {
         return {};
     }
@@ -189,9 +268,8 @@ int LibraryBrowseModel::rowCount(const QModelIndex& parent) const
     return m_groups.at(g).tracks.size();
 }
 
-int LibraryBrowseModel::columnCount(const QModelIndex& parent) const
+int LibraryBrowseModel::columnCount([[maybe_unused]] const QModelIndex& parent) const
 {
-    Q_UNUSED(parent);
     return 4; // Title / Artist / Album / Duration
 }
 

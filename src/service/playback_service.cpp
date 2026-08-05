@@ -1,5 +1,7 @@
 #include "service/playback_service.h"
 
+#include "core/utils/audio.hpp"
+
 PlaybackService::PlaybackService(MainWindow* main_window, PlaybackController* playback_ctl,
                                  PlaylistController* playlist_ctl, QObject* parent) :
     QObject(parent), main_window_(main_window), m_playback_ctl(playback_ctl),
@@ -98,8 +100,17 @@ void PlaybackService::bind()
         }
     });
 
+    // 请求播放:优先在当前播放列表定位(更新 context → song table/元数据同步);
+    // 不在列表(库直播/外部)则按路径播放(面板走文件标签兜底)
     connect(m_playlist_ctl, &PlaylistController::sgn_request_play, this,
-            [this](const QString& filepath) { main_window_->play_track_in_ui(filepath); });
+            [this](const QString& filepath) {
+                if (filepath.isEmpty()) {
+                    return;
+                }
+                const bool located           = m_playlist_ctl->locate_filepath(filepath);
+                locate_on_next_play_request_ = located; // 命中列表则定位高亮
+                main_window_->play_track_in_ui(filepath);
+            });
 
     m_bound = true;
 }
@@ -126,6 +137,11 @@ void PlaybackService::handle_play_track_request(const QString& filepath)
     locate_on_next_play_request_ = false;
 
     TrackMetaData meta           = m_playlist_ctl->current_metadata();
+    // 元数据必须匹配本次播放的文件;否则(库直播/外部/搜索播放)退回文件标签解析
+    if (!meta.isValid ||
+        utils::path::normalize_path(meta.filepath) != utils::path::normalize_path(filepath)) {
+        meta = utils::audio::parse_to_local_meta(filepath);
+    }
     side_panel->load_lyrics(meta);
     side_panel->load_meta_data(meta);
 }

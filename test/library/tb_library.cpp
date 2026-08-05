@@ -339,6 +339,24 @@ static void test_search_backend()
     hints         = backend.search(query);
     CHECK(hints.size() == 1);
 
+    // 子串(前缀命中不了,FTS 兜底 LIKE %sub%)→ 仍应命中
+    query.mode    = SearchQueryMode::Prefix;
+    query.keyword = "ong";
+    hints         = backend.search(query);
+    CHECK(hints.size() == 1);
+    if (hints.size() == 1) {
+        CHECK(hints[0].title == "track song.mp3");
+    }
+
+    // 多 token:每个 token 前缀 AND
+    query.mode    = SearchQueryMode::Prefix;
+    query.keyword = "tra so";
+    hints         = backend.search(query);
+    CHECK(hints.size() == 1);
+    if (hints.size() == 1) {
+        CHECK(hints[0].title == "track song.mp3");
+    }
+
     // 空关键字 → 无结果
     query.mode    = SearchQueryMode::Plain;
     query.keyword = "   ";

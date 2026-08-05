@@ -1,6 +1,5 @@
 #include "device.h"
 
-#include "core/player_types.h"
 #include <cstdio>
 #include <cstring>
 
@@ -239,11 +238,9 @@ size_t Device::get_recent_audio_frames(F32StereoFrame* out_buffer, size_t count)
     return count;
 }
 
-void Device::data_callback(ma_device* device, void* output, const void* input,
+void Device::data_callback(ma_device* device, void* output, [[maybe_unused]] const void* input,
                            ma_uint32 frame_count)
 {
-    UNUSED(input);
-
     Device* self = static_cast<Device*>(device->pUserData);
     SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer = self->m_buffer;
 

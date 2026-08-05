@@ -8,6 +8,8 @@
 #include <QHeaderView>
 #include <QJsonObject>
 #include <QLineEdit>
+#include <QMenu>
+#include <QModelIndexList>
 #include <QPushButton>
 #include <QTreeView>
 #include <QVBoxLayout>
@@ -50,6 +52,10 @@ void LibraryBrowserWidget::init_ui()
     m_tree->setUniformRowHeights(true);
     m_tree->setSelectionMode(QAbstractItemView::ExtendedSelection);
     m_tree->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    // 拖拽源(拖到播放列表树 / 歌曲表)
+    m_tree->setDragEnabled(true);
+    m_tree->setDragDropMode(QAbstractItemView::DragOnly);
+    m_tree->setContextMenuPolicy(Qt::CustomContextMenu);
     m_tree->header()->setStretchLastSection(true);
     m_tree->header()->setSectionResizeMode(0, QHeaderView::Stretch);
     m_tree->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
@@ -84,6 +90,13 @@ void LibraryBrowserWidget::init_connections()
     connect(m_btn_config, &QPushButton::clicked, this,
             &LibraryBrowserWidget::sgnOpenLibrarySettingsRequested);
     connect(m_tree, &QTreeView::doubleClicked, this, &LibraryBrowserWidget::on_double_clicked);
+    connect(m_tree, &QTreeView::customContextMenuRequested, this,
+            &LibraryBrowserWidget::call_tree_context_menu);
+}
+
+void LibraryBrowserWidget::set_playlist_list_provider(PlaylistListProvider provider)
+{
+    m_playlist_provider = std::move(provider);
 }
 
 void LibraryBrowserWidget::set_library_manager(LibraryManager* lib)
@@ -151,9 +164,8 @@ QString LibraryBrowserWidget::config_sub_key() const
     return "library_browser";
 }
 
-void LibraryBrowserWidget::on_keyword_changed(const QString& keyword)
+void LibraryBrowserWidget::on_keyword_changed([[maybe_unused]] const QString& keyword)
 {
-    Q_UNUSED(keyword);
     m_tim_input->start(); // 防抖
 }
 
@@ -178,4 +190,65 @@ void LibraryBrowserWidget::on_double_clicked(const QModelIndex& index)
     // 分组节点 → 展开/折叠
     const bool expanded = m_tree->isExpanded(index);
     m_tree->setExpanded(index, !expanded);
+}
+
+void LibraryBrowserWidget::call_tree_context_menu(const QPoint& pos)
+{
+    if (m_model == nullptr) {
+        return;
+    }
+    const QModelIndex index = m_tree->indexAt(pos);
+    if (!index.isValid()) {
+        return; // 不提供背景右键
+    }
+    // 收集右键行(或多选集合)对应的库曲目;组节点展开为该组全部
+    QModelIndexList rows;
+    if (m_tree->selectionModel()) {
+        rows = m_tree->selectionModel()->selectedRows(0);
+    }
+    if (!rows.contains(index)) {
+        rows = {index};
+    }
+    const QVector<TrackId> tids = m_model->collect_track_ids(rows);
+    if (tids.isEmpty()) {
+        return;
+    }
+
+    QMenu menu(this);
+    QAction* actPlay   = menu.addAction(tr("&Play"));
+    QAction* actAddSub = menu.addAction(tr("Add to Playlist...")); // 占位,下转为子菜单
+    menu.addSeparator();
+    QAction* actRefresh = menu.addAction(tr("&Refresh Library"));
+
+    connect(actPlay, &QAction::triggered, this, [this, tids]() {
+        if (m_queue_svc != nullptr) {
+            for (const TrackId& tid : tids) {
+                m_queue_svc->play_library_track(tid);
+            }
+        } else if (tids.size() == 1) {
+            emit sgnPlayRequested(tids.first());
+        }
+    });
+    connect(actRefresh, &QAction::triggered, this,
+            &LibraryBrowserWidget::sgnRefreshLibraryRequested);
+
+    // Add to Playlist 子菜单(替换占位项)
+    if (m_playlist_provider) {
+        const auto lists = m_playlist_provider();
+        if (!lists.isEmpty()) {
+            menu.removeAction(actAddSub);
+            auto* sub = menu.addMenu(tr("Add to Playlist..."));
+            for (const auto& [pid, name] : lists) {
+                QAction* act = sub->addAction(name);
+                connect(act, &QAction::triggered, this,
+                        [this, pid, tids]() { emit sgnAddTracksToPlaylist(pid, tids); });
+            }
+        } else {
+            actAddSub->setEnabled(false);
+        }
+    } else {
+        actAddSub->setEnabled(false);
+    }
+
+    menu.exec(m_tree->viewport()->mapToGlobal(pos));
 }

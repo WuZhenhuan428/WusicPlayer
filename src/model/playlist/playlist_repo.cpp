@@ -1,5 +1,7 @@
 #include "playlist_repo.h"
 
+#include <algorithm>
+
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
@@ -165,7 +167,7 @@ QString PlaylistRepo::cache_file_path(const PlaylistId& pid) const
 }
 
 bool PlaylistRepo::write_json_playlist(QIODevice& device,
-                                     const std::shared_ptr<Playlist>& playlist) const
+                                       const std::shared_ptr<Playlist>& playlist) const
 {
     if (!playlist) {
         return false;
@@ -198,8 +200,8 @@ bool PlaylistRepo::write_json_playlist(QIODevice& device,
 }
 
 bool PlaylistRepo::load_json_playlist(const QByteArray& data, const QString& fallbackName,
-                                    std::shared_ptr<Playlist>& out_playlist,
-                                    bool* out_legacy_format) const
+                                      std::shared_ptr<Playlist>& out_playlist,
+                                      bool* out_legacy_format) const
 {
     if (out_legacy_format) {
         *out_legacy_format = false;
@@ -283,7 +285,8 @@ void PlaylistRepo::load_cache_from_disk()
     }
 }
 
-QVector<std::pair<std::shared_ptr<Playlist>, bool>> PlaylistRepo::load_cache_from_disk_to_vector() const
+QVector<std::pair<std::shared_ptr<Playlist>, bool>>
+PlaylistRepo::load_cache_from_disk_to_vector() const
 {
     QVector<std::pair<std::shared_ptr<Playlist>, bool>> loaded;
     if (m_cache_dir.isEmpty()) {
@@ -581,6 +584,31 @@ void PlaylistRepo::remove_list(const PlaylistId& pid)
     if (!m_cache_dir.isEmpty()) {
         QFile::remove(cache_file_path(pid));
     }
+    emit sgn_playlist_changed();
+}
+
+void PlaylistRepo::reorder_lists(const QVector<PlaylistId>& ordered_ids)
+{
+    if (ordered_ids.size() != m_list.size()) {
+        qWarning() << "[PlaylistRepo] reorder_lists: size mismatch" << ordered_ids.size() << "vs"
+                   << m_list.size();
+        return;
+    }
+    QVector<std::shared_ptr<Playlist>> new_order;
+    new_order.reserve(ordered_ids.size());
+    for (const PlaylistId& pid : ordered_ids) {
+        auto it =
+            std::find_if(m_list.begin(), m_list.end(),
+                         [&pid](const std::shared_ptr<Playlist>& pl) { return pl->id() == pid; });
+        if (it != m_list.end()) {
+            new_order.push_back(*it);
+        }
+    }
+    if (new_order.size() != m_list.size()) {
+        qWarning() << "[PlaylistRepo] reorder_lists: dropped entries, abort";
+        return;
+    }
+    m_list = std::move(new_order);
     emit sgn_playlist_changed();
 }
 

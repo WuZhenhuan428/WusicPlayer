@@ -196,6 +196,17 @@ const Track* Playlist::find_track_by_id(const EntryId& eid) const
     return nullptr;
 }
 
+const Track* Playlist::find_track_by_filepath(const QString& filepath) const
+{
+    const QString norm = utils::path::normalize_path(filepath);
+    for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
+        if (utils::path::normalize_path(it->filepath) == norm) {
+            return &(*it);
+        }
+    }
+    return nullptr;
+}
+
 const QVector<Track>& Playlist::get_tracks() const
 {
     return m_tracks;

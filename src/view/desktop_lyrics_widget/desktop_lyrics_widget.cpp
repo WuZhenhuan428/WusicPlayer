@@ -11,8 +11,8 @@
 #include <QWindow>
 
 #ifdef Q_OS_WIN
-#include <dwmapi.h>
-#include <windows.h>
+#    include <dwmapi.h>
+#    include <windows.h>
 #endif
 
 DesktopLyricsWidget::DesktopLyricsWidget(QWidget* parent) :
@@ -302,7 +302,7 @@ void DesktopLyricsWidget::setGeometry(const QByteArray& geo)
         move(s->availableGeometry().center() - rect().center());
 }
 
-void DesktopLyricsWidget::apply_click_through(bool on)
+void DesktopLyricsWidget::apply_click_through([[maybe_unused]] bool on)
 {
 #ifdef Q_OS_WIN
     HWND hwnd = reinterpret_cast<HWND>(winId());
@@ -320,7 +320,7 @@ void DesktopLyricsWidget::apply_click_through(bool on)
     SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 #else
-    Q_UNUSED(on);
+    // do nothing on linux
 #endif
 }
 

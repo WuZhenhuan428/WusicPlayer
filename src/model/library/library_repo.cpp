@@ -271,35 +271,90 @@ int LibraryRepo::track_count() const
     return q.next() ? q.value(0).toInt() : 0;
 }
 
-QVector<LibraryTrack> LibraryRepo::search(const QString& keyword, SearchQueryMode mode,
-                                          int limit) const
+namespace
+{
+// 按空白(含全角空格等)切分搜索词;QChar::isSpace 覆盖 U+3000
+QStringList split_search_tokens(const QString& text)
+{
+    QStringList tokens;
+    QString cur;
+    for (const QChar& c : text) {
+        if (c.isSpace()) {
+            if (!cur.isEmpty()) {
+                tokens.push_back(cur);
+                cur.clear();
+            }
+        } else {
+            cur.push_back(c);
+        }
+    }
+    if (!cur.isEmpty()) {
+        tokens.push_back(cur);
+    }
+    return tokens;
+}
+} // namespace
+
+QVector<LibraryTrack> LibraryRepo::search(const QString& keyword,
+                                          [[maybe_unused]] SearchQueryMode mode, int limit) const
 {
     QVector<LibraryTrack> result;
     const QString keyword_trimmed = keyword.trimmed();
     if (keyword_trimmed.isEmpty() || !has_fts5()) {
         return result;
     }
-    // 双引号包裹避免 FTS5 语法错误(内部双引号转义);Prefix/Fuzzy 对单 token 使用前缀匹配
-    QString escaped = keyword_trimmed;
-    escaped.replace('"', "\"\"");
-    QString match;
-    if ((mode == SearchQueryMode::Prefix || mode == SearchQueryMode::Fuzzy) &&
-        !escaped.contains(' ')) {
-        match = escaped + QLatin1Char('*');
-    } else {
-        match = QStringLiteral("\"%1\"").arg(escaped);
+    const QStringList tokens = split_search_tokens(keyword_trimmed);
+    if (tokens.isEmpty()) {
+        return result;
     }
 
+    // 1) FTS5 前缀优先:每个 token 加 * 并 AND(unicode61 下 CJK 连续为单 token,前缀命中开头)
+    QStringList prefix_terms;
+    for (const QString& tok : tokens) {
+        QString e = tok;
+        e.replace('"', "\"\"");
+        prefix_terms.push_back(QStringLiteral("\"%1\"*").arg(e));
+    }
     QSqlQuery q(m_db);
     q.prepare("SELECT t.* FROM tracks_fts f JOIN tracks t ON t.id = f.rowid"
               " WHERE tracks_fts MATCH ? ORDER BY bm25(tracks_fts) LIMIT ?");
-    q.addBindValue(match);
+    q.addBindValue(prefix_terms.join(QLatin1Char(' ')));
     q.addBindValue(limit);
-    if (!q.exec()) {
+    if (q.exec()) {
+        while (q.next()) {
+            result.append(row_to_track(q));
+        }
+    }
+    // FTS5 命中即返回(前缀已满足多数场景)
+    if (!result.isEmpty()) {
         return result;
     }
-    while (q.next()) {
-        result.append(row_to_track(q));
+
+    // 2) LIKE 子串兜底:每个 token 在任一文本列子串命中(token 间 AND,列间 OR)
+    QStringList where_clauses;
+    QStringList like_binds;
+    for (const QString& tok : tokens) {
+        QString like = tok;
+        like.replace('\\', "\\\\").replace('%', "\\%").replace('_', "\\_");
+        const QString pattern = QStringLiteral("%%1%").arg(like);
+        QStringList col_clauses;
+        for (const char* col : {"title", "artist", "album", "album_artist", "genre"}) {
+            col_clauses.push_back(QStringLiteral("%1 LIKE ? ESCAPE '\\'").arg(col));
+            like_binds.push_back(pattern);
+        }
+        where_clauses.push_back(QStringLiteral("(%1)").arg(col_clauses.join(" OR ")));
+    }
+    QSqlQuery q2(m_db);
+    q2.prepare(QStringLiteral("SELECT t.* FROM tracks t WHERE %1 ORDER BY t.title LIMIT ?")
+                   .arg(where_clauses.join(" AND ")));
+    for (const QString& pattern : like_binds) {
+        q2.addBindValue(pattern);
+    }
+    q2.addBindValue(limit);
+    if (q2.exec()) {
+        while (q2.next()) {
+            result.append(row_to_track(q2));
+        }
     }
     return result;
 }

@@ -90,8 +90,6 @@ private:
     // menu File
     QMenu* m_menu_file;
     QAction* m_act_open_file;
-    QAction* m_act_add_file;
-    QAction* m_act_add_folder;
     QAction* m_act_new_playlist;
     QAction* m_act_load_playlist;
     QAction* m_act_exit;
@@ -135,8 +133,6 @@ signals:
     void sgnAboutToClose();
     void sgnOpenSearchPanelRequested();
     void sgnOpenSettingsPanelRequested();
-    void sgnImportFilesRequested();
-    void sgnImportFolderRequested();
     void sgnCreatePlaylistRequested();
     void sgnPlayTrackRequested(const QString& filepath);
     void sgnSetSortRuleRequested();

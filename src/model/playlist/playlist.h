@@ -43,6 +43,8 @@ public:
 
     // 非拥有:返回指针生命周期由所属 Playlist 管理,Playlist 未被修改/析构前有效;调用方不得 delete
     const Track* find_track_by_id(const EntryId& eid) const;
+    // 按规范化路径查找条目;找不到返回 nullptr
+    const Track* find_track_by_filepath(const QString& filepath) const;
 
     const QVector<Track>& get_tracks() const;
 

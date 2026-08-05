@@ -28,6 +28,8 @@ public:
     void rename_list(const PlaylistId& pid, const QString& name);
     void remove_list(const PlaylistId& pid);
     void copy_list(const PlaylistId& src);
+    // 按给定顺序重排播放列表(拖动排序);缺失 id 保持原位
+    void reorder_lists(const QVector<PlaylistId>& ordered_ids);
     std::shared_ptr<Playlist> find_playlist_by_id(const PlaylistId& pid);
     void add_track_to_playlist(const PlaylistId& pid, const QString& filepath);
     void add_tracks_to_playlist(const PlaylistId& pid, const QStringList& filepaths);
@@ -53,8 +55,8 @@ private:
     void load_cache_from_disk();
     QVector<std::pair<std::shared_ptr<Playlist>, bool>> load_cache_from_disk_to_vector() const;
     bool load_json_playlist(const QByteArray& data, const QString& fallbackName,
-                          std::shared_ptr<Playlist>& out_playlist,
-                          bool* out_legacy_format = nullptr) const;
+                            std::shared_ptr<Playlist>& out_playlist,
+                            bool* out_legacy_format = nullptr) const;
     bool write_json_playlist(QIODevice& device, const std::shared_ptr<Playlist>& playlist) const;
 
     QVector<std::shared_ptr<Playlist>> m_list;

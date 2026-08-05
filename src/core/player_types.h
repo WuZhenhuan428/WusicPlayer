@@ -1,10 +1,5 @@
 #pragma once
 
-#define UNUSED(x)                                                                                  \
-    do {                                                                                           \
-        (void)(x);                                                                                 \
-    } while (0)
-
 typedef struct
 {
     float _31;
