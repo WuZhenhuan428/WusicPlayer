@@ -8,6 +8,11 @@
 
 #include <optional>
 
+#include "core/logger/log.h"
+
+
+WUSIC_LOG_MODULE(playlist)
+
 PlaylistManager::PlaylistManager(QObject* parent) : QObject(parent)
 {
     m_context = new PlaylistContext(this);
@@ -92,7 +97,7 @@ void PlaylistManager::save_playlist(const PlaylistId& pid, const QString& save_p
     auto pl = m_repo->find_playlist_by_id(pid);
     if (!pl->isEmpty()) {
         m_repo->save_list(pid, save_path);
-        qDebug() << "[INFO] save playlist " << pid.toString() << " at " << save_path;
+        WUSIC_LOG(playlist, info, "[INFO] save playlist {} at {}", pid.toString(), save_path);
     }
 }
 
@@ -156,8 +161,8 @@ int PlaylistManager::add_library_tracks(const PlaylistId& pid, const QVector<Tra
             t.missing          = lib->missing;
             tracks.push_back(t);
         } else {
-            qWarning() << "[PlaylistManager] add_library_tracks: TrackId not in library"
-                       << tid.toString();
+            WUSIC_LOG(playlist, warn, "[PlaylistManager] add_library_tracks: TrackId not in library {}",
+                       tid.toString());
         }
     }
     if (tracks.isEmpty()) {

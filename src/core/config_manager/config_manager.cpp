@@ -1,6 +1,9 @@
 #include "core/config_manager/config_manager.h"
 
-#include <QDebug>
+#include "core/logger/log.h"
+
+WUSIC_LOG_MODULE(config)
+
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -21,7 +24,7 @@ QJsonObject readRootFromFile(const QString& filepath)
         return {};
     }
     if (!file.open(QIODevice::ReadOnly)) {
-        qWarning() << "[CONFIG] open failed:" << file.fileName() << file.errorString();
+        WUSIC_LOG(config, warn, "[CONFIG] open failed: {} {}", file.fileName(), file.errorString());
         return {};
     }
 
@@ -29,7 +32,7 @@ QJsonObject readRootFromFile(const QString& filepath)
     const QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &err);
     file.close();
     if (err.error != QJsonParseError::NoError || !doc.isObject()) {
-        qWarning() << "[CONFIG] parse failed:" << err.errorString();
+        WUSIC_LOG(config, warn, "[CONFIG] parse failed: {}", err.errorString());
         return {};
     }
     return doc.object();
@@ -39,14 +42,16 @@ void writeRootToFile(const QString& filepath, const QJsonObject& root)
 {
     QSaveFile file(filepath);
     if (!file.open(QIODevice::WriteOnly)) {
-        qWarning() << "[CONFIG] write open failed:" << file.fileName() << file.errorString();
+        WUSIC_LOG(config, warn, "[CONFIG] write open failed: {} {}", file.fileName(),
+                  file.errorString());
         return;
     }
 
     QJsonDocument doc(root);
     file.write(doc.toJson(QJsonDocument::Indented));
     if (!file.commit()) {
-        qWarning() << "[CONFIG] commit failed:" << file.fileName() << file.errorString();
+        WUSIC_LOG(config, warn, "[CONFIG] commit failed: {} {}", file.fileName(),
+                  file.errorString());
     }
 }
 } // namespace
@@ -89,7 +94,7 @@ void ConfigManager::load_all()
         return;
     }
     if (!file.open(QIODevice::ReadOnly)) {
-        qWarning() << "[CONFIG] open failed:" << file.fileName() << file.errorString();
+        WUSIC_LOG(config, warn, "[CONFIG] open failed: {} {}", file.fileName(), file.errorString());
         return;
     }
 
@@ -97,7 +102,7 @@ void ConfigManager::load_all()
     const QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &err);
     file.close();
     if (err.error != QJsonParseError::NoError || !doc.isObject()) {
-        qWarning() << "[CONFIG] parse failed:" << err.errorString();
+        WUSIC_LOG(config, warn, "[CONFIG] parse failed: {}", err.errorString());
         return;
     }
 

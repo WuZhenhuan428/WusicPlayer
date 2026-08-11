@@ -2,13 +2,17 @@
 #include "lyrics_search_widget.h"
 #include "core/utils/audio.hpp"
 
-#include <QDebug>
 #include <QFile>
 #include <QFileDialog>
 #include <QMenu>
 #include <QMessageBox>
 
+#include "core/logger/log.h"
+
 #define DEFAULT_COVER_PATH ":/images/test_cover_chirno.png"
+
+
+WUSIC_LOG_MODULE(side_panel)
 
 SidePanel::SidePanel(QWidget* parent) : QWidget(parent)
 {
@@ -132,12 +136,12 @@ bool SidePanel::load_lyrics(const TrackMetaData& meta)
     if (meta.isValid) {
         if (!meta.lyrics.isEmpty()) {
             m_lyrics_panel->set_raw_lyrics(meta.lyrics);
-            qDebug() << "[LRC] Loaded from metadata.";
+            WUSIC_LOG(side_panel, debug, "[LRC] Loaded from metadata.");
         } else if (m_lyrics_panel->set_local_lrc(meta.filepath)) {
-            qDebug() << "[LRC] Loaded from local .lrc file.";
+            WUSIC_LOG(side_panel, debug, "[LRC] Loaded from local .lrc file.");
         } else {
             m_lyrics_panel->set_default_info(meta);
-            qDebug() << "[LRC] Use default info";
+            WUSIC_LOG(side_panel, debug, "[LRC] Use default info");
         }
         return true;
     }

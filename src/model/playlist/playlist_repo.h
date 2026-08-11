@@ -2,7 +2,6 @@
 
 #include "model/playlist/playlist.h"
 
-#include <QDebug>
 #include <QObject>
 #include <QString>
 #include <QUuid>

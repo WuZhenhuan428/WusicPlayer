@@ -38,6 +38,11 @@
 #include <format>
 #include <string>
 
+#include "core/logger/log.h"
+
+
+WUSIC_LOG_MODULE(app_controller)
+
 AppController::AppController(PlaybackController* playback_controller,
                              wusic::log::LogSinkGui* gui_sink, QObject* parent) :
     QObject(parent), playback_controller_(playback_controller), gui_sink_(gui_sink),
@@ -331,31 +336,31 @@ void AppController::initialize_config()
     ConfigManager& cm = ConfigManager::get_instance();
     if (playback_controller_) {
         cm.register_module(playback_controller_);
-        qDebug() << "[CONFIG] register playback controller";
+        WUSIC_LOG(app_controller, debug, "[CONFIG] register playback controller");
     }
     if (playlist_controller_) {
         cm.register_module(playlist_controller_.get());
-        qDebug() << "[CONFIG] register playlist controller";
+        WUSIC_LOG(app_controller, debug, "[CONFIG] register playlist controller");
     }
     if (main_window_) {
         cm.register_module(main_window_.get());
-        qDebug() << "[CONFIG] register main window";
+        WUSIC_LOG(app_controller, debug, "[CONFIG] register main window");
         if (main_window_->song_table_view()) {
             cm.register_module(main_window_->song_table_view());
-            qDebug() << "[CONFIG] register song table view";
+            WUSIC_LOG(app_controller, debug, "[CONFIG] register song table view");
         }
         if (main_window_->library_browser()) {
             cm.register_module(main_window_->library_browser());
-            qDebug() << "[CONFIG] register library browser";
+            WUSIC_LOG(app_controller, debug, "[CONFIG] register library browser");
         }
         if (main_window_->desktop_lyrics_widget()) {
             cm.register_module(main_window_->desktop_lyrics_widget());
-            qDebug() << "[CONFIG] register desktop lyrics widget";
+            WUSIC_LOG(app_controller, debug, "[CONFIG] register desktop lyrics widget");
         }
     }
     if (panel_coordinator_->shortcuts_controller()) {
         cm.register_module(panel_coordinator_->shortcuts_controller());
-        qDebug() << "[CONFIG] register shortcuts controller";
+        WUSIC_LOG(app_controller, debug, "[CONFIG] register shortcuts controller");
     }
     cm.load_all();
 

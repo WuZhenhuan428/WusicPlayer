@@ -12,6 +12,11 @@
 #include <QTime>
 #include <random>
 
+#include "core/logger/log.h"
+
+
+WUSIC_LOG_MODULE(playlist_view_model)
+
 PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo, QObject* parent) :
     QAbstractItemModel(parent), m_repo(repo)
 {
@@ -106,7 +111,7 @@ void PlaylistViewModel::rebuild()
 
     endResetModel();
     m_active_track_index = QPersistentModelIndex(find_track_index(m_active_track_id));
-    qDebug() << "[INFO] rebuild finished. Queue size:" << m_playback_queue.size();
+    WUSIC_LOG(playlist_view_model, info, "[INFO] rebuild finished. Queue size: {}", m_playback_queue.size());
     emit changedPlaybackQueue();
 }
 
@@ -587,7 +592,7 @@ QVector<EntryId> PlaylistViewModel::generate_group_shuffle_queue()
             }
         }
     }
-    qDebug() << "[INFO] (re)build m_group_shuffle_queue";
+    WUSIC_LOG(playlist_view_model, info, "[INFO] (re)build m_group_shuffle_queue");
     return result;
 }
 
@@ -605,7 +610,7 @@ QVector<EntryId> PlaylistViewModel::generate_single_shuffle_queue()
     std::shuffle(result.begin(), result.end(), g);
     m_single_shuffle_queue.clear();
     m_single_shuffle_queue = result;
-    qDebug() << "[INFO] (re)build m_single_shuffle_queue";
+    WUSIC_LOG(playlist_view_model, info, "[INFO] (re)build m_single_shuffle_queue");
     return result;
 }
 

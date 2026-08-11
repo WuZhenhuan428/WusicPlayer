@@ -18,6 +18,11 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
+#include "core/logger/log.h"
+
+
+WUSIC_LOG_MODULE(song_table)
+
 namespace
 {
 QVector<TrackId> decode_library_tracks(const QMimeData* mime)
@@ -217,7 +222,7 @@ void SongTableView::call_song_context_menu(const QPoint& pos)
             QFileInfo file_info(path);
             const QUrl url = QUrl::fromLocalFile(file_info.absolutePath());
             if (!QDesktopServices::openUrl(url)) {
-                qDebug() << "Failed to open folder: " << file_info.absolutePath();
+                WUSIC_LOG(song_table, debug, "Failed to open folder: {}", file_info.absolutePath());
             }
         });
         connect(actRemove, &QAction::triggered, this,

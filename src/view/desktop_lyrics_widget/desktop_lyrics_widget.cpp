@@ -1,6 +1,5 @@
 #include "view/desktop_lyrics_widget/desktop_lyrics_widget.h"
 
-#include <QDebug>
 #include <QFontMetrics>
 #include <QGuiApplication>
 #include <QJsonObject>

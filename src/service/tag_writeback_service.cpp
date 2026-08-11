@@ -10,6 +10,11 @@
 #include <QString>
 #include <QThread>
 
+#include "core/logger/log.h"
+
+
+WUSIC_LOG_MODULE(tag_writeback)
+
 TagWritebackService::TagWritebackService(PlaylistController* playlist_ctl,
                                          PlaybackController* playback_ctl,
                                          PlaylistManager* playlist_manager, MainWindow* main_window,
@@ -79,7 +84,7 @@ void TagWritebackService::request_track_property(EntryId tid, [[maybe_unused]] Q
                         }
 
                         if (!write_ok) {
-                            qDebug() << "[TAG] Failed to writeback tag";
+                            WUSIC_LOG(tag_writeback, debug, "[TAG] Failed to writeback tag");
                         } else {
                             const QString target_normalized =
                                 utils::path::normalize_path(target_filepath);

@@ -1,10 +1,14 @@
 #include "library_repo.h"
 
-#include <QDebug>
 #include <QFileInfo>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QVariant>
+
+#include "core/logger/log.h"
+
+
+WUSIC_LOG_MODULE(library_repo)
 
 namespace
 {
@@ -89,7 +93,7 @@ bool LibraryRepo::open(const QString& db_path)
     m_db.setDatabaseName(db_path);
     if (!m_db.open()) {
         m_last_error = m_db.lastError().text();
-        qWarning() << "[LIBRARY] cannot open database:" << db_path << m_last_error;
+        WUSIC_LOG(library_repo, warn, "[LIBRARY] cannot open database: {} {}", db_path, m_last_error);
         return false;
     }
     m_open = true;
@@ -125,7 +129,7 @@ bool LibraryRepo::exec_schema()
         QSqlQuery q(m_db);
         if (!q.exec(sql)) {
             m_last_error = q.lastError().text();
-            qWarning() << "[LIBRARY] schema exec failed:" << m_last_error;
+            WUSIC_LOG(library_repo, warn, "[LIBRARY] schema exec failed: {}", m_last_error);
             return false;
         }
     }
@@ -135,12 +139,12 @@ bool LibraryRepo::exec_schema()
             QSqlQuery q(m_db);
             if (!q.exec(sql)) {
                 m_last_error = q.lastError().text();
-                qWarning() << "[LIBRARY] FTS5 setup failed:" << m_last_error;
+                WUSIC_LOG(library_repo, warn, "[LIBRARY] FTS5 setup failed: {}", m_last_error);
                 return false;
             }
         }
     } else {
-        qWarning() << "[LIBRARY] FTS5 not available in bundled SQLite; search disabled.";
+        WUSIC_LOG(library_repo, warn, "[LIBRARY] FTS5 not available in bundled SQLite; search disabled.");
     }
     return true;
 }
@@ -226,7 +230,7 @@ bool LibraryRepo::upsert_track(const LibraryTrack& track)
     q.addBindValue(m.date);
     if (!q.exec()) {
         m_last_error = q.lastError().text();
-        qWarning() << "[LIBRARY] upsert_track failed:" << m_last_error;
+        WUSIC_LOG(library_repo, warn, "[LIBRARY] upsert_track failed: {}", m_last_error);
         return false;
     }
     return true;

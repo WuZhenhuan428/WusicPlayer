@@ -1,8 +1,12 @@
 #include "decoder.h"
 
+#include "core/logger/log.h"
+
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
+
+WUSIC_LOG_MODULE(decoder)
 
 Decoder::Decoder(const std::string& filepath)
 {
@@ -10,7 +14,7 @@ Decoder::Decoder(const std::string& filepath)
     m_has_init = this->init_decoder();
     m_has_init = (this->init_filters() == 0);
     if (!m_has_init) {
-        fprintf(stderr, "[DECODER] Error: failed to init decoder/filters\n");
+        WUSIC_LOG(decoder, error, "Error: failed to init decoder/filters");
     }
 }
 
@@ -26,12 +30,12 @@ Decoder::~Decoder()
 bool Decoder::init_decoder()
 {
     if (avformat_open_input(&m_fmt_ctx, m_filepath.c_str(), nullptr, nullptr) != 0) {
-        fprintf(stderr, "[DECODER] Error: could not open file %s\n", m_filepath.c_str());
+        WUSIC_LOG(decoder, error, "could not open file {}", m_filepath);
         return false;
     }
 
     if (avformat_find_stream_info(m_fmt_ctx, nullptr) < 0) {
-        fprintf(stderr, "[DECODER] Error: could not find stream info\n");
+        WUSIC_LOG(decoder, error, "could not find stream info");
         return false;
     }
 
@@ -45,22 +49,22 @@ bool Decoder::init_decoder()
     }
 
     if (m_audio_stream_index == -1) {
-        fprintf(stderr, "[DECODER] No audio stream found\n");
+        WUSIC_LOG(decoder, error, "No audio stream found");
         return false;
     }
 
     m_codecpar           = m_fmt_ctx->streams[m_audio_stream_index]->codecpar;
     const AVCodec* codec = avcodec_find_decoder(m_codecpar->codec_id);
     if (!codec) {
-        fprintf(stderr, "[DECODER] Error: could not find codec\n");
+        WUSIC_LOG(decoder, error, "could not find AVCodec");
         return false;
     }
-    printf("[DECODER] codec type: %d\n", (int)codec->type);
+    WUSIC_LOG(decoder, info, "AVCodec type: {}", (int)codec->type);
 
     m_codec_ctx = avcodec_alloc_context3(codec);
     avcodec_parameters_to_context(m_codec_ctx, m_codecpar);
     if (avcodec_open2(m_codec_ctx, codec, nullptr) < 0) {
-        fprintf(stderr, "[DECODER] Could not open codec\n");
+        WUSIC_LOG(decoder, error, "Could not open codec");
         return false;
     }
 
@@ -69,21 +73,21 @@ bool Decoder::init_decoder()
 
     this->parse_tag();
 
-    printf("[DECODER] Initialization completed...\n");
+    WUSIC_LOG(decoder, info, "Initialization completed...");
     return true;
 }
 
 void Decoder::work(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer,
                    std::atomic_bool* decode_finished)
 {
-    printf("[DECODER] thread start work\n");
+    WUSIC_LOG(decoder, info, "thread start work");
     m_thread = std::thread(
         [this, buffer, decode_finished]() { this->thread_decode(buffer, decode_finished); });
 }
 
 void Decoder::join()
 {
-    printf("[DECODER] thread join\n");
+    WUSIC_LOG(decoder, info, "thread join");
     if (m_thread.joinable()) {
         m_thread.join();
     }
@@ -104,7 +108,7 @@ void Decoder::decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffe
     }
 
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error submitting the packet to the decoder\n");
+        WUSIC_LOG(decoder, error, "Error submitting the packet to the decoder");
         return;
     }
     while (ret >= 0) {
@@ -112,7 +116,7 @@ void Decoder::decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffe
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
             return;
         } else if (ret < 0) {
-            fprintf(stderr, "[DECODER] Error during decoding: code=%d\n", ret);
+            WUSIC_LOG(decoder, error, "Error occured during decoding: code={}", ret);
             return;
         }
 
@@ -128,7 +132,7 @@ void Decoder::decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffe
         int ret_push =
             av_buffersrc_add_frame_flags(m_buffersrc_ctx, m_frame, AV_BUFFERSRC_FLAG_KEEP_REF);
         if (ret_push < 0) {
-            fprintf(stderr, "[DECODER] Error processing frame with EQ");
+            WUSIC_LOG(decoder, error, "some error occured when processing frame with EQ");
             break;
         }
 
@@ -287,7 +291,7 @@ int Decoder::init_filters()
         avfilter_graph_create_filter(&m_buffersrc_ctx, src, "in", args, nullptr, m_filter_graph);
 
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create abuffer filter\n");
+        WUSIC_LOG(decoder, error, "failed to create abuffer filter");
         return ret;
     }
 
@@ -296,7 +300,7 @@ int Decoder::init_filters()
                                        m_filter_graph);
 
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create abuffersink filter\n");
+        WUSIC_LOG(decoder, error, "failed to create abuffersink filter");
         return ret;
     }
 
@@ -308,7 +312,7 @@ int Decoder::init_filters()
         &aformat_planar_ctx, avfilter_get_by_name("aformat"), "fmt_planar",
         "sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo", nullptr, m_filter_graph);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create aformat_planar filter\n");
+        WUSIC_LOG(decoder, error, "failed to create aformat_planar filter");
         return ret;
     }
 
@@ -320,7 +324,7 @@ int Decoder::init_filters()
                                        "frequency=31:width_type=o:width=1:gain=0", nullptr,
                                        m_filter_graph);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create eq_31\n");
+        WUSIC_LOG(decoder, error, "failed to create eq_31");
         return ret;
     }
 
@@ -328,7 +332,7 @@ int Decoder::init_filters()
                                        "frequency=63:width_type=o:width=1:gain=0", nullptr,
                                        m_filter_graph);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create eq_63\n");
+        WUSIC_LOG(decoder, error, "failed to create eq_63");
         return ret;
     }
 
@@ -336,7 +340,7 @@ int Decoder::init_filters()
                                        "frequency=125:width_type=o:width=1:gain=0", nullptr,
                                        m_filter_graph);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create eq _25\n");
+        WUSIC_LOG(decoder, error, "failed to create eq_125");
         return ret;
     }
 
@@ -344,7 +348,7 @@ int Decoder::init_filters()
                                        "frequency=250:width_type=o:width=1:gain=0", nullptr,
                                        m_filter_graph);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create eq _50\n");
+        WUSIC_LOG(decoder, error, "failed to create eq_250");
         return ret;
     }
 
@@ -352,7 +356,7 @@ int Decoder::init_filters()
                                        "frequency=500:width_type=o:width=1:gain=0", nullptr,
                                        m_filter_graph);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create eq _00\n");
+        WUSIC_LOG(decoder, error, "failed to create eq_500");
         return ret;
     }
 
@@ -360,7 +364,7 @@ int Decoder::init_filters()
                                        "frequency=1k:width_type=o:width=1:gain=0", nullptr,
                                        m_filter_graph);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create eq_1k\n");
+        WUSIC_LOG(decoder, error, "failed to create eq_1k");
         return ret;
     }
 
@@ -368,7 +372,7 @@ int Decoder::init_filters()
                                        "frequency=2k:width_type=o:width=1:gain=0", nullptr,
                                        m_filter_graph);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create eq_2k\n");
+        WUSIC_LOG(decoder, error, "failed to create eq_2k");
         return ret;
     }
 
@@ -376,7 +380,7 @@ int Decoder::init_filters()
                                        "frequency=4k:width_type=o:width=1:gain=0", nullptr,
                                        m_filter_graph);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create eq_4k\n");
+        WUSIC_LOG(decoder, error, "failed to create eq_4k");
         return ret;
     }
 
@@ -384,7 +388,7 @@ int Decoder::init_filters()
                                        "frequency=8k:width_type=o:width=1:gain=0", nullptr,
                                        m_filter_graph);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create eq_8k\n");
+        WUSIC_LOG(decoder, error, "failed to create eq_8k");
         return ret;
     }
 
@@ -392,7 +396,7 @@ int Decoder::init_filters()
                                        "frequency=16k:width_type=o:width=1:gain=0", nullptr,
                                        m_filter_graph);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create eq _6k\n");
+        WUSIC_LOG(decoder, error, "failed to create eq_16k");
         return ret;
     }
 
@@ -401,7 +405,7 @@ int Decoder::init_filters()
         &aformat_packed_ctx, avfilter_get_by_name("aformat"), "fmt_packed",
         "sample_fmts=flt:sample_rates=44100:channel_layouts=stereo", nullptr, m_filter_graph);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to create aformat_packed filter\n");
+        WUSIC_LOG(decoder, error, "failed to create aformat_packed filter");
         return ret;
     }
 
@@ -422,7 +426,7 @@ int Decoder::init_filters()
     // apply config
     ret = avfilter_graph_config(m_filter_graph, nullptr);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER] Error: failed to apply filter graph's config\n");
+        WUSIC_LOG(decoder, error, "failed to apply filter graph's config");
         return ret;
     }
 
@@ -433,7 +437,7 @@ int Decoder::process_frame_with_eq(AVFrame* frame)
 {
     int ret = av_buffersrc_add_frame_flags(m_buffersrc_ctx, frame, AV_BUFFERSRC_FLAG_KEEP_REF);
     if (ret < 0) {
-        fprintf(stderr, "[DECODER/EQ] Error: failed to process frame\n");
+        WUSIC_LOG(decoder, error, "failed to process frame");
         return ret;
     }
 

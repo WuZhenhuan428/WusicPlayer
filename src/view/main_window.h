@@ -13,7 +13,6 @@
 #include <QAction>
 #include <QByteArray>
 #include <QCloseEvent>
-#include <QDebug>
 #include <QDialog>
 #include <QFileDialog>
 #include <QHBoxLayout>

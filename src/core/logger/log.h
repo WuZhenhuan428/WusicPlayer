@@ -3,10 +3,34 @@
 #include "core/logger/logger_manager.h"
 
 #include <QString>
+#include <QStringView>
 
 #include <format>
 #include <string>
 #include <string_view>
+
+// 让 QString / QStringView 可直接用于 std::format("{}", qstr) —— 转 UTF-8。
+template <>
+struct std::formatter<QString, char> : std::formatter<std::string_view, char>
+{
+    auto format(const QString& value, format_context& ctx) const
+    {
+        const QByteArray utf8 = value.toUtf8();
+        return std::formatter<std::string_view, char>::format(
+            std::string_view(utf8.constData(), size_t(utf8.size())), ctx);
+    }
+};
+
+template <>
+struct std::formatter<QStringView, char> : std::formatter<std::string_view, char>
+{
+    auto format(const QStringView& value, format_context& ctx) const
+    {
+        const QByteArray utf8 = value.toUtf8();
+        return std::formatter<std::string_view, char>::format(
+            std::string_view(utf8.constData(), size_t(utf8.size())), ctx);
+    }
+};
 
 namespace wusic::log::detail
 {

@@ -1,6 +1,5 @@
 #include "view/dialogs/font_select_dialog.h"
 
-#include <QDebug>
 #include <QStyle>
 #include <algorithm>
 

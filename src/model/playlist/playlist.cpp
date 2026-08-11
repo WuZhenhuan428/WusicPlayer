@@ -2,19 +2,24 @@
 
 #include <QFileInfo>
 
+#include "core/logger/log.h"
+
 /**
  * @brief: 创建播放列表时生成UUID
  */
+
+WUSIC_LOG_MODULE(playlist)
+
 Playlist::Playlist(const QString& name)
 {
     m_name = name;
     m_pid  = PlaylistId::createUuid();
-    qDebug() << "[INFO] Create playlist uuid: " << m_pid.toString();
+    WUSIC_LOG(playlist, info, "[INFO] Create playlist uuid: {}", m_pid.toString());
 }
 
 Playlist::~Playlist()
 {
-    qDebug() << "[INFO] Remove playlist uuid: " << m_pid.toString();
+    WUSIC_LOG(playlist, info, "[INFO] Remove playlist uuid: {}", m_pid.toString());
 }
 
 /**
@@ -143,12 +148,12 @@ void Playlist::remove_track(const EntryId& tid)
             EntryId removedId = it->entry_id;
             m_tracks.erase(it);
 
-            qDebug() << "[INFO] Remove UUID=" << removedId << ", filepath=" << path;
+            WUSIC_LOG(playlist, info, "[INFO] Remove UUID={}, filepath={}", removedId.toString(), path);
             return;
         }
     }
 
-    qDebug() << "[WARNING] file does not in playlist!";
+    WUSIC_LOG(playlist, warn, "[WARNING] file does not in playlist!");
 };
 
 /**
@@ -189,10 +194,10 @@ const Track* Playlist::find_track_by_id(const EntryId& eid) const
     for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
         if (it->entry_id == eid) {
             return &(*it);
-            qDebug() << "[INFO] find track " << it->entry_id << " at playlist " << m_name;
+            WUSIC_LOG(playlist, info, "[INFO] find track {} at playlist {}", it->entry_id.toString(), m_name);
         }
     }
-    qDebug() << "[WARNING] track " << eid << " does not exist!";
+    WUSIC_LOG(playlist, warn, "[WARNING] track {} does not exist!", eid.toString());
     return nullptr;
 }
 

@@ -8,6 +8,11 @@
 #include <QMessageBox>
 #include <QStringList>
 
+#include "core/logger/log.h"
+
+
+WUSIC_LOG_MODULE(playlist_controller)
+
 namespace
 {
 TableColumn jsonToColumn(const QJsonObject& obj)
@@ -252,7 +257,7 @@ void PlaylistController::save_playlist(const PlaylistId& id)
     }
 
     m_manager->save_playlist(target_id, filename);
-    qDebug() << "[PLAYLIST] playlist save to" << filename;
+    WUSIC_LOG(playlist_controller, info, "[PLAYLIST] playlist save to {}", filename);
 }
 
 void PlaylistController::copy_playlist(const PlaylistId& id)
@@ -487,7 +492,7 @@ void PlaylistController::load_from_json(const QJsonObject& json)
     m_last_track_id    = EntryId(obj.value("last_track_id").toString());
 
     if (!m_last_playlist_id.isNull() && !this->find_playlist_by_id(m_last_playlist_id)) {
-        qWarning() << "playlist" << m_last_playlist_id.toString() << "does not exist!";
+        WUSIC_LOG(playlist_controller, warn, "playlist {} does not exist!", m_last_playlist_id.toString());
     }
     // TODO: find track in current playlist if playlist available
 }

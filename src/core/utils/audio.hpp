@@ -1,11 +1,8 @@
 #pragma once
 
+#include "core/logger/log.h"
 #include "core/types.h"
-
-#include <algorithm>
-#include <filesystem>
-#include <string>
-#include <vector>
+WUSIC_LOG_MODULE(audio_utils);
 
 #include <taglib/asffile.h>
 #include <taglib/attachedpictureframe.h>
@@ -30,6 +27,11 @@
 #include <QPixmap>
 #include <QString>
 #include <QStringList>
+
+#include <algorithm>
+#include <filesystem>
+#include <string>
+#include <vector>
 
 namespace utils
 {
@@ -208,13 +210,13 @@ inline QPixmap find_cover_at_folder(const QString& audio_path)
 {
     QFileInfo audio_file(audio_path);
     if (!audio_file.exists()) {
-        qDebug() << "[WARNING] audio file does not exist: " << audio_file;
+        WUSIC_LOG(audio_utils, warn, "audio file does not exist: {}", audio_file.fileName());
         return QPixmap();
     }
 
     QDir audio_dir = audio_file.absoluteDir();
     if (!audio_dir.exists()) {
-        qDebug() << "[WARNING] audio path does not exist: " << audio_dir;
+        WUSIC_LOG(audio_utils, warn, "audio path does not exist: {}", audio_dir.dirName());
         return QPixmap();
     }
 
@@ -242,7 +244,7 @@ inline QPixmap find_cover_at_folder(const QString& audio_path)
 
     QVector<QString> files = audio_dir.entryList();
     if (files.isEmpty()) {
-        qDebug() << "[INFO] can not find any cover image.";
+        WUSIC_LOG(audio_utils, info, "can not find any cover image");
         return QPixmap();
     }
 
@@ -264,7 +266,7 @@ inline QPixmap find_cover_at_folder(const QString& audio_path)
     });
 
     QString cover_path = audio_dir.absoluteFilePath(files.first());
-    qDebug() << "[INFO] Find default cover " << cover_path;
+    WUSIC_LOG(audio_utils, info, "Find default cover");
     QPixmap pix;
     pix.load(cover_path);
     return pix;

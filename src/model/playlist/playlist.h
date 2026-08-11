@@ -3,7 +3,6 @@
 #include "core/types.h"
 #include "model/library/library_track.h"
 
-#include <QDebug>
 #include <QString>
 #include <QUuid>
 #include <QVector>

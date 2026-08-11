@@ -6,6 +6,11 @@
 #include <QStatusBar>
 #include <QTimer>
 
+#include "core/logger/log.h"
+
+
+WUSIC_LOG_MODULE(main_window)
+
 MainWindow::MainWindow(PlaybackController* playback_controller,
                        PlaylistController* playlist_controller, QWidget* parent) :
     QMainWindow(parent), playback_controller_(playback_controller),
@@ -290,7 +295,7 @@ void MainWindow::on_open_file()
     if (!filepath.isEmpty()) {
         emit sgnPlayTrackRequested(filepath);
     } else {
-        qDebug() << "[INFO] filepath is empty!";
+        WUSIC_LOG(main_window, info, "[INFO] filepath is empty!");
     }
 }
 

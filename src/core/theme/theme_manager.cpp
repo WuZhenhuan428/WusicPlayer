@@ -1,8 +1,9 @@
 #include "core/theme/theme_manager.h"
+
+#include "core/logger/log.h"
 #include "wusic_proxy_style.h"
 
 #include <QApplication>
-#include <QDebug>
 #include <QDir>
 #include <QDirIterator>
 #include <QJsonObject>
@@ -14,6 +15,8 @@
 // ============================================================================
 // 单例
 // ============================================================================
+
+WUSIC_LOG_MODULE(theme)
 
 ThemeManager& ThemeManager::instance()
 {
@@ -48,7 +51,7 @@ void ThemeManager::scan_external_plugins(const QString& dir)
         auto* plugin = qobject_cast<IThemePlugin*>(loader.instance());
         if (plugin) {
             m_externalPlugins.insert(plugin->name(), info.absoluteFilePath());
-            qDebug() << "[ThemeManager] found external theme:" << plugin->name();
+            WUSIC_LOG(theme, debug, "[ThemeManager] found external theme: {}", plugin->name());
         }
     }
 }

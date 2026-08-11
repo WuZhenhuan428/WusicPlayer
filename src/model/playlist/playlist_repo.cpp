@@ -17,6 +17,10 @@
 #include <QThread>
 #include <QTimer>
 
+#include "core/logger/log.h"
+
+WUSIC_LOG_MODULE(playlist_repo)
+
 static QJsonObject metaToJson(const TrackMetaData& meta)
 {
     QJsonObject obj;
@@ -99,17 +103,18 @@ void PlaylistRepo::save_list_to_cache(std::shared_ptr<Playlist> playlist)
         return;
     }
     if (m_cache_dir.isEmpty()) {
-        qDebug() << "[WARNING] Cache dir is empty, skip saving playlist.";
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Cache dir is empty, skip saving playlist.");
         return;
     }
 
     QFile file(cache_file_path(playlist->id()));
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        qDebug() << "[WARNING] Failed to open" << file.fileName() << "for cache saving.";
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Failed to open {} for cache saving.",
+                  file.fileName());
         return;
     }
     if (!write_json_playlist(file, playlist)) {
-        qDebug() << "[WARNING] Failed to write cache file:" << file.fileName();
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Failed to write cache file: {}", file.fileName());
     }
 }
 
@@ -346,7 +351,7 @@ PlaylistId PlaylistRepo::load_list(const QString& filepath)
 {
     QFile file(filepath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qDebug() << "[WARNING] Failed to open file for loading:" << filepath;
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Failed to open file for loading: {}", filepath);
         return PlaylistId();
     }
 
@@ -372,7 +377,7 @@ PlaylistId PlaylistRepo::load_list(const QString& filepath)
 
     m_list.push_back(new_playlist);
     emit sgn_playlist_changed();
-    qDebug() << "[INFO] Loading playlist from:" << filepath;
+    WUSIC_LOG(playlist_repo, info, "[INFO] Loading playlist from: {}", filepath);
     return new_playlist->id();
 }
 
@@ -384,7 +389,7 @@ PlaylistId PlaylistRepo::load_list_batched(const QString& filepath, int batch_si
 
     QFile file(filepath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qDebug() << "[WARNING] Failed to open file for loading:" << filepath;
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Failed to open file for loading: {}", filepath);
         return PlaylistId();
     }
 
@@ -534,7 +539,8 @@ PlaylistId PlaylistRepo::load_list_batched(const QString& filepath, int batch_si
 
     QTimer::singleShot(0, this, processBatch);
 
-    qDebug() << "[INFO] Loading playlist (batched) from:" << filepath << "total:" << totalCount;
+    WUSIC_LOG(playlist_repo, info, "[INFO] Loading playlist (batched) from: {} total: {}", filepath,
+              totalCount);
     return pid;
 }
 
@@ -543,29 +549,30 @@ void PlaylistRepo::save_list(const PlaylistId& pid, const QString& dst_path)
 {
     std::shared_ptr<Playlist> src = find_playlist_by_id(pid);
     if (!src) {
-        qDebug() << "[WARNING] Playlist (" << pid.toString() << ") not found, save failed.";
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Playlist ({}) not found, save failed.",
+                  pid.toString());
         return;
     }
 
     QFile file(dst_path);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        qDebug() << "[WARNING] Failed to open file for saving:" << dst_path;
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Failed to open file for saving: {}", dst_path);
         return;
     }
 
     if (!write_json_playlist(file, src)) {
-        qDebug() << "[WARNING] Failed to write playlist file:" << dst_path;
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Failed to write playlist file: {}", dst_path);
         return;
     }
 
-    qDebug() << "[INFO] Saved playlist to:" << dst_path;
+    WUSIC_LOG(playlist_repo, info, "[INFO] Saved playlist to: {}", dst_path);
 }
 
 void PlaylistRepo::rename_list(const PlaylistId& pid, const QString& name)
 {
     std::shared_ptr<Playlist> src = find_playlist_by_id(pid);
     if (!src) {
-        qDebug() << "[WARNING] Playlist" << pid << "does not exist";
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Playlist {} does not exist", pid.toString());
         return;
     }
     src->set_playlist_name(name);
@@ -577,7 +584,7 @@ void PlaylistRepo::remove_list(const PlaylistId& pid)
 {
     std::shared_ptr<Playlist> src = find_playlist_by_id(pid);
     if (!src) {
-        qDebug() << "[WARNING] Playlist " << pid << "not found";
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Playlist {} not found", pid.toString());
         return;
     }
     m_list.removeOne(src);
@@ -590,8 +597,8 @@ void PlaylistRepo::remove_list(const PlaylistId& pid)
 void PlaylistRepo::reorder_lists(const QVector<PlaylistId>& ordered_ids)
 {
     if (ordered_ids.size() != m_list.size()) {
-        qWarning() << "[PlaylistRepo] reorder_lists: size mismatch" << ordered_ids.size() << "vs"
-                   << m_list.size();
+        WUSIC_LOG(playlist_repo, warn, "[PlaylistRepo] reorder_lists: size mismatch {} vs {}",
+                  ordered_ids.size(), m_list.size());
         return;
     }
     QVector<std::shared_ptr<Playlist>> new_order;
@@ -605,7 +612,7 @@ void PlaylistRepo::reorder_lists(const QVector<PlaylistId>& ordered_ids)
         }
     }
     if (new_order.size() != m_list.size()) {
-        qWarning() << "[PlaylistRepo] reorder_lists: dropped entries, abort";
+        WUSIC_LOG(playlist_repo, warn, "[PlaylistRepo] reorder_lists: dropped entries, abort");
         return;
     }
     m_list = std::move(new_order);
@@ -620,7 +627,8 @@ void PlaylistRepo::copy_list(const PlaylistId& src_uuid)
     std::shared_ptr<Playlist> src = find_playlist_by_id(src_uuid);
 
     if (!src) {
-        qDebug() << "[WARNING] Source playlist " << src_uuid << "not found";
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Source playlist {} not found",
+                  src_uuid.toString());
         return;
     }
 
@@ -642,10 +650,10 @@ void PlaylistRepo::add_track_to_playlist(const PlaylistId& pid, const QString& f
 {
     std::shared_ptr<Playlist> src = find_playlist_by_id(pid);
     if (!src) {
-        qDebug() << "[WARNING] Playlist id " << pid.toString() << "not found";
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Playlist id {} not found", pid.toString());
         return;
     }
-    qDebug() << "[INFO] Add track " << filepath << "to " << pid.toString();
+    WUSIC_LOG(playlist_repo, info, "[INFO] Add track {} to {}", filepath, pid.toString());
 
     Track newTrack = src->add_track(filepath);
     save_list_to_cache(src);
@@ -656,10 +664,10 @@ void PlaylistRepo::add_tracks_to_playlist(const PlaylistId& pid, const QStringLi
 {
     std::shared_ptr<Playlist> src = find_playlist_by_id(pid);
     if (!src) {
-        qDebug() << "[WARNING] Playlist id " << pid.toString() << "not found";
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Playlist id {} not found", pid.toString());
         return;
     }
-    qDebug() << "[INFO] Add " << filepaths.size() << " tracks to " << pid.toString();
+    WUSIC_LOG(playlist_repo, info, "[INFO] Add {} tracks to {}", filepaths.size(), pid.toString());
 
     for (const auto& filepath : filepaths) {
         src->add_track(filepath);
@@ -672,7 +680,7 @@ void PlaylistRepo::add_track_object(const PlaylistId& pid, const Track& track)
 {
     std::shared_ptr<Playlist> src = find_playlist_by_id(pid);
     if (!src) {
-        qDebug() << "[WARNING] Playlist id " << pid.toString() << "not found";
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Playlist id {} not found", pid.toString());
         return;
     }
     src->add_track_object(track);
@@ -684,7 +692,7 @@ void PlaylistRepo::add_track_objects(const PlaylistId& pid, const QVector<Track>
 {
     std::shared_ptr<Playlist> src = find_playlist_by_id(pid);
     if (!src) {
-        qDebug() << "[WARNING] Playlist id " << pid.toString() << "not found";
+        WUSIC_LOG(playlist_repo, warn, "[WARNING] Playlist id {} not found", pid.toString());
         return;
     }
     for (const auto& track : tracks) {
@@ -713,7 +721,7 @@ std::shared_ptr<Playlist> PlaylistRepo::find_playlist_by_id(const PlaylistId& pi
             return it;
         }
     }
-    qDebug() << "[WARNING] Playlist does not exist, UUID=" << pid.toString();
+    WUSIC_LOG(playlist_repo, warn, "[WARNING] Playlist does not exist, UUID={}", pid.toString());
     return nullptr;
 }
 
