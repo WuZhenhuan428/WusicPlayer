@@ -24,11 +24,17 @@ class ThemeService;
 class LibraryManager;
 class PlaybackQueueService;
 
+namespace wusic::log {
+class LogSinkGui;
+}
+
 class AppController : public QObject
 {
     Q_OBJECT
 public:
-    explicit AppController(PlaybackController* playback_controller, QObject* parent = nullptr);
+    explicit AppController(PlaybackController* playback_controller,
+                           wusic::log::LogSinkGui* gui_sink = nullptr,
+                           QObject* parent = nullptr);
     ~AppController() override;
 
     void show_main_window();
@@ -50,6 +56,7 @@ private:
 
 private:
     PlaybackController* playback_controller_ = nullptr;
+    wusic::log::LogSinkGui* gui_sink_ = nullptr; // 非拥有
     std::unique_ptr<PlaylistManager> playlist_manager_;
     std::unique_ptr<PlaylistController> playlist_controller_;
     std::unique_ptr<LibraryManager> library_manager_;

@@ -96,6 +96,8 @@ void MainWindow::init_menu_connections()
 
     connect(m_act_search_panel, &QAction::triggered, this,
             &MainWindow::sgnOpenSearchPanelRequested);
+    connect(m_act_log_viewer, &QAction::triggered, this,
+            &MainWindow::sgnOpenLogViewerRequested);
     connect(m_act_show_desktop_lyrics, &QAction::toggled, this, [this](bool checked) {
         if (m_desktop_lyrics_widget)
             m_desktop_lyrics_widget->setVisible(checked);
@@ -139,10 +141,12 @@ void MainWindow::build_menu_bar()
     m_act_insert_column = new QAction("Insert a column (&I)", m_menu_view);
     m_act_remove_column = new QAction("Remove a column (&R)", m_menu_view);
     m_act_search_panel  = new QAction("Open search panel (&S)", m_menu_view);
+    m_act_log_viewer    = new QAction("Open Log (&L)", m_menu_view);
     m_menu_view->addAction(m_act_set_sort_rule);
     m_menu_view->addAction(m_act_insert_column);
     m_menu_view->addAction(m_act_remove_column);
     m_menu_view->addAction(m_act_search_panel);
+    m_menu_view->addAction(m_act_log_viewer);
     m_menu_view->addSeparator();
     m_act_show_desktop_lyrics = new QAction("Show Desktop Lyrics (&D)", m_menu_view);
     m_act_show_desktop_lyrics->setCheckable(true);

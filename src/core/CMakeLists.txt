@@ -9,6 +9,8 @@ add_library(wusic_core STATIC
     logger/log_sink.h
     logger/log_sink_console.h
     logger/log_sink_console.cpp
+    logger/log_sink_gui.h
+    logger/log_sink_gui.cpp
     logger/logger_manager.h
     logger/logger_manager.cpp
     logger/log.h

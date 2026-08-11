@@ -7,6 +7,7 @@
 #include "controller/status_bar_controller.h"
 #include "core/config_manager/config_manager.h"
 #include "core/config_manager/i_configurable.h"
+#include "core/logger/log_sink_gui.h"
 #include "core/types.h"
 #include "model/library/library_manager.h"
 #include "model/playback_queue/playback_queue_service.h"
@@ -37,8 +38,11 @@
 #include <format>
 #include <string>
 
-AppController::AppController(PlaybackController* playback_controller, QObject* parent) :
-    QObject(parent), playback_controller_(playback_controller),
+AppController::AppController(PlaybackController* playback_controller, wusic::log::LogSinkGui* gui_sink,
+                             QObject* parent) :
+    QObject(parent),
+    playback_controller_(playback_controller),
+    gui_sink_(gui_sink),
     playlist_manager_(std::make_unique<PlaylistManager>()),
     playlist_controller_(
         std::make_unique<PlaylistController>(playlist_manager_.get(), nullptr, this)),
@@ -62,7 +66,7 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     // 面板编排:设置/搜索/EQ/快捷键(构造时注册默认快捷键)
     panel_coordinator_(std::make_unique<PanelCoordinator>(
         main_window_.get(), playback_controller_, playlist_controller_.get(),
-        library_manager_.get(), theme_service_.get(), search_backend_.get(), this))
+        library_manager_.get(), theme_service_.get(), search_backend_.get(), gui_sink_, this))
 {
     // 现在播放队列:注入数据源(积累期,媒体库控件入队即播)
     playback_queue_service_->set_playlist_manager(playlist_manager_.get());
@@ -87,6 +91,8 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     // 面板入口信号 → PanelCoordinator(组合根不再中转)
     connect(main_window_.get(), &MainWindow::sgnOpenSearchPanelRequested, panel_coordinator_.get(),
             &PanelCoordinator::open_search_panel);
+    connect(main_window_.get(), &MainWindow::sgnOpenLogViewerRequested, panel_coordinator_.get(),
+            &PanelCoordinator::open_log_viewer);
     connect(main_window_.get(), &MainWindow::sgnOpenSettingsPanelRequested,
             panel_coordinator_.get(), &PanelCoordinator::open_settings_panel);
     connect(main_window_.get(), &MainWindow::sgnShowDesktopLyricsRequested, this,

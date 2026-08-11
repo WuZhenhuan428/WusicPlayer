@@ -64,6 +64,9 @@ add_library(wusic_view STATIC
     dialogs/font_select_dialog.cpp
     dialogs/font_select_dialog.h
 
+    dialogs/log_viewer_dialog.cpp
+    dialogs/log_viewer_dialog.h
+
     dialogs/text_editor_dialog.cpp
     dialogs/text_editor_dialog.h
 

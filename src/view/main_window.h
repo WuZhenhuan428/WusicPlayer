@@ -100,6 +100,7 @@ private:
     QAction* m_act_insert_column;
     QAction* m_act_remove_column;
     QAction* m_act_search_panel;
+    QAction* m_act_log_viewer;
     QAction* m_act_show_desktop_lyrics;
     QAction* m_act_lock_desktop_lyrics;
 
@@ -132,6 +133,7 @@ signals:
     void sgnCurrentPlaylistChanged(PlaylistId pid);
     void sgnAboutToClose();
     void sgnOpenSearchPanelRequested();
+    void sgnOpenLogViewerRequested();
     void sgnOpenSettingsPanelRequested();
     void sgnCreatePlaylistRequested();
     void sgnPlayTrackRequested(const QString& filepath);

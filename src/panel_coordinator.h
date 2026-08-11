@@ -7,6 +7,7 @@ class EQWidget;
 class InMemorySearchBackend;
 class LibraryManager;
 class LibrarySettingsPage;
+class LogViewerDialog;
 class LyricsSettingPanel;
 class MainWindow;
 class PlaybackController;
@@ -17,6 +18,10 @@ class ShortcutsController;
 class ShortcutsPanel;
 class ThemeService;
 class ThemeSettingsPage;
+
+namespace wusic::log {
+class LogSinkGui;
+}
 
 /**
  * @brief UI 面板编排:所有浮动面板/对话框的创建、显示、生命周期,
@@ -32,6 +37,7 @@ public:
     PanelCoordinator(MainWindow* main_window, PlaybackController* playback_ctl,
                      PlaylistController* playlist_ctl, LibraryManager* library_mgr,
                      ThemeService* theme_service, InMemorySearchBackend* search_backend,
+                     wusic::log::LogSinkGui* gui_sink = nullptr,
                      QObject* parent = nullptr);
     ~PanelCoordinator() override;
 
@@ -46,6 +52,7 @@ public slots:
     void open_settings_panel_page(const QString& title);  // 指定页(如 "Media Library"/"Lyrics")
     void open_search_panel();
     void open_eq_widget();
+    void open_log_viewer();
 
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override;
@@ -56,6 +63,7 @@ private:
     void ensure_shortcuts_page();
     void register_default_shortcuts();
     void ensure_search_panel();
+    void ensure_log_viewer();
 
     // ---- 非拥有依赖 ----
     MainWindow* main_window_            = nullptr;
@@ -64,6 +72,7 @@ private:
     LibraryManager* library_mgr_        = nullptr;
     ThemeService* theme_service_        = nullptr;
     InMemorySearchBackend* search_backend_ = nullptr;
+    wusic::log::LogSinkGui* gui_sink_   = nullptr;
 
     // ---- 拥有(懒创建,可复用) ----
     QPointer<SettingsPanel> settings_panel_;
@@ -73,6 +82,7 @@ private:
     QPointer<LyricsSettingPanel> lyrics_settings_panel_;
     QPointer<ThemeSettingsPage> theme_settings_page_;
     QPointer<LibrarySettingsPage> library_settings_page_;
+    QPointer<LogViewerDialog> log_viewer_;
     QPointer<EQWidget> eq_widget_;
     bool has_shortcuts_registered_ = false;
 };

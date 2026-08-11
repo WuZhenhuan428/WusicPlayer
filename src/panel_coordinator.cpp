@@ -5,10 +5,12 @@
 #include "controller/search_backend/in_memory_search_backend.h"
 #include "controller/shortcuts_controller.h"
 #include "core/config_manager/config_manager.h"
+#include "core/logger/log_sink_gui.h"
 #include "core/types.h"
 #include "model/library/library_manager.h"
 #include "model/shortcuts_view_model/shortcuts_types.hpp"
 #include "service/theme_service.h"
+#include "view/dialogs/log_viewer_dialog.h"
 #include "view/eq_widget/eq_widget.h"
 #include "view/main_window.h"
 #include "view/search_panel/search_panel.h"
@@ -28,10 +30,12 @@
 PanelCoordinator::PanelCoordinator(MainWindow* main_window, PlaybackController* playback_ctl,
                                    PlaylistController* playlist_ctl, LibraryManager* library_mgr,
                                    ThemeService* theme_service,
-                                   InMemorySearchBackend* search_backend, QObject* parent) :
-    QObject(parent), main_window_(main_window), playback_ctl_(playback_ctl),
-    playlist_ctl_(playlist_ctl), library_mgr_(library_mgr), theme_service_(theme_service),
-    search_backend_(search_backend)
+                                   InMemorySearchBackend* search_backend,
+                                   wusic::log::LogSinkGui* gui_sink, QObject* parent) :
+    QObject(parent),
+    main_window_(main_window), playback_ctl_(playback_ctl), playlist_ctl_(playlist_ctl),
+    library_mgr_(library_mgr), theme_service_(theme_service), search_backend_(search_backend),
+    gui_sink_(gui_sink)
 {
     ensure_shortcuts_controller();
 }
@@ -130,6 +134,28 @@ void PanelCoordinator::open_search_panel()
     search_panel_->show();
     search_panel_->raise();
     search_panel_->activateWindow();
+}
+
+void PanelCoordinator::open_log_viewer()
+{
+    ensure_log_viewer();
+    log_viewer_->show();
+    log_viewer_->raise();
+    log_viewer_->activateWindow();
+}
+
+void PanelCoordinator::ensure_log_viewer()
+{
+    if (log_viewer_) {
+        return;
+    }
+    if (!gui_sink_) {
+        return;
+    }
+    log_viewer_ = new LogViewerDialog(gui_sink_);
+    log_viewer_->setWindowFlag(Qt::Window, true);
+    log_viewer_->setAttribute(Qt::WA_DeleteOnClose, true);
+    connect(log_viewer_, &QObject::destroyed, this, [this]() { log_viewer_ = nullptr; });
 }
 
 void PanelCoordinator::open_eq_widget()
