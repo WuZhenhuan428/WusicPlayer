@@ -63,4 +63,5 @@ target_link_libraries(wusic_core
         FFMPEG::FFMPEG
         Threads::Threads
         $<$<CXX_COMPILER_ID:GNU>:atomic>
+        stdc++exp
 )

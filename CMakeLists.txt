@@ -71,6 +71,9 @@ if (WUSIC_BUILD_TESTS)
     add_subdirectory(test)
 endif()
 
+if(WIN32)
+   set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE ON)
+endif()
 
 include(GNUInstallDirs)
 
