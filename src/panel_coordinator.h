@@ -19,7 +19,8 @@ class ShortcutsPanel;
 class ThemeService;
 class ThemeSettingsPage;
 
-namespace wusic::log {
+namespace wusic::log
+{
 class LogSinkGui;
 }
 
@@ -37,8 +38,7 @@ public:
     PanelCoordinator(MainWindow* main_window, PlaybackController* playback_ctl,
                      PlaylistController* playlist_ctl, LibraryManager* library_mgr,
                      ThemeService* theme_service, InMemorySearchBackend* search_backend,
-                     wusic::log::LogSinkGui* gui_sink = nullptr,
-                     QObject* parent = nullptr);
+                     wusic::log::LogSinkGui* gui_sink = nullptr, QObject* parent = nullptr);
     ~PanelCoordinator() override;
 
     // 懒创建并返回快捷键控制器(供配置注册)
@@ -49,7 +49,7 @@ public:
 
 public slots:
     void open_settings_panel();                          // 默认页
-    void open_settings_panel_page(const QString& title);  // 指定页(如 "Media Library"/"Lyrics")
+    void open_settings_panel_page(const QString& title); // 指定页(如 "Media Library"/"Lyrics")
     void open_search_panel();
     void open_eq_widget();
     void open_log_viewer();
@@ -66,13 +66,13 @@ private:
     void ensure_log_viewer();
 
     // ---- 非拥有依赖 ----
-    MainWindow* main_window_            = nullptr;
-    PlaybackController* playback_ctl_   = nullptr;
-    PlaylistController* playlist_ctl_   = nullptr;
-    LibraryManager* library_mgr_        = nullptr;
-    ThemeService* theme_service_        = nullptr;
+    MainWindow* main_window_               = nullptr;
+    PlaybackController* playback_ctl_      = nullptr;
+    PlaylistController* playlist_ctl_      = nullptr;
+    LibraryManager* library_mgr_           = nullptr;
+    ThemeService* theme_service_           = nullptr;
     InMemorySearchBackend* search_backend_ = nullptr;
-    wusic::log::LogSinkGui* gui_sink_   = nullptr;
+    wusic::log::LogSinkGui* gui_sink_      = nullptr;
 
     // ---- 拥有(懒创建,可复用) ----
     QPointer<SettingsPanel> settings_panel_;

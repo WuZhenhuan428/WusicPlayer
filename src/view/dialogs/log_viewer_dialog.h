@@ -12,7 +12,8 @@ class QComboBox;
 class QPlainTextEdit;
 class QPushButton;
 
-namespace wusic::log {
+namespace wusic::log
+{
 class LogSinkGui;
 }
 
@@ -44,8 +45,8 @@ private:
 
     wusic::log::LogSinkGui* m_sink = nullptr; // 非拥有
 
-    QComboBox* m_cb_level_filter = nullptr;
-    QPushButton* m_btn_clear     = nullptr;
-    QCheckBox* m_chk_follow      = nullptr;
-    QPlainTextEdit* m_text       = nullptr;
+    QComboBox* m_cb_level_filter   = nullptr;
+    QPushButton* m_btn_clear       = nullptr;
+    QCheckBox* m_chk_follow        = nullptr;
+    QPlainTextEdit* m_text         = nullptr;
 };

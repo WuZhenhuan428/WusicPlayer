@@ -38,11 +38,9 @@
 #include <format>
 #include <string>
 
-AppController::AppController(PlaybackController* playback_controller, wusic::log::LogSinkGui* gui_sink,
-                             QObject* parent) :
-    QObject(parent),
-    playback_controller_(playback_controller),
-    gui_sink_(gui_sink),
+AppController::AppController(PlaybackController* playback_controller,
+                             wusic::log::LogSinkGui* gui_sink, QObject* parent) :
+    QObject(parent), playback_controller_(playback_controller), gui_sink_(gui_sink),
     playlist_manager_(std::make_unique<PlaylistManager>()),
     playlist_controller_(
         std::make_unique<PlaylistController>(playlist_manager_.get(), nullptr, this)),

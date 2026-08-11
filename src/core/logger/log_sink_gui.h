@@ -8,7 +8,8 @@
 
 #include <QMutex>
 
-namespace wusic::log {
+namespace wusic::log
+{
 
 // GUI sink:把日志转发到主线程(QueuedConnection),并保留环形缓冲供窗口打开时回显。
 // 线程安全:write() 可能来自任意线程(如扫描 worker),内部持锁 + emit 信号。

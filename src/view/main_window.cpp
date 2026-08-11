@@ -96,8 +96,7 @@ void MainWindow::init_menu_connections()
 
     connect(m_act_search_panel, &QAction::triggered, this,
             &MainWindow::sgnOpenSearchPanelRequested);
-    connect(m_act_log_viewer, &QAction::triggered, this,
-            &MainWindow::sgnOpenLogViewerRequested);
+    connect(m_act_log_viewer, &QAction::triggered, this, &MainWindow::sgnOpenLogViewerRequested);
     connect(m_act_show_desktop_lyrics, &QAction::toggled, this, [this](bool checked) {
         if (m_desktop_lyrics_widget)
             m_desktop_lyrics_widget->setVisible(checked);

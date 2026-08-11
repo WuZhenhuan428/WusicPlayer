@@ -31,7 +31,7 @@ void LogViewerDialog::build_ui()
     m_cb_level_filter->addItem(tr("Warn+"), int(Level::warn));
     m_cb_level_filter->addItem(tr("Error+"), int(Level::error));
 
-    m_btn_clear = new QPushButton(tr("Clear"));
+    m_btn_clear  = new QPushButton(tr("Clear"));
     m_chk_follow = new QCheckBox(tr("Follow"));
     m_chk_follow->setChecked(true);
 
@@ -108,10 +108,9 @@ bool LogViewerDialog::should_display(int level) const
 
 void LogViewerDialog::append_line(int level, const QString& module, const QString& message)
 {
-    const QString ts =
-        QDateTime::currentDateTime().toString(QStringLiteral("HH:mm:ss.zzz"));
-    const QString line = QStringLiteral("[%1] [%2] [%3] %4")
-                             .arg(ts, level_name(Level(level)), module, message);
+    const QString ts = QDateTime::currentDateTime().toString(QStringLiteral("HH:mm:ss.zzz"));
+    const QString line =
+        QStringLiteral("[%1] [%2] [%3] %4").arg(ts, level_name(Level(level)), module, message);
     m_text->appendPlainText(line);
     if (m_chk_follow && m_chk_follow->isChecked()) {
         QTextCursor cursor = m_text->textCursor();

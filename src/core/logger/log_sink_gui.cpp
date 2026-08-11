@@ -1,6 +1,7 @@
 #include "core/logger/log_sink_gui.h"
 
-namespace wusic::log {
+namespace wusic::log
+{
 
 LogSinkGui::LogSinkGui(QObject* parent) : QObject(parent) {}
 

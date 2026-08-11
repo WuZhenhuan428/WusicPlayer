@@ -32,10 +32,9 @@ PanelCoordinator::PanelCoordinator(MainWindow* main_window, PlaybackController* 
                                    ThemeService* theme_service,
                                    InMemorySearchBackend* search_backend,
                                    wusic::log::LogSinkGui* gui_sink, QObject* parent) :
-    QObject(parent),
-    main_window_(main_window), playback_ctl_(playback_ctl), playlist_ctl_(playlist_ctl),
-    library_mgr_(library_mgr), theme_service_(theme_service), search_backend_(search_backend),
-    gui_sink_(gui_sink)
+    QObject(parent), main_window_(main_window), playback_ctl_(playback_ctl),
+    playlist_ctl_(playlist_ctl), library_mgr_(library_mgr), theme_service_(theme_service),
+    search_backend_(search_backend), gui_sink_(gui_sink)
 {
     ensure_shortcuts_controller();
 }
