@@ -1,5 +1,8 @@
 # 使用g++20+时可能导致clangd module解析失败
 CompileFlags:
+  Add: [
+    '-std=c++23'
+  ]
   Remove: [
     '-fmodules-ts',
     '-fmodule-mapper=*',        # 使用通配符忽略所有 -fmodule-mapper 参数

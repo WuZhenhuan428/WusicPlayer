@@ -3,6 +3,15 @@ add_library(wusic_core STATIC
     hsv_types.h
     search_types.h
     player_types.h
+
+    logger/log_level.h
+    logger/log_record.h
+    logger/log_sink.h
+    logger/log_sink_console.h
+    logger/log_sink_console.cpp
+    logger/logger_manager.h
+    logger/logger_manager.cpp
+    logger/log.h
     
     utils/audio.hpp
     utils/path.hpp

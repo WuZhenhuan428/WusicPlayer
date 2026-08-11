@@ -70,6 +70,7 @@
 - [x] **播放列表解析策略 + 配置**:`AddFilePolicy{by_operation,import_to_library,keep_external,always_ask}`;`PlaylistManager::addTrack/addFolder` 接受策略(by_operation 按操作类型:文件夹→同步入库、单文件→仅外部);import 时注册父目录/目录到库,扫描后 `upgradeExternalTracks` 自动升级为库引用;`PlaylistController` 决策(always_ask 弹窗)并持久化 `add_file_policy`(config key "playlist");设置面板 "Media Library" 页新增"添加未入库文件时"下拉。测试:`tb_add_file_policy`(keep_external/import/by_operation/全局策略/文件夹/库命中)17 项断言
 - [~] **菜单栏清理**(第一步完成):移除与播放列表右键重复的 File 菜单项(Save/Copy/Rename/Remove current playlist,右键经 `LibraryInteractionService` 已接线);移除死代码 Help→Manual(从未连接);修复 View 菜单助记符冲突("Set sort rule (&R)" vs "Remove a column (&R)");同步清理 MainWindow 信号(`sgnSave/Copy/Rename/RemovePlaylistRequested`)与 AppController 对应连接。剩余(待各控件右键功能完善后):View 排序/列管理→播放列表右键、文件添加→媒体库控件右键、Playback EQ 归位
 - [ ] **智能播放列表**(保存的查询):特化视图实时反映库变化,替代手工维护;"整库播放列表"由库控件承担
+- [ ] **播放列表JSON解析**: 使用高性能 json 库, 取代现有的 Qt Json 库
 
 ## 媒体库控件补充:持久化 + 搜索面板职责切分
 
