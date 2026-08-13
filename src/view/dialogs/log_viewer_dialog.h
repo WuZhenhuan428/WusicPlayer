@@ -1,8 +1,6 @@
 #pragma once
 
 #include "core/logger/log_level.h"
-#include "core/logger/log_record.h"
-#include "core/logger/log_sink_gui.h"
 
 #include <QDialog>
 #include <QPointer>
@@ -12,10 +10,7 @@ class QComboBox;
 class QPlainTextEdit;
 class QPushButton;
 
-namespace wusic::log
-{
 class LogSinkGui;
-}
 
 /**
  * @brief 软件内日志查看窗口(View → Log)。
@@ -28,10 +23,10 @@ class LogViewerDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit LogViewerDialog(wusic::log::LogSinkGui* sink, QWidget* parent = nullptr);
+    explicit LogViewerDialog(LogSinkGui* sink, QWidget* parent = nullptr);
 
     // 把 sink 绑定到本窗口(由外部在创建时注入)
-    void set_sink(wusic::log::LogSinkGui* sink);
+    void set_sink(LogSinkGui* sink);
 
 private slots:
     void on_record(int level, QString module, QString message);
@@ -43,10 +38,10 @@ private:
     void append_line(int level, const QString& module, const QString& message);
     bool should_display(int level) const;
 
-    wusic::log::LogSinkGui* m_sink = nullptr; // 非拥有
+    LogSinkGui* m_sink           = nullptr; // 非拥有
 
-    QComboBox* m_cb_level_filter   = nullptr;
-    QPushButton* m_btn_clear       = nullptr;
-    QCheckBox* m_chk_follow        = nullptr;
-    QPlainTextEdit* m_text         = nullptr;
+    QComboBox* m_cb_level_filter = nullptr;
+    QPushButton* m_btn_clear     = nullptr;
+    QCheckBox* m_chk_follow      = nullptr;
+    QPlainTextEdit* m_text       = nullptr;
 };

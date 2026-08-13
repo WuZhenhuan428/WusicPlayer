@@ -6,10 +6,11 @@
 #include <QStatusBar>
 #include <QTimer>
 
-#include "core/logger/log.h"
-
-
-WUSIC_LOG_MODULE(main_window)
+#include "core/logger/logger_manager.h"
+namespace
+{
+Logger* logger = LoggerManager::file_logger("main_window", {"console", "gui"});
+}
 
 MainWindow::MainWindow(PlaybackController* playback_controller,
                        PlaylistController* playlist_controller, QWidget* parent) :
@@ -295,7 +296,7 @@ void MainWindow::on_open_file()
     if (!filepath.isEmpty()) {
         emit sgnPlayTrackRequested(filepath);
     } else {
-        WUSIC_LOG(main_window, info, "[INFO] filepath is empty!");
+        logger->info("[INFO] filepath is empty!");
     }
 }
 

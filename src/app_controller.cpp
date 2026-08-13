@@ -38,14 +38,14 @@
 #include <format>
 #include <string>
 
-#include "core/logger/log.h"
+#include "core/logger/logger_manager.h"
+namespace
+{
+Logger* logger = LoggerManager::file_logger("app_controller", {"console", "gui"});
+}
 
-
-WUSIC_LOG_MODULE(app_controller)
-
-AppController::AppController(PlaybackController* playback_controller,
-                             wusic::log::LogSinkGui* gui_sink, QObject* parent) :
-    QObject(parent), playback_controller_(playback_controller), gui_sink_(gui_sink),
+AppController::AppController(PlaybackController* playback_controller, QObject* parent) :
+    QObject(parent), playback_controller_(playback_controller),
     playlist_manager_(std::make_unique<PlaylistManager>()),
     playlist_controller_(
         std::make_unique<PlaylistController>(playlist_manager_.get(), nullptr, this)),
@@ -69,7 +69,8 @@ AppController::AppController(PlaybackController* playback_controller,
     // 面板编排:设置/搜索/EQ/快捷键(构造时注册默认快捷键)
     panel_coordinator_(std::make_unique<PanelCoordinator>(
         main_window_.get(), playback_controller_, playlist_controller_.get(),
-        library_manager_.get(), theme_service_.get(), search_backend_.get(), gui_sink_, this))
+        library_manager_.get(), theme_service_.get(), search_backend_.get(),
+        dynamic_cast<LogSinkGui*>(LoggerManager::instance().get_sink_by_name("gui").get()), this))
 {
     // 现在播放队列:注入数据源(积累期,媒体库控件入队即播)
     playback_queue_service_->set_playlist_manager(playlist_manager_.get());
@@ -336,31 +337,31 @@ void AppController::initialize_config()
     ConfigManager& cm = ConfigManager::get_instance();
     if (playback_controller_) {
         cm.register_module(playback_controller_);
-        WUSIC_LOG(app_controller, debug, "[CONFIG] register playback controller");
+        logger->debug("[CONFIG] register playback controller");
     }
     if (playlist_controller_) {
         cm.register_module(playlist_controller_.get());
-        WUSIC_LOG(app_controller, debug, "[CONFIG] register playlist controller");
+        logger->debug("[CONFIG] register playlist controller");
     }
     if (main_window_) {
         cm.register_module(main_window_.get());
-        WUSIC_LOG(app_controller, debug, "[CONFIG] register main window");
+        logger->debug("[CONFIG] register main window");
         if (main_window_->song_table_view()) {
             cm.register_module(main_window_->song_table_view());
-            WUSIC_LOG(app_controller, debug, "[CONFIG] register song table view");
+            logger->debug("[CONFIG] register song table view");
         }
         if (main_window_->library_browser()) {
             cm.register_module(main_window_->library_browser());
-            WUSIC_LOG(app_controller, debug, "[CONFIG] register library browser");
+            logger->debug("[CONFIG] register library browser");
         }
         if (main_window_->desktop_lyrics_widget()) {
             cm.register_module(main_window_->desktop_lyrics_widget());
-            WUSIC_LOG(app_controller, debug, "[CONFIG] register desktop lyrics widget");
+            logger->debug("[CONFIG] register desktop lyrics widget");
         }
     }
     if (panel_coordinator_->shortcuts_controller()) {
         cm.register_module(panel_coordinator_->shortcuts_controller());
-        WUSIC_LOG(app_controller, debug, "[CONFIG] register shortcuts controller");
+        logger->debug("[CONFIG] register shortcuts controller");
     }
     cm.load_all();
 

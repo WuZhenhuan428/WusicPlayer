@@ -1,6 +1,5 @@
 #include "core/theme/theme_manager.h"
 
-#include "core/logger/log.h"
 #include "wusic_proxy_style.h"
 
 #include <QApplication>
@@ -12,12 +11,14 @@
 
 #include "plugin/i_theme_plugin.h"
 
+#include "core/logger/logger_manager.h"
+namespace
+{
+Logger* logger = LoggerManager::file_logger("theme", {"console", "gui"});
+}
 // ============================================================================
 // 单例
 // ============================================================================
-
-WUSIC_LOG_MODULE(theme)
-
 ThemeManager& ThemeManager::instance()
 {
     static ThemeManager inst;
@@ -51,7 +52,7 @@ void ThemeManager::scan_external_plugins(const QString& dir)
         auto* plugin = qobject_cast<IThemePlugin*>(loader.instance());
         if (plugin) {
             m_externalPlugins.insert(plugin->name(), info.absoluteFilePath());
-            WUSIC_LOG(theme, debug, "[ThemeManager] found external theme: {}", plugin->name());
+            logger->debug("[ThemeManager] found external theme: {}", plugin->name());
         }
     }
 }

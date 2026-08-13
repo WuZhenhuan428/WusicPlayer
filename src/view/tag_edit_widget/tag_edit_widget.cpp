@@ -14,9 +14,11 @@
 #include <QRegularExpression>
 #include <QSet>
 
-#include "core/logger/log.h"
-
-WUSIC_LOG_MODULE(tag_edit)
+#include "core/logger/logger_manager.h"
+namespace
+{
+Logger* logger = LoggerManager::file_logger("tag_edit_widget", {"console", "gui"});
+}
 
 TagEditWidget::TagEditWidget(TrackMetaData meta, EntryId tid, QWidget* parent) :
     QWidget(parent), m_tid(tid)
@@ -113,7 +115,7 @@ void TagEditWidget::handle_show_menu(const QPoint& pos)
 void TagEditWidget::handle_save_tags()
 {
     if (!m_table_model) {
-        WUSIC_LOG(tag_edit, debug, "[TagEdit]: table_model does not exist!");
+        logger->debug("[TagEdit]: table_model does not exist!");
         return;
     }
 

@@ -2,8 +2,6 @@
 
 #include "controller/playback_controller.h"
 #include "core/config_manager/config_manager.h"
-#include "core/logger/log_sink_console.h"
-#include "core/logger/log_sink_gui.h"
 #include "core/logger/logger_manager.h"
 #include "core/theme/builtin/wusic_dark_palette.h"
 #include "core/theme/builtin/wusic_light_palette.h"
@@ -24,15 +22,11 @@ int main(int argc, char* argv[])
     QApplication a(argc, argv);
 
     // ---- 日志系统初始化 ----
-    using namespace wusic::log;
+    // 必须先于任何 QObject 子类 sink(LogSinkGui)的构造调用:
+    // 静态初始化期创建的文件级 logger 会在此补挂 GUI sink,避免在无 QApplication 时构造 QObject。
     auto& logger_mgr = LoggerManager::instance();
-    logger_mgr.add_sink(std::make_shared<ConsoleSink>(true));
-    // 注意:不设 parent — 所有权唯一归 LoggerManager 的 shared_ptr。
-    // 若以 QApplication 为 parent,栈对象 QApplication 先析构时会先删掉本 sink,
-    // 随后 LoggerManager(函数内 static,后析构)再次释放 → double free 段错误。
-    auto* gui_sink = new LogSinkGui;
-    logger_mgr.add_sink(std::shared_ptr<LogSink>(gui_sink));
-    qInstallMessageHandler(&LoggerManager::qt_bridge); // Qt 日志转发到统一管道
+    logger_mgr.mark_app_ready();
+    qInstallMessageHandler(LoggerManager::qt_bridge); // Qt 日志转发到统一管道
 
     QCoreApplication::setApplicationName("WusicPlayer");
     a.setWindowIcon(QIcon(":icons/main.ico"));
@@ -50,13 +44,7 @@ int main(int argc, char* argv[])
     ConfigManager::get_instance().register_module(&theme_mgr);
     ConfigManager::get_instance().load_all();
 
-    AppController appController(&playback_controller, gui_sink);
+    AppController appController(&playback_controller);
     appController.show_main_window();
-    const int ret = a.exec();
-
-    // 在 QApplication 存活期内显式释放所有 sink(否则函数内 static 的
-    // LoggerManager 会在 QApplication 之后析构,导致 QObject 子类 sink 的
-    // 析构发生在 Qt 应用对象销毁之后,存在风险)。
-    logger_mgr.clear_sinks();
-    return ret;
+    return a.exec();
 }

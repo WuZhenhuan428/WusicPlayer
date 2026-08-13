@@ -1,14 +1,13 @@
 #include "device.h"
 
-#include "core/logger/log.h"
-
 #include <cstdio>
 #include <cstring>
 
-WUSIC_LOG_MODULE(player_device)
-
+#include "core/logger/logger_manager.h"
 namespace
 {
+Logger* logger = LoggerManager::file_logger("player_device", {"console", "gui"});
+
 std::vector<std::string> enum_playback_names()
 {
     std::vector<std::string> result;
@@ -78,7 +77,7 @@ Device::~Device()
 bool Device::init(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer)
 {
     m_buffer = buffer; // Store the original buffer pointer in our class
-    WUSIC_LOG(player_device, info, "init requested. selected={}", m_selected_device_name);
+    logger->info("init requested. selected={}", m_selected_device_name);
 
     m_device_config                   = ma_device_config_init(ma_device_type_playback);
     m_device_config.playback.format   = ma_format_f32;
@@ -90,17 +89,16 @@ bool Device::init(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer)
     ma_device_id selected_id;
     if (find_device_id_by_name(m_selected_device_name, &selected_id)) {
         m_device_config.playback.pDeviceID = &selected_id;
-        WUSIC_LOG(player_device, info, "using explicit playback device: {}",
-                  m_selected_device_name);
+        logger->info("using explicit playback device: {}", m_selected_device_name);
     }
 
     if (ma_device_init(nullptr, &m_device_config, &m_device) != MA_SUCCESS) {
-        WUSIC_LOG(player_device, info, "failed to init ma_device");
+        logger->info("failed to init ma_device");
         return false;
     }
 
     m_active_device_name = m_device.playback.name;
-    WUSIC_LOG(player_device, info, "init success. active='{}'", m_active_device_name);
+    logger->info("init success. active='{}'", m_active_device_name);
     m_initialized = true;
     return true;
 }
@@ -108,15 +106,15 @@ bool Device::init(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer)
 bool Device::start()
 {
     if (!m_initialized) {
-        WUSIC_LOG(player_device, error, "ma_device not initialized");
+        logger->error("ma_device not initialized");
         return false;
     }
 
     if (ma_device_start(&m_device) != MA_SUCCESS) {
-        WUSIC_LOG(player_device, error, "ma_device_start failed");
+        logger->error("ma_device_start failed");
         return false;
     }
-    WUSIC_LOG(player_device, info, "started, active='{}'", m_active_device_name);
+    logger->info("started, active='{}'", m_active_device_name);
     m_started = true;
     return true;
 }
@@ -124,14 +122,14 @@ bool Device::start()
 bool Device::pause()
 {
     if (!m_initialized) {
-        WUSIC_LOG(player_device, error, "ma_device not initialized");
+        logger->error("ma_device not initialized");
         return false;
     }
     if (ma_device_stop(&m_device) != MA_SUCCESS) {
-        WUSIC_LOG(player_device, error, "failed to stop ma_device");
+        logger->error("failed to stop ma_device");
         return false;
     }
-    WUSIC_LOG(player_device, info, "paused/stopped. active='{}'", m_active_device_name);
+    logger->info("paused/stopped. active='{}'", m_active_device_name);
     m_started = false;
     return true;
 }
@@ -177,40 +175,39 @@ std::string Device::current_playback_device_name() const
 bool Device::switch_playback_device_by_name(const std::string& device_name, bool start_after_switch)
 {
     if (!m_buffer) {
-        WUSIC_LOG(player_device, error, "switch ignored: null buffer");
+        logger->error("switch ignored: null buffer");
         return false;
     }
 
-    WUSIC_LOG(player_device, info, "switch request from '{}' to '{}', start_after_switch={}",
-              m_active_device_name, device_name, start_after_switch ? 1 : 0);
+    logger->info("switch request from '{}' to '{}', start_after_switch={}", m_active_device_name,
+                 device_name, start_after_switch ? 1 : 0);
 
     const float old_volume = get_volume();
     if (m_initialized) {
         ma_device_uninit(&m_device);
         m_initialized = false;
         m_started     = false;
-        WUSIC_LOG(player_device, info, "old device uninitialized");
+        logger->info("old device uninitialized");
     }
 
     m_selected_device_name = device_name;
     if (!init(m_buffer)) {
-        WUSIC_LOG(player_device, error, "switch failed during init");
+        logger->error("switch failed during init");
         return false;
     }
 
     if (old_volume >= 0.0f) {
         set_volume(old_volume);
-        WUSIC_LOG(player_device, info, "restored volume={:.03f}", old_volume);
+        logger->info("restored volume={:.03f}", old_volume);
     }
 
     if (start_after_switch) {
         const bool started = start();
-        WUSIC_LOG(player_device, info, "switch result started={} active='{}'", started ? 1 : 0,
-                  m_active_device_name);
+        logger->info("switch result started={} active='{}'", started ? 1 : 0, m_active_device_name);
         return started;
     }
 
-    WUSIC_LOG(player_device, info, "switch result active='{}' (not started)", m_active_device_name);
+    logger->info("switch result active='{}' (not started)", m_active_device_name);
 
     return true;
 }

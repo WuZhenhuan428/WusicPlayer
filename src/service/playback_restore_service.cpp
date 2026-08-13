@@ -3,10 +3,11 @@
 #include "controller/playback_controller.h"
 #include "controller/playlist_controller.h"
 
-#include "core/logger/log.h"
-
-
-WUSIC_LOG_MODULE(playback_restore)
+#include "core/logger/logger_manager.h"
+namespace
+{
+Logger* logger = LoggerManager::file_logger("playback_restore", {"console", "gui"});
+}
 
 PlaybackRestoreService::PlaybackRestoreService(PlaylistController* playlist_ctl,
                                                PlaybackController* playback_ctl, QObject* parent) :
@@ -20,7 +21,7 @@ PlaybackRestoreService::~PlaybackRestoreService() {}
 void PlaybackRestoreService::restore()
 {
     if (!m_playlist_ctl || !m_playback_ctl) {
-        WUSIC_LOG_FATAL(playback_restore, "[PlaybackRestoreService] !m_playlist_ctl || !m_playback_ctl");
+        logger->fatal("[PlaybackRestoreService] !m_playlist_ctl || !m_playback_ctl");
         return;
     }
 
@@ -82,7 +83,7 @@ void PlaybackRestoreService::on_cache_load_finished()
 void PlaybackRestoreService::on_model_reset()
 {
     if (m_pending_tid.isNull()) {
-        WUSIC_LOG(playback_restore, debug, "PlaybackRestoreService: m_pending_tid.isNull()");
+        logger->debug("PlaybackRestoreService: m_pending_tid.isNull()");
         return;
     }
     const int queue_index = find_queue_index_by_track_id(m_pending_tid);

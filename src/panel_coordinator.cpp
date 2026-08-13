@@ -5,7 +5,6 @@
 #include "controller/search_backend/in_memory_search_backend.h"
 #include "controller/shortcuts_controller.h"
 #include "core/config_manager/config_manager.h"
-#include "core/logger/log_sink_gui.h"
 #include "core/types.h"
 #include "model/library/library_manager.h"
 #include "model/shortcuts_view_model/shortcuts_types.hpp"
@@ -30,8 +29,8 @@
 PanelCoordinator::PanelCoordinator(MainWindow* main_window, PlaybackController* playback_ctl,
                                    PlaylistController* playlist_ctl, LibraryManager* library_mgr,
                                    ThemeService* theme_service,
-                                   InMemorySearchBackend* search_backend,
-                                   wusic::log::LogSinkGui* gui_sink, QObject* parent) :
+                                   InMemorySearchBackend* search_backend, LogSinkGui* gui_sink,
+                                   QObject* parent) :
     QObject(parent), main_window_(main_window), playback_ctl_(playback_ctl),
     playlist_ctl_(playlist_ctl), library_mgr_(library_mgr), theme_service_(theme_service),
     search_backend_(search_backend), gui_sink_(gui_sink)

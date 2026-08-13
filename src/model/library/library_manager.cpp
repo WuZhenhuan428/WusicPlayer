@@ -5,10 +5,11 @@
 #include <QFileInfo>
 #include <QStandardPaths>
 
-#include "core/logger/log.h"
-
-
-WUSIC_LOG_MODULE(library)
+#include "core/logger/logger_manager.h"
+namespace
+{
+Logger* logger = LoggerManager::file_logger("library", {"console", "gui"});
+}
 
 LibraryManager::LibraryManager(QObject* parent) : QObject(parent)
 {
@@ -47,7 +48,7 @@ LibraryManager::~LibraryManager()
 bool LibraryManager::initialize(const QString& db_path)
 {
     if (!m_repo->open(db_path)) {
-        WUSIC_LOG(library, warn, "[LIBRARY] initialize failed: {}", m_repo->last_error());
+        logger->warn("[LIBRARY] initialize failed: {}", m_repo->last_error());
         return false;
     }
     // 载入既有曲目到内存索引
@@ -64,7 +65,8 @@ void LibraryManager::add_watched_folder(const QString& path)
 {
     const QString norm = utils::path::normalize_path(path);
     if (!QFileInfo::exists(norm)) {
-        WUSIC_LOG(library, warn, "[LIBRARY] add_watched_folder: not exists: {}", norm);
+
+        logger->warn("[LIBRARY] add_watched_folder: not exists: {}", norm);
         return;
     }
     m_repo->add_watched_folder(norm);

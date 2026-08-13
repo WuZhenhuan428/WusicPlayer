@@ -4,8 +4,6 @@
 #include <QIcon>
 #include <magic_enum/magic_enum.hpp>
 
-#include "core/logger/log.h"
-
 #define SLIDER_VOLUME_MIN_WIDTH 100
 #define SLIDER_VOLUME_MAX_WIDTH 100
 
@@ -14,7 +12,11 @@
 
 /// 根据当前主题的明暗 + 用户图标模式偏好返回正确的图标路径前缀
 
-WUSIC_LOG_MODULE(control_bar)
+#include "core/logger/logger_manager.h"
+namespace
+{
+Logger* logger = LoggerManager::file_logger("control_bar", {"console", "gui"});
+}
 
 static QString iconPath(const QString& name)
 {
@@ -175,7 +177,7 @@ void ControlBar::refresh_all_icons()
 void ControlBar::update_button_status(PlayerEngine::PlayingState new_state)
 {
     // set icon here
-    WUSIC_LOG(control_bar, debug, "[ControlBar] update new state: {}", magic_enum::enum_name(new_state));
+    logger->debug("[ControlBar] update new state: {}", magic_enum::enum_name(new_state));
     if (new_state != PlayerEngine::PlayingState::PLAYING) {
         m_is_playing = false;
         m_btn_play_pause->setIcon(QIcon(iconPath("play")));

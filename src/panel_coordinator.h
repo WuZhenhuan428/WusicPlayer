@@ -19,10 +19,7 @@ class ShortcutsPanel;
 class ThemeService;
 class ThemeSettingsPage;
 
-namespace wusic::log
-{
 class LogSinkGui;
-}
 
 /**
  * @brief UI 面板编排:所有浮动面板/对话框的创建、显示、生命周期,
@@ -38,7 +35,7 @@ public:
     PanelCoordinator(MainWindow* main_window, PlaybackController* playback_ctl,
                      PlaylistController* playlist_ctl, LibraryManager* library_mgr,
                      ThemeService* theme_service, InMemorySearchBackend* search_backend,
-                     wusic::log::LogSinkGui* gui_sink = nullptr, QObject* parent = nullptr);
+                     LogSinkGui* gui_sink = nullptr, QObject* parent = nullptr);
     ~PanelCoordinator() override;
 
     // 懒创建并返回快捷键控制器(供配置注册)
@@ -72,7 +69,7 @@ private:
     LibraryManager* library_mgr_           = nullptr;
     ThemeService* theme_service_           = nullptr;
     InMemorySearchBackend* search_backend_ = nullptr;
-    wusic::log::LogSinkGui* gui_sink_      = nullptr;
+    LogSinkGui* gui_sink_                  = nullptr;
 
     // ---- 拥有(懒创建,可复用) ----
     QPointer<SettingsPanel> settings_panel_;

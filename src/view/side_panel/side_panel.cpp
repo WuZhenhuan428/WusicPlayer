@@ -1,18 +1,19 @@
 #include "view/side_panel/side_panel.h"
-#include "lyrics_search_widget.h"
 #include "core/utils/audio.hpp"
+#include "lyrics_search_widget.h"
 
 #include <QFile>
 #include <QFileDialog>
 #include <QMenu>
 #include <QMessageBox>
 
-#include "core/logger/log.h"
-
 #define DEFAULT_COVER_PATH ":/images/test_cover_chirno.png"
 
-
-WUSIC_LOG_MODULE(side_panel)
+#include "core/logger/logger_manager.h"
+namespace
+{
+Logger* logger = LoggerManager::file_logger("side_panel", {"console", "gui"});
+}
 
 SidePanel::SidePanel(QWidget* parent) : QWidget(parent)
 {
@@ -136,12 +137,12 @@ bool SidePanel::load_lyrics(const TrackMetaData& meta)
     if (meta.isValid) {
         if (!meta.lyrics.isEmpty()) {
             m_lyrics_panel->set_raw_lyrics(meta.lyrics);
-            WUSIC_LOG(side_panel, debug, "[LRC] Loaded from metadata.");
+            logger->debug("[LRC] Loaded from metadata.");
         } else if (m_lyrics_panel->set_local_lrc(meta.filepath)) {
-            WUSIC_LOG(side_panel, debug, "[LRC] Loaded from local .lrc file.");
+            logger->debug("[LRC] Loaded from local .lrc file.");
         } else {
             m_lyrics_panel->set_default_info(meta);
-            WUSIC_LOG(side_panel, debug, "[LRC] Use default info");
+            logger->debug("[LRC] Use default info");
         }
         return true;
     }
@@ -317,7 +318,7 @@ void SidePanel::show_lyrics_context_menu(const QPoint& pos)
 
         if (m_has_last_lyrics_meta) {
             m_lyrics_search_widget->set_initial_query(m_last_lyrics_meta.title,
-                                                    m_last_lyrics_meta.artist);
+                                                      m_last_lyrics_meta.artist);
 
             lyrics_fetcher::TrackMeta context;
             context.rawTitle    = m_last_lyrics_meta.title;

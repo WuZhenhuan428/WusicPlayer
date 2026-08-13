@@ -5,10 +5,11 @@
 #include <QFileInfo>
 #include <algorithm>
 
-#include "core/logger/log.h"
-
-
-WUSIC_LOG_MODULE(lyrics)
+#include "core/logger/logger_manager.h"
+namespace
+{
+Logger* logger = LoggerManager::file_logger("lyrics_model", {"console", "gui"});
+}
 
 WLyricsModel::WLyricsModel(QObject* parent) : QAbstractListModel(parent) {}
 
@@ -80,7 +81,7 @@ bool WLyricsModel::set_local_lrc(const QString& filepath)
     }
     QFileInfo audio_fileinfo(filepath);
     if (!audio_fileinfo.exists()) {
-        WUSIC_LOG(lyrics, warn, "[WARNING] Audio file does not exist: {}", filepath);
+        logger->warn("[WARNING] Audio file does not exist: {}", filepath);
         m_raw_lyrics_text.clear();
         endResetModel();
         emit currentLineChanged(QString(), QString());

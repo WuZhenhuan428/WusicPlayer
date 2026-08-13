@@ -8,9 +8,6 @@
 
 #include <QMutex>
 
-namespace wusic::log
-{
-
 // GUI sink:把日志转发到主线程(QueuedConnection),并保留环形缓冲供窗口打开时回显。
 // 线程安全:write() 可能来自任意线程(如扫描 worker),内部持锁 + emit 信号。
 class LogSinkGui : public QObject, public LogSink
@@ -19,11 +16,15 @@ class LogSinkGui : public QObject, public LogSink
 public:
     explicit LogSinkGui(QObject* parent = nullptr);
 
-    void write(const Record& record) override;
+    void write(const LogRecord& record) override;
     void flush() override {}
+    QString name() const override
+    {
+        return QStringLiteral("gui");
+    }
 
     // 当前缓冲快照(供窗口打开时回显)
-    QVector<Record> snapshot() const;
+    QVector<LogRecord> snapshot() const;
     // 清空缓冲(窗口"清空"按钮)
     void clear_buffer();
 
@@ -35,7 +36,5 @@ signals:
 
 private:
     mutable QMutex m_mutex;
-    QVector<Record> m_buffer;
+    QVector<LogRecord> m_buffer;
 };
-
-} // namespace wusic::log

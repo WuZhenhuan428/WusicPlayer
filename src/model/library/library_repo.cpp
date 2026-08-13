@@ -5,10 +5,11 @@
 #include <QSqlQuery>
 #include <QVariant>
 
-#include "core/logger/log.h"
-
-
-WUSIC_LOG_MODULE(library_repo)
+#include "core/logger/logger_manager.h"
+namespace
+{
+Logger* logger = LoggerManager::file_logger("library_repo", {"console", "gui"});
+}
 
 namespace
 {
@@ -93,7 +94,7 @@ bool LibraryRepo::open(const QString& db_path)
     m_db.setDatabaseName(db_path);
     if (!m_db.open()) {
         m_last_error = m_db.lastError().text();
-        WUSIC_LOG(library_repo, warn, "[LIBRARY] cannot open database: {} {}", db_path, m_last_error);
+        logger->warn("[LIBRARY] cannot open database: {} {}", db_path, m_last_error);
         return false;
     }
     m_open = true;
@@ -129,7 +130,7 @@ bool LibraryRepo::exec_schema()
         QSqlQuery q(m_db);
         if (!q.exec(sql)) {
             m_last_error = q.lastError().text();
-            WUSIC_LOG(library_repo, warn, "[LIBRARY] schema exec failed: {}", m_last_error);
+            logger->warn("[LIBRARY] schema exec failed: {}", m_last_error);
             return false;
         }
     }
@@ -139,12 +140,12 @@ bool LibraryRepo::exec_schema()
             QSqlQuery q(m_db);
             if (!q.exec(sql)) {
                 m_last_error = q.lastError().text();
-                WUSIC_LOG(library_repo, warn, "[LIBRARY] FTS5 setup failed: {}", m_last_error);
+                logger->warn("[LIBRARY] FTS5 setup failed: {}", m_last_error);
                 return false;
             }
         }
     } else {
-        WUSIC_LOG(library_repo, warn, "[LIBRARY] FTS5 not available in bundled SQLite; search disabled.");
+        logger->warn("[LIBRARY] FTS5 not available in bundled SQLite; search disabled.");
     }
     return true;
 }
@@ -230,7 +231,7 @@ bool LibraryRepo::upsert_track(const LibraryTrack& track)
     q.addBindValue(m.date);
     if (!q.exec()) {
         m_last_error = q.lastError().text();
-        WUSIC_LOG(library_repo, warn, "[LIBRARY] upsert_track failed: {}", m_last_error);
+        logger->warn("[LIBRARY] upsert_track failed: {}", m_last_error);
         return false;
     }
     return true;

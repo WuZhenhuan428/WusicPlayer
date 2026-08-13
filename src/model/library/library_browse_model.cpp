@@ -10,10 +10,11 @@
 
 #include <algorithm>
 
-#include "core/logger/log.h"
-
-
-WUSIC_LOG_MODULE(library_browse)
+#include "core/logger/logger_manager.h"
+namespace
+{
+Logger* logger = LoggerManager::file_logger("library_browser", {"console", "gui"});
+}
 
 namespace
 {
@@ -204,7 +205,7 @@ QMimeData* LibraryBrowseModel::mimeData(const QModelIndexList& indexes) const
         }
     }
     if (has_group && has_leaf) {
-        WUSIC_LOG(library_browse, warn, "[LibraryBrowseModel] mixed drag selection (group + track) rejected");
+        logger->warn("[LibraryBrowseModel] mixed drag selection (group + track) rejected");
         return nullptr;
     }
     const QVector<TrackId> tids = collect_track_ids(indexes);

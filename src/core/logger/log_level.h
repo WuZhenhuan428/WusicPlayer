@@ -2,11 +2,8 @@
 
 #include <QString>
 
-namespace wusic::log
-{
-
 // 日志级别(与 QtMsgType 兼容映射;数值越大越严重)
-enum class Level : int
+enum class LogLevel : int
 {
     trace = 0,
     debug = 1,
@@ -17,23 +14,21 @@ enum class Level : int
 };
 
 // 级别 → 显示字符串(控制台/pattern 用)
-inline QString level_name(Level level)
+inline QString level_name(LogLevel level)
 {
     switch (level) {
-    case Level::trace:
+    case LogLevel::trace:
         return QStringLiteral("trace");
-    case Level::debug:
+    case LogLevel::debug:
         return QStringLiteral("debug");
-    case Level::info:
+    case LogLevel::info:
         return QStringLiteral("info");
-    case Level::warn:
+    case LogLevel::warn:
         return QStringLiteral("warn");
-    case Level::error:
+    case LogLevel::error:
         return QStringLiteral("error");
-    case Level::fatal:
+    case LogLevel::fatal:
         return QStringLiteral("fatal");
     }
     return QStringLiteral("?");
 }
-
-} // namespace wusic::log

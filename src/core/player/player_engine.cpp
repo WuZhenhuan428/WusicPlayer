@@ -1,11 +1,14 @@
 #include "core/player/player_engine.h"
 
-#include "core/logger/log.h"
-
 #include <chrono>
 #include <thread>
 
-WUSIC_LOG_MODULE(player_engine)
+#include "core/logger/logger_manager.h"
+
+namespace
+{
+Logger* logger = LoggerManager::file_logger("player_engine", {"console", "gui"});
+}
 
 PlayerEngine::PlayerEngine()
 {
@@ -31,7 +34,7 @@ PlayerEngine::~PlayerEngine()
 bool PlayerEngine::start_device()
 {
     if (!m_device->start()) {
-        WUSIC_LOG(player_engine, info, "ma_device_start");
+        logger->info("ma_device_start");
         m_decode_finished.store(true, std::memory_order_release);
         if (m_decoder) {
             m_decoder->join();
@@ -62,7 +65,7 @@ void PlayerEngine::set_watchdog()
                     PlayingState curr_state =
                         m_state.exchange(PlayingState::STOP, std::memory_order_acq_rel);
                     if (curr_state != PlayingState::STOP) {
-                        WUSIC_LOG(player_engine, info, "Playback finished autonomously");
+                        logger->info("Playback finished autonomously");
                         if (m_playback_callback) {
                             m_playback_callback(StopReason::NATURAL_EOF);
                         }
@@ -153,7 +156,7 @@ void PlayerEngine::stop()
 void PlayerEngine::set_volume(float volume)
 {
     if (volume < 0 || volume > 1.0f) {
-        WUSIC_LOG(player_engine, warn, "Volume must be in range from 0 to 1");
+        logger->warn("Volume must be in range from 0 to 1");
         return;
     }
     if (m_device) {
@@ -164,7 +167,7 @@ void PlayerEngine::set_volume(float volume)
 void PlayerEngine::seek(int64_t pos_ms)
 {
     if (!m_device || !m_decoder) {
-        WUSIC_LOG(player_engine, error, "device or decoder does not exist");
+        logger->error("device or decoder does not exist");
         return;
     }
 

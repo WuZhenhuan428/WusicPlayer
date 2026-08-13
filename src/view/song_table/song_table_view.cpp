@@ -18,10 +18,11 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
-#include "core/logger/log.h"
-
-
-WUSIC_LOG_MODULE(song_table)
+#include "core/logger/logger_manager.h"
+namespace
+{
+Logger* logger = LoggerManager::file_logger("song_table_view", {"console", "gui"});
+}
 
 namespace
 {
@@ -222,7 +223,7 @@ void SongTableView::call_song_context_menu(const QPoint& pos)
             QFileInfo file_info(path);
             const QUrl url = QUrl::fromLocalFile(file_info.absolutePath());
             if (!QDesktopServices::openUrl(url)) {
-                WUSIC_LOG(song_table, debug, "Failed to open folder: {}", file_info.absolutePath());
+                logger->debug("Failed to open folder: {}", file_info.absolutePath());
             }
         });
         connect(actRemove, &QAction::triggered, this,

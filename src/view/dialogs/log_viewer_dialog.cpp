@@ -1,5 +1,7 @@
 #include "view/dialogs/log_viewer_dialog.h"
 
+#include "core/logger/log_sink_gui.h"
+
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDateTime>
@@ -9,10 +11,6 @@
 #include <QPushButton>
 #include <QTextCursor>
 #include <QVBoxLayout>
-
-#include <functional>
-
-using namespace wusic::log;
 
 LogViewerDialog::LogViewerDialog(LogSinkGui* sink, QWidget* parent) : QDialog(parent), m_sink(sink)
 {
@@ -26,10 +24,10 @@ void LogViewerDialog::build_ui()
 {
     m_cb_level_filter = new QComboBox;
     m_cb_level_filter->addItem(tr("All"), -1);
-    m_cb_level_filter->addItem(tr("Debug+"), int(Level::debug));
-    m_cb_level_filter->addItem(tr("Info+"), int(Level::info));
-    m_cb_level_filter->addItem(tr("Warn+"), int(Level::warn));
-    m_cb_level_filter->addItem(tr("Error+"), int(Level::error));
+    m_cb_level_filter->addItem(tr("Debug+"), int(LogLevel::debug));
+    m_cb_level_filter->addItem(tr("Info+"), int(LogLevel::info));
+    m_cb_level_filter->addItem(tr("Warn+"), int(LogLevel::warn));
+    m_cb_level_filter->addItem(tr("Error+"), int(LogLevel::error));
 
     m_btn_clear  = new QPushButton(tr("Clear"));
     m_chk_follow = new QCheckBox(tr("Follow"));
@@ -67,9 +65,9 @@ void LogViewerDialog::set_sink(LogSinkGui* sink)
         return;
     }
     // 回显历史缓冲
-    const QVector<Record> history = m_sink->snapshot();
-    for (const Record& r : history) {
-        append_line(static_cast<int>(r.level), r.module, r.message);
+    const QVector<LogRecord> history = m_sink->snapshot();
+    for (const LogRecord& r : history) {
+        append_line(static_cast<int>(r.level), r.name, r.message);
     }
     // 实时订阅(跨线程安全:QueuedConnection → 主线程)
     connect(m_sink, &LogSinkGui::sgn_record, this, &LogViewerDialog::on_record,
@@ -110,7 +108,7 @@ void LogViewerDialog::append_line(int level, const QString& module, const QStrin
 {
     const QString ts = QDateTime::currentDateTime().toString(QStringLiteral("HH:mm:ss.zzz"));
     const QString line =
-        QStringLiteral("[%1] [%2] [%3] %4").arg(ts, level_name(Level(level)), module, message);
+        QStringLiteral("[%1] [%2] [%3] %4").arg(ts, level_name(LogLevel(level)), module, message);
     m_text->appendPlainText(line);
     if (m_chk_follow && m_chk_follow->isChecked()) {
         QTextCursor cursor = m_text->textCursor();
