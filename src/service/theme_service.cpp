@@ -7,8 +7,9 @@ ThemeService::ThemeService(QObject* parent) :
     QObject(parent), m_model(std::make_unique<ThemeSettingsModel>(this))
 {
     // 监听外部主题变更（如其他地方调用了 applyXxxTheme）
-    connect(&ThemeManager::instance(), &ThemeManager::sgn_theme_changed, this,
-            [this]() { emit sgn_current_theme_changed(ThemeManager::instance().current_theme_name()); });
+    connect(&ThemeManager::instance(), &ThemeManager::sgn_theme_changed, this, [this]() {
+        emit sgn_current_theme_changed(ThemeManager::instance().current_theme_name());
+    });
 }
 
 void ThemeService::scan_themes()

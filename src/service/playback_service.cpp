@@ -1,6 +1,10 @@
 #include "service/playback_service.h"
 
+#include "controller/playback_controller.h"
+#include "controller/playlist_controller.h"
 #include "core/utils/audio.hpp"
+#include "view/control_bar/control_bar.h"
+#include "view/main_window.h"
 
 PlaybackService::PlaybackService(MainWindow* main_window, PlaybackController* playback_ctl,
                                  PlaylistController* playlist_ctl, QObject* parent) :

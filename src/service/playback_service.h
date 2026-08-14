@@ -1,12 +1,12 @@
 #pragma once
 
-#include "controller/playback_controller.h"
-#include "controller/playlist_controller.h"
-#include "view/control_bar/control_bar.h"
-#include "view/main_window.h"
-
 #include <QObject>
 #include <QWidget>
+
+class PlaybackController;
+class PlaylistController;
+class ControlBar;
+class MainWindow;
 
 class PlaybackService : public QObject
 {

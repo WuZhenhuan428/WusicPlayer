@@ -34,9 +34,9 @@ Player::Player(QObject* parent) :
     refresh_device_cache();
     connect(m_media_devices, &QMediaDevices::audioOutputsChanged, this, [this]() {
         const QByteArray old_id = m_current_output_id;
-        logger->info("audioOutputsChanged triggered. old_id={}", old_id);
+        logger->info("audioOutputsChanged triggered. old_id='{}'", old_id);
         refresh_device_cache();
-        logger->info("refreshed outputs count={} current_id={}", m_audio_devices.size(),
+        logger->info("refreshed outputs count={} current_id='{}'", m_audio_devices.size(),
                      m_current_output_id);
 
         if (m_audio_devices.isEmpty()) {
@@ -251,7 +251,7 @@ void Player::set_output_device(const QAudioDevice& device)
         return;
     }
 
-    logger->info("switching output device to {} id={}", device.description(), device.id());
+    logger->info("switching output device to {} id='{}'", device.description(), device.id());
 
     const bool ok = m_player_engine->set_output_device_by_name(device.description().toStdString());
     if (!ok) {
@@ -261,7 +261,7 @@ void Player::set_output_device(const QAudioDevice& device)
 
     m_preferred_output_id = device.id();
     refresh_device_cache();
-    logger->info("output switch applied. active={} id={}", current_output_device().description(),
+    logger->info("output switch applied. active={} id='{}'", current_output_device().description(),
                  current_output_device().id());
     emit sgn_device_changed(current_output_device());
 }
@@ -273,7 +273,7 @@ void Player::set_output_device_by_id(const QByteArray& id)
         return;
     }
 
-    logger->info("request switch by id={}", id);
+    logger->info("request switch by id='{}'", id);
 
     for (const auto& dev : m_audio_devices) {
         if (dev.id() == id) {
