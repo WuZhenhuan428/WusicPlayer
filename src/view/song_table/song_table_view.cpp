@@ -1,6 +1,5 @@
 #include "view/song_table/song_table_view.h"
 
-#include "model/library/library_browse_model.h"
 #include "model/playlist/playlist_view_model.h"
 #include "view/playlist/playlist_widgets.h"
 

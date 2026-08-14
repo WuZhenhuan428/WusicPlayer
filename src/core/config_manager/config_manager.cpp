@@ -26,8 +26,7 @@ QJsonObject readRootFromFile(const QString& filepath)
         return {};
     }
     if (!file.open(QIODevice::ReadOnly)) {
-        logger->warn("[CONFIG] open failed: {} {}", file.fileName(),
-                     file.errorString().toStdString());
+        logger->warn("open failed: {} {}", file.fileName(), file.errorString());
         return {};
     }
 
@@ -35,7 +34,7 @@ QJsonObject readRootFromFile(const QString& filepath)
     const QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &err);
     file.close();
     if (err.error != QJsonParseError::NoError || !doc.isObject()) {
-        logger->warn("[CONFIG] parse failed: {}", err.errorString());
+        logger->warn("parse failed: {}", err.errorString());
         return {};
     }
     return doc.object();
@@ -45,16 +44,14 @@ void writeRootToFile(const QString& filepath, const QJsonObject& root)
 {
     QSaveFile file(filepath);
     if (!file.open(QIODevice::WriteOnly)) {
-        logger->warn("[CONFIG] write open failed: {} {}", file.fileName(),
-                     file.errorString().toStdString());
+        logger->warn("write open failed: {} {}", file.fileName(), file.errorString());
         return;
     }
 
     QJsonDocument doc(root);
     file.write(doc.toJson(QJsonDocument::Indented));
     if (!file.commit()) {
-        logger->warn("[CONFIG] commit failed: {} {}", file.fileName(),
-                     file.errorString().toStdString());
+        logger->warn("commit failed: {} {}", file.fileName(), file.errorString());
     }
 }
 } // namespace
@@ -97,8 +94,7 @@ void ConfigManager::load_all()
         return;
     }
     if (!file.open(QIODevice::ReadOnly)) {
-        logger->warn("[CONFIG] open failed: {} {}", file.fileName(),
-                     file.errorString().toStdString());
+        logger->warn("open failed: {} {}", file.fileName(), file.errorString());
         return;
     }
 
@@ -106,7 +102,7 @@ void ConfigManager::load_all()
     const QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &err);
     file.close();
     if (err.error != QJsonParseError::NoError || !doc.isObject()) {
-        logger->warn("[CONFIG] parse failed: {}", err.errorString());
+        logger->warn("parse failed: {}", err.errorString());
         return;
     }
 

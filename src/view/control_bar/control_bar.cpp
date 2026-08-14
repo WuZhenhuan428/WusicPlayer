@@ -177,7 +177,7 @@ void ControlBar::refresh_all_icons()
 void ControlBar::update_button_status(PlayerEngine::PlayingState new_state)
 {
     // set icon here
-    logger->debug("[ControlBar] update new state: {}", magic_enum::enum_name(new_state));
+    logger->debug("update new state: {}", magic_enum::enum_name(new_state));
     if (new_state != PlayerEngine::PlayingState::PLAYING) {
         m_is_playing = false;
         m_btn_play_pause->setIcon(QIcon(iconPath("play")));

@@ -112,7 +112,7 @@ void PlaylistViewModel::rebuild()
 
     endResetModel();
     m_active_track_index = QPersistentModelIndex(find_track_index(m_active_track_id));
-    logger->info("[INFO] rebuild finished. Queue size: {}", m_playback_queue.size());
+    logger->info("rebuild finished. Queue size: {}", m_playback_queue.size());
     emit changedPlaybackQueue();
 }
 
@@ -593,7 +593,7 @@ QVector<EntryId> PlaylistViewModel::generate_group_shuffle_queue()
             }
         }
     }
-    logger->info("[INFO] (re)build m_group_shuffle_queue");
+    logger->info("(re)build m_group_shuffle_queue");
     return result;
 }
 
@@ -611,7 +611,7 @@ QVector<EntryId> PlaylistViewModel::generate_single_shuffle_queue()
     std::shuffle(result.begin(), result.end(), g);
     m_single_shuffle_queue.clear();
     m_single_shuffle_queue = result;
-    logger->info("[INFO] (re)build m_single_shuffle_queue");
+    logger->info("(re)build m_single_shuffle_queue");
     return result;
 }
 

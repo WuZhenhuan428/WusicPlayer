@@ -16,12 +16,12 @@ Playlist::Playlist(const QString& name)
     m_name = name;
     m_pid  = PlaylistId::createUuid();
 
-    logger->info("[INFO] Create playlist uuid: {}", m_pid.toString());
+    logger->info("Create playlist uuid: {}", m_pid.toString());
 }
 
 Playlist::~Playlist()
 {
-    logger->info("[INFO] Remove playlist uuid: {}", m_pid.toString());
+    logger->info("Remove playlist uuid: {}", m_pid.toString());
 }
 
 /**
@@ -150,13 +150,12 @@ void Playlist::remove_track(const EntryId& tid)
             EntryId removedId = it->entry_id;
             m_tracks.erase(it);
 
-            logger->info("[INFO] Remove UUID={}, filepath={}", removedId.toString(),
-                         path.toStdString());
+            logger->info("Remove UUID={}, filepath={}", removedId.toString(), path);
             return;
         }
     }
 
-    logger->warn("[WARNING] file does not in playlist!");
+    logger->warn("file does not in playlist!");
 };
 
 /**
@@ -197,11 +196,10 @@ const Track* Playlist::find_track_by_id(const EntryId& eid) const
     for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
         if (it->entry_id == eid) {
             return &(*it);
-            logger->info("[INFO] find track {} at playlist {}",
-                         it->entry_id.toString().toStdString(), m_name.toStdString());
+            logger->info("find track {} at playlist {}", it->entry_id.toString(), m_name);
         }
     }
-    logger->warn("[WARNING] track {} does not exist!", eid.toString());
+    logger->warn("track {} does not exist!", eid.toString());
     return nullptr;
 }
 

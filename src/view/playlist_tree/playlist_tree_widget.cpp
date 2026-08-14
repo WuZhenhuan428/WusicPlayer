@@ -1,6 +1,5 @@
 #include "view/playlist_tree/playlist_tree_widget.h"
 
-#include "model/library/library_browse_model.h"
 #include "view/playlist/playlist_widgets.h"
 
 #include <QDragEnterEvent>

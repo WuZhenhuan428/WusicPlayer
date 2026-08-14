@@ -4,6 +4,7 @@
 #include "log_record.h"
 #include "log_sink.h"
 
+#include <QByteArray>
 #include <QDateTime>
 #include <QString>
 #include <QVector>
@@ -23,6 +24,15 @@ struct std::formatter<QString> : formatter<std::string_view>
     }
 };
 
+template <>
+struct std::formatter<QByteArray> : formatter<std::string_view>
+{
+    auto format(const QByteArray& str, std::format_context& ctx) const
+    {
+        return std::formatter<string_view>::format(str.toStdString(), ctx);
+    }
+};
+
 class Logger
 {
 public:
@@ -32,7 +42,7 @@ public:
 
     template <typename... Args>
     void log(LogLevel level, const std::source_location& loc, std::format_string<Args...> fmt,
-             Args&&... args)
+             Args&&... args) const
     {
         if (std::to_underlying(level) < std::to_underlying(level_)) {
             return;
@@ -55,12 +65,12 @@ public:
     }
 
     template <typename... Args>
-    void log(LogLevel level, std::format_string<Args...> fmt, Args&&... args)
+    void log(LogLevel level, std::format_string<Args...> fmt, Args&&... args) const
     {
         this->log(level, std::source_location::current(), fmt, std::forward<Args>(args)...);
     }
 
-    void log_qt(const LogRecord& rec)
+    void log_qt(const LogRecord& rec) const
     {
         if (std::to_underlying(rec.level) < std::to_underlying(level_)) {
             return;
@@ -75,38 +85,38 @@ public:
 
     // Wrap of log(..., sourc_location, ...);
     template <typename... Args>
-    void trace(std::format_string<Args...> fmt, Args&&... args)
+    void trace(std::format_string<Args...> fmt, Args&&... args) const
     {
         this->log(LogLevel::trace, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void debug(std::format_string<Args...> fmt, Args&&... args)
+    void debug(std::format_string<Args...> fmt, Args&&... args) const
     {
         this->log(LogLevel::debug, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void info(std::format_string<Args...> fmt, Args&&... args)
+    void info(std::format_string<Args...> fmt, Args&&... args) const
     {
         this->log(LogLevel::info, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void warn(std::format_string<Args...> fmt, Args&&... args)
+    void warn(std::format_string<Args...> fmt, Args&&... args) const
     {
         this->log(LogLevel::warn, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    void error(std::format_string<Args...> fmt, Args&&... args)
+    void error(std::format_string<Args...> fmt, Args&&... args) const
     {
         this->log(LogLevel::error, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     void warn_force(std::format_string<Args...> fmt, Args&&... args,
-                    std::source_location loc = std::source_location::current())
+                    std::source_location loc = std::source_location::current()) const
     {
         std::string raw = std::format(fmt, std::forward<Args>(args)...);
         QString msg     = QString::fromStdString(raw);
@@ -121,7 +131,7 @@ public:
     }
 
     template <typename... Args>
-    [[noreturn]] void fatal(std::format_string<Args...> fmt, Args&&... args)
+    [[noreturn]] void fatal(std::format_string<Args...> fmt, Args&&... args) const
     {
         this->log(LogLevel::fatal, fmt, std::forward<Args>(args)...);
         for (const auto& sink : this->sinks_) {
@@ -165,7 +175,7 @@ public:
     }
 
 private:
-    LogLocation from_std_source_ocation(std::source_location loc)
+    const LogLocation from_std_source_ocation(std::source_location loc) const
     {
         LogLocation qt_loc;
         qt_loc.file     = loc.file_name();
@@ -175,7 +185,7 @@ private:
         return qt_loc;
     }
 
-    LogRecord make_record(LogLevel level, QString&& msg, std::source_location loc)
+    const LogRecord make_record(LogLevel level, QString&& msg, std::source_location loc) const
     {
         LogRecord r;
         r.level        = level;
@@ -190,5 +200,5 @@ private:
     QVector<std::shared_ptr<LogSink>> sinks_;
     LogLevel level_;
 
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
 };

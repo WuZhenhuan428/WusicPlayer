@@ -98,7 +98,7 @@ void PlaylistManager::save_playlist(const PlaylistId& pid, const QString& save_p
     auto pl = m_repo->find_playlist_by_id(pid);
     if (!pl->isEmpty()) {
         m_repo->save_list(pid, save_path);
-        logger->info("[INFO] save playlist {} at {}", pid.toString(), save_path);
+        logger->info("save playlist {} at {}", pid.toString(), save_path);
     }
 }
 

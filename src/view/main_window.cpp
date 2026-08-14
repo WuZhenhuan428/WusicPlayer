@@ -296,7 +296,7 @@ void MainWindow::on_open_file()
     if (!filepath.isEmpty()) {
         emit sgnPlayTrackRequested(filepath);
     } else {
-        logger->info("[INFO] filepath is empty!");
+        logger->info("filepath is empty!");
     }
 }
 
