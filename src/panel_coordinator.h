@@ -4,21 +4,22 @@
 #include <QPointer>
 
 class EQWidget;
-class InMemorySearchBackend;
-class LibraryManager;
 class LibrarySettingsPage;
+class LibraryManager;
 class LogViewerDialog;
 class LyricsSettingPanel;
-class MainWindow;
-class PlaybackController;
 class PlaylistController;
 class SearchPanel;
 class SettingsPanel;
 class ShortcutsController;
 class ShortcutsPanel;
-class ThemeService;
 class ThemeSettingsPage;
 
+class AppContext;
+class InMemorySearchBackend;
+class ThemeService;
+class PlaybackController;
+class MainWindow;
 class LogSinkGui;
 
 /**
@@ -32,10 +33,7 @@ class PanelCoordinator : public QObject
 {
     Q_OBJECT
 public:
-    PanelCoordinator(MainWindow* main_window, PlaybackController* playback_ctl,
-                     PlaylistController* playlist_ctl, LibraryManager* library_mgr,
-                     ThemeService* theme_service, InMemorySearchBackend* search_backend,
-                     LogSinkGui* gui_sink = nullptr, QObject* parent = nullptr);
+    PanelCoordinator(AppContext& ctx, QObject* parent = nullptr);
     ~PanelCoordinator() override;
 
     // 懒创建并返回快捷键控制器(供配置注册)
@@ -63,13 +61,7 @@ private:
     void ensure_log_viewer();
 
     // ---- 非拥有依赖 ----
-    MainWindow* main_window_               = nullptr;
-    PlaybackController* playback_ctl_      = nullptr;
-    PlaylistController* playlist_ctl_      = nullptr;
-    LibraryManager* library_mgr_           = nullptr;
-    ThemeService* theme_service_           = nullptr;
-    InMemorySearchBackend* search_backend_ = nullptr;
-    LogSinkGui* gui_sink_                  = nullptr;
+    AppContext& ctx_;
 
     // ---- 拥有(懒创建,可复用) ----
     QPointer<SettingsPanel> settings_panel_;

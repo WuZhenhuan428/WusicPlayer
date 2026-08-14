@@ -3,18 +3,18 @@
 #include <QObject>
 #include <QWidget>
 
+class AppContext;
+class MainWindow;
+class ControlBar;
 class PlaybackController;
 class PlaylistController;
-class ControlBar;
-class MainWindow;
 
 class PlaybackService : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit PlaybackService(MainWindow* main_window, PlaybackController* playback_ctl,
-                             PlaylistController* playlist_ctl, QObject* parent);
+    explicit PlaybackService(AppContext& ctx, QObject* parent);
     ~PlaybackService();
 
     /**
@@ -34,12 +34,14 @@ private:
     void handle_play_track_request(const QString& filepath);
 
 private:
-    // just "borrow" a "pointer_view", so use raw pointer is safe
-    MainWindow* main_window_           = nullptr;
-    PlaybackController* m_playback_ctl = nullptr;
-    PlaylistController* m_playlist_ctl = nullptr;
-    ControlBar* m_control_bar          = nullptr;
+    AppContext& ctx_;
 
-    bool locate_on_next_play_request_  = false;
-    bool m_bound                       = false;
+    // alias from AppContext
+    MainWindow* main_window           = nullptr;
+    ControlBar* control_bar           = nullptr;
+    PlaybackController* playback_ctl  = nullptr;
+    PlaylistController* playlist_ctl  = nullptr;
+
+    bool locate_on_next_play_request_ = false;
+    bool m_bound                      = false;
 };

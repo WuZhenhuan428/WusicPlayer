@@ -24,6 +24,8 @@ class ThemeService;
 class LibraryManager;
 class PlaybackQueueService;
 
+#include "app_context.h"
+
 class AppController : public QObject
 {
     Q_OBJECT
@@ -59,11 +61,13 @@ private:
 
     std::unique_ptr<PlaybackService> playback_service_;
     std::unique_ptr<PlaybackRestoreService> playback_restore_service_;
-    std::unique_ptr<LibraryInteractionService> library_interaction_serivce_;
+    std::unique_ptr<LibraryInteractionService> library_interaction_service_;
     std::unique_ptr<TagWritebackService> tag_writeback_service_;
     std::unique_ptr<ThemeService> theme_service_;
     std::unique_ptr<PlaybackQueueService> playback_queue_service_;
     std::unique_ptr<PanelCoordinator> panel_coordinator_;
+
+    AppContext app_context_;
 
     bool has_saved_config_on_exit_    = false;
     bool locate_on_next_play_request_ = false;

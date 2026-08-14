@@ -1,5 +1,6 @@
 #include "model/playback_queue/playback_queue_service.h"
 
+#include "app_context.h"
 #include "core/utils/path.hpp"
 #include "model/library/library_manager.h"
 #include "model/playlist/playlist_manager.h"
@@ -92,35 +93,29 @@ QueueItem item_from_json(const QJsonObject& o)
 
 } // namespace
 
-PlaybackQueueService::PlaybackQueueService(QObject* parent) : QObject(parent)
+PlaybackQueueService::PlaybackQueueService(AppContext& ctx, QObject* parent) :
+    QObject(parent), ctx_(ctx)
 {
-    connect(&m_queue, &PlaybackQueue::sgn_queue_changed, this,
+    this->playlist_mgr_ = ctx_.playlist_manager_;
+    this->library_      = this->ctx_.library_manager_;
+    assert(playlist_mgr_ && library_);
+    connect(&queue_, &PlaybackQueue::sgn_queue_changed, this,
             &PlaybackQueueService::sgn_queue_changed);
-    connect(&m_queue, &PlaybackQueue::sgn_current_changed, this,
+    connect(&queue_, &PlaybackQueue::sgn_current_changed, this,
             &PlaybackQueueService::sgn_current_changed);
-}
-
-void PlaybackQueueService::set_playlist_manager(PlaylistManager* mgr)
-{
-    m_playlist_mgr = mgr;
-}
-
-void PlaybackQueueService::set_library_manager(LibraryManager* lib)
-{
-    m_library = lib;
 }
 
 PlaybackQueue* PlaybackQueueService::queue()
 {
-    return &m_queue;
+    return &queue_;
 }
 
 bool PlaybackQueueService::enqueue_playlist_entry(const PlaylistId& pid, const EntryId& eid)
 {
-    if (m_playlist_mgr == nullptr) {
+    if (playlist_mgr_ == nullptr) {
         return false;
     }
-    for (const auto& pl : m_playlist_mgr->get_playlists()) {
+    for (const auto& pl : playlist_mgr_->get_playlists()) {
         if (pl->id() != pid) {
             continue;
         }
@@ -133,7 +128,7 @@ bool PlaybackQueueService::enqueue_playlist_entry(const PlaylistId& pid, const E
         item.source_playlist_id = pid;
         item.filepath           = utils::path::normalize_path(track->filepath);
         item.meta               = track->meta;
-        m_queue.enqueue(item);
+        queue_.enqueue(item);
         return true;
     }
     return false;
@@ -141,10 +136,10 @@ bool PlaybackQueueService::enqueue_playlist_entry(const PlaylistId& pid, const E
 
 bool PlaybackQueueService::enqueue_library_track(const TrackId& track_id)
 {
-    if (m_library == nullptr) {
+    if (library_ == nullptr) {
         return false;
     }
-    const std::optional<LibraryTrack> lt = m_library->track_by_id(track_id);
+    const std::optional<LibraryTrack> lt = library_->track_by_id(track_id);
     if (!lt.has_value()) {
         return false;
     }
@@ -152,7 +147,7 @@ bool PlaybackQueueService::enqueue_library_track(const TrackId& track_id)
     item.library_track_id = track_id;
     item.filepath         = lt->filepath;
     item.meta             = lt->meta;
-    m_queue.enqueue(item);
+    queue_.enqueue(item);
     return true;
 }
 
@@ -167,7 +162,7 @@ int PlaybackQueueService::enqueue_external(const QString& filepath, const TrackM
     if (item.meta.filename.isEmpty()) {
         item.meta.filename = QFileInfo(item.filepath).fileName();
     }
-    return m_queue.enqueue(item);
+    return queue_.enqueue(item);
 }
 
 bool PlaybackQueueService::play_library_track(const TrackId& track_id)
@@ -175,9 +170,9 @@ bool PlaybackQueueService::play_library_track(const TrackId& track_id)
     if (!enqueue_library_track(track_id)) {
         return false;
     }
-    const int idx = m_queue.size() - 1;
-    m_queue.set_current(idx);
-    if (auto item = m_queue.current()) {
+    const int idx = queue_.size() - 1;
+    queue_.set_current(idx);
+    if (auto item = queue_.current()) {
         emit sgn_play_requested(*item);
     }
     return true;
@@ -186,8 +181,8 @@ bool PlaybackQueueService::play_library_track(const TrackId& track_id)
 int PlaybackQueueService::play_external(const QString& filepath, const TrackMetaData& meta)
 {
     const int idx = enqueue_external(filepath, meta);
-    m_queue.set_current(idx);
-    if (auto item = m_queue.current()) {
+    queue_.set_current(idx);
+    if (auto item = queue_.current()) {
         emit sgn_play_requested(*item);
     }
     return idx;
@@ -197,9 +192,9 @@ bool PlaybackQueueService::save_to(const QString& path) const
 {
     QJsonObject root;
     root["version"]       = 1;
-    root["current_index"] = m_queue.current_index();
+    root["current_index"] = queue_.current_index();
     QJsonArray arr;
-    for (const QueueItem& item : m_queue.items()) {
+    for (const QueueItem& item : queue_.items()) {
         arr.append(item_to_json(item));
     }
     root["items"] = arr;
@@ -233,11 +228,11 @@ bool PlaybackQueueService::load_from(const QString& path)
     for (const QJsonValue& v : arr) {
         items.append(item_from_json(v.toObject()));
     }
-    m_queue.clear();
-    m_queue.enqueue_many(items);
+    queue_.clear();
+    queue_.enqueue_many(items);
     const int cur = root["current_index"].toInt(-1);
     if (cur >= 0 && cur < items.size()) {
-        m_queue.set_current(cur);
+        queue_.set_current(cur);
     }
     return true;
 }

@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QString>
 
+class AppContext;
 class LibraryManager;
 class PlaylistManager;
 
@@ -23,11 +24,7 @@ class PlaybackQueueService : public QObject
 {
     Q_OBJECT
 public:
-    explicit PlaybackQueueService(QObject* parent = nullptr);
-
-    // 依赖注入(非拥有,可空)
-    void set_playlist_manager(PlaylistManager* mgr);
-    void set_library_manager(LibraryManager* lib);
+    explicit PlaybackQueueService(AppContext& ctx, QObject* parent = nullptr);
 
     // 非拥有:队列归本服务所有
     PlaybackQueue* queue();
@@ -57,7 +54,8 @@ signals:
     void sgn_play_requested(const QueueItem& item);
 
 private:
-    PlaybackQueue m_queue;
-    PlaylistManager* m_playlist_mgr = nullptr;
-    LibraryManager* m_library       = nullptr;
+    PlaybackQueue queue_;
+    AppContext& ctx_;
+    PlaylistManager* playlist_mgr_ = nullptr;
+    LibraryManager* library_       = nullptr;
 };

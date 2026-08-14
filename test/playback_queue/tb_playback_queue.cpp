@@ -1,3 +1,5 @@
+#include "app_context.h"
+
 #include "core/types.h"
 #include "core/utils/path.hpp"
 #include "model/library/library_manager.h"
@@ -54,6 +56,16 @@ QString make_audio_file(const QString& dir, const QString& name)
         f.close();
     }
     return path;
+}
+
+// PlaybackQueueService 构造要求 playlist/library 管理器均非空(assert),
+// 为不需要实际管理器的用例构造一个持有栈上管理器的上下文。
+AppContext make_ctx(PlaylistManager* pm, LibraryManager* lib)
+{
+    AppContext ctx;
+    ctx.playlist_manager_ = pm;
+    ctx.library_manager_  = lib;
+    return ctx;
 }
 } // namespace
 
@@ -293,7 +305,11 @@ static void test_persistence()
     }
     const QString path = dir.filePath("queue.json");
 
-    PlaybackQueueService s1;
+    PlaylistManager pm;
+    LibraryManager lib;
+    AppContext ctx = make_ctx(&pm, &lib);
+
+    PlaybackQueueService s1(ctx);
     QueueItem it;
     it.library_track_id   = TrackId::createUuid();
     it.playlist_entry_id  = EntryId::createUuid();
@@ -313,7 +329,7 @@ static void test_persistence()
     CHECK(s1.queue()->set_current(1));
     CHECK(s1.save_to(path));
 
-    PlaybackQueueService s2;
+    PlaybackQueueService s2(ctx);
     CHECK(s2.load_from(path));
     CHECK(s2.queue()->size() == 2);
     CHECK(s2.queue()->current_index() == 1);
@@ -338,7 +354,10 @@ static void test_persistence()
 /* ---- 服务:播放(入队 + 设当前 + 发信号) ---- */
 static void test_service_play()
 {
-    PlaybackQueueService s;
+    PlaylistManager pm;
+    LibraryManager lib;
+    AppContext ctx = make_ctx(&pm, &lib);
+    PlaybackQueueService s(ctx);
     int play_signals = 0;
     QString played_path;
     QObject::connect(&s, &PlaybackQueueService::sgn_play_requested, [&](const QueueItem& item) {
@@ -356,7 +375,7 @@ static void test_service_play()
     CHECK(played_path == norm("rel/foo.mp3"));
     CHECK(s.queue()->current()->meta.title == "T");
 
-    // 库曲目:未注入 LibraryManager → 失败且不发信号
+    // 库曲目:库中不存在该曲目 → 失败且不发信号
     const int before = play_signals;
     CHECK(!s.play_library_track(TrackId::createUuid()));
     CHECK(play_signals == before);
@@ -366,7 +385,10 @@ static void test_service_play()
 /* ---- 服务:外部文件 ---- */
 static void test_service_external()
 {
-    PlaybackQueueService s;
+    PlaylistManager pm;
+    LibraryManager lib;
+    AppContext ctx = make_ctx(&pm, &lib);
+    PlaybackQueueService s(ctx);
     const int i = s.enqueue_external("relative_dir/foo.mp3");
     CHECK(i == 0);
     auto it = s.queue()->item_at(0);
@@ -405,8 +427,9 @@ static void test_service_playlist_entry()
     }
     const EntryId eid = tracks.last().entry_id;
 
-    PlaybackQueueService s;
-    s.set_playlist_manager(&pm);
+    LibraryManager lib;
+    AppContext ctx = make_ctx(&pm, &lib);
+    PlaybackQueueService s(ctx);
     CHECK(s.enqueue_playlist_entry(pid, eid));
     auto it = s.queue()->item_at(0);
     CHECK(it.has_value());
@@ -417,9 +440,6 @@ static void test_service_playlist_entry()
 
     // 未知条目 → 失败
     CHECK(!s.enqueue_playlist_entry(pid, EntryId::createUuid()));
-    // 未注入管理器 → 失败
-    PlaybackQueueService s2;
-    CHECK(!s2.enqueue_playlist_entry(pid, eid));
 }
 
 /* ---- 服务:媒体库曲目解析(扫描后) ---- */
@@ -452,8 +472,9 @@ static void test_service_library_track()
     CHECK(idx.size() == 1);
     const TrackId tid = idx.constBegin()->track_id;
 
-    PlaybackQueueService s;
-    s.set_library_manager(&lib);
+    PlaylistManager pm;
+    AppContext ctx = make_ctx(&pm, &lib);
+    PlaybackQueueService s(ctx);
     CHECK(s.enqueue_library_track(tid));
     auto it = s.queue()->item_at(0);
     CHECK(it.has_value());
@@ -461,10 +482,8 @@ static void test_service_library_track()
     CHECK(it->library_track_id == tid);
     CHECK(it->filepath == norm(music_dir.path() + "/lib_song.mp3"));
 
-    // 未知曲目 / 未注入 → 失败
+    // 未知曲目 → 失败
     CHECK(!s.enqueue_library_track(TrackId::createUuid()));
-    PlaybackQueueService s2;
-    CHECK(!s2.enqueue_library_track(tid));
 }
 
 int main(int argc, char* argv[])

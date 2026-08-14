@@ -3,6 +3,7 @@
 #include "core/types.h"
 #include <QObject>
 
+class AppContext;
 class PlaybackController;
 class PlaylistController;
 
@@ -11,15 +12,15 @@ class PlaybackRestoreService : public QObject
     Q_OBJECT
 
 public:
-    explicit PlaybackRestoreService(PlaylistController* playlist_ctl,
-                                    PlaybackController* playback_ctl, QObject* parent);
+    explicit PlaybackRestoreService(AppContext& ctx, QObject* parent);
     ~PlaybackRestoreService();
 
     void restore();
 
 private:
-    PlaylistController* m_playlist_ctl = nullptr;
-    PlaybackController* m_playback_ctl = nullptr;
+    AppContext& ctx_;
+    PlaylistController* playlist_ctl_ = nullptr;
+    PlaybackController* playback_ctl_ = nullptr;
 
 private:
     int find_queue_index_by_track_id(const EntryId& tid);
@@ -27,10 +28,10 @@ private:
     void on_cache_load_finished();
     void on_model_reset();
 
-    PlaylistId m_pending_pid;
-    EntryId m_pending_tid;
-    int m_pending_pos_ms         = 0;
-    bool m_pending_should_resume = false;
+    PlaylistId pending_pid_;
+    EntryId pending_tid_;
+    int pending_pos_ms_         = 0;
+    bool pending_should_resume_ = false;
 
-    bool m_restored              = false;
+    bool restored_              = false;
 };

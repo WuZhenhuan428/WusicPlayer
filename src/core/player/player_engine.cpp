@@ -167,7 +167,7 @@ void PlayerEngine::set_volume(float volume)
 void PlayerEngine::seek(int64_t pos_ms)
 {
     if (!m_device || !m_decoder) {
-        logger->error("device or decoder does not exist");
+        logger->warn("device or decoder does not exist (may be initializing)");
         return;
     }
 

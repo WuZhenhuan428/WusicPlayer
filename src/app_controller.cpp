@@ -44,6 +44,7 @@ namespace
 Logger* logger = LoggerManager::file_logger("app_controller", {"console", "gui"});
 }
 
+// 构造顺序: 独立组件 -> Controller -> (AppContext) -> Service
 AppController::AppController(PlaybackController* playback_controller, QObject* parent) :
     QObject(parent), playback_controller_(playback_controller),
     playlist_manager_(std::make_unique<PlaylistManager>()),
@@ -53,28 +54,34 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     // 搜索面板:搜索当前播放列表(数据库 FTS5 仅媒体库控件使用)
     search_backend_(std::make_unique<InMemorySearchBackend>(playlist_controller_.get())),
     main_window_(std::make_unique<MainWindow>(playback_controller_, playlist_controller_.get())),
-    status_bar_controller_(std::make_unique<StatusBarController>(main_window_->statusBar(), this)),
-    playback_service_(std::make_unique<PlaybackService>(main_window_.get(), playback_controller_,
-                                                        playlist_controller_.get(), this)),
-    playback_restore_service_(std::make_unique<PlaybackRestoreService>(playlist_controller_.get(),
-                                                                       playback_controller_, this)),
-    library_interaction_serivce_(std::make_unique<LibraryInteractionService>(
-        main_window_->playlist_tree_widget(), main_window_->song_table_view(), playback_controller_,
-        playlist_controller_.get(), this)),
-    tag_writeback_service_(
-        std::make_unique<TagWritebackService>(playlist_controller_.get(), playback_controller_,
-                                              playlist_manager_.get(), main_window_.get(), this)),
-    theme_service_(std::make_unique<ThemeService>(this)),
-    playback_queue_service_(std::make_unique<PlaybackQueueService>(this)),
-    // 面板编排:设置/搜索/EQ/快捷键(构造时注册默认快捷键)
-    panel_coordinator_(std::make_unique<PanelCoordinator>(
-        main_window_.get(), playback_controller_, playlist_controller_.get(),
-        library_manager_.get(), theme_service_.get(), search_backend_.get(),
-        dynamic_cast<LogSinkGui*>(LoggerManager::instance().get_sink_by_name("gui").get()), this))
+    status_bar_controller_(std::make_unique<StatusBarController>(main_window_->statusBar(), this))
 {
-    // 现在播放队列:注入数据源(积累期,媒体库控件入队即播)
-    playback_queue_service_->set_playlist_manager(playlist_manager_.get());
-    playback_queue_service_->set_library_manager(library_manager_.get());
+    // 先构造 AppContext 引用的服务, 再构建上下文——
+    // theme_service_ 必须在 app_context_ 之前构造, 否则上下文里是空指针
+    // (PanelCoordinator/ThemeSettingsPage 会 connect/解引用 null → 段错误)。
+    theme_service_     = std::make_unique<ThemeService>(this);
+
+    // 其他资源初始化
+    this->app_context_ = {
+        .main_window_              = this->main_window_.get(),
+        .playback_controller_      = this->playback_controller_,
+        .playlist_controller_      = this->playlist_controller_.get(),
+        .playlist_manager_         = this->playlist_manager_.get(),
+        .theme_service_            = this->theme_service_.get(),
+        .in_memory_search_backend_ = this->search_backend_.get(),
+        .log_sink_gui_ =
+            dynamic_cast<LogSinkGui*>(LoggerManager::instance().get_sink_by_name("gui").get()),
+        .library_manager_ = this->library_manager_.get(),
+    };
+    // 面板编排:设置/搜索/EQ/快捷键(构造时注册默认快捷键)
+    panel_coordinator_           = std::make_unique<PanelCoordinator>(app_context_, this);
+    // Services 初始化
+    playback_service_            = std::make_unique<PlaybackService>(app_context_, this);
+    playback_restore_service_    = std::make_unique<PlaybackRestoreService>(app_context_, this);
+    library_interaction_service_ = std::make_unique<LibraryInteractionService>(app_context_, this);
+    tag_writeback_service_       = std::make_unique<TagWritebackService>(app_context_, this);
+    playback_queue_service_      = std::make_unique<PlaybackQueueService>(app_context_, this);
+
     // 媒体库控件(左侧播放列表下方):注入库与队列服务
     main_window_->library_browser()->set_library_manager(library_manager_.get());
     main_window_->library_browser()->set_playback_queue_service(playback_queue_service_.get());
@@ -101,7 +108,6 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
             panel_coordinator_.get(), &PanelCoordinator::open_settings_panel);
     connect(main_window_.get(), &MainWindow::sgnShowDesktopLyricsRequested, this,
             &AppController::handle_show_desktop_lyrics_requested);
-
     connect(main_window_.get(), &MainWindow::sgnAboutToClose, this, &AppController::save_config);
 
     connect(qApp, &QCoreApplication::aboutToQuit, this, &AppController::save_config);
@@ -180,7 +186,7 @@ void AppController::initialize_core_connections()
     connect(library_browser, &LibraryBrowserWidget::sgnOpenLibrarySettingsRequested, this,
             [this]() { panel_coordinator_->open_settings_panel_page("Media Library"); });
 
-    library_interaction_serivce_->bind();
+    library_interaction_service_->bind();
     connect(song_table_view, &SongTableView::sgnTrackPropertyRequested,
             tag_writeback_service_.get(), &TagWritebackService::request_track_property);
 
