@@ -6,3 +6,6 @@ build/
 
 # clangd cache directory
 .cache/
+
+# CTest
+Testing/
