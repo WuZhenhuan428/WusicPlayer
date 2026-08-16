@@ -31,6 +31,7 @@ void Playlist::clear_list()
 {
     m_tracks.clear();
     m_tracks.shrink_to_fit();
+    m_track_index.clear();
 }
 /**
  * @brief: 添加音轨, 原来为空时自动指向第一首
@@ -43,44 +44,45 @@ Track Playlist::add_track(const QString& filepath)
     return t;
 }
 
-Track Playlist::add_track_with_id(const EntryId& tid, const QString& filepath)
+Track Playlist::add_track_with_id(const EntryId& eid, const QString& filepath)
 {
-    Track t = Track::from_entry(tid, filepath);
+    Track t = Track::from_entry(eid, filepath);
     add_track_object(t);
     return t;
 }
 
 void Playlist::add_track_object(const Track& track)
 {
+    m_track_index.insert(track.entry_id, m_tracks.size());
     m_tracks.emplace_back(track);
 }
 
-bool Playlist::update_track_meta(const EntryId& tid, const TrackMetaData& meta)
+bool Playlist::update_track_meta(const EntryId& eid, const TrackMetaData& meta)
 {
-    for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
-        if (it->entry_id == tid) {
-            it->meta = meta;
-            if (it->meta.filepath.isEmpty()) {
-                it->meta.filepath = it->filepath;
-            }
-            if (it->meta.filename.isEmpty()) {
-                it->meta.filename = QFileInfo(it->filepath).fileName();
-            }
-            return true;
-        }
+    auto it = m_track_index.constFind(eid);
+    if (it == m_track_index.constEnd()) {
+        return false;
     }
-    return false;
+
+    Track& t = m_tracks[it.value()];
+    t.meta   = meta;
+    if (t.meta.filepath.isEmpty()) {
+        t.meta.filepath = t.filepath;
+    }
+    if (t.meta.filename.isEmpty()) {
+        t.meta.filename = QFileInfo(t.filepath).fileName();
+    }
+    return true;
 }
 
 bool Playlist::set_track_missing(const EntryId& eid, bool missing)
 {
-    for (auto& t : m_tracks) {
-        if (t.entry_id == eid) {
-            t.missing = missing;
-            return true;
-        }
+    auto it = m_track_index.constFind(eid);
+    if (it == m_track_index.constEnd()) {
+        return false;
     }
-    return false;
+    m_tracks[it.value()].missing = missing;
+    return true;
 }
 
 int Playlist::refresh_library_tracks(
@@ -135,6 +137,7 @@ int Playlist::remove_missing_tracks()
             ++it;
         }
     }
+    this->rebuild_index();
     return removed;
 }
 
@@ -142,20 +145,24 @@ int Playlist::remove_missing_tracks()
  * @brief: 查找并删除音轨
  * @note: 如果删除当前音轨, 则暂停播放
  */
-void Playlist::remove_track(const EntryId& tid)
+void Playlist::remove_track(const EntryId& eid)
 {
-    for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
-        if (it->entry_id == tid) {
-            QString path      = it->filepath;
-            EntryId removedId = it->entry_id;
-            m_tracks.erase(it);
+    auto it = m_track_index.constFind(eid);
+    if (it == m_track_index.constEnd()) {
+        return;
+    }
+    const qsizetype idx = it.value();
+    const QString path  = m_tracks[idx].filepath;
+    m_tracks.erase(m_tracks.begin() + idx);
+    m_track_index.erase(it);
 
-            logger->info("Remove UUID={}, filepath={}", removedId.toString(), path);
-            return;
+    for (auto it = m_track_index.begin(); it != m_track_index.end(); ++it) {
+        if (it.value() > idx) {
+            --it.value();
         }
     }
 
-    logger->warn("file does not in playlist!");
+    logger->info("Remove UUID={}, filepath={}", eid.toString(), path);
 };
 
 /**
@@ -193,14 +200,13 @@ void Playlist::new_uuid(const PlaylistId& pid)
 
 const Track* Playlist::find_track_by_id(const EntryId& eid) const
 {
-    for (auto it = m_tracks.begin(); it != m_tracks.end(); ++it) {
-        if (it->entry_id == eid) {
-            return &(*it);
-            logger->info("find track {} at playlist {}", it->entry_id.toString(), m_name);
-        }
+    auto it = m_track_index.constFind(eid);
+    if (it == m_track_index.constEnd()) {
+        logger->warn("track {} does not exist!", eid.toString());
+        return nullptr;
     }
-    logger->warn("track {} does not exist!", eid.toString());
-    return nullptr;
+    logger->info("find track {} at playlist {}", eid.toString(), m_name);
+    return &m_tracks[it.value()];
 }
 
 const Track* Playlist::find_track_by_filepath(const QString& filepath) const
@@ -222,4 +228,13 @@ const QVector<Track>& Playlist::get_tracks() const
 size_t Playlist::track_count()
 {
     return m_tracks.size();
+}
+
+void Playlist::rebuild_index()
+{
+    m_track_index.clear();
+    m_track_index.reserve(m_tracks.size());
+    for (qsizetype i = 0; i < m_tracks.size(); ++i) {
+        m_track_index.insert(m_tracks[i].entry_id, i);
+    }
 }
