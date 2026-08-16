@@ -21,11 +21,11 @@ struct QueueItem
 
     bool is_library() const
     {
-        return !library_track_id.isNull();
+        return !library_track_id.is_null();
     }
     bool is_playlist() const
     {
-        return !playlist_entry_id.isNull();
+        return !playlist_entry_id.is_null();
     }
     bool is_external() const
     {

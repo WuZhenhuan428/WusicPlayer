@@ -88,7 +88,7 @@ SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget* parent) :
                     return;
                 }
                 const TrackId id = hint.track_id;
-                if (!id.isNull()) {
+                if (!id.is_null()) {
                     emit sgnRequestPlayTrack(id);
                 }
             });

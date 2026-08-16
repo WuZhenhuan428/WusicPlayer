@@ -208,7 +208,7 @@ bool LibraryRepo::upsert_track(const LibraryTrack& track)
         "  bitrate=excluded.bitrate, comment=excluded.comment, lyrics=excluded.lyrics,"
         "  encoder=excluded.encoder, date=excluded.date");
     const auto& m = track.meta;
-    q.addBindValue(track.track_id.toString(QUuid::WithoutBraces));
+    q.addBindValue(track.track_id.to_string_without_brace());
     q.addBindValue(track.filepath);
     q.addBindValue(track.file_size);
     q.addBindValue(track.mtime);

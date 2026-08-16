@@ -375,7 +375,7 @@ QVariant PlaylistViewModel::data(const QModelIndex& index, int role) const
         return QVariant();
 
     Node* node    = static_cast<Node*>(index.internalPointer());
-    bool is_group = node->id.isNull();
+    bool is_group = node->id.is_null();
 
     if (role == Qt::TextAlignmentRole && is_group) {
         return int(Qt::AlignLeft | Qt::AlignVCenter);
@@ -520,7 +520,7 @@ QMimeData* PlaylistViewModel::mimeData(const QModelIndexList& indexes) const
             continue;
         }
         auto* node = static_cast<Node*>(index.internalPointer());
-        if (node && !node->id.isNull() && !ids.contains(node->id)) {
+        if (node && !node->id.is_null() && !ids.contains(node->id)) {
             ids.push_back(node->id);
         }
     }
@@ -529,10 +529,10 @@ QMimeData* PlaylistViewModel::mimeData(const QModelIndexList& indexes) const
     }
     QJsonArray arr;
     for (const EntryId& id : ids) {
-        arr.append(id.toString(QUuid::WithoutBraces));
+        arr.append(id.to_string_without_brace());
     }
     QJsonObject root;
-    root["src"] = m_pid.toString(QUuid::WithoutBraces);
+    root["src"] = m_pid.to_string_without_brace();
     root["ids"] = arr;
     auto* mime  = new QMimeData;
     mime->setData(QString::fromLatin1(wusic::kPlaylistEntriesMime),
@@ -550,7 +550,7 @@ QModelIndex PlaylistViewModel::get_current_track_index()
 
 QModelIndex PlaylistViewModel::find_track_index(const EntryId& tid) const
 {
-    if (tid.isNull() || !m_root) {
+    if (tid.is_null() || !m_root) {
         return QModelIndex();
     }
 
@@ -588,7 +588,7 @@ QVector<EntryId> PlaylistViewModel::generate_group_shuffle_queue()
     std::shuffle(groups.begin(), groups.end(), g);
     for (Node* group : groups) {
         for (Node* track_node : group->children) {
-            if (!track_node->id.isNull()) {
+            if (!track_node->id.is_null()) {
                 result.append(track_node->id);
             }
         }

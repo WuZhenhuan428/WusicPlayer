@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/utils/path.hpp"
+
 #include <QByteArray>
 #include <QFileInfo>
 #include <QHash>
@@ -7,11 +9,83 @@
 #include <QString>
 #include <QUuid>
 
-#include "core/utils/path.hpp"
+template <typename Tag>
+class Id
+{
+public:
+    Id() = default; // null id
+    explicit Id(const QUuid& uuid) : uuid_(uuid) {}
+    explicit Id(QAnyStringView string) : uuid_(QUuid(string)) {}
+    static Id create_uuid()
+    {
+        return Id(QUuid::createUuid());
+    }
 
-using EntryId    = QUuid; // 播放列表条目身份:播放列表内唯一
-using PlaylistId = QUuid; // 播放列表身份
-using TrackId    = QUuid; // 库级曲目身份:首次入库时由库分配(阶段 2 落地)
+    QUuid to_uuid() const
+    {
+        return uuid_;
+    }
+
+    QString to_string() const
+    {
+        return uuid_.toString();
+    }
+
+    QString to_string_without_brace() const
+    {
+        return uuid_.toString(QUuid::WithoutBraces);
+    }
+
+    bool is_null() const
+    {
+        return uuid_.isNull();
+    }
+
+    friend bool operator==(const Id& a, const Id& b)
+    {
+        return a.uuid_ == b.uuid_;
+    }
+
+    friend bool operator!=(const Id& a, const Id& b)
+    {
+        return a.uuid_ != b.uuid_;
+    }
+
+    template <typename ToTag>
+    Id<ToTag> to_tag_of() const
+    {
+        return Id<ToTag>(uuid_);
+    }
+
+    static Id<Tag> from_string(QAnyStringView string)
+    {
+        return Id<Tag>(string);
+    }
+
+private:
+    QUuid uuid_;
+};
+
+struct EntryIdTag
+{};
+struct PlaylistIdTag
+{};
+struct TrackIdTag
+{};
+
+using EntryId    = Id<EntryIdTag>;    // 播放列表条目身份:播放列表内唯一
+using PlaylistId = Id<PlaylistIdTag>; // 播放列表身份
+using TrackId    = Id<TrackIdTag>;    // 库级曲目身份:首次入库时由库分配(阶段 2 落地)
+
+template <typename Tag>
+inline size_t qHash(const Id<Tag>& id, size_t seed = 0) noexcept
+{
+    return qHash(id.to_uuid(), seed);
+}
+
+Q_DECLARE_METATYPE(EntryId)
+Q_DECLARE_METATYPE(PlaylistId)
+Q_DECLARE_METATYPE(TrackId)
 
 namespace wusic
 {
@@ -85,8 +159,8 @@ enum class TrackSource
  */
 struct Track
 {
-    EntryId entry_id = EntryId::createUuid(); // 条目身份(播放列表内唯一)
-    TrackId library_track_id;                 // 库级身份;外部条目为空
+    EntryId entry_id = EntryId::create_uuid(); // 条目身份(播放列表内唯一)
+    TrackId library_track_id;                  // 库级身份;外部条目为空
     TrackSource source = TrackSource::external;
     QString filepath; // 规范化路径
     TrackMetaData meta;

@@ -192,8 +192,8 @@ void PlaylistController::rename_playlist(const PlaylistId& id)
     if (!m_manager)
         return;
 
-    PlaylistId target_id = id.isNull() ? m_manager->get_current_playlist_id() : id;
-    if (target_id.isNull())
+    PlaylistId target_id = id.is_null() ? m_manager->get_current_playlist_id() : id;
+    if (target_id.is_null())
         return;
     QString old_name = m_manager->get_playlist_by_id(target_id);
 
@@ -210,8 +210,8 @@ void PlaylistController::rename_playlist(const PlaylistId& id, const QString& ne
     if (!m_manager || new_name.trimmed().isEmpty()) {
         return;
     }
-    const PlaylistId target_id = id.isNull() ? m_manager->get_current_playlist_id() : id;
-    if (target_id.isNull()) {
+    const PlaylistId target_id = id.is_null() ? m_manager->get_current_playlist_id() : id;
+    if (target_id.is_null()) {
         return;
     }
     m_manager->rename_playlist(target_id, new_name.trimmed());
@@ -222,8 +222,8 @@ void PlaylistController::remove_playlist(const PlaylistId& id)
     if (!m_manager)
         return;
 
-    PlaylistId target_id = id.isNull() ? m_manager->get_current_playlist_id() : id;
-    if (target_id.isNull())
+    PlaylistId target_id = id.is_null() ? m_manager->get_current_playlist_id() : id;
+    if (target_id.is_null())
         return;
 
     auto btn = QMessageBox::question(m_dialogParent, tr("Confirm Remove"),
@@ -240,8 +240,8 @@ void PlaylistController::save_playlist(const PlaylistId& id)
     if (!m_manager)
         return;
 
-    const PlaylistId target_id = id.isNull() ? m_manager->get_current_playlist_id() : id;
-    if (target_id.isNull())
+    const PlaylistId target_id = id.is_null() ? m_manager->get_current_playlist_id() : id;
+    if (target_id.is_null())
         return;
 
     QFileDialog dialog(m_dialogParent);
@@ -266,15 +266,15 @@ void PlaylistController::copy_playlist(const PlaylistId& id)
     if (!m_manager)
         return;
 
-    const PlaylistId target_id = id.isNull() ? m_manager->get_current_playlist_id() : id;
-    if (!target_id.isNull()) {
+    const PlaylistId target_id = id.is_null() ? m_manager->get_current_playlist_id() : id;
+    if (!target_id.is_null()) {
         m_manager->copy_playlist(target_id);
     }
 }
 
 void PlaylistController::remove_track(const EntryId& id)
 {
-    if (!m_manager || id.isNull()) {
+    if (!m_manager || id.is_null()) {
         return;
     }
 
@@ -317,7 +317,7 @@ void PlaylistController::remove_tracks(const QVector<EntryId>& ids)
         return;
     }
     for (const EntryId& id : ids) {
-        if (!id.isNull()) {
+        if (!id.is_null()) {
             m_manager->remove_track(id);
         }
     }
@@ -360,11 +360,11 @@ EntryId PlaylistController::prev_track() const
 }
 QString PlaylistController::track_file_path(const EntryId& eid) const
 {
-    if (eid.isNull() || !m_manager) {
+    if (eid.is_null() || !m_manager) {
         return QString();
     }
     const PlaylistId pid = m_manager->get_current_playlist_id();
-    if (pid.isNull()) {
+    if (pid.is_null()) {
         return QString();
     }
     const auto playlist = m_manager->m_repo->find_playlist_by_id(pid);
@@ -419,7 +419,7 @@ const std::shared_ptr<Playlist> PlaylistController::current_playlist()
 
 std::shared_ptr<Playlist> PlaylistController::find_playlist_by_id(PlaylistId pid)
 {
-    if (pid.isNull()) {
+    if (pid.is_null()) {
         return nullptr;
     }
     return m_manager->m_repo->find_playlist_by_id(pid);
@@ -492,8 +492,8 @@ void PlaylistController::load_from_json(const QJsonObject& json)
     m_last_playlist_id = PlaylistId(obj.value("last_playlist_id").toString());
     m_last_track_id    = EntryId(obj.value("last_track_id").toString());
 
-    if (!m_last_playlist_id.isNull() && !this->find_playlist_by_id(m_last_playlist_id)) {
-        logger->warn("playlist {} does not exist!", m_last_playlist_id.toString());
+    if (!m_last_playlist_id.is_null() && !this->find_playlist_by_id(m_last_playlist_id)) {
+        logger->warn("playlist {} does not exist!", m_last_playlist_id.to_string());
     }
     // TODO: find track in current playlist if playlist available
 }
@@ -525,8 +525,8 @@ QJsonObject PlaylistController::save_to_json()
     m_last_playlist_id      = this->current_playlist_id();
     m_last_track_id         = this->current_track_id();
 
-    obj["last_playlist_id"] = m_last_playlist_id.toString(QUuid::WithoutBraces);
-    obj["last_track_id"]    = m_last_track_id.toString(QUuid::WithoutBraces);
+    obj["last_playlist_id"] = m_last_playlist_id.to_string_without_brace();
+    obj["last_track_id"]    = m_last_track_id.to_string_without_brace();
 
     return obj;
 }

@@ -115,7 +115,7 @@ LayoutResult PlaylistLayoutBuilder::build(const Playlist& playlist)
 
     // get linear playback queue
     std::function<void(Node*)> collectLeaves = [&](Node* n) {
-        if (!n->id.isNull()) {
+        if (!n->id.is_null()) {
             result.playback_queue.append(n->id);
             return;
         }

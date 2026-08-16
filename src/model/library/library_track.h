@@ -24,7 +24,7 @@ struct LibraryTrack
     static LibraryTrack from_path(const QString& normalized_path)
     {
         LibraryTrack t;
-        t.track_id = TrackId::createUuid();
+        t.track_id = TrackId::create_uuid();
         t.filepath = normalized_path;
         return t;
     }

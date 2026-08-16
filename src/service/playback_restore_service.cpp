@@ -35,7 +35,7 @@ void PlaybackRestoreService::restore()
     pending_pos_ms_        = playback_ctl_->last_position_ms();
     pending_should_resume_ = playback_ctl_->last_was_playing();
 
-    if (pending_pid_.isNull())
+    if (pending_pid_.is_null())
         return;
 
     connect(playlist_ctl_, &PlaylistController::sgn_cache_load_finished, this,
@@ -46,7 +46,7 @@ void PlaybackRestoreService::restore()
 
 int PlaybackRestoreService::find_queue_index_by_track_id(const EntryId& tid)
 {
-    if (tid.isNull() || !playlist_ctl_->view_model()) {
+    if (tid.is_null() || !playlist_ctl_->view_model()) {
         return -1;
     }
     const auto& queue = playlist_ctl_->view_model()->playback_queue();
@@ -74,7 +74,7 @@ void PlaybackRestoreService::finalize_restore_when_ready(int retry)
 
 void PlaybackRestoreService::on_cache_load_finished()
 {
-    if (pending_pid_.isNull())
+    if (pending_pid_.is_null())
         return;
 
     playlist_ctl_->switch_to_playlist(pending_pid_);
@@ -84,7 +84,7 @@ void PlaybackRestoreService::on_cache_load_finished()
 
 void PlaybackRestoreService::on_model_reset()
 {
-    if (pending_tid_.isNull()) {
+    if (pending_tid_.is_null()) {
         logger->debug("PlaybackRestoreService: pending_tid_.isNull()");
         return;
     }

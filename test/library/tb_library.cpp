@@ -60,7 +60,7 @@ static void test_library_index()
     CHECK(lib.track_count() == 2);
     CHECK(lib.track_by_path(norm("/a/1.mp3")).has_value());
     CHECK(lib.track_by_id(t2.track_id).has_value());
-    CHECK(lib.track_by_id(TrackId::createUuid()) == std::nullopt);
+    CHECK(lib.track_by_id(TrackId::create_uuid()) == std::nullopt);
     CHECK(lib.track_by_path(norm("/a/3.mp3")) == std::nullopt);
 
     // upsert 同一路径:身份保持,元数据更新
@@ -95,7 +95,7 @@ static void test_repo_roundtrip()
     CHECK(repo.is_open());
 
     LibraryTrack t;
-    t.track_id     = TrackId::createUuid();
+    t.track_id     = TrackId::create_uuid();
     t.filepath     = norm("/music/01.mp3");
     t.file_size    = 1024;
     t.mtime        = 12345;
@@ -176,7 +176,7 @@ static void test_scanner_incremental()
     for (const auto& u : updates) {
         CHECK(u.change == TrackChange::added);
     }
-    CHECK(!updates[0].track.track_id.isNull());
+    CHECK(!updates[0].track.track_id.is_null());
     CHECK(!updates[0].track.meta.title.isEmpty()); // 假文件标签无效 → 回退文件名
 
     // 二次扫描(快照一致):全部 unchanged,无更新
@@ -282,7 +282,7 @@ static void test_playlist_library_resolution()
     auto tracks = playlists.last()->get_tracks();
     CHECK(tracks.size() == 1);
     CHECK(tracks[0].source == TrackSource::library);
-    CHECK(!tracks[0].library_track_id.isNull());
+    CHECK(!tracks[0].library_track_id.is_null());
     CHECK(tracks[0].filepath == norm(f1));
     CHECK(tracks[0].meta.title == "r1.mp3"); // 假文件回退文件名
 
@@ -292,7 +292,7 @@ static void test_playlist_library_resolution()
     tracks = playlists.last()->get_tracks();
     CHECK(tracks.size() == 2);
     CHECK(tracks[1].source == TrackSource::external);
-    CHECK(tracks[1].library_track_id.isNull());
+    CHECK(tracks[1].library_track_id.is_null());
 }
 
 /* ---- FTS5 搜索后端 ---- */
@@ -330,7 +330,7 @@ static void test_search_backend()
     CHECK(hints.size() == 1);
     if (hints.size() == 1) {
         CHECK(hints[0].title == "track song.mp3");
-        CHECK(!hints[0].track_id.isNull());
+        CHECK(!hints[0].track_id.is_null());
     }
 
     // 前缀模式
@@ -405,7 +405,7 @@ static void test_add_folder_populates_library()
     CHECK(tracks.size() == 2);
     for (const auto& t : tracks) {
         CHECK(t.source == TrackSource::library);
-        CHECK(!t.library_track_id.isNull());
+        CHECK(!t.library_track_id.is_null());
     }
 }
 

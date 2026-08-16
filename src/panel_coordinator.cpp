@@ -361,7 +361,7 @@ void PanelCoordinator::ensure_search_panel()
     // 库级曲目身份(库引用条目兜底):经库解析后播放
     connect(search_panel_, &SearchPanel::sgnRequestPlayTrack, main_window,
             [this](const TrackId& id) {
-                if (id.isNull()) {
+                if (id.is_null()) {
                     return;
                 }
                 const auto lib_track = this->ctx_.library_manager_->track_by_id(id);

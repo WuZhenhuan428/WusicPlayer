@@ -105,7 +105,7 @@ static void test_search_current_playlist(QCoreApplication& app)
     if (hits.size() == 1) {
         CHECK(hits[0].title == "song one.mp3");
         CHECK(hits[0].filepath == norm(music_dir.path() + "/song one.mp3"));
-        CHECK(!hits[0].track_id.isNull()); // 库引用 → 库级身份
+        CHECK(!hits[0].track_id.is_null()); // 库引用 → 库级身份
     }
 
     // 外部条目:filepath 播放依据 + track_id 为空
@@ -114,7 +114,7 @@ static void test_search_current_playlist(QCoreApplication& app)
     CHECK(hits.size() == 1);
     if (hits.size() == 1) {
         CHECK(hits[0].filepath == norm("/mnt/music/ext song.mp3"));
-        CHECK(hits[0].track_id.isNull());
+        CHECK(hits[0].track_id.is_null());
     }
 
     // 无命中 / 空关键字
@@ -135,7 +135,7 @@ static void test_search_current_playlist(QCoreApplication& app)
     const auto& pl_tracks = pm.m_repo->find_playlist_by_id(pid)->get_tracks();
     CHECK(!pl_tracks.isEmpty());
     CHECK(pc.track_file_path(pl_tracks[0].entry_id) == norm(music_dir.path() + "/song one.mp3"));
-    CHECK(pc.track_file_path(EntryId::createUuid()).isEmpty());
+    CHECK(pc.track_file_path(EntryId::create_uuid()).isEmpty());
 }
 
 int main(int argc, char* argv[])

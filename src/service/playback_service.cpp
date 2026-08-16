@@ -75,7 +75,7 @@ void PlaybackService::bind()
 
     connect(control_bar, &ControlBar::sgnBtnNextClicked, this, [this]() {
         const EntryId next_id = playlist_ctl->next_track();
-        if (!next_id.isNull()) {
+        if (!next_id.is_null()) {
             this->locate_on_next_play_request_ = true;
             const QString path                 = playlist_ctl->track_file_path(next_id);
             if (!path.isEmpty()) {
@@ -86,7 +86,7 @@ void PlaybackService::bind()
 
     connect(control_bar, &ControlBar::sgnBtnPrevClicked, this, [this]() {
         const EntryId prev_id = playlist_ctl->prev_track();
-        if (!prev_id.isNull()) {
+        if (!prev_id.is_null()) {
             this->locate_on_next_play_request_ = true;
             const QString path                 = playlist_ctl->track_file_path(prev_id);
             if (!path.isEmpty()) {
@@ -97,7 +97,7 @@ void PlaybackService::bind()
 
     connect(playback_ctl, &PlaybackController::sgn_playback_natural_end, this, [this]() {
         const EntryId next_id = playlist_ctl->next_track();
-        if (!next_id.isNull()) {
+        if (!next_id.is_null()) {
             this->locate_on_next_play_request_ = true;
             const QString path                 = playlist_ctl->track_file_path(next_id);
             if (!path.isEmpty()) {

@@ -214,7 +214,7 @@ QMimeData* LibraryBrowseModel::mimeData(const QModelIndexList& indexes) const
     }
     QJsonArray arr;
     for (const TrackId& tid : tids) {
-        arr.append(tid.toString(QUuid::WithoutBraces));
+        arr.append(tid.to_string_without_brace());
     }
     auto* mime = new QMimeData;
     mime->setData(QString::fromLatin1(wusic::kLibraryTracksMime),

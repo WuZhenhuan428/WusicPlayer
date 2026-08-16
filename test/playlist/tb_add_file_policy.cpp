@@ -181,7 +181,7 @@ static void test_library_hit_policy()
     auto tracks = playlists.first()->get_tracks();
     CHECK(tracks.size() == 1);
     CHECK(tracks[0].source == TrackSource::library);
-    CHECK(!tracks[0].library_track_id.isNull());
+    CHECK(!tracks[0].library_track_id.is_null());
     CHECK(tracks[0].filepath == norm(music_dir.path() + "/in lib.mp3"));
 }
 

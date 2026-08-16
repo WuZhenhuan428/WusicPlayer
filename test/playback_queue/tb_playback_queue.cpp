@@ -311,9 +311,9 @@ static void test_persistence()
 
     PlaybackQueueService s1(ctx);
     QueueItem it;
-    it.library_track_id   = TrackId::createUuid();
-    it.playlist_entry_id  = EntryId::createUuid();
-    it.source_playlist_id = PlaylistId::createUuid();
+    it.library_track_id   = TrackId::create_uuid();
+    it.playlist_entry_id  = EntryId::create_uuid();
+    it.source_playlist_id = PlaylistId::create_uuid();
     it.source_label       = "列表:测试";
     it.filepath           = norm("/mnt/music/one.mp3");
     it.meta.title         = "One";
@@ -377,7 +377,7 @@ static void test_service_play()
 
     // 库曲目:库中不存在该曲目 → 失败且不发信号
     const int before = play_signals;
-    CHECK(!s.play_library_track(TrackId::createUuid()));
+    CHECK(!s.play_library_track(TrackId::create_uuid()));
     CHECK(play_signals == before);
     CHECK(s.queue()->size() == 1); // 未入队
 }
@@ -439,7 +439,7 @@ static void test_service_playlist_entry()
     CHECK(it->filepath == norm("/mnt/music/playlist_song.mp3"));
 
     // 未知条目 → 失败
-    CHECK(!s.enqueue_playlist_entry(pid, EntryId::createUuid()));
+    CHECK(!s.enqueue_playlist_entry(pid, EntryId::create_uuid()));
 }
 
 /* ---- 服务:媒体库曲目解析(扫描后) ---- */
@@ -483,7 +483,7 @@ static void test_service_library_track()
     CHECK(it->filepath == norm(music_dir.path() + "/lib_song.mp3"));
 
     // 未知曲目 → 失败
-    CHECK(!s.enqueue_library_track(TrackId::createUuid()));
+    CHECK(!s.enqueue_library_track(TrackId::create_uuid()));
 }
 
 int main(int argc, char* argv[])

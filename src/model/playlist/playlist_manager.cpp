@@ -35,7 +35,7 @@ PlaylistManager::PlaylistManager(QObject* parent) : QObject(parent)
             &PlaylistManager::sgn_playlist_load_finished);
     connect(m_repo, &PlaylistRepo::sgn_cache_load_finished, this, [this](int count) {
         emit sgn_cache_load_finished(count);
-        if (m_context->get_playlist_id().isNull()) {
+        if (m_context->get_playlist_id().is_null()) {
             auto lists = m_repo->get_lists();
             if (!lists.isEmpty()) {
                 m_context->set_playlist(lists.first()->id());
@@ -83,7 +83,7 @@ void PlaylistManager::reorder_playlists(const QVector<PlaylistId>& ordered_ids)
 void PlaylistManager::load_playlist(const QString& playlist_path)
 {
     PlaylistId new_id = m_repo->load_list_batched(playlist_path, 500);
-    if (!new_id.isNull()) {
+    if (!new_id.is_null()) {
         m_context->set_playlist(new_id);
     }
 }
@@ -98,7 +98,7 @@ void PlaylistManager::save_playlist(const PlaylistId& pid, const QString& save_p
     auto pl = m_repo->find_playlist_by_id(pid);
     if (!pl->isEmpty()) {
         m_repo->save_list(pid, save_path);
-        logger->info("save playlist {} at {}", pid.toString(), save_path);
+        logger->info("save playlist {} at {}", pid.to_string(), save_path);
     }
 }
 
@@ -148,7 +148,7 @@ int PlaylistManager::add_library_tracks(const PlaylistId& pid, const QVector<Tra
     QVector<Track> tracks;
     tracks.reserve(track_ids.size());
     for (const TrackId& tid : track_ids) {
-        if (tid.isNull()) {
+        if (tid.is_null()) {
             continue;
         }
         // 库曲目:优先走库解析(元数据由库维护);库未注入时按 TrackId 直查
@@ -163,7 +163,7 @@ int PlaylistManager::add_library_tracks(const PlaylistId& pid, const QVector<Tra
             tracks.push_back(t);
         } else {
             logger->warn("[PlaylistManager] add_library_tracks: TrackId not in library {}",
-                         tid.toString());
+                         tid.to_string());
         }
     }
     if (tracks.isEmpty()) {
@@ -194,7 +194,7 @@ int PlaylistManager::copy_tracks_to_playlist(const PlaylistId& src_pid,
         }
         // 复制条目:保留来源(库引用/外部)与元数据,生成新的条目身份
         Track copy    = *src_track;
-        copy.entry_id = EntryId::createUuid();
+        copy.entry_id = EntryId::create_uuid();
         tracks.push_back(copy);
     }
     if (tracks.isEmpty()) {
@@ -206,7 +206,7 @@ int PlaylistManager::copy_tracks_to_playlist(const PlaylistId& src_pid,
 
 void PlaylistManager::remove_track(const EntryId& tid)
 {
-    if (tid.isNull() || !m_repo || !m_context) {
+    if (tid.is_null() || !m_repo || !m_context) {
         return;
     }
 
@@ -319,7 +319,7 @@ void PlaylistManager::add_folder(const PlaylistId& pid, const QString& directory
     }
 
     PlaylistId curr_pid = pid;
-    if (pid.isNull()) {
+    if (pid.is_null()) {
         curr_pid = m_repo->create_list();
         m_context->set_playlist(curr_pid);
     }
@@ -364,7 +364,7 @@ EntryId PlaylistManager::next_track(PlayMode mode)
         break;
     }
 
-    if (!next_id.isNull()) {
+    if (!next_id.is_null()) {
         m_context->set_play_track(next_id);
     }
     return next_id;
@@ -396,7 +396,7 @@ EntryId PlaylistManager::prev_track(PlayMode mode)
         break;
     }
 
-    if (!prev_id.isNull()) {
+    if (!prev_id.is_null()) {
         m_context->set_play_track(prev_id);
     }
     return prev_id;

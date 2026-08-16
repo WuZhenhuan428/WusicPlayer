@@ -70,9 +70,9 @@ void apply_meta_from_json(const QJsonObject& o, TrackMetaData* meta)
 QJsonObject item_to_json(const QueueItem& item)
 {
     QJsonObject o;
-    o["library_track_id"]   = item.library_track_id.toString();
-    o["playlist_entry_id"]  = item.playlist_entry_id.toString();
-    o["source_playlist_id"] = item.source_playlist_id.toString();
+    o["library_track_id"]   = item.library_track_id.to_string();
+    o["playlist_entry_id"]  = item.playlist_entry_id.to_string();
+    o["source_playlist_id"] = item.source_playlist_id.to_string();
     o["source_label"]       = item.source_label;
     o["filepath"]           = item.filepath;
     o["meta"]               = meta_to_json(item.meta);

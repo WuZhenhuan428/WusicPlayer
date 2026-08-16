@@ -14,14 +14,14 @@ Logger* logger = LoggerManager::file_logger("playlist", {"console", "gui"});
 Playlist::Playlist(const QString& name)
 {
     m_name = name;
-    m_pid  = PlaylistId::createUuid();
+    m_pid  = PlaylistId::create_uuid();
 
-    logger->info("Create playlist uuid: {}", m_pid.toString());
+    logger->info("Create playlist uuid: {}", m_pid.to_string());
 }
 
 Playlist::~Playlist()
 {
-    logger->info("Remove playlist uuid: {}", m_pid.toString());
+    logger->info("Remove playlist uuid: {}", m_pid.to_string());
 }
 
 /**
@@ -162,7 +162,7 @@ void Playlist::remove_track(const EntryId& eid)
         }
     }
 
-    logger->info("Remove UUID={}, filepath={}", eid.toString(), path);
+    logger->info("Remove UUID={}, filepath={}", eid.to_string(), path);
 };
 
 /**
@@ -190,7 +190,7 @@ void Playlist::set_playlist_name(QString setname)
 
 void Playlist::new_uuid()
 {
-    m_pid = PlaylistId::createUuid();
+    m_pid = PlaylistId::create_uuid();
 }
 
 void Playlist::new_uuid(const PlaylistId& pid)
@@ -202,10 +202,10 @@ const Track* Playlist::find_track_by_id(const EntryId& eid) const
 {
     auto it = m_track_index.constFind(eid);
     if (it == m_track_index.constEnd()) {
-        logger->warn("track {} does not exist!", eid.toString());
+        logger->warn("track {} does not exist!", eid.to_string());
         return nullptr;
     }
-    logger->info("find track {} at playlist {}", eid.toString(), m_name);
+    logger->info("find track {} at playlist {}", eid.to_string(), m_name);
     return &m_tracks[it.value()];
 }
 

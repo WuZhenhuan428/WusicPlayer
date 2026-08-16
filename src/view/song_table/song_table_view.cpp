@@ -37,8 +37,8 @@ QVector<TrackId> decode_library_tracks(const QMimeData* mime)
     QVector<TrackId> tids;
     const QJsonArray arr = QJsonDocument::fromJson(raw).array();
     for (const QJsonValue& v : arr) {
-        const TrackId tid = TrackId::fromString(v.toString());
-        if (!tid.isNull()) {
+        const TrackId tid = TrackId::from_string(v.toString());
+        if (!tid.is_null()) {
             tids.push_back(tid);
         }
     }
@@ -182,7 +182,7 @@ void SongTableView::call_song_context_menu(const QPoint& pos)
     if (rows.contains(index)) {
         for (const QModelIndex& idx : rows) {
             auto* node = static_cast<Node*>(idx.internalPointer());
-            if (node && !node->id.isNull()) {
+            if (node && !node->id.is_null()) {
                 selected.push_back(node->id);
             }
         }
@@ -190,7 +190,7 @@ void SongTableView::call_song_context_menu(const QPoint& pos)
     // 右键不在当前多选集合内 → 按单选处理(只对右键所在行)
     if (selected.isEmpty()) {
         auto* node = static_cast<Node*>(index.internalPointer());
-        if (!node || node->id.isNull()) {
+        if (!node || node->id.is_null()) {
             return; // 组节点上右键:不提供曲目操作
         }
         selected.push_back(node->id);

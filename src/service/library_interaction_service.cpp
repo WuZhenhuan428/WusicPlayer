@@ -62,14 +62,14 @@ void LibraryInteractionService::bind()
     });
 
     connect(song_table_view_, &SongTableView::sgnRemoveTrackRequested, this,
-            [this](const EntryId& tid) {
-                if (tid.isNull()) {
+            [this](const EntryId& eid) {
+                if (eid.is_null()) {
                     return;
                 }
-                if (playlist_ctl_->current_track_id() == tid) {
+                if (playlist_ctl_->current_track_id() == eid) {
                     playback_ctl_->stop();
                 }
-                playlist_ctl_->remove_track(tid);
+                playlist_ctl_->remove_track(eid);
             });
     connect(song_table_view_, &SongTableView::sgnRemoveMissingTracksRequested, playlist_ctl_,
             &PlaylistController::remove_missing_tracks);
@@ -87,7 +87,7 @@ void LibraryInteractionService::bind()
     // 复制选中曲目到目标列表(Add to Playlist)
     connect(song_table_view_, &SongTableView::sgnCopyTracksToPlaylist, this,
             [this](const PlaylistId& dst_pid, const QVector<EntryId>& track_ids) {
-                if (dst_pid.isNull() || track_ids.isEmpty()) {
+                if (dst_pid.is_null() || track_ids.isEmpty()) {
                     return;
                 }
                 playlist_ctl_->copy_tracks_to_playlist(playlist_ctl_->current_playlist_id(),
@@ -99,7 +99,7 @@ void LibraryInteractionService::bind()
                 if (!model)
                     return;
                 const EntryId id = model->track_at(index);
-                if (id.isNull())
+                if (id.is_null())
                     return;
                 const int queueIndex = model->playback_queue().indexOf(id);
                 if (queueIndex >= 0) {

@@ -45,9 +45,9 @@ void InMemorySearchBackend::warmup(const PlaylistId& pid)
         return;
     }
 
-    if (pid.isNull()) {
+    if (pid.is_null()) {
         const PlaylistId current = playlist_controller_->current_playlist_id();
-        if (!current.isNull()) {
+        if (!current.is_null()) {
             rebuild_index(current);
         }
         return;
@@ -58,7 +58,7 @@ void InMemorySearchBackend::warmup(const PlaylistId& pid)
 
 void InMemorySearchBackend::invalidate(const PlaylistId& pid)
 {
-    if (pid.isNull()) {
+    if (pid.is_null()) {
         m_index_by_playlist.clear();
         return;
     }
@@ -74,7 +74,7 @@ QVector<SearchHint> InMemorySearchBackend::search(const SearchQuery& query)
     }
 
     const PlaylistId pid = resolve_pid(query);
-    if (pid.isNull()) {
+    if (pid.is_null()) {
         return hits;
     }
     if (!ensure_index_ready(pid)) {
@@ -117,7 +117,7 @@ QVector<SearchHint> InMemorySearchBackend::search(const SearchQuery& query)
 
 PlaylistId InMemorySearchBackend::resolve_pid(const SearchQuery& query) const
 {
-    if (!query.pid.isNull()) {
+    if (!query.pid.is_null()) {
         return query.pid;
     }
     if (!playlist_controller_) {
@@ -128,7 +128,7 @@ PlaylistId InMemorySearchBackend::resolve_pid(const SearchQuery& query) const
 
 void InMemorySearchBackend::rebuild_index(const PlaylistId& pid)
 {
-    if (!playlist_controller_ || pid.isNull()) {
+    if (!playlist_controller_ || pid.is_null()) {
         return;
     }
 

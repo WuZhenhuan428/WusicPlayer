@@ -27,8 +27,8 @@ QVector<TrackId> decode_library_tracks(const QMimeData* mime)
     QVector<TrackId> tids;
     const QJsonArray arr = QJsonDocument::fromJson(raw).array();
     for (const QJsonValue& v : arr) {
-        const TrackId tid = TrackId::fromString(v.toString());
-        if (!tid.isNull()) {
+        const TrackId tid = TrackId::from_string(v.toString());
+        if (!tid.is_null()) {
             tids.push_back(tid);
         }
     }
@@ -47,15 +47,15 @@ bool decode_playlist_entries(const QMimeData* mime, PlaylistId* src_pid,
         return false;
     }
     const QJsonObject root = QJsonDocument::fromJson(raw).object();
-    *src_pid               = PlaylistId::fromString(root.value("src").toString());
-    if (src_pid->isNull()) {
+    *src_pid               = PlaylistId::from_string(root.value("src").toString());
+    if (src_pid->is_null()) {
         return false;
     }
     entry_ids->clear();
     const QJsonArray arr = root.value("ids").toArray();
     for (const QJsonValue& v : arr) {
-        const EntryId id = EntryId::fromString(v.toString());
-        if (!id.isNull()) {
+        const EntryId id = EntryId::from_string(v.toString());
+        if (!id.is_null()) {
             entry_ids->push_back(id);
         }
     }
