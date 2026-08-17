@@ -65,8 +65,11 @@ int WusicProxyStyle::pixelMetric(PixelMetric m, const QStyleOption* opt, const Q
         return m_palette.sliderHandleW;
     case PM_TabBarTabHSpace:
         return 12;
-    case PM_TabBarTabVSpace:
-        return 4;
+    case PM_TabBarTabVSpace: {
+        // 标签总高度 = 字体高度 + 垂直留白，由目标高度反推留白
+        const int fontH = (w && qobject_cast<const QTabBar*>(w)) ? w->fontMetrics().height() : 16;
+        return qMax(m_palette.tabBarHeight - fontH, 2);
+    }
     case PM_ToolBarIconSize:
         return 20;
     case PM_ToolBarSeparatorExtent:
@@ -200,7 +203,7 @@ void WusicProxyStyle::drawControl(ControlElement element, const QStyleOption* op
 
     // --- 标签页 ---
     case CE_TabBarTab:
-        drawTabBarTab(opt, p);
+        drawTabBarTab(opt, p, w);
         break;
     case CE_TabBarTabLabel: {
         const auto* tab = qstyleoption_cast<const QStyleOptionTab*>(opt);
@@ -276,7 +279,7 @@ void WusicProxyStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption* opt
     case PE_PanelMenu: {
         fill_round(p, opt->rect.adjusted(1, 1, -1, -1), m_palette.base, m_palette.menuRadius);
         stroke_round(p, opt->rect.adjusted(1, 1, -1, -1), m_palette.frameBorder,
-                    m_palette.menuRadius);
+                     m_palette.menuRadius);
         break;
     }
     case PE_PanelLineEdit:
@@ -308,7 +311,7 @@ void WusicProxyStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption* opt
     case PE_Frame:
     case PE_FrameDefaultButton:
         stroke_round(p, opt->rect.adjusted(0, 0, -1, -1), m_palette.frameBorder,
-                    m_palette.buttonRadius);
+                     m_palette.buttonRadius);
         break;
     case PE_FrameGroupBox:
         p->setPen(QPen(m_palette.frameBorder, m_palette.separatorW));
@@ -463,13 +466,14 @@ void WusicProxyStyle::unpolish(QWidget* w)
 // 通用辅助
 // ============================================================================
 
-void WusicProxyStyle::fill_round(QPainter* p, const QRect& r, const QColor& bg, int /*radius*/) const
+void WusicProxyStyle::fill_round(QPainter* p, const QRect& r, const QColor& bg,
+                                 int /*radius*/) const
 {
     p->fillRect(r, bg);
 }
 
-void WusicProxyStyle::stroke_round(QPainter* p, const QRect& r, const QColor& border, int /*radius*/,
-                                  int w) const
+void WusicProxyStyle::stroke_round(QPainter* p, const QRect& r, const QColor& border,
+                                   int /*radius*/, int w) const
 {
     p->setPen(QPen(border, w));
     p->setBrush(Qt::NoBrush);
@@ -757,7 +761,8 @@ void WusicProxyStyle::drawMenuBarItem(const QStyleOption* opt, QPainter* p) cons
     const bool ena = opt->state & QStyle::State_Enabled;
 
     if (sel && ena) {
-        fill_round(p, opt->rect.adjusted(2, 2, -2, -2), m_palette.itemHover, m_palette.buttonRadius);
+        fill_round(p, opt->rect.adjusted(2, 2, -2, -2), m_palette.itemHover,
+                   m_palette.buttonRadius);
     }
 
     const auto* mi = qstyleoption_cast<const QStyleOptionMenuItem*>(opt);
@@ -903,7 +908,8 @@ void WusicProxyStyle::drawSpinBox(const QStyleOptionComplex* opt, QPainter* p,
 
     // 1) 背景 + 边框
     fill_round(p, opt->rect.adjusted(1, 1, -1, -1), m_palette.base, m_palette.buttonRadius);
-    stroke_round(p, opt->rect.adjusted(1, 1, -1, -1), m_palette.frameBorder, m_palette.buttonRadius);
+    stroke_round(p, opt->rect.adjusted(1, 1, -1, -1), m_palette.frameBorder,
+                 m_palette.buttonRadius);
 
     // 2) 上下按钮背景
     QRect upRect   = QProxyStyle::subControlRect(CC_SpinBox, sb, SC_SpinBoxUp, w);
@@ -932,7 +938,7 @@ void WusicProxyStyle::drawSpinBox(const QStyleOptionComplex* opt, QPainter* p,
 // drawTabBarTab
 // ============================================================================
 
-void WusicProxyStyle::drawTabBarTab(const QStyleOption* opt, QPainter* p) const
+void WusicProxyStyle::drawTabBarTab(const QStyleOption* opt, QPainter* p, const QWidget* w) const
 {
     const bool sel     = opt->state & QStyle::State_Selected;
     const bool hovered = opt->state & QStyle::State_MouseOver;
@@ -947,6 +953,10 @@ void WusicProxyStyle::drawTabBarTab(const QStyleOption* opt, QPainter* p) const
         p->fillRect(QRect(opt->rect.left() + 4, opt->rect.bottom() - 2, opt->rect.width() - 8, 2),
                     m_palette.highlight);
     }
+
+    // QTabBar 只调用 CE_TabBarTab，不会单独调用 CE_TabBarTabLabel，
+    // 因此必须在这里显式委托绘制标签文字 / 图标 / 关闭按钮，否则文字不会显示。
+    drawControl(CE_TabBarTabLabel, opt, p, w);
 
     p->restore();
 }

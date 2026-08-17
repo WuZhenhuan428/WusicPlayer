@@ -45,6 +45,7 @@ inline ThemePalette darkPalette()
     p.sliderGrooveH    = 4;
     p.sliderHandleW    = 12;
     p.separatorW       = 1;
+    p.tabBarHeight     = 36;
 
     return p;
 }

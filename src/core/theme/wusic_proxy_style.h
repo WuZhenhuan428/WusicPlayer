@@ -53,7 +53,7 @@ private:
     void drawMenuBarItem(const QStyleOption* opt, QPainter* p) const;
     void drawHeader(const QStyleOption* opt, QPainter* p) const;
     void drawComboBox(const QStyleOptionComplex* opt, QPainter* p) const;
-    void drawTabBarTab(const QStyleOption* opt, QPainter* p) const;
+    void drawTabBarTab(const QStyleOption* opt, QPainter* p, const QWidget* w) const;
     void drawSpinBox(const QStyleOptionComplex* opt, QPainter* p, const QWidget* w) const;
     void drawToolButton(const QStyleOptionComplex* opt, QPainter* p) const;
 
@@ -65,5 +65,5 @@ private:
     // ---- 通用辅助 ----
     void fill_round(QPainter* p, const QRect& r, const QColor& bg, int radius) const;
     void stroke_round(QPainter* p, const QRect& r, const QColor& border, int radius,
-                     int w = 1) const;
+                      int w = 1) const;
 };

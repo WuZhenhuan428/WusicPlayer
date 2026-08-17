@@ -49,6 +49,7 @@ struct ThemePalette
     int sliderGrooveH  = 4;
     int sliderHandleW  = 12;
     int separatorW     = 1;
+    int tabBarHeight   = 30; // QTabBar 标签总高度（px），越大标签越高
 
     /// 生成 QPalette
     QPalette toQPalette() const
