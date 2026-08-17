@@ -18,6 +18,7 @@
 #include "service/playback_service.h"
 #include "service/tag_writeback_service.h"
 #include "service/theme_service.h"
+#include "view/dialogs/about_info_dialog.h"
 #include "view/main_window.h"
 #include "view/playlist/playlist_widgets.h"
 
@@ -308,13 +309,11 @@ void AppController::handle_remove_column_requested()
 
 void AppController::handle_show_about_messagebox()
 {
-    QMessageBox* msg = new QMessageBox(main_window_.get());
-    msg->setWindowTitle("About");
-    msg->setText("This is a ABOUT message box.");
-    msg->setIcon(QMessageBox::Information);
-    msg->setStandardButtons(QMessageBox::Ok);
-    msg->show();
-    msg->setAttribute(Qt::WA_DeleteOnClose);
+    // 不要设置父组件, 否则会嵌入到主页面
+    AboutInfoDialog* about = new AboutInfoDialog(main_window_.get());
+    about->show();
+    about->activateWindow();
+    about->setAttribute(Qt::WA_DeleteOnClose);
 }
 
 void AppController::handle_show_desktop_lyrics_requested()

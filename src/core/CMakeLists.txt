@@ -17,6 +17,7 @@ add_library(wusic_core STATIC
 
     utils/audio.hpp
     utils/path.hpp
+    utils/font.hpp
 
     config_manager/config_manager.h
     config_manager/config_manager.cpp

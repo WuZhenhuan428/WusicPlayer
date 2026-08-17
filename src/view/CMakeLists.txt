@@ -66,10 +66,13 @@ add_library(wusic_view STATIC
 
     dialogs/log_viewer_dialog.cpp
     dialogs/log_viewer_dialog.h
-
+    
     dialogs/text_editor_dialog.cpp
     dialogs/text_editor_dialog.h
 
+    dialogs/about_info_dialog.cpp
+    dialogs/about_info_dialog.h
+    
     tag_edit_widget/tag_edit_widget.cpp
     tag_edit_widget/tag_edit_widget.h
     tag_edit_widget/new_tag_item_dialog.cpp

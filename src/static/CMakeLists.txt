@@ -9,6 +9,7 @@ function(wusic_add_static_resources target_name)
         "${_static_root}/images/test_cover_chirno.png"
 
         "${_static_root}/icons/main.ico"
+	"${_static_root}/icons/main_64_64.ico"
 
         "${_static_root}/icons/light/device.svg"
         "${_static_root}/icons/light/in_order.svg"
