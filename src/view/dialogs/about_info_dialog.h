@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QPushButton>
 #include <QString>
@@ -34,7 +35,9 @@ class AboutInfoDialog : public QWidget
 public:
     AboutInfoDialog(QWidget* parent = nullptr);
 
-private:
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
+
 private:
     // 1. 头部
     QHBoxLayout* hbl_header_;

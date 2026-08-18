@@ -140,3 +140,12 @@ gains_t EQWidget::array_to_gaint_t(std::array<float, 10> gains)
                     gains[5], gains[6], gains[7], gains[8], gains[9]};
     return gain;
 }
+
+void EQWidget::keyPressEvent(QKeyEvent* event)
+{
+    switch (event->key()) {
+    case Qt::Key_Escape:
+        this->close();
+        break;
+    }
+}

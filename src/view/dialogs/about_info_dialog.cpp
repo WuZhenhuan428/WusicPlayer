@@ -171,3 +171,12 @@ AboutInfoDialog::AboutInfoDialog(QWidget* parent) : QWidget(parent)
 
     connect(btn_close_, &QPushButton::clicked, this, &QWidget::close);
 }
+
+void AboutInfoDialog::keyPressEvent(QKeyEvent* event)
+{
+    switch (event->key()) {
+    case Qt::Key_Escape:
+        this->close();
+        break;
+    }
+}

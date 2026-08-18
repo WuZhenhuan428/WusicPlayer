@@ -73,6 +73,15 @@ void SettingsPanel::hideEvent(QHideEvent* event)
     QWidget::hideEvent(event);
 }
 
+void SettingsPanel::keyPressEvent(QKeyEvent* event)
+{
+    switch (event->key()) {
+    case Qt::Key_Escape:
+        this->close();
+        break;
+    }
+}
+
 void SettingsPanel::load_from_json(const QJsonObject& json)
 {
     const QByteArray geometry = QByteArray::fromBase64(json.value("geometry").toString().toUtf8());

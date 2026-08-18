@@ -4,6 +4,7 @@
 
 #include <QCheckBox>
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QObject>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -24,6 +25,9 @@ public:
 signals:
     void sgnGainChanged(gains_t gains);
     void sgnEqEnabledChanged(bool enabled);
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
 
 private:
     void init_ui();
