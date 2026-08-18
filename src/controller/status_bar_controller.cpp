@@ -4,14 +4,26 @@
 
 StatusBarController::StatusBarController(QStatusBar* status_bar, QObject* parent) : QObject(parent)
 {
-    this->status_bar_ = status_bar;
+    this->status_bar_  = status_bar;
+    this->lb_temp_msg_ = new QLabel(this->status_bar_);
+    this->lb_temp_msg_->setAlignment(Qt::AlignRight);
+    status_bar->addPermanentWidget(lb_temp_msg_, 1);
+    permanent_widget_cnt_ += 1;
+
+    this->timer_ = new QTimer(this);
+    this->timer_->setSingleShot(true);
+    connect(this->timer_, &QTimer::timeout, this, [this]() { this->lb_temp_msg_->clear(); });
+
+    this->show_temp_message("Loading", 5000);
 }
 
-void StatusBarController::register_item(const QString& id, const QString& default_text)
+void StatusBarController::register_item(const QString& id, const QString& default_message)
 {
-    QLabel* lb = new QLabel(default_text, this->status_bar_);
+    int total      = this->status_bar_->children().count();
+    int insert_pos = total - this->permanent_widget_cnt_;
+    QLabel* lb     = new QLabel(default_message, this->status_bar_);
     lb->setObjectName("status_" + id);
-    this->status_bar_->addWidget(lb);
+    this->status_bar_->insertWidget(insert_pos, lb);
 }
 
 QLabel* StatusBarController::find_label(const QString& id)
@@ -23,11 +35,11 @@ QLabel* StatusBarController::find_label(const QString& id)
     return nullptr;
 }
 
-bool StatusBarController::update_item_by_id(const QString& id, const QString& text)
+bool StatusBarController::update_item_by_id(const QString& id, const QString& message)
 {
     QLabel* lb = this->find_label(id);
     if (lb) {
-        lb->setText(text);
+        lb->setText(message);
         return true;
     }
     return false;
@@ -41,4 +53,13 @@ bool StatusBarController::remove_item_by_id(const QString& id)
         return true;
     }
     return false;
+}
+
+void StatusBarController::show_temp_message(const QString& message, int ms)
+{
+    if (message.isEmpty()) {
+        return;
+    }
+    this->lb_temp_msg_->setText(message);
+    this->timer_->start(ms);
 }
