@@ -3,6 +3,8 @@ add_library(wusic_core STATIC
     hsv_types.h
     search_types.h
     player_types.h
+    event_bus.h
+    event_bus.cpp
     
     logger/logger.h
     logger/logger_manager.cpp

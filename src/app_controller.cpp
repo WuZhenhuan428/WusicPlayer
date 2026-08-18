@@ -7,13 +7,16 @@
 #include "controller/status_bar_controller.h"
 #include "core/config_manager/config_manager.h"
 #include "core/config_manager/i_configurable.h"
+#include "core/event_bus.h"
 #include "core/logger/log_sink_gui.h"
+#include "core/notification_types.h"
 #include "core/types.h"
 #include "model/library/library_manager.h"
 #include "model/playback_queue/playback_queue_service.h"
 #include "model/playlist/playlist_manager.h"
 #include "panel_coordinator.h"
 #include "service/library_interaction_service.h"
+#include "service/notification_service/notification_service.h"
 #include "service/playback_restore_service.h"
 #include "service/playback_service.h"
 #include "service/tag_writeback_service.h"
@@ -55,7 +58,8 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     // 搜索面板:搜索当前播放列表(数据库 FTS5 仅媒体库控件使用)
     search_backend_(std::make_unique<InMemorySearchBackend>(playlist_controller_.get())),
     main_window_(std::make_unique<MainWindow>(playback_controller_, playlist_controller_.get())),
-    status_bar_controller_(std::make_unique<StatusBarController>(main_window_->statusBar(), this))
+    status_bar_controller_(std::make_unique<StatusBarController>(main_window_->statusBar(), this)),
+    event_bus_(std::make_unique<EventBus>())
 {
     // 先构造 AppContext 引用的服务, 再构建上下文——
     // theme_service_ 必须在 app_context_ 之前构造, 否则上下文里是空指针
@@ -73,6 +77,7 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
         .log_sink_gui_ =
             dynamic_cast<LogSinkGui*>(LoggerManager::instance().get_sink_by_name("gui").get()),
         .library_manager_ = this->library_manager_.get(),
+        .event_bus_       = this->event_bus_.get(),
     };
     // 面板编排:设置/搜索/EQ/快捷键(构造时注册默认快捷键)
     panel_coordinator_           = std::make_unique<PanelCoordinator>(app_context_, this);
@@ -82,6 +87,9 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     library_interaction_service_ = std::make_unique<LibraryInteractionService>(app_context_, this);
     tag_writeback_service_       = std::make_unique<TagWritebackService>(app_context_, this);
     playback_queue_service_      = std::make_unique<PlaybackQueueService>(app_context_, this);
+    notification_service_        = std::make_unique<NotificationService>(app_context_, this);
+
+    notification_service_->add_display(status_bar_controller_.get());
 
     // 媒体库控件(左侧播放列表下方):注入库与队列服务
     main_window_->library_browser()->set_library_manager(library_manager_.get());
@@ -91,6 +99,12 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     playlist_manager_->set_library_manager(library_manager_.get());
     const QString data_dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir().mkpath(data_dir);
+    // 最小通知通路:库扫描完成 → EventBus → NotificationService → 状态栏临时消息
+    connect(library_manager_.get(), &LibraryManager::sgn_scan_finished, this, [this]() {
+        event_bus_->publish(EventBus::Topic::NotificationShown,
+                            AppNotification{AppNotification::Level::Info,
+                                            QStringLiteral("Library scan finished"), 5000});
+    });
     if (library_manager_->initialize(data_dir + "/library.db")) {
         library_manager_->start_scan();
     }

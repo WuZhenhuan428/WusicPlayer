@@ -13,6 +13,10 @@ add_library(wusic_service STATIC
 
     theme_service.cpp
     theme_service.h
+
+    notification_service/i_notification_display.h
+    notification_service/notification_service.cpp
+    notification_service/notification_service.h
 )
 
 target_link_libraries(wusic_service

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "service/notification_service/i_notification_display.h"
 #include <QLabel>
 #include <QObject>
 #include <QSet>
@@ -8,7 +9,7 @@
 #include <QTimer>
 #include <QVector>
 
-class StatusBarController : public QObject
+class StatusBarController : public QObject, public INotificationDisplay
 {
 public:
     explicit StatusBarController(QStatusBar* status_bar, QObject* parent = nullptr);
@@ -21,6 +22,10 @@ public:
     bool remove_item_by_id(const QString& id);
 
     void show_temp_message(const QString& message, int ms);
+
+public:
+    void show_notification(const AppNotification& n) override;
+    void clear_notification() override;
 
 private:
     QLabel* find_label(const QString& id);

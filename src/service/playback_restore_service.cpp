@@ -3,6 +3,10 @@
 #include "app_context.h"
 #include "controller/playback_controller.h"
 #include "controller/playlist_controller.h"
+#include "core/event_bus.h"
+#include "core/notification_types.h"
+
+#include <QString>
 
 #include "core/logger/logger_manager.h"
 namespace
@@ -40,6 +44,15 @@ void PlaybackRestoreService::restore()
 
     connect(playlist_ctl_, &PlaylistController::sgn_cache_load_finished, this,
             &PlaybackRestoreService::on_cache_load_finished, Qt::SingleShotConnection);
+    connect(playlist_ctl_, &PlaylistController::sgn_cache_load_finished, this, [this]() {
+        //
+        this->ctx_.event_bus_->publish(EventBus::Topic::NotificationShown,
+                                       AppNotification{
+                                           .level       = AppNotification::Level::Info,
+                                           .message     = "Playlist Load Finished",
+                                           .duration_ms = 5000,
+                                       });
+    });
 
     restored_ = true;
 }

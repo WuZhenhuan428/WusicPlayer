@@ -23,6 +23,9 @@ class TagWritebackService;
 class ThemeService;
 class LibraryManager;
 class PlaybackQueueService;
+class NotificationService;
+
+class EventBus;
 
 #include "app_context.h"
 
@@ -66,6 +69,9 @@ private:
     std::unique_ptr<ThemeService> theme_service_;
     std::unique_ptr<PlaybackQueueService> playback_queue_service_;
     std::unique_ptr<PanelCoordinator> panel_coordinator_;
+    std::unique_ptr<NotificationService> notification_service_;
+
+    std::unique_ptr<EventBus> event_bus_;
 
     AppContext app_context_;
 

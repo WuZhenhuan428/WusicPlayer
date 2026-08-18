@@ -63,3 +63,13 @@ void StatusBarController::show_temp_message(const QString& message, int ms)
     this->lb_temp_msg_->setText(message);
     this->timer_->start(ms);
 }
+
+void StatusBarController::show_notification(const AppNotification& n)
+{
+    this->show_temp_message(n.message, n.duration_ms);
+}
+
+void StatusBarController::clear_notification()
+{
+    this->lb_temp_msg_->clear();
+}
