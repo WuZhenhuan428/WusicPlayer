@@ -1,5 +1,6 @@
 #include "view/main_window.h"
 
+#include <QApplication>
 #include <QHeaderView>
 #include <QJsonObject>
 #include <QPointer>
@@ -307,9 +308,25 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    emit sgnAboutToClose();
-    if (m_desktop_lyrics_widget) {
-        m_desktop_lyrics_widget->close();
+    if (this->m_is_quit) {
+        logger->debug("MainWindow close event called, close branch");
+        emit sgnAboutToClose();
+        if (m_desktop_lyrics_widget) {
+            m_desktop_lyrics_widget->close();
+        }
+        event->accept();
+        // 托盘图标无法实际退出, 能重复进入此分支, 但是不重复保存配置
+    } else {
+        event->ignore();
+        this->hide();
     }
-    QMainWindow::closeEvent(event);
+}
+
+void MainWindow::quit_application()
+{
+    this->m_is_quit = true;
+    this->close();
+    // 窗口可能已通过 closeEvent 的 hide 分支隐藏到托盘:此时 close() 不会触发
+    // lastWindowClosed(), quitOnLastWindowClosed 不生效, 必须显式退出事件循环。
+    QApplication::quit();
 }

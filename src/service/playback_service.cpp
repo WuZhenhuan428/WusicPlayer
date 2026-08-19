@@ -73,27 +73,8 @@ void PlaybackService::bind()
     connect(playback_ctl, &PlaybackController::sgn_mute_changed, control_bar,
             &ControlBar::update_mute_button);
 
-    connect(control_bar, &ControlBar::sgnBtnNextClicked, this, [this]() {
-        const EntryId next_id = playlist_ctl->next_track();
-        if (!next_id.is_null()) {
-            this->locate_on_next_play_request_ = true;
-            const QString path                 = playlist_ctl->track_file_path(next_id);
-            if (!path.isEmpty()) {
-                main_window->play_track_in_ui(path);
-            }
-        }
-    });
-
-    connect(control_bar, &ControlBar::sgnBtnPrevClicked, this, [this]() {
-        const EntryId prev_id = playlist_ctl->prev_track();
-        if (!prev_id.is_null()) {
-            this->locate_on_next_play_request_ = true;
-            const QString path                 = playlist_ctl->track_file_path(prev_id);
-            if (!path.isEmpty()) {
-                main_window->play_track_in_ui(path);
-            }
-        }
-    });
+    connect(control_bar, &ControlBar::sgnBtnNextClicked, this, &PlaybackService::play_next_request);
+    connect(control_bar, &ControlBar::sgnBtnPrevClicked, this, &PlaybackService::play_prev_request);
 
     connect(playback_ctl, &PlaybackController::sgn_playback_natural_end, this, [this]() {
         const EntryId next_id = playlist_ctl->next_track();
@@ -154,4 +135,32 @@ void PlaybackService::handle_play_track_request(const QString& filepath)
     }
     side_panel->load_lyrics(meta);
     side_panel->load_meta_data(meta);
+}
+
+void PlaybackService::play_track_request(const EntryId& eid)
+{
+    if (!eid.is_null()) {
+        this->locate_on_next_play_request_ = true;
+        const QString path                 = playlist_ctl->track_file_path(eid);
+        if (!path.isEmpty()) {
+            main_window->play_track_in_ui(path);
+        }
+    }
+}
+
+void PlaybackService::play_next_request()
+{
+    const EntryId next_id = playlist_ctl->next_track();
+    this->play_track_request(next_id);
+}
+
+void PlaybackService::play_prev_request()
+{
+    const EntryId prev_id = playlist_ctl->prev_track();
+    this->play_track_request(prev_id);
+}
+
+bool PlaybackService::is_playing()
+{
+    return (this->playback_ctl->state() == PlayingState::PLAYING);
 }

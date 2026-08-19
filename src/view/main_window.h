@@ -59,6 +59,8 @@ public:
     QJsonObject save_to_json() override;
     QString config_sub_key() const override;
 
+    void quit_application();
+
 protected:
     void resizeEvent(QResizeEvent* event) override;
     void showEvent(QShowEvent* event) override;
@@ -69,6 +71,7 @@ private:
     PlaylistController* playlist_controller_;
 
     bool m_cache_load_scheduled = false;
+    bool m_is_quit              = false; // 关联任务栏托盘行为
 
     void init_ui();
     void build_menu_bar();

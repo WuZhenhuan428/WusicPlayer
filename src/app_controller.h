@@ -27,6 +27,8 @@ class NotificationService;
 
 class EventBus;
 
+class QSystemTrayIcon;
+
 #include "app_context.h"
 
 class AppController : public QObject
@@ -53,6 +55,8 @@ private:
 
     void setup_status_bar_connections();
 
+    void initialize_sys_tray();
+
 private:
     PlaybackController* playback_controller_ = nullptr;
     std::unique_ptr<PlaylistManager> playlist_manager_;
@@ -72,6 +76,8 @@ private:
     std::unique_ptr<NotificationService> notification_service_;
 
     std::unique_ptr<EventBus> event_bus_;
+
+    QSystemTrayIcon* sys_tray_;
 
     AppContext app_context_;
 

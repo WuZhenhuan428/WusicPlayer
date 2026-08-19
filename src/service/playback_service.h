@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/types.h"
+
 #include <QObject>
 #include <QWidget>
 
@@ -27,10 +29,15 @@ public:
     void start();
     void shutdown();
 
+    void play_next_request();
+    void play_prev_request();
+    bool is_playing();
+
 signals:
     void sgnLocateCurrentTrack();
 
 private:
+    void play_track_request(const EntryId& eid);
     void handle_play_track_request(const QString& filepath);
 
 private:

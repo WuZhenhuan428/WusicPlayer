@@ -36,6 +36,7 @@
 #include <QShortcut>
 #include <QStandardPaths>
 #include <QString>
+#include <QSystemTrayIcon>
 #include <QThread>
 #include <QTimer>
 #include <QTreeView>
@@ -88,6 +89,10 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     tag_writeback_service_       = std::make_unique<TagWritebackService>(app_context_, this);
     playback_queue_service_      = std::make_unique<PlaybackQueueService>(app_context_, this);
     notification_service_        = std::make_unique<NotificationService>(app_context_, this);
+
+    this->initialize_sys_tray();
+
+    // ---- 初始化结束 ---- //
 
     notification_service_->add_display(status_bar_controller_.get());
 
@@ -405,6 +410,7 @@ void AppController::save_config()
     ConfigManager& cm         = ConfigManager::get_instance();
     panel_coordinator_->save_panel_configs();
     cm.save_all();
+    logger->info("save config");
 }
 
 void AppController::setup_status_bar_connections()
@@ -452,4 +458,61 @@ void AppController::setup_status_bar_connections()
                     &PlaylistTreeWidget::sgnSwitchPlaylist, this, show_track_count);
         },
         Qt::SingleShotConnection);
+}
+
+#include <QApplication>
+void AppController::initialize_sys_tray()
+{
+    if (!QSystemTrayIcon::isSystemTrayAvailable()) {
+        return;
+    }
+    sys_tray_ = new QSystemTrayIcon(main_window_.get());
+    sys_tray_->setIcon(QIcon(":icons/main.ico"));
+    sys_tray_->setToolTip("WusicPlayer");
+
+    QMenu* menu         = new QMenu(main_window_.get());
+    QAction* play_pause = new QAction(tr("Play/Pause"), menu);
+    QAction* stop       = new QAction(tr("Stop"), menu);
+    QAction* mute       = new QAction(tr("Mute"), menu);
+    mute->setCheckable(true);
+    QAction* next = new QAction(tr("Next"), menu);
+    QAction* prev = new QAction(tr("Previous"), menu);
+    QAction* show = new QAction(tr("Show"), menu);
+    QAction* hide = new QAction(tr("Hide"), menu);
+    QAction* exit = new QAction(tr("Exit"), menu);
+
+    menu->addAction(play_pause);
+    menu->addAction(stop);
+    menu->addAction(mute);
+    menu->addAction(next);
+    menu->addAction(prev);
+    menu->addSeparator();
+    menu->addAction(show);
+    menu->addAction(hide);
+    menu->addSeparator();
+    menu->addAction(exit);
+
+    sys_tray_->show();
+    sys_tray_->setContextMenu(menu);
+
+    connect(play_pause, &QAction::triggered, this, [this]() {
+        if (this->playback_service_->is_playing()) {
+            this->playback_controller_->pause();
+        } else {
+            this->playback_controller_->play();
+        }
+    });
+    connect(stop, &QAction::triggered, this, [this]() { this->playback_controller_->stop(); });
+    connect(mute, &QAction::triggered, this, [this, &mute]() {
+        this->playback_controller_->flip_mute();
+        mute->setChecked(this->playback_controller_->is_mute());
+    });
+    connect(next, &QAction::triggered, this,
+            [this]() { this->playback_service_->play_next_request(); });
+    connect(prev, &QAction::triggered, this,
+            [this]() { this->playback_service_->play_prev_request(); });
+    connect(show, &QAction::triggered, this, [this]() { this->main_window_->show(); });
+    connect(hide, &QAction::triggered, this, [this]() { this->main_window_->hide(); });
+    connect(exit, &QAction::triggered, this, [this]() { main_window_->quit_application(); });
+    // todo: 接受事件总线事件, 并在系统托盘处显示临时信息
 }
