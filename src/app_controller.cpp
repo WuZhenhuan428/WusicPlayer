@@ -472,14 +472,19 @@ void AppController::initialize_sys_tray()
 
     QMenu* menu         = new QMenu(main_window_.get());
     QAction* play_pause = new QAction(tr("Play/Pause"), menu);
-    QAction* stop       = new QAction(tr("Stop"), menu);
-    QAction* mute       = new QAction(tr("Mute"), menu);
+    play_pause->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)));
+    QAction* stop = new QAction(tr("Stop"), menu);
+    stop->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaStop)));
+    QAction* mute = new QAction(tr("Mute"), menu);
     mute->setCheckable(true);
     QAction* next = new QAction(tr("Next"), menu);
+    next->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_ArrowRight)));
     QAction* prev = new QAction(tr("Previous"), menu);
+    prev->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_ArrowLeft)));
     QAction* show = new QAction(tr("Show"), menu);
     QAction* hide = new QAction(tr("Hide"), menu);
     QAction* exit = new QAction(tr("Exit"), menu);
+    exit->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogCloseButton)));
 
     menu->addAction(play_pause);
     menu->addAction(stop);
@@ -495,15 +500,19 @@ void AppController::initialize_sys_tray()
     sys_tray_->show();
     sys_tray_->setContextMenu(menu);
 
-    connect(play_pause, &QAction::triggered, this, [this]() {
+    connect(play_pause, &QAction::triggered, this, [this, play_pause]() {
         if (this->playback_service_->is_playing()) {
             this->playback_controller_->pause();
+            play_pause->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)));
         } else {
             this->playback_controller_->play();
+            play_pause->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPause)));
         }
     });
     connect(stop, &QAction::triggered, this, [this]() { this->playback_controller_->stop(); });
-    connect(mute, &QAction::triggered, this, [this, &mute]() {
+    // 值捕获 mute: lambda 在点击时才执行, 引用捕获会悬垂
+    // 生命周期由 QObject 树 (menu->main_window) 保证, 值捕获安全
+    connect(mute, &QAction::triggered, this, [this, mute]() {
         this->playback_controller_->flip_mute();
         mute->setChecked(this->playback_controller_->is_mute());
     });
