@@ -1,20 +1,16 @@
 #pragma once
 
+#include "plugin/i_basic_plugin.h"
+
 #include "core/theme/theme_palette.h"
 #include <QtPlugin>
 
 /// 外部主题插件接口。
 /// 实现此接口的 QObject 子类编译为 .so/.dll，放到 plugins/themes/ 下即可被加载。
-class IThemePlugin
+class IThemePlugin : public IBasicPlugin
 {
 public:
-    virtual ~IThemePlugin()                    = default;
-
-    virtual QString name() const               = 0;
-    virtual QString author() const             = 0;
-    virtual QString version() const            = 0;
-    virtual QString description() const        = 0;
-
+    /// 其他函数继承自IBasicPlugin
     /// 工厂方法：返回一个填充完整的 ThemePalette
     virtual ThemePalette createPalette() const = 0;
 };

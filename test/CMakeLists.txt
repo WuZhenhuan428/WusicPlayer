@@ -1,5 +1,4 @@
 # ======== tb_playlist ========
-
 add_executable(tb_playlist
     playlist/tb_playlist.cpp
 )
@@ -14,7 +13,6 @@ target_link_libraries(tb_playlist
 add_test(NAME tb_playlist COMMAND tb_playlist)
 
 # ======== tb_add_file_policy ========
-
 add_executable(tb_add_file_policy
     playlist/tb_add_file_policy.cpp
 )
@@ -29,7 +27,6 @@ target_link_libraries(tb_add_file_policy
 add_test(NAME tb_add_file_policy COMMAND tb_add_file_policy)
 
 # ======== tb_library ========
-
 add_executable(tb_library
     library/tb_library.cpp
 )
@@ -45,7 +42,6 @@ target_link_libraries(tb_library
 add_test(NAME tb_library COMMAND tb_library)
 
 # ======== tb_library_browse ========
-
 add_executable(tb_library_browse
     library/tb_library_browse.cpp
 )
@@ -60,7 +56,6 @@ target_link_libraries(tb_library_browse
 add_test(NAME tb_library_browse COMMAND tb_library_browse)
 
 # ======== tb_search_backend ========
-
 add_executable(tb_search_backend
     search/tb_search_backend.cpp
 )
@@ -76,7 +71,6 @@ target_link_libraries(tb_search_backend
 add_test(NAME tb_search_backend COMMAND tb_search_backend)
 
 # ======== tb_playback_queue ========
-
 add_executable(tb_playback_queue
     playback_queue/tb_playback_queue.cpp
 )
@@ -91,7 +85,6 @@ target_link_libraries(tb_playback_queue
 add_test(NAME tb_playback_queue COMMAND tb_playback_queue)
 
 # ======== utils_audio ========
-
 add_executable(utils_audio
     utils_audio/main.cpp
 )
@@ -102,3 +95,15 @@ target_link_libraries(utils_audio
 )
 
 add_test(NAME utils_audio COMMAND utils_audio)
+
+# ======== utils_path ========
+add_executable(utils_path
+    utils_path/main.cpp
+)
+
+target_link_libraries(utils_path
+    PRIVATE
+        wusic_core
+)
+
+add_test(NAME utils_path COMMAND utils_path)

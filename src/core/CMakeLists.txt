@@ -51,6 +51,9 @@ add_library(wusic_core STATIC
     player/player_engine.h
     player/player.h
     player/ring_buffer.hpp
+
+    plugin_manager/plugin_manager.cpp
+    plugin_manager/plugin_manager.h
 )
 
 target_link_libraries(wusic_core
