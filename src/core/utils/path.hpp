@@ -91,7 +91,7 @@ inline bool contains_suffix(const QString& filename, const QStringList& extensio
     return false;
 }
 
-inline std::optional<std::tuple<int, int, int>> parse_versioned_unix_so(const QString& filepath)
+inline std::optional<std::tuple<int, int, int>> parse_versioned_unix_so([[maybe_unused]]const QString& filepath)
 {
 #if defined(Q_OS_UNIX)
     // 整体思路: 寻找 ".so" 子串, 存在时解析版本号子串是否存在 / 合法
@@ -192,7 +192,6 @@ inline std::optional<std::tuple<int, int, int>> parse_versioned_unix_so(const QS
     }
     // 只检查合法性也要按位检查, 和解析没多大区别了, 那就干脆解析吧...
     // 另外新版本的标准库已经很好用了^^:
-
 #endif
     return std::nullopt;
 }
