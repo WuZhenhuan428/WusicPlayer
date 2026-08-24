@@ -101,8 +101,7 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     notification_service_->add_display(status_bar_controller_.get());
 
     // 插件: 启动扫描可执行文件旁的 plugins/ 目录(不存在则创建)
-    const QString plugins_dir =
-        QCoreApplication::applicationDirPath() + QStringLiteral("/plugins");
+    const QString plugins_dir = QCoreApplication::applicationDirPath() + QStringLiteral("/plugins");
     QDir().mkpath(plugins_dir);
     plugin_controller_->scan_directory(plugins_dir);
 
@@ -376,6 +375,10 @@ void AppController::initialize_config()
     if (playlist_controller_) {
         cm.register_module(playlist_controller_.get());
         logger->debug("[CONFIG] register playlist controller");
+    }
+    if (plugin_controller_) {
+        cm.register_module(plugin_controller_.get());
+        logger->debug("[CONFIG] register plugin controller");
     }
     if (main_window_) {
         cm.register_module(main_window_.get());

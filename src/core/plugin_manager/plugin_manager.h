@@ -35,6 +35,9 @@ public:
     /// 用于更新视图信息
     const QVector<PluginDescriptor> descriptors() const;
 
+    /// 外部插件文件路径(用于持久化; 内建插件不在其中)
+    QVector<QString> external_plugin_paths() const;
+
     /// 外部调用时仅传出指针, 不转移所有权
     QVector<IBasicPlugin*> all() const;
 

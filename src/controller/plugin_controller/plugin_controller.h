@@ -1,15 +1,17 @@
 #pragma once
 
+#include "core/config_manager/i_configurable.h"
 #include "core/plugin_manager/plugin_manager.h"
 #include "core/plugin_manager/plugin_types.h"
 
+#include <QJsonObject>
 #include <QObject>
 #include <QString>
 #include <QVector>
 
 #include <memory>
 
-class PluginController : public QObject
+class PluginController : public QObject, public IConfigurable
 {
     Q_OBJECT
 
@@ -23,6 +25,11 @@ public:
     void scan_directory(const QString& dir);
 
     const QVector<PluginDescriptor> descriptors();
+
+    // ---- IConfigurable: 持久化外部插件路径, 启动时恢复 ----
+    void load_from_json(const QJsonObject& json) override;
+    QJsonObject save_to_json() override;
+    QString config_sub_key() const override;
 
 signals:
     void sgn_data_updated();

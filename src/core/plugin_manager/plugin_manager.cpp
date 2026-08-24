@@ -154,6 +154,17 @@ QVector<IBasicPlugin*> PluginManager::all() const
     return vec;
 }
 
+QVector<QString> PluginManager::external_plugin_paths() const
+{
+    QVector<QString> vec;
+    for (const auto& [_, handle] : this->handles_) {
+        if (!handle->file_path.isEmpty()) { // 内建插件 file_path 为空
+            vec.push_back(handle->file_path);
+        }
+    }
+    return vec;
+}
+
 const QVector<PluginDescriptor> PluginManager::descriptors() const
 {
     QVector<PluginDescriptor> vec;
