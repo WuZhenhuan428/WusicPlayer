@@ -34,4 +34,4 @@ signals:
     void sgn_config_changed();
 };
 
-Q_DECLARE_INTERFACE(IEqPlugin, "com.wusicplayer.IEqPlugin/2.1")
+Q_DECLARE_INTERFACE(IEqPlugin, "com.wusicplayer.IEqPlugin/1.0")
