@@ -16,6 +16,9 @@ add_library(wusic_controller STATIC
 
     status_bar_controller.cpp
     status_bar_controller.h
+
+    plugin_controller/plugin_controller.cpp
+    plugin_controller/plugin_controller.h
 )
 
 target_link_libraries(wusic_controller

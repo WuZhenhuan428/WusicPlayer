@@ -14,6 +14,7 @@ class SettingsPanel;
 class ShortcutsController;
 class ShortcutsPanel;
 class ThemeSettingsPage;
+class PluginPanel;
 
 class AppContext;
 class InMemorySearchBackend;
@@ -71,6 +72,8 @@ private:
     QPointer<LyricsSettingPanel> lyrics_settings_panel_;
     QPointer<ThemeSettingsPage> theme_settings_page_;
     QPointer<LibrarySettingsPage> library_settings_page_;
+    QPointer<PluginPanel> plugin_panel_;
+
     QPointer<LogViewerDialog> log_viewer_;
     QPointer<EQWidget> eq_widget_;
     bool has_shortcuts_registered_ = false;

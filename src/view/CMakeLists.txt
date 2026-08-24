@@ -50,6 +50,9 @@ add_library(wusic_view STATIC
     settings_panel/library_settings_page.cpp
     settings_panel/library_settings_page.h
 
+    settings_panel/plugin_panel/plugin_panel.cpp
+    settings_panel/plugin_panel/plugin_panel.h
+
     dialogs/hsv_dialog/color_preview_item.cpp
     dialogs/hsv_dialog/color_preview_item.h
     dialogs/hsv_dialog/hsv_dialog.cpp

@@ -28,6 +28,13 @@ public:
     /// 检测输入目录下存在的插件, 默认递归
     void scan_directory(const QString& dir);
 
+    /// 移除插件: 外部插件卸载(QPluginLoader 析构→unload);
+    /// 内建插件仅从登记表移除, 对象仍由创建方管理。
+    bool remove(const QString& id);
+
+    /// 用于更新视图信息
+    const QVector<PluginDescriptor> descriptors() const;
+
     /// 外部调用时仅传出指针, 不转移所有权
     QVector<IBasicPlugin*> all() const;
 

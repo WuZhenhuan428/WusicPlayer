@@ -15,6 +15,7 @@ class PlaybackController;
 class MainWindow;
 class StatusBarController;
 class PanelCoordinator;
+class PluginController;
 
 class PlaybackService;
 class PlaybackRestoreService;
@@ -65,6 +66,7 @@ private:
     std::unique_ptr<InMemorySearchBackend> search_backend_;
     std::unique_ptr<MainWindow> main_window_;
     std::unique_ptr<StatusBarController> status_bar_controller_;
+    std::unique_ptr<PluginController> plugin_controller_;
 
     std::unique_ptr<PlaybackService> playback_service_;
     std::unique_ptr<PlaybackRestoreService> playback_restore_service_;

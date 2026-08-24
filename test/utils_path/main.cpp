@@ -63,6 +63,6 @@ int main()
         CHECK(OK);
     }
 
-    std::printf("== tb_search_backend: %d CHECKs, %d failures ==\n", g_CHECKs, g_failures);
+    std::printf("== utils_path: %d CHECKs, %d failures ==\n", g_CHECKs, g_failures);
     return g_failures == 0 ? 0 : 1;
 }

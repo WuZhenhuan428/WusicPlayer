@@ -131,8 +131,6 @@ inline std::optional<std::tuple<int, int, int>> parse_versioned_unix_so(const QS
             if (ch_ >= '0' && ch_ <= '9') {
                 major += (ch_ - '0');
                 state = VERSION_STATUS::MAJOR;
-            } else if (ch_ == '.') { // edge case
-                state = VERSION_STATUS::POINT_1;
             } else {
                 state = VERSION_STATUS::ERROR;
             }

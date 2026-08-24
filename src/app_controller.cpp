@@ -2,6 +2,7 @@
 
 #include "controller/playback_controller.h"
 #include "controller/playlist_controller.h"
+#include "controller/plugin_controller/plugin_controller.h"
 #include "controller/search_backend/in_memory_search_backend.h"
 #include "controller/shortcuts_controller.h"
 #include "controller/status_bar_controller.h"
@@ -60,6 +61,7 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     search_backend_(std::make_unique<InMemorySearchBackend>(playlist_controller_.get())),
     main_window_(std::make_unique<MainWindow>(playback_controller_, playlist_controller_.get())),
     status_bar_controller_(std::make_unique<StatusBarController>(main_window_->statusBar(), this)),
+    plugin_controller_(std::make_unique<PluginController>(this)),
     event_bus_(std::make_unique<EventBus>())
 {
     // 先构造 AppContext 引用的服务, 再构建上下文——
@@ -77,8 +79,9 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
         .in_memory_search_backend_ = this->search_backend_.get(),
         .log_sink_gui_ =
             dynamic_cast<LogSinkGui*>(LoggerManager::instance().get_sink_by_name("gui").get()),
-        .library_manager_ = this->library_manager_.get(),
-        .event_bus_       = this->event_bus_.get(),
+        .library_manager_   = this->library_manager_.get(),
+        .plugin_controller_ = this->plugin_controller_.get(),
+        .event_bus_         = this->event_bus_.get(),
     };
     // 面板编排:设置/搜索/EQ/快捷键(构造时注册默认快捷键)
     panel_coordinator_           = std::make_unique<PanelCoordinator>(app_context_, this);

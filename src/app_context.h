@@ -8,6 +8,7 @@ class LogSinkGui;
 class PlaylistController;
 class LibraryManager;
 class PlaylistManager;
+class PluginController;
 class EventBus;
 
 /**
@@ -24,5 +25,6 @@ public:
     InMemorySearchBackend* in_memory_search_backend_ = nullptr;
     LogSinkGui* log_sink_gui_                        = nullptr;
     LibraryManager* library_manager_                 = nullptr;
+    PluginController* plugin_controller_             = nullptr;
     EventBus* event_bus_                             = nullptr;
 };

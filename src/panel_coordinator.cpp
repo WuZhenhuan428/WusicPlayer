@@ -3,6 +3,7 @@
 #include "app_context.h"
 #include "controller/playback_controller.h"
 #include "controller/playlist_controller.h"
+#include "controller/plugin_controller/plugin_controller.h"
 #include "controller/search_backend/in_memory_search_backend.h"
 #include "controller/shortcuts_controller.h"
 #include "core/config_manager/config_manager.h"
@@ -16,6 +17,7 @@
 #include "view/search_panel/search_panel.h"
 #include "view/settings_panel/library_settings_page.h"
 #include "view/settings_panel/lyrics_setting_panel/lyrics_setting_panel.h"
+#include "view/settings_panel/plugin_panel/plugin_panel.h"
 #include "view/settings_panel/settings_panel.h"
 #include "view/settings_panel/shortcuts_panel/shortcuts_panel.h"
 #include "view/settings_panel/theme_settings_page/theme_settings_page.h"
@@ -109,6 +111,22 @@ void PanelCoordinator::open_settings_panel()
                 });
         settings_panel_->register_widget(library_settings_page_->get_title_item(),
                                          library_settings_page_);
+    }
+
+    auto& plugin_controller = this->ctx_.plugin_controller_;
+    if (!plugin_panel_) {
+        plugin_panel_ = new PluginPanel(plugin_controller->descriptors(), main_window);
+        plugin_panel_->setWindowFlag(Qt::Window, true);
+
+        connect(plugin_panel_, &PluginPanel::sgn_request_refresh_plugin, this,
+                [this]() { plugin_panel_->refresh(this->ctx_.plugin_controller_->descriptors()); });
+        connect(plugin_panel_, &PluginPanel::sgn_request_import_plugin, plugin_controller,
+                &PluginController::import);
+        connect(plugin_panel_, &PluginPanel::sgn_request_remove_plugin, plugin_controller,
+                &PluginController::remove);
+        connect(plugin_controller, &PluginController::sgn_data_updated, this,
+                [this]() { plugin_panel_->refresh(this->ctx_.plugin_controller_->descriptors()); });
+        settings_panel_->register_widget(plugin_panel_->get_title_item(), plugin_panel_);
     }
 
     settings_panel_->show();

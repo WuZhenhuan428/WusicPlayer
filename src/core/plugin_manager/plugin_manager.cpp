@@ -88,6 +88,18 @@ void PluginManager::scan_directory(const QString& dir)
     }
 }
 
+bool PluginManager::remove(const QString& id)
+{
+    auto it = handles_.find(id);
+    if (it == handles_.end()) {
+        logger->warn("plugin id '{}' not found, nothing to remove", id);
+        return false;
+    }
+    handles_.erase(it); // 外部插件: handle 析构 → loader unload
+    logger->info("plugin '{}' removed", id);
+    return true;
+}
+
 void PluginManager::register_builtin(IBasicPlugin* plugin)
 {
     if (!plugin) {
@@ -138,6 +150,15 @@ QVector<IBasicPlugin*> PluginManager::all() const
     QVector<IBasicPlugin*> vec;
     for (const auto& [_, handle] : this->handles_) {
         vec.push_back(handle->interface);
+    }
+    return vec;
+}
+
+const QVector<PluginDescriptor> PluginManager::descriptors() const
+{
+    QVector<PluginDescriptor> vec;
+    for (const auto& [_, handle] : handles_) {
+        vec.push_back(handle->descriptor);
     }
     return vec;
 }
