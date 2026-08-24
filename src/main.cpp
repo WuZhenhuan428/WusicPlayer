@@ -3,8 +3,6 @@
 #include "controller/playback_controller.h"
 #include "core/config_manager/config_manager.h"
 #include "core/logger/logger_manager.h"
-#include "core/theme/builtin/wusic_dark_palette.h"
-#include "core/theme/builtin/wusic_light_palette.h"
 #include "core/theme/theme_manager.h"
 
 #include <QApplication>
@@ -32,9 +30,9 @@ int main(int argc, char* argv[])
     a.setWindowIcon(QIcon(":icons/main.ico"));
 
     // ---- 主题系统初始化 ----
+    // 内建主题(Wusic Dark/Light)现由 AppController 以 BuiltinThemePlugin 注册,
+    // 不再使用 register_builtin_palette。
     auto& theme_mgr = ThemeManager::instance();
-    theme_mgr.register_builtin_palette(darkPalette());
-    theme_mgr.register_builtin_palette(lightPalette());
 
     Player player;
     PlaybackController playback_controller(&player);

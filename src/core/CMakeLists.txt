@@ -32,6 +32,8 @@ add_library(wusic_core STATIC
     theme/theme_manager.cpp
     theme/builtin/wusic_dark_palette.h
     theme/builtin/wusic_light_palette.h
+    theme/builtin/builtin_theme_plugin.h
+    theme/builtin/builtin_theme_plugin.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../include/plugin/i_theme_plugin.h
 
     lyrics_fetcher/lyrics_manager.h
@@ -54,7 +56,12 @@ add_library(wusic_core STATIC
 
     plugin_manager/plugin_manager.cpp
     plugin_manager/plugin_manager.h
+    plugin_manager/i_basic_plugin.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../include/plugin/i_basic_plugin.h
 )
+
+# 插件接口(IBasicPlugin 等)的 moc 必须可被外部插件 .so 链接, 故需要 PIC
+set_target_properties(wusic_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(wusic_core
     PUBLIC

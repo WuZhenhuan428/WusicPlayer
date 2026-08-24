@@ -27,24 +27,23 @@ void ThemeService::scan_themes()
         entries.append(e);
     }
 
-    // 内置主题——从注册的调色板读取 isDark
+    // 内置主题——内建主题插件(元信息来自插件描述)
     for (const auto& name : tm.builtin_themes()) {
-        const auto* pal = tm.palette_by_name(name);
         ThemeEntry e;
         e.name   = name;
         e.source = QStringLiteral("Builtin");
-        e.author = QStringLiteral("WusicPlayer");
-        e.isDark = pal ? pal->isDark : false;
+        e.author = tm.theme_author(name);
+        e.isDark = tm.theme_is_dark(name);
         entries.append(e);
     }
 
-    // 外部主题——仅名称已知，元信息在插件内部
+    // 外部主题——外部插件(元信息来自插件描述)
     for (const auto& name : tm.external_themes()) {
         ThemeEntry e;
         e.name   = name;
         e.source = QStringLiteral("External");
-        e.author = QStringLiteral("-");
-        e.isDark = false;
+        e.author = tm.theme_author(name);
+        e.isDark = tm.theme_is_dark(name);
         entries.append(e);
     }
 

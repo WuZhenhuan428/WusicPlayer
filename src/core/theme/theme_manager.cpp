@@ -3,12 +3,10 @@
 #include "wusic_proxy_style.h"
 
 #include <QApplication>
-#include <QDir>
-#include <QDirIterator>
 #include <QJsonObject>
-#include <QPluginLoader>
 #include <QStyleFactory>
 
+#include "core/plugin_manager/plugin_manager.h"
 #include "plugin/i_theme_plugin.h"
 
 #include "core/logger/logger_manager.h"
@@ -28,33 +26,22 @@ ThemeManager& ThemeManager::instance()
 ThemeManager::ThemeManager() : QObject(nullptr) {}
 
 // ============================================================================
-// 注册内置调色板
-// ============================================================================
-
-void ThemeManager::register_builtin_palette(const ThemePalette& palette)
-{
-    m_builtinPalettes.insert(palette.name, palette);
-}
-
-// ============================================================================
 // 扫描外部主题插件
 // ============================================================================
 
+void ThemeManager::set_plugin_manager(PluginManager* plugin_manager)
+{
+    m_plugin_manager = plugin_manager;
+}
+
 void ThemeManager::scan_external_plugins(const QString& dir)
 {
-    QDir pluginDir(dir);
-    if (!pluginDir.exists())
+    // 外部主题插件统一由 PluginManager 扫描/加载, 本管理器仅查询
+    if (!m_plugin_manager) {
+        logger->warn("[ThemeManager] plugin manager not injected, skip scan: {}", dir);
         return;
-
-    const auto entries = pluginDir.entryInfoList(QDir::Files);
-    for (const auto& info : entries) {
-        QPluginLoader loader(info.absoluteFilePath());
-        auto* plugin = qobject_cast<IThemePlugin*>(loader.instance());
-        if (plugin) {
-            m_externalPlugins.insert(plugin->name(), info.absoluteFilePath());
-            logger->debug("[ThemeManager] found external theme: {}", plugin->name());
-        }
     }
+    m_plugin_manager->scan_directory(dir);
 }
 
 // ============================================================================
@@ -68,12 +55,49 @@ QStringList ThemeManager::system_themes() const
 
 QStringList ThemeManager::builtin_themes() const
 {
-    return m_builtinPalettes.keys();
+    QStringList names;
+    if (m_plugin_manager) {
+        for (auto* plugin : m_plugin_manager->builtin_plugins<IThemePlugin>()) {
+            names.push_back(plugin->name());
+        }
+    }
+    return names;
 }
 
 QStringList ThemeManager::external_themes() const
 {
-    return m_externalPlugins.keys();
+    QStringList names;
+    if (m_plugin_manager) {
+        for (auto* plugin : m_plugin_manager->external_plugins<IThemePlugin>()) {
+            names.push_back(plugin->name());
+        }
+    }
+    return names;
+}
+
+QString ThemeManager::theme_author(const QString& name) const
+{
+    if (m_plugin_manager) {
+        for (auto* plugin : m_plugin_manager->plugins<IThemePlugin>()) {
+            if (plugin->name() == name) {
+                return plugin->author();
+            }
+        }
+    }
+    return QStringLiteral("WusicPlayer");
+}
+
+bool ThemeManager::theme_is_dark(const QString& name) const
+{
+    if (m_plugin_manager) {
+        for (auto* plugin : m_plugin_manager->plugins<IThemePlugin>()) {
+            if (plugin->name() == name) {
+                return plugin->createPalette().isDark;
+            }
+        }
+    }
+    auto it = m_builtinPalettes.find(name);
+    return it != m_builtinPalettes.end() && it->isDark;
 }
 
 // ============================================================================
@@ -92,35 +116,54 @@ void ThemeManager::apply_system_theme(const QString& key)
 
 void ThemeManager::apply_builtin_theme(const QString& name)
 {
-    auto it = m_builtinPalettes.find(name);
-    if (it == m_builtinPalettes.end())
+    if (!m_plugin_manager) {
         return;
+    }
+    IThemePlugin* plugin = nullptr;
+    for (auto* p : m_plugin_manager->builtin_plugins<IThemePlugin>()) {
+        if (p->name() == name) {
+            plugin = p;
+            break;
+        }
+    }
+    if (!plugin) {
+        logger->warn("[ThemeManager] builtin theme '{}' not found", name);
+        return;
+    }
 
     // WusicProxyStyle 以 Fusion 为基础样式
-    auto* style = new WusicProxyStyle(it.value());
+    ThemePalette p = plugin->createPalette();
+    auto* style    = new WusicProxyStyle(p);
     qApp->setStyle(style); // qApp 接管所有权
     qApp->setPalette(style->standardPalette());
+    m_builtinPalettes.insert(name, p); // 缓存供 current_palette() 查询
 
     set_current(Builtin, name, style);
 }
 
 void ThemeManager::apply_external_theme(const QString& name)
 {
-    auto it = m_externalPlugins.find(name);
-    if (it == m_externalPlugins.end())
+    if (!m_plugin_manager) {
         return;
-
-    QPluginLoader loader(it.value());
-    auto* plugin = qobject_cast<IThemePlugin*>(loader.instance());
-    if (!plugin)
+    }
+    IThemePlugin* plugin = nullptr;
+    for (auto* p : m_plugin_manager->external_plugins<IThemePlugin>()) {
+        if (p->name() == name) {
+            plugin = p;
+            break;
+        }
+    }
+    if (!plugin) {
+        logger->warn("[ThemeManager] external theme '{}' not found", name);
         return;
+    }
 
     ThemePalette p = plugin->createPalette();
     auto* style    = new WusicProxyStyle(p);
     qApp->setStyle(style);
     qApp->setPalette(style->standardPalette());
 
-    // 同时将外部调色板注册到内置表，方便 current_palette() 查询
+    // 同时将调色板注册到内置表，方便 current_palette() 查询
     m_builtinPalettes.insert(name, p);
 
     set_current(External, name, style);

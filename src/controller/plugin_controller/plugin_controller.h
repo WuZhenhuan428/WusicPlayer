@@ -24,6 +24,12 @@ public:
     /// 扫描目录下的插件(递归, 经 PluginManager)
     void scan_directory(const QString& dir);
 
+    /// 注册内建插件(生命周期由调用方管理, 仅登记)
+    void register_builtin(IBasicPlugin* plugin);
+
+    /// 暴露底层 PluginManager(供组合根注入 ThemeManager 等)
+    PluginManager* plugin_manager() const;
+
     const QVector<PluginDescriptor> descriptors();
 
     // ---- IConfigurable: 持久化外部插件路径, 启动时恢复 ----

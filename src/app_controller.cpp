@@ -11,6 +11,10 @@
 #include "core/event_bus.h"
 #include "core/logger/log_sink_gui.h"
 #include "core/notification_types.h"
+#include "core/theme/builtin/builtin_theme_plugin.h"
+#include "core/theme/builtin/wusic_dark_palette.h"
+#include "core/theme/builtin/wusic_light_palette.h"
+#include "core/theme/theme_manager.h"
 #include "core/types.h"
 #include "model/library/library_manager.h"
 #include "model/playback_queue/playback_queue_service.h"
@@ -104,6 +108,23 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     const QString plugins_dir = QCoreApplication::applicationDirPath() + QStringLiteral("/plugins");
     QDir().mkpath(plugins_dir);
     plugin_controller_->scan_directory(plugins_dir);
+
+    // 内建主题插件: 替代原有 register_builtin_palette, 统一走 PluginManager 内建通路
+    builtin_dark_plugin_ = std::make_unique<BuiltinThemePlugin>(
+        QStringLiteral("wusic.theme.dark"), QStringLiteral("Wusic Dark"),
+        QStringLiteral("1.0.0"), QStringLiteral("Built-in dark theme"),
+        QStringLiteral("WusicPlayer"), QVector<QString>{QStringLiteral("theme")}, darkPalette());
+    builtin_light_plugin_ = std::make_unique<BuiltinThemePlugin>(
+        QStringLiteral("wusic.theme.light"), QStringLiteral("Wusic Light"),
+        QStringLiteral("1.0.0"), QStringLiteral("Built-in light theme"),
+        QStringLiteral("WusicPlayer"), QVector<QString>{QStringLiteral("theme")}, lightPalette());
+    plugin_controller_->register_builtin(builtin_dark_plugin_.get());
+    plugin_controller_->register_builtin(builtin_light_plugin_.get());
+    // 主题管理器改为从 PluginManager 获取主题插件(内建 + 外部 .so)
+    ThemeManager::instance().set_plugin_manager(plugin_controller_->plugin_manager());
+    // 验证内建插件通路: builtin_themes() 应能取到两个内建主题插件
+    const auto theme_names = ThemeManager::instance().builtin_themes();
+    logger->debug("[PLUGIN] builtin themes: {}", theme_names.join(QStringLiteral(", ")));
 
     // 媒体库控件(左侧播放列表下方):注入库与队列服务
     main_window_->library_browser()->set_library_manager(library_manager_.get());

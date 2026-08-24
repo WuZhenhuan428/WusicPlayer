@@ -48,6 +48,16 @@ void PluginController::scan_directory(const QString& dir)
     plugin_manager_->scan_directory(dir);
 }
 
+void PluginController::register_builtin(IBasicPlugin* plugin)
+{
+    plugin_manager_->register_builtin(plugin);
+}
+
+PluginManager* PluginController::plugin_manager() const
+{
+    return plugin_manager_.get();
+}
+
 void PluginController::load_from_json(const QJsonObject& json)
 {
     const QJsonArray arr = json.value("external_plugins").toArray();

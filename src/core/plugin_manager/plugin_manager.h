@@ -53,6 +53,36 @@ public:
         return out;
     }
 
+    /// 仅内建插件(register_builtin 注册, 无文件路径)
+    template <typename T>
+    QVector<T*> builtin_plugins() const
+    {
+        QVector<T*> out;
+        for (const auto& [_, handle] : handles_) {
+            if (!handle->file_path.isEmpty())
+                continue;
+            if (auto* t = qobject_cast<T*>(handle->interface)) {
+                out.push_back(t);
+            }
+        }
+        return out;
+    }
+
+    /// 仅外部插件(.so/.dll 加载, 有文件路径)
+    template <typename T>
+    QVector<T*> external_plugins() const
+    {
+        QVector<T*> out;
+        for (const auto& [_, handle] : handles_) {
+            if (handle->file_path.isEmpty())
+                continue;
+            if (auto* t = qobject_cast<T*>(handle->interface)) {
+                out.push_back(t);
+            }
+        }
+        return out;
+    }
+
     template <typename T>
     T* plugin(const QString& id) const
     {

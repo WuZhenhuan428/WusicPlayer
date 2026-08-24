@@ -1,11 +1,12 @@
 #pragma once
 
-#include "core/theme/theme_palette.h"
 #include "core/config_manager/i_configurable.h"
+#include "core/theme/theme_palette.h"
 #include <QMap>
 #include <QObject>
 
 class QStyle;
+class PluginManager;
 
 /// 主题管理器——单例，负责主题发现、切换和持久化。
 /// 支持三种来源：系统主题（QStyleFactory）、内置主题（编译进程序的调色板）、外部插件（.so/.dll）。
@@ -22,16 +23,21 @@ public:
 
     static ThemeManager& instance();
 
-    // ---- 注册内置调色板（main.cpp 启动时调用） ----
-    void register_builtin_palette(const ThemePalette& palette);
-
     // ---- 扫描外部主题插件 ----
     void scan_external_plugins(const QString& dir);
 
+    /// 注入 PluginManager(组合根调用): 内建/外部主题插件统一由 PluginManager 登记,
+    /// 本管理器只负责查询与应用。
+    void set_plugin_manager(PluginManager* plugin_manager);
+
     // ---- 查询可用主题列表 ----
     QStringList system_themes() const;   // QStyleFactory::keys()
-    QStringList builtin_themes() const;  // 已注册的内置调色板名称
-    QStringList external_themes() const; // 已发现的外部插件名称
+    QStringList builtin_themes() const;  // 内建主题插件名称(register_builtin)
+    QStringList external_themes() const; // 外部主题插件名称(.so 加载)
+
+    // ---- 主题元信息(来自插件描述/调色板) ----
+    QString theme_author(const QString& name) const; // 插件 author(无则 "WusicPlayer")
+    bool theme_is_dark(const QString& name) const;   // 插件调色板 isDark
 
     // ---- 应用主题 ----
     void apply_system_theme(const QString& key);    // "Fusion", "Windows" 等
@@ -85,11 +91,11 @@ private:
 
     // 内置调色板注册表: name → ThemePalette
     QMap<QString, ThemePalette> m_builtinPalettes;
-    // 外部插件注册表: name → filePath
-    QMap<QString, QString> m_externalPlugins;
+    // 非拥有: 组合根注入的 PluginManager(主题插件统一登记处)
+    PluginManager* m_plugin_manager = nullptr;
 
-    Source m_current_source = System;
-    QString m_currentName  = QStringLiteral("Fusion");
-    QStyle* m_current_style = nullptr;  // QApplication 拥有所有权（setStyle 后）
-    IconMode m_icon_mode    = IconAuto; // 默认跟随主题
+    Source m_current_source         = System;
+    QString m_currentName           = QStringLiteral("Fusion");
+    QStyle* m_current_style         = nullptr;  // QApplication 拥有所有权（setStyle 后）
+    IconMode m_icon_mode            = IconAuto; // 默认跟随主题
 };
