@@ -12,12 +12,15 @@ extern "C" {
 
 #include "core/player/config.h"
 #include "core/player_types.h"
+#include "plugin/eq_types.h"
 #include "ring_buffer.hpp"
 
 #include <atomic>
+#include <memory>
 #include <string>
 #include <thread>
 #include <unordered_map>
+#include <vector>
 
 class Decoder
 {
@@ -31,7 +34,10 @@ public:
     void stop();
     void seek(int64_t position_ms);
     const std::unordered_map<std::string, std::string> metadata();
+    /// 兼容 shim: ±12dB 钳制后转换为 10 段 EqConfig(旧 UI 路径)
     void set_eq_gain(gains_t gains);
+    /// 插件路径: 任意 band, 无增益上下限
+    void set_eq_config(std::shared_ptr<const EqConfig> cfg);
     const gains_t gains() const;
     int64_t position();
 
@@ -45,6 +51,7 @@ private:
     int process_frame_with_eq(AVFrame* frame);
 
     void eq_check_and_update();
+    bool eq_structure_changed(const EqConfig& applied, const EqConfig& next) const;
 
 private:
     std::atomic_int64_t m_seek_req_ms{-1};
@@ -66,21 +73,14 @@ private:
     AVFilterContext* m_buffersrc_ctx  = nullptr;
     AVFilterContext* m_buffersink_ctx = nullptr;
 
-    AVFilterContext* m_eq_ctx_31      = nullptr;
-    AVFilterContext* m_eq_ctx_63      = nullptr;
-    AVFilterContext* m_eq_ctx_125     = nullptr;
-    AVFilterContext* m_eq_ctx_250     = nullptr;
-    AVFilterContext* m_eq_ctx_500     = nullptr;
-    AVFilterContext* m_eq_ctx_1k      = nullptr;
-    AVFilterContext* m_eq_ctx_2k      = nullptr;
-    AVFilterContext* m_eq_ctx_4k      = nullptr;
-    AVFilterContext* m_eq_ctx_8k      = nullptr;
-    AVFilterContext* m_eq_ctx_16k     = nullptr;
+    // 由 EqConfig 动态构建的 band 滤波器链(替代固定十段)
+    std::vector<AVFilterContext*> m_eq_ctxs;
 
-    std::atomic<gains_t> m_gains;
-    // ^ m_gains is not lock free, but it doesn't matter QAQ
+    std::atomic<std::shared_ptr<const EqConfig>> m_pending_eq{nullptr};
+    std::shared_ptr<const EqConfig> m_applied_eq; // 解码线程独占
     std::atomic_bool m_has_eq_changed{false};
-    gains_t m_gains_old{};
+
+    std::atomic<gains_t> m_gains; // 兼容查询用(非 lock-free, 可接受)
 
     std::atomic<int64_t> m_pos_ms{0};
 };

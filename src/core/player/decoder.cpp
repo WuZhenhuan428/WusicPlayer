@@ -9,6 +9,52 @@ namespace
 Logger* logger = LoggerManager::file_logger("decoder", {"console", "gui"});
 } // namespace
 
+namespace
+{
+// ---- EQ band → FFmpeg filter 映射 ----
+const char* eq_filter_name(EqFilterType type)
+{
+    switch (type) {
+    case EqFilterType::Parametric:
+    case EqFilterType::Peak:
+        return "equalizer";
+    case EqFilterType::LowShelf:
+        return "bass";
+    case EqFilterType::HighShelf:
+        return "treble";
+    case EqFilterType::LowPass:
+        return "lowpass";
+    case EqFilterType::HighPass:
+        return "highpass";
+    }
+    return "equalizer";
+}
+
+void eq_filter_args(const EqBand& band, char* buf, size_t size)
+{
+    // q 统一为 Q factor(width_type=q); 低通/高通不使用 gain
+    switch (band.type) {
+    case EqFilterType::LowPass:
+    case EqFilterType::HighPass:
+        std::snprintf(buf, size, "frequency=%.2f:width_type=q:width=%.3f", band.freq, band.q);
+        break;
+    case EqFilterType::Parametric:
+    case EqFilterType::Peak:
+    case EqFilterType::LowShelf:
+    case EqFilterType::HighShelf:
+    default:
+        std::snprintf(buf, size, "frequency=%.2f:width_type=q:width=%.3f:gain=%.2f", band.freq,
+                      band.q, band.gain_db);
+        break;
+    }
+}
+
+void eq_instance_name(int index, char* buf, size_t size)
+{
+    std::snprintf(buf, size, "eq_%d", index);
+}
+} // namespace
+
 Decoder::Decoder(const std::string& filepath)
 {
     m_filepath = filepath;
@@ -274,6 +320,15 @@ void Decoder::seek(int64_t position_ms)
 
 int Decoder::init_filters()
 {
+    // 可重复调用: 重建前释放旧图(eq_check_and_update 结构变化时触发)
+    if (m_filter_graph) {
+        avfilter_graph_free(&m_filter_graph);
+        m_filter_graph   = nullptr;
+        m_buffersrc_ctx  = nullptr;
+        m_buffersink_ctx = nullptr;
+        m_eq_ctxs.clear();
+    }
+
     const AVFilter* src  = avfilter_get_by_name("abuffer");
     const AVFilter* sink = avfilter_get_by_name("abuffersink");
     m_filter_graph       = avfilter_graph_alloc();
@@ -317,88 +372,29 @@ int Decoder::init_filters()
         return ret;
     }
 
-    // 2. EQ
-    /* add more filter here
-        31 63 125 250 500 1k 2k 4k 8k 16k
-    */
-    ret = avfilter_graph_create_filter(&m_eq_ctx_31, avfilter_get_by_name("equalizer"), "eq_31",
-                                       "frequency=31:width_type=o:width=1:gain=0", nullptr,
-                                       m_filter_graph);
-    if (ret < 0) {
-        logger->error("failed to create eq_31");
-        return ret;
+    // 2. EQ: 由 EqConfig 动态构建任意数量的 band 滤波器
+    auto eq_cfg = m_pending_eq.load(std::memory_order_acquire);
+    if (!eq_cfg) {
+        eq_cfg = std::make_shared<EqConfig>(); // 默认空
     }
+    if (eq_cfg->enabled) {
+        char name_buf[32];
+        for (int i = 0; i < eq_cfg->bands.size(); ++i) {
+            const EqBand& band = eq_cfg->bands[i];
+            char args_eq[256];
+            eq_filter_args(band, args_eq, sizeof(args_eq));
+            eq_instance_name(i, name_buf, sizeof(name_buf));
 
-    ret = avfilter_graph_create_filter(&m_eq_ctx_63, avfilter_get_by_name("equalizer"), "eq_63",
-                                       "frequency=63:width_type=o:width=1:gain=0", nullptr,
-                                       m_filter_graph);
-    if (ret < 0) {
-        logger->error("failed to create eq_63");
-        return ret;
-    }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_125, avfilter_get_by_name("equalizer"), "eq_125",
-                                       "frequency=125:width_type=o:width=1:gain=0", nullptr,
-                                       m_filter_graph);
-    if (ret < 0) {
-        logger->error("failed to create eq_125");
-        return ret;
-    }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_250, avfilter_get_by_name("equalizer"), "eq_250",
-                                       "frequency=250:width_type=o:width=1:gain=0", nullptr,
-                                       m_filter_graph);
-    if (ret < 0) {
-        logger->error("failed to create eq_250");
-        return ret;
-    }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_500, avfilter_get_by_name("equalizer"), "eq_500",
-                                       "frequency=500:width_type=o:width=1:gain=0", nullptr,
-                                       m_filter_graph);
-    if (ret < 0) {
-        logger->error("failed to create eq_500");
-        return ret;
-    }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_1k, avfilter_get_by_name("equalizer"), "eq_1k",
-                                       "frequency=1k:width_type=o:width=1:gain=0", nullptr,
-                                       m_filter_graph);
-    if (ret < 0) {
-        logger->error("failed to create eq_1k");
-        return ret;
-    }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_2k, avfilter_get_by_name("equalizer"), "eq_2k",
-                                       "frequency=2k:width_type=o:width=1:gain=0", nullptr,
-                                       m_filter_graph);
-    if (ret < 0) {
-        logger->error("failed to create eq_2k");
-        return ret;
-    }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_4k, avfilter_get_by_name("equalizer"), "eq_4k",
-                                       "frequency=4k:width_type=o:width=1:gain=0", nullptr,
-                                       m_filter_graph);
-    if (ret < 0) {
-        logger->error("failed to create eq_4k");
-        return ret;
-    }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_8k, avfilter_get_by_name("equalizer"), "eq_8k",
-                                       "frequency=8k:width_type=o:width=1:gain=0", nullptr,
-                                       m_filter_graph);
-    if (ret < 0) {
-        logger->error("failed to create eq_8k");
-        return ret;
-    }
-
-    ret = avfilter_graph_create_filter(&m_eq_ctx_16k, avfilter_get_by_name("equalizer"), "eq_16k",
-                                       "frequency=16k:width_type=o:width=1:gain=0", nullptr,
-                                       m_filter_graph);
-    if (ret < 0) {
-        logger->error("failed to create eq_16k");
-        return ret;
+            AVFilterContext* eq_ctx = nullptr;
+            ret                     = avfilter_graph_create_filter(&eq_ctx,
+                                                                   avfilter_get_by_name(eq_filter_name(band.type)),
+                                                                   name_buf, args_eq, nullptr, m_filter_graph);
+            if (ret < 0) {
+                logger->error("failed to create eq filter #{}", i);
+                return ret;
+            }
+            m_eq_ctxs.push_back(eq_ctx);
+        }
     }
 
     // 2. packed
@@ -411,17 +407,16 @@ int Decoder::init_filters()
     }
 
     avfilter_link(m_buffersrc_ctx, 0, aformat_planar_ctx, 0);
-    avfilter_link(aformat_planar_ctx, 0, m_eq_ctx_31, 0);
-    avfilter_link(m_eq_ctx_31, 0, m_eq_ctx_63, 0);
-    avfilter_link(m_eq_ctx_63, 0, m_eq_ctx_125, 0);
-    avfilter_link(m_eq_ctx_125, 0, m_eq_ctx_250, 0);
-    avfilter_link(m_eq_ctx_250, 0, m_eq_ctx_500, 0);
-    avfilter_link(m_eq_ctx_500, 0, m_eq_ctx_1k, 0);
-    avfilter_link(m_eq_ctx_1k, 0, m_eq_ctx_2k, 0);
-    avfilter_link(m_eq_ctx_2k, 0, m_eq_ctx_4k, 0);
-    avfilter_link(m_eq_ctx_4k, 0, m_eq_ctx_8k, 0);
-    avfilter_link(m_eq_ctx_8k, 0, m_eq_ctx_16k, 0);
-    avfilter_link(m_eq_ctx_16k, 0, aformat_packed_ctx, 0);
+    if (m_eq_ctxs.empty()) {
+        // 无 EQ band: planar 直连 packed
+        avfilter_link(aformat_planar_ctx, 0, aformat_packed_ctx, 0);
+    } else {
+        avfilter_link(aformat_planar_ctx, 0, m_eq_ctxs.front(), 0);
+        for (size_t i = 0; i + 1 < m_eq_ctxs.size(); ++i) {
+            avfilter_link(m_eq_ctxs[i], 0, m_eq_ctxs[i + 1], 0);
+        }
+        avfilter_link(m_eq_ctxs.back(), 0, aformat_packed_ctx, 0);
+    }
     avfilter_link(aformat_packed_ctx, 0, m_buffersink_ctx, 0);
 
     // apply config
@@ -431,6 +426,8 @@ int Decoder::init_filters()
         return ret;
     }
 
+    // 记录已应用的结构(供 eq_check_and_update 判断是否需重建)
+    m_applied_eq = std::move(eq_cfg);
     return 0;
 }
 
@@ -456,75 +453,82 @@ int Decoder::process_frame_with_eq(AVFrame* frame)
 
 void Decoder::set_eq_gain(gains_t gains)
 {
-    // save value first
-    m_gains.store(gains, std::memory_order_release);
+    // 兼容 shim: 保留原十段 ±12dB 行为, 转换为 EqConfig 走统一后端
+    auto cfg               = std::make_shared<EqConfig>();
+    cfg->enabled           = true;
+
+    const double freqs[10] = {31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000};
+    const double vals[10]  = {gains._31, gains._63, gains._125, gains._250, gains._500,
+                              gains._1k, gains._2k, gains._4k,  gains._8k,  gains._16k};
+    for (int i = 0; i < 10; ++i) {
+        double g = vals[i];
+        if (g > EQ_UPPER_LIMIT_DB)
+            g = EQ_UPPER_LIMIT_DB;
+        if (g < EQ_LOWER_LIMIT_DB)
+            g = EQ_LOWER_LIMIT_DB;
+        // Q≈1.414 对应原 width_type=o:width=1(1 octave 带宽)
+        cfg->bands.push_back(EqBand{EqFilterType::Parametric, freqs[i], 1.414, g});
+    }
+
+    m_gains.store(gains, std::memory_order_release); // 兼容 gains() 查询
+    this->set_eq_config(std::move(cfg));
+}
+
+void Decoder::set_eq_config(std::shared_ptr<const EqConfig> cfg)
+{
+    if (!cfg) {
+        return;
+    }
+    m_pending_eq.store(std::move(cfg), std::memory_order_release);
     m_has_eq_changed.store(true, std::memory_order_release);
+}
+
+bool Decoder::eq_structure_changed(const EqConfig& applied, const EqConfig& next) const
+{
+    if (applied.enabled != next.enabled)
+        return true;
+    if (applied.bands.size() != next.bands.size())
+        return true;
+    for (int i = 0; i < applied.bands.size(); ++i) {
+        if (applied.bands[i].type != next.bands[i].type)
+            return true;
+        if (applied.bands[i].freq != next.bands[i].freq)
+            return true;
+        if (applied.bands[i].q != next.bands[i].q)
+            return true;
+    }
+    return false;
 }
 
 void Decoder::eq_check_and_update()
 {
-    if (m_has_eq_changed.load(std::memory_order_acquire) == true) {
-        m_has_eq_changed.store(false, std::memory_order_release);
-        // compare
-        gains_t new_gains = m_gains.load(std::memory_order_acquire);
-        char gain_buf[32];
-        std::string gain_str; // auto trim
-
-        auto send_gain = [&](const char* filter_name, float gain) {
-            float safe_gain = gain;
-            if (safe_gain > EQ_UPPER_LIMIT_DB)
-                safe_gain = EQ_UPPER_LIMIT_DB;
-            if (safe_gain < EQ_LOWER_LIMIT_DB)
-                safe_gain = EQ_LOWER_LIMIT_DB;
-
-            std::snprintf(gain_buf, sizeof(gain_buf), "%.2f", static_cast<double>(safe_gain));
-            gain_str = gain_buf;
-            avfilter_graph_send_command(m_filter_graph, filter_name, "gain", gain_str.c_str(),
-                                        nullptr, 0, 0);
-        };
-
-        float epsilon = std::numeric_limits<float>::epsilon();
-        if (std::abs(m_gains_old._31 - new_gains._31) >= epsilon) {
-            m_gains_old._31 = new_gains._31;
-            send_gain("eq_31", m_gains_old._31);
-        }
-        if (std::abs(m_gains_old._63 - new_gains._63) >= epsilon) {
-            m_gains_old._63 = new_gains._63;
-            send_gain("eq_63", m_gains_old._63);
-        }
-        if (std::abs(m_gains_old._125 - new_gains._125) >= epsilon) {
-            m_gains_old._125 = new_gains._125;
-            send_gain("eq_125", m_gains_old._125);
-        }
-        if (std::abs(m_gains_old._250 - new_gains._250) >= epsilon) {
-            m_gains_old._250 = new_gains._250;
-            send_gain("eq_250", m_gains_old._250);
-        }
-        if (std::abs(m_gains_old._500 - new_gains._500) >= epsilon) {
-            m_gains_old._500 = new_gains._500;
-            send_gain("eq_500", m_gains_old._500);
-        }
-        if (std::abs(m_gains_old._1k - new_gains._1k) >= epsilon) {
-            m_gains_old._1k = new_gains._1k;
-            send_gain("eq_1k", m_gains_old._1k);
-        }
-        if (std::abs(m_gains_old._2k - new_gains._2k) >= epsilon) {
-            m_gains_old._2k = new_gains._2k;
-            send_gain("eq_2k", m_gains_old._2k);
-        }
-        if (std::abs(m_gains_old._4k - new_gains._4k) >= epsilon) {
-            m_gains_old._4k = new_gains._4k;
-            send_gain("eq_4k", m_gains_old._4k);
-        }
-        if (std::abs(m_gains_old._8k - new_gains._8k) >= epsilon) {
-            m_gains_old._8k = new_gains._8k;
-            send_gain("eq_8k", m_gains_old._8k);
-        }
-        if (std::abs(m_gains_old._16k - new_gains._16k) >= epsilon) {
-            m_gains_old._16k = new_gains._16k;
-            send_gain("eq_16k", m_gains_old._16k);
-        }
+    if (!m_has_eq_changed.load(std::memory_order_acquire)) {
+        return;
     }
+    m_has_eq_changed.store(false, std::memory_order_release);
+
+    auto new_cfg = m_pending_eq.load(std::memory_order_acquire);
+    if (!new_cfg) {
+        return;
+    }
+
+    // 结构未变 → 仅按 band 发增益命令; 结构变化/首次 → 重建 filter graph
+    const bool rebuild = !m_applied_eq || this->eq_structure_changed(*m_applied_eq, *new_cfg);
+    if (rebuild) {
+        if (this->init_filters() != 0) {
+            logger->error("eq: failed to rebuild filter graph");
+        }
+        return; // init_filters 已按新配置建图并记录 m_applied_eq
+    }
+
+    char gain_buf[32];
+    for (int i = 0; i < new_cfg->bands.size() && i < static_cast<int>(m_eq_ctxs.size()); ++i) {
+        char name_buf[32];
+        eq_instance_name(i, name_buf, sizeof(name_buf));
+        std::snprintf(gain_buf, sizeof(gain_buf), "%.2f", new_cfg->bands[i].gain_db);
+        avfilter_graph_send_command(m_filter_graph, name_buf, "gain", gain_buf, nullptr, 0, 0);
+    }
+    m_applied_eq = std::move(new_cfg);
 }
 
 int64_t Decoder::position()

@@ -35,6 +35,7 @@ add_library(wusic_core STATIC
     theme/builtin/builtin_theme_plugin.h
     theme/builtin/builtin_theme_plugin.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../include/plugin/i_theme_plugin.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../include/plugin/eq_types.h
 
     lyrics_fetcher/lyrics_manager.h
     lyrics_fetcher/lyrics_manager.cpp
