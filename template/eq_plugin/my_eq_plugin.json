@@ -1,0 +1,10 @@
+{
+    "id": "com.wusicplayer.eq.myeq",
+    "name": "My EQ",
+    "version": "1.0",
+    "description": "A sample EQ plugin (3 bands)",
+    "author": "Your Name",
+    "categories": [
+        "eq"
+    ]
+}

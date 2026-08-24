@@ -1,0 +1,10 @@
+{
+    "id": "com.wusicplayer.theme.mytheme",
+    "name": "My Theme",
+    "version": "1.0",
+    "description": "A sample theme plugin",
+    "author": "Your Name",
+    "categories": [
+        "theme"
+    ]
+}
