@@ -8,6 +8,7 @@
 #include "controller/status_bar_controller.h"
 #include "core/config_manager/config_manager.h"
 #include "core/config_manager/i_configurable.h"
+#include "core/eq/builtin/builtin_eq_plugin.h"
 #include "core/event_bus.h"
 #include "core/logger/log_sink_gui.h"
 #include "core/notification_types.h"
@@ -20,6 +21,7 @@
 #include "model/playback_queue/playback_queue_service.h"
 #include "model/playlist/playlist_manager.h"
 #include "panel_coordinator.h"
+#include "plugin/i_eq_plugin.h"
 #include "service/library_interaction_service.h"
 #include "service/notification_service/notification_service.h"
 #include "service/playback_restore_service.h"
@@ -111,13 +113,13 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
 
     // 内建主题插件: 替代原有 register_builtin_palette, 统一走 PluginManager 内建通路
     builtin_dark_plugin_ = std::make_unique<BuiltinThemePlugin>(
-        QStringLiteral("wusic.theme.dark"), QStringLiteral("Wusic Dark"),
-        QStringLiteral("1.0.0"), QStringLiteral("Built-in dark theme"),
-        QStringLiteral("WusicPlayer"), QVector<QString>{QStringLiteral("theme")}, darkPalette());
+        QStringLiteral("wusic.theme.dark"), QStringLiteral("Wusic Dark"), QStringLiteral("1.0.0"),
+        QStringLiteral("Built-in dark theme"), QStringLiteral("WusicPlayer"),
+        QVector<QString>{QStringLiteral("theme")}, darkPalette());
     builtin_light_plugin_ = std::make_unique<BuiltinThemePlugin>(
-        QStringLiteral("wusic.theme.light"), QStringLiteral("Wusic Light"),
-        QStringLiteral("1.0.0"), QStringLiteral("Built-in light theme"),
-        QStringLiteral("WusicPlayer"), QVector<QString>{QStringLiteral("theme")}, lightPalette());
+        QStringLiteral("wusic.theme.light"), QStringLiteral("Wusic Light"), QStringLiteral("1.0.0"),
+        QStringLiteral("Built-in light theme"), QStringLiteral("WusicPlayer"),
+        QVector<QString>{QStringLiteral("theme")}, lightPalette());
     plugin_controller_->register_builtin(builtin_dark_plugin_.get());
     plugin_controller_->register_builtin(builtin_light_plugin_.get());
     // 主题管理器改为从 PluginManager 获取主题插件(内建 + 外部 .so)
@@ -125,6 +127,13 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     // 验证内建插件通路: builtin_themes() 应能取到两个内建主题插件
     const auto theme_names = ThemeManager::instance().builtin_themes();
     logger->debug("[PLUGIN] builtin themes: {}", theme_names.join(QStringLiteral(", ")));
+
+    // 内建 EQ 插件(十段 ±12dB): 验证 register_builtin 的 EQ 通路
+    builtin_eq_plugin_ = std::make_unique<BuiltinEqPlugin>();
+    plugin_controller_->register_builtin(builtin_eq_plugin_.get());
+    const auto eq_plugins = plugin_controller_->plugin_manager()->plugins<IEqPlugin>();
+    logger->debug("[PLUGIN] eq plugins: {} (builtin bands: {})", eq_plugins.size(),
+                  eq_plugins.isEmpty() ? 0 : eq_plugins.first()->eq_config().bands.size());
 
     // 媒体库控件(左侧播放列表下方):注入库与队列服务
     main_window_->library_browser()->set_library_manager(library_manager_.get());

@@ -17,6 +17,7 @@ class StatusBarController;
 class PanelCoordinator;
 class PluginController;
 class BuiltinThemePlugin;
+class BuiltinEqPlugin;
 
 class PlaybackService;
 class PlaybackRestoreService;
@@ -68,8 +69,10 @@ private:
     std::unique_ptr<MainWindow> main_window_;
     std::unique_ptr<StatusBarController> status_bar_controller_;
     std::unique_ptr<PluginController> plugin_controller_;
-    std::unique_ptr<BuiltinThemePlugin> builtin_dark_plugin_;  // 内建主题插件(替代 register_builtin_palette)
+    std::unique_ptr<BuiltinThemePlugin>
+        builtin_dark_plugin_; // 内建主题插件(替代 register_builtin_palette)
     std::unique_ptr<BuiltinThemePlugin> builtin_light_plugin_;
+    std::unique_ptr<BuiltinEqPlugin> builtin_eq_plugin_; // 内建 EQ 插件(十段 ±12dB)
 
     std::unique_ptr<PlaybackService> playback_service_;
     std::unique_ptr<PlaybackRestoreService> playback_restore_service_;

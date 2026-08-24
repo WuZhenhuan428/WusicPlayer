@@ -58,7 +58,12 @@ add_library(wusic_core STATIC
     plugin_manager/plugin_manager.cpp
     plugin_manager/plugin_manager.h
     plugin_manager/i_basic_plugin.cpp
+    plugin_manager/i_eq_plugin.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../include/plugin/i_basic_plugin.h
+
+    eq/builtin/builtin_eq_plugin.h
+    eq/builtin/builtin_eq_plugin.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../include/plugin/i_eq_plugin.h
 )
 
 # 插件接口(IBasicPlugin 等)的 moc 必须可被外部插件 .so 链接, 故需要 PIC
