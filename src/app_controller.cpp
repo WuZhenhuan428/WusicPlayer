@@ -127,6 +127,8 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     // 验证内建插件通路: builtin_themes() 应能取到两个内建主题插件
     const auto theme_names = ThemeManager::instance().builtin_themes();
     logger->debug("[PLUGIN] builtin themes: {}", theme_names.join(QStringLiteral(", ")));
+    logger->debug("[PLUGIN] external themes: {}",
+                  ThemeManager::instance().external_themes().join(QStringLiteral(", ")));
 
     // 内建 EQ 插件(十段 ±12dB): 验证 register_builtin 的 EQ 通路
     builtin_eq_plugin_ = std::make_unique<BuiltinEqPlugin>();

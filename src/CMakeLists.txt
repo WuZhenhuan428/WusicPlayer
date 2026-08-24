@@ -35,3 +35,10 @@ target_link_libraries(WusicPlayer
         wusic_headers
         wusic_service
 )
+
+# 外部插件经 dlopen 加载, 需要解析宿主可执行文件中的接口符号
+# (如 IBasicPlugin::staticMetaObject, 由静态库 wusic_core 提供);
+# 可执行文件默认不导出符号, 这里开启 --export-dynamic。
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_link_options(WusicPlayer PRIVATE "-rdynamic")
+endif()

@@ -31,14 +31,16 @@ bool PluginManager::load_plugin(const QString& path)
     // 加载插件 & 缓存对象
     handle->instance = handle->loader->instance();
     if (!handle->instance) {
-        logger->warn("load_plugin: failed to load plugin: {}", path);
+        logger->warn("load_plugin: failed to load plugin '{}': {}", path,
+                     handle->loader->errorString());
         return false;
     }
 
     // 缓存接口
     handle->interface = qobject_cast<IBasicPlugin*>(handle->instance);
     if (!handle->interface) {
-        logger->warn("plugin '{}' does not implement IBasicPlugin", path);
+        logger->warn("plugin '{}' does not implement IBasicPlugin (error: {})", path,
+                     handle->loader->errorString());
         return false;
     }
 
