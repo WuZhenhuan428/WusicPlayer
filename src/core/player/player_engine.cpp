@@ -98,7 +98,11 @@ void PlayerEngine::set_url(const std::string& url)
     m_decode_finished.store(false, std::memory_order_release);
 
     m_decoder = std::make_unique<Decoder>(url);
-    m_decoder->set_eq_gain(m_pending_gains); // apply cached EQ config
+    if (m_pending_eq) {
+        m_decoder->set_eq_config(m_pending_eq); // 插件路径: apply cached EQ config
+    } else {
+        m_decoder->set_eq_gain(m_pending_gains); // 兼容 shim: 旧十段路径
+    }
     m_decoder->work(m_buffer.get(), &m_decode_finished);
 
     // pre-filling 100ms buffer
@@ -202,6 +206,22 @@ void PlayerEngine::set_eq(gains_t gains)
     if (m_decoder) {
         m_decoder->set_eq_gain(gains);
     }
+}
+
+void PlayerEngine::set_eq_config(std::shared_ptr<const EqConfig> cfg)
+{
+    m_pending_eq = std::move(cfg);
+    if (m_decoder) {
+        m_decoder->set_eq_config(m_pending_eq);
+    }
+}
+
+std::shared_ptr<const EqConfig> PlayerEngine::eq_config() const
+{
+    if (m_decoder) {
+        return m_decoder->eq_config();
+    }
+    return m_pending_eq;
 }
 
 size_t PlayerEngine::get_recent_audio_frames(F32StereoFrame* out_buffer, size_t count)

@@ -24,6 +24,8 @@ public:
     virtual void apply_current()                                 = 0;
     /// 取消: 回退到上次 apply 的状态
     virtual void revert()                                        = 0;
+    /// 重置: 恢复到插件默认状态(如 0dB)
+    virtual void reset()                                         = 0;
 
 signals:
     /// 即时模式下 UI 改动即通知固定窗口

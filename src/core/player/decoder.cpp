@@ -541,3 +541,8 @@ const gains_t Decoder::gains() const
     gains_t gains = m_gains.load(std::memory_order_acquire);
     return gains;
 }
+
+std::shared_ptr<const EqConfig> Decoder::eq_config() const
+{
+    return m_pending_eq.load(std::memory_order_acquire);
+}

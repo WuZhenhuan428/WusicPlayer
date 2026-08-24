@@ -10,7 +10,8 @@
 
 namespace
 {
-constexpr double kEqFreqs[10] = {31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000};
+constexpr double kEqFreqs[10]  = {31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000};
+const char* kEqFreqStrings[10] = {"31", "63", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"};
 } // namespace
 
 BuiltinEqPlugin::BuiltinEqPlugin() = default;
@@ -55,7 +56,7 @@ QWidget* BuiltinEqPlugin::create_eq_widget(QWidget* parent)
 
     for (int i = 0; i < 10; ++i) {
         auto* vbl     = new QVBoxLayout;
-        auto* lb_freq = new QLabel(QString::number(kEqFreqs[i]), w);
+        auto* lb_freq = new QLabel(kEqFreqStrings[i], w);
         lb_freq->setAlignment(Qt::AlignHCenter);
         auto* lb_val = new QLabel(QStringLiteral("0 dB"), w);
         lb_val->setAlignment(Qt::AlignHCenter);
@@ -63,9 +64,9 @@ QWidget* BuiltinEqPlugin::create_eq_widget(QWidget* parent)
         slider->setRange(-range, range);
         slider->setValue(static_cast<int>(m_gains[i] * 100.0f));
 
-        vbl->addWidget(lb_freq);
-        vbl->addWidget(lb_val);
-        vbl->addWidget(slider, 1);
+        vbl->addWidget(lb_val, 0, Qt::AlignHCenter);
+        vbl->addWidget(slider, 1, Qt::AlignHCenter);
+        vbl->addWidget(lb_freq, 0, Qt::AlignHCenter);
         hbl->addLayout(vbl);
 
         m_sliders[i]   = slider;
@@ -99,6 +100,13 @@ void BuiltinEqPlugin::apply_current()
 void BuiltinEqPlugin::revert()
 {
     m_gains = m_gains_applied;
+    this->sync_sliders();
+}
+
+void BuiltinEqPlugin::reset()
+{
+    m_gains.fill(0.0f);
+    m_gains_applied.fill(0.0f);
     this->sync_sliders();
 }
 

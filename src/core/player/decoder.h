@@ -38,6 +38,8 @@ public:
     void set_eq_gain(gains_t gains);
     /// 插件路径: 任意 band, 无增益上下限
     void set_eq_config(std::shared_ptr<const EqConfig> cfg);
+    /// 查询当前请求的 EQ 配置(插件路径)
+    std::shared_ptr<const EqConfig> eq_config() const;
     const gains_t gains() const;
     int64_t position();
 

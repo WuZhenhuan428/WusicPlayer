@@ -33,6 +33,7 @@ public:
     EqConfig eq_config() const override;
     void apply_current() override;
     void revert() override;
+    void reset() override;
 
 private:
     void sync_sliders();

@@ -345,6 +345,16 @@ void Player::set_eq(gains_t gains)
     m_player_engine->set_eq(gains);
 }
 
+void Player::set_eq_config(std::shared_ptr<const EqConfig> cfg)
+{
+    m_player_engine->set_eq_config(std::move(cfg));
+}
+
+std::shared_ptr<const EqConfig> Player::eq_config() const
+{
+    return m_player_engine->eq_config();
+}
+
 float Player::volume() const
 {
     return m_player_engine->volume();

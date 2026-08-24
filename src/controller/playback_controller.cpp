@@ -102,6 +102,31 @@ void PlaybackController::set_eq_enabled(bool enabled)
     }
 }
 
+void PlaybackController::set_eq_config(EqConfig cfg)
+{
+    if (!m_player) {
+        return;
+    }
+    m_eq_enabled      = cfg.enabled;
+    m_eq_config_cache = std::make_shared<const EqConfig>(std::move(cfg));
+    m_player->set_eq_config(m_eq_config_cache);
+}
+
+EqConfig PlaybackController::eq_config() const
+{
+    if (m_eq_config_cache) {
+        return *m_eq_config_cache;
+    }
+    // 回退: 从播放链路取当前生效配置(如首次打开 EQ 窗口时)
+    if (m_player) {
+        auto cur = m_player->eq_config();
+        if (cur) {
+            return *cur;
+        }
+    }
+    return EqConfig{};
+}
+
 bool PlaybackController::is_eq_enabled() const
 {
     return m_eq_enabled;

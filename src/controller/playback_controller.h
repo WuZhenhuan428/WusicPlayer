@@ -3,12 +3,14 @@
 #include "core/config_manager/i_configurable.h"
 #include "core/player/player.h"
 #include "core/player_types.h"
+#include "plugin/eq_types.h"
 
 #include <QAudioDevice>
 #include <QByteArray>
 #include <QList>
 #include <QObject>
 #include <QString>
+#include <memory>
 
 class PlaybackController : public QObject, public IConfigurable
 {
@@ -28,6 +30,9 @@ public:
     void set_eq_enabled(bool enabled);
     const gains_t gains() const;
     bool is_eq_enabled() const;
+    /// 插件路径: 应用任意 band 的 EQ 配置(enabled 取自 cfg.enabled)
+    void set_eq_config(EqConfig cfg);
+    EqConfig eq_config() const;
     void set_mute(bool mute_on);
     bool is_mute();
     void flip_mute();
@@ -64,4 +69,5 @@ private:
 
     gains_t m_gains_cache   = {};
     bool m_eq_enabled       = false;
+    std::shared_ptr<const EqConfig> m_eq_config_cache;
 };

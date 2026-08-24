@@ -175,18 +175,15 @@ void PanelCoordinator::ensure_log_viewer()
 
 void PanelCoordinator::open_eq_widget()
 {
-    auto& playback_ctl = this->ctx_.playback_controller_;
-    auto& main_window  = this->ctx_.main_window_;
+    auto& main_window = this->ctx_.main_window_;
     if (!eq_widget_) {
-        eq_widget_ =
-            new EQWidget(playback_ctl->gains(), playback_ctl->is_eq_enabled(), false, main_window);
+        eq_widget_ = new EQWidget(this->ctx_, main_window);
         eq_widget_->setWindowFlag(Qt::Window, true);
         eq_widget_->setAttribute(Qt::WA_DeleteOnClose);
 
-        connect(eq_widget_, &EQWidget::sgnGainChanged, playback_ctl,
-                &PlaybackController::set_gains);
-        connect(eq_widget_, &EQWidget::sgnEqEnabledChanged, playback_ctl,
-                &PlaybackController::set_eq_enabled);
+        // “跳转至设置页面” → 插件管理页
+        connect(eq_widget_, &EQWidget::sgnOpenSettingsRequested, this,
+                [this]() { this->open_settings_panel_page(QStringLiteral("Plugins")); });
 
         // QPointer auto-nulls on destroy; config saved via save_config() on exit
         connect(eq_widget_, &QObject::destroyed, this, []() {});
