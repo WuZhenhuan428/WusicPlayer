@@ -28,6 +28,7 @@
 
 #include <QAbstractItemModel>
 #include <QAbstractItemView>
+#include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
 #include <QJsonObject>
@@ -98,6 +99,12 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     // ---- 初始化结束 ---- //
 
     notification_service_->add_display(status_bar_controller_.get());
+
+    // 插件: 启动扫描可执行文件旁的 plugins/ 目录(不存在则创建)
+    const QString plugins_dir =
+        QCoreApplication::applicationDirPath() + QStringLiteral("/plugins");
+    QDir().mkpath(plugins_dir);
+    plugin_controller_->scan_directory(plugins_dir);
 
     // 媒体库控件(左侧播放列表下方):注入库与队列服务
     main_window_->library_browser()->set_library_manager(library_manager_.get());

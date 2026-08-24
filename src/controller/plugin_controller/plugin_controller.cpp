@@ -42,6 +42,11 @@ void PluginController::remove(const QString& id)
     }
 }
 
+void PluginController::scan_directory(const QString& dir)
+{
+    plugin_manager_->scan_directory(dir);
+}
+
 const QVector<PluginDescriptor> PluginController::descriptors()
 {
     return plugin_manager_->descriptors();

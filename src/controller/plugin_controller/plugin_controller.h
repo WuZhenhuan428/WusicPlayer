@@ -18,6 +18,10 @@ public:
 
     void import();
     void remove(const QString& id);
+
+    /// 扫描目录下的插件(递归, 经 PluginManager)
+    void scan_directory(const QString& dir);
+
     const QVector<PluginDescriptor> descriptors();
 
 signals:
