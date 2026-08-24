@@ -451,29 +451,6 @@ int Decoder::process_frame_with_eq(AVFrame* frame)
     return 0;
 }
 
-void Decoder::set_eq_gain(gains_t gains)
-{
-    // 兼容 shim: 保留原十段 ±12dB 行为, 转换为 EqConfig 走统一后端
-    auto cfg               = std::make_shared<EqConfig>();
-    cfg->enabled           = true;
-
-    const double freqs[10] = {31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000};
-    const double vals[10]  = {gains._31, gains._63, gains._125, gains._250, gains._500,
-                              gains._1k, gains._2k, gains._4k,  gains._8k,  gains._16k};
-    for (int i = 0; i < 10; ++i) {
-        double g = vals[i];
-        if (g > EQ_UPPER_LIMIT_DB)
-            g = EQ_UPPER_LIMIT_DB;
-        if (g < EQ_LOWER_LIMIT_DB)
-            g = EQ_LOWER_LIMIT_DB;
-        // Q≈1.414 对应原 width_type=o:width=1(1 octave 带宽)
-        cfg->bands.push_back(EqBand{EqFilterType::Parametric, freqs[i], 1.414, g});
-    }
-
-    m_gains.store(gains, std::memory_order_release); // 兼容 gains() 查询
-    this->set_eq_config(std::move(cfg));
-}
-
 void Decoder::set_eq_config(std::shared_ptr<const EqConfig> cfg)
 {
     if (!cfg) {
@@ -534,12 +511,6 @@ void Decoder::eq_check_and_update()
 int64_t Decoder::position()
 {
     return m_pos_ms.load(std::memory_order_acquire);
-}
-
-const gains_t Decoder::gains() const
-{
-    gains_t gains = m_gains.load(std::memory_order_acquire);
-    return gains;
 }
 
 std::shared_ptr<const EqConfig> Decoder::eq_config() const

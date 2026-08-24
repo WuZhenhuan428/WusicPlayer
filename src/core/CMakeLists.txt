@@ -2,7 +2,6 @@ add_library(wusic_core STATIC
     types.h
     hsv_types.h
     search_types.h
-    player_types.h
     event_bus.h
     event_bus.cpp
     

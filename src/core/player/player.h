@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/player/player_engine.h"
-#include "core/player_types.h"
 
 #include <QAudioDevice>
 #include <QByteArray>
@@ -39,8 +38,6 @@ public:
     void set_mute(bool mute);
     void set_volume(float vol);
     float volume() const;
-    void set_eq(gains_t gains);
-    const gains_t gains() const;
     /// 插件路径: 任意 band 的 EQ 配置
     void set_eq_config(std::shared_ptr<const EqConfig> cfg);
     std::shared_ptr<const EqConfig> eq_config() const;

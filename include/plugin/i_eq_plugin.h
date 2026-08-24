@@ -26,10 +26,12 @@ public:
     virtual void revert()                                        = 0;
     /// 重置: 恢复到插件默认状态(如 0dB)
     virtual void reset()                                         = 0;
+    /// 从给定配置恢复 UI 与已应用快照(启动恢复持久化配置后打开窗口时同步)
+    virtual void restore_from_config(const EqConfig& cfg)        = 0;
 
 signals:
     /// 即时模式下 UI 改动即通知固定窗口
     void sgn_config_changed();
 };
 
-Q_DECLARE_INTERFACE(IEqPlugin, "com.wusicplayer.IEqPlugin/2.0")
+Q_DECLARE_INTERFACE(IEqPlugin, "com.wusicplayer.IEqPlugin/2.1")

@@ -4,7 +4,6 @@
 #include "core/player/decoder.h"
 #include "core/player/device.h"
 #include "core/player/ring_buffer.hpp"
-#include "core/player_types.h"
 
 #include <atomic>
 #include <functional>
@@ -45,8 +44,6 @@ public:
     PlayerEngine::PlayingState state();
     void seek(int64_t pos_ms);
     void set_volume(float volume);
-    void set_eq(gains_t gains);
-    const gains_t gains() const;
     /// 插件路径: 任意 band 的 EQ 配置(无增益上下限)
     void set_eq_config(std::shared_ptr<const EqConfig> cfg);
     /// 查询当前请求的 EQ 配置
@@ -73,9 +70,7 @@ private:
 
     std::atomic<PlayingState> m_state;
 
-    // Cached EQ gains — applied to Decoder when it is created (set_url),
-    // so EQ config loaded before any audio file can still take effect.
-    gains_t m_pending_gains = {};
-    // 插件路径缓存: set_url 创建 Decoder 时优先应用它(旧 shim 路径已淘汰时保留 fallback)
+    // 缓存 EQ 配置 — set_url 创建 Decoder 时应用,
+    // 使任何音频文件加载前设置/恢复的 EQ 配置都能生效。
     std::shared_ptr<const EqConfig> m_pending_eq;
 };

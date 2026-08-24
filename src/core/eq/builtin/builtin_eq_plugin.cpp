@@ -110,6 +110,16 @@ void BuiltinEqPlugin::reset()
     this->sync_sliders();
 }
 
+void BuiltinEqPlugin::restore_from_config(const EqConfig& cfg)
+{
+    m_gains.fill(0.0f);
+    for (int i = 0; i < 10 && i < cfg.bands.size(); ++i) {
+        m_gains[i] = static_cast<float>(cfg.bands[i].gain_db);
+    }
+    m_gains_applied = m_gains; // 恢复值视为已应用, Cancel 不回退到全 0
+    this->sync_sliders();
+}
+
 void BuiltinEqPlugin::sync_sliders()
 {
     for (int i = 0; i < 10; ++i) {

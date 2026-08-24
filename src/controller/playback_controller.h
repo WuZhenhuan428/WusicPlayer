@@ -2,7 +2,6 @@
 
 #include "core/config_manager/i_configurable.h"
 #include "core/player/player.h"
-#include "core/player_types.h"
 #include "plugin/eq_types.h"
 
 #include <QAudioDevice>
@@ -26,13 +25,12 @@ public:
     void set_position(qint64 pos_ms);
     qint64 position();
     void set_volume(int percent);
-    void set_gains(gains_t gains);
-    void set_eq_enabled(bool enabled);
-    const gains_t gains() const;
-    bool is_eq_enabled() const;
     /// 插件路径: 应用任意 band 的 EQ 配置(enabled 取自 cfg.enabled)
     void set_eq_config(EqConfig cfg);
     EqConfig eq_config() const;
+    /// 当前选中的 EQ 插件 id(持久化)
+    QString eq_plugin_id() const;
+    void set_eq_plugin_id(const QString& id);
     void set_mute(bool mute_on);
     bool is_mute();
     void flip_mute();
@@ -67,7 +65,6 @@ private:
     int m_last_position_ms  = 0;
     bool m_last_was_playing = false;
 
-    gains_t m_gains_cache   = {};
-    bool m_eq_enabled       = false;
+    QString m_eq_plugin_id; // 选中的 EQ 插件 id(持久化)
     std::shared_ptr<const EqConfig> m_eq_config_cache;
 };

@@ -1,5 +1,6 @@
 #include "controller/playback_controller.h"
 
+#include <QJsonArray>
 #include <QJsonObject>
 
 PlaybackController::PlaybackController(Player* player, QObject* parent) :
@@ -83,31 +84,11 @@ void PlaybackController::set_volume(int percent)
     emit sgn_volume_changed(percent);
 }
 
-void PlaybackController::set_gains(gains_t gains)
-{
-    if (!m_player) {
-        return;
-    }
-    m_gains_cache = gains;
-    m_player->set_eq(gains);
-}
-
-void PlaybackController::set_eq_enabled(bool enabled)
-{
-    m_eq_enabled = enabled;
-    if (enabled) {
-        m_player->set_eq(m_gains_cache);
-    } else {
-        m_player->set_eq(gains_t{});
-    }
-}
-
 void PlaybackController::set_eq_config(EqConfig cfg)
 {
     if (!m_player) {
         return;
     }
-    m_eq_enabled      = cfg.enabled;
     m_eq_config_cache = std::make_shared<const EqConfig>(std::move(cfg));
     m_player->set_eq_config(m_eq_config_cache);
 }
@@ -127,9 +108,14 @@ EqConfig PlaybackController::eq_config() const
     return EqConfig{};
 }
 
-bool PlaybackController::is_eq_enabled() const
+QString PlaybackController::eq_plugin_id() const
 {
-    return m_eq_enabled;
+    return m_eq_plugin_id;
+}
+
+void PlaybackController::set_eq_plugin_id(const QString& id)
+{
+    m_eq_plugin_id = id;
 }
 
 void PlaybackController::read(QString filepath)
@@ -204,26 +190,27 @@ void PlaybackController::load_from_json(const QJsonObject& json)
     this->set_mute(obj.value("muted").toBool());
     this->set_device_by_id(QByteArray::fromBase64(obj.value("last_device").toString().toUtf8()));
 
-    m_last_position_ms   = obj.value("last_position_ms").toInt();
-    m_last_was_playing   = obj.value("last_was_playing").toBool(false);
+    m_last_position_ms       = obj.value("last_position_ms").toInt();
+    m_last_was_playing       = obj.value("last_was_playing").toBool(false);
 
-    // Restore EQ state
-    m_eq_enabled         = obj.value("eq_enabled").toBool(false);
-    QJsonObject eq_gains = obj.value("eq_gains").toObject();
-    if (!eq_gains.isEmpty()) {
-        m_gains_cache._31  = static_cast<float>(eq_gains.value("_31").toDouble());
-        m_gains_cache._63  = static_cast<float>(eq_gains.value("_63").toDouble());
-        m_gains_cache._125 = static_cast<float>(eq_gains.value("_125").toDouble());
-        m_gains_cache._250 = static_cast<float>(eq_gains.value("_250").toDouble());
-        m_gains_cache._500 = static_cast<float>(eq_gains.value("_500").toDouble());
-        m_gains_cache._1k  = static_cast<float>(eq_gains.value("_1k").toDouble());
-        m_gains_cache._2k  = static_cast<float>(eq_gains.value("_2k").toDouble());
-        m_gains_cache._4k  = static_cast<float>(eq_gains.value("_4k").toDouble());
-        m_gains_cache._8k  = static_cast<float>(eq_gains.value("_8k").toDouble());
-        m_gains_cache._16k = static_cast<float>(eq_gains.value("_16k").toDouble());
-    }
-    if (m_eq_enabled && m_player) {
-        m_player->set_eq(m_gains_cache);
+    // Restore EQ state (EqConfig 驱动)
+    const QJsonObject eq_obj = obj.value("eq").toObject();
+    m_eq_plugin_id           = eq_obj.value("plugin_id").toString();
+    if (m_player && eq_obj.contains("enabled")) {
+        auto cfg               = std::make_shared<EqConfig>();
+        cfg->enabled           = eq_obj.value("enabled").toBool(false);
+        const QJsonArray bands = eq_obj.value("bands").toArray();
+        for (const auto& b : bands) {
+            const QJsonObject bo = b.toObject();
+            EqBand band;
+            band.type    = static_cast<EqFilterType>(bo.value("type").toInt(0));
+            band.freq    = bo.value("freq").toDouble(1000.0);
+            band.q       = bo.value("q").toDouble(1.414);
+            band.gain_db = static_cast<float>(bo.value("gain_db").toDouble(0.0));
+            cfg->bands.push_back(band);
+        }
+        m_eq_config_cache = cfg;
+        m_player->set_eq_config(cfg);
     }
 
     // TODO: consider about time sequence
@@ -245,19 +232,26 @@ QJsonObject PlaybackController::save_to_json()
     obj["last_was_playing"] = m_last_was_playing;
     obj["last_position_ms"] = m_last_position_ms;
 
-    obj["eq_enabled"]       = m_eq_enabled;
-    QJsonObject eq_gains;
-    eq_gains["_31"]  = m_gains_cache._31;
-    eq_gains["_63"]  = m_gains_cache._63;
-    eq_gains["_125"] = m_gains_cache._125;
-    eq_gains["_250"] = m_gains_cache._250;
-    eq_gains["_500"] = m_gains_cache._500;
-    eq_gains["_1k"]  = m_gains_cache._1k;
-    eq_gains["_2k"]  = m_gains_cache._2k;
-    eq_gains["_4k"]  = m_gains_cache._4k;
-    eq_gains["_8k"]  = m_gains_cache._8k;
-    eq_gains["_16k"] = m_gains_cache._16k;
-    obj["eq_gains"]  = eq_gains;
+    // EQ 配置(插件路径)
+    QJsonObject eq_obj;
+    eq_obj["plugin_id"] = m_eq_plugin_id;
+    if (m_eq_config_cache) {
+        eq_obj["enabled"] = m_eq_config_cache->enabled;
+        QJsonArray bands;
+        for (const EqBand& band : m_eq_config_cache->bands) {
+            QJsonObject bo;
+            bo["type"]    = static_cast<int>(band.type);
+            bo["freq"]    = band.freq;
+            bo["q"]       = band.q;
+            bo["gain_db"] = band.gain_db;
+            bands.append(bo);
+        }
+        eq_obj["bands"] = bands;
+    } else {
+        eq_obj["enabled"] = false;
+        eq_obj["bands"]   = QJsonArray();
+    }
+    obj["eq"] = eq_obj;
 
     return obj;
 }
@@ -275,9 +269,4 @@ int PlaybackController::last_position_ms() const
 bool PlaybackController::last_was_playing() const
 {
     return m_last_was_playing;
-}
-
-const gains_t PlaybackController::gains() const
-{
-    return m_player->gains();
 }

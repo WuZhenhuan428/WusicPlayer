@@ -48,6 +48,7 @@ private:
     IEqPlugin* m_current_plugin = nullptr;
     QWidget* m_plugin_host      = nullptr; // 宿主(带 margin)
     QWidget* m_plugin_widget    = nullptr; // 当前插件 UI
+    int m_loaded_index_         = -1;      // 已加载的插件索引(防重复切换)
 
     QComboBox* m_cb_plugins     = nullptr;
     QLabel* m_lb_current        = nullptr;

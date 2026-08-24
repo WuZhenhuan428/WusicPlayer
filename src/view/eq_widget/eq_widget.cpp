@@ -105,15 +105,32 @@ void EQWidget::reload_plugins()
         m_lb_current->setText(tr("Current plugin: (none)"));
         return;
     }
-    m_cb_plugins->setCurrentIndex(0);
+
+    // 恢复上次选中的插件(id 匹配; 找不到则默认第一个)
+    const QString saved_id = ctx_.playback_controller_->eq_plugin_id();
+    int index              = 0;
+    for (int i = 0; i < m_plugins.size(); ++i) {
+        if (m_plugins[i]->id() == saved_id) {
+            index = i;
+            break;
+        }
+    }
+    m_cb_plugins->setCurrentIndex(index);
     // 注意: addItem 添加首个条目时 Qt 已自动把 currentIndex 置为 0,
     // 此后再 setCurrentIndex(0) 不会触发 currentIndexChanged 信号,
     // 必须显式调用 switch_plugin 完成首次插件加载。
-    this->switch_plugin(0);
+    // switch_plugin 内部按 m_loaded_index_ 去重, 重复调用安全。
+    this->switch_plugin(index);
 }
 
 void EQWidget::switch_plugin(int index)
 {
+    // 防重: setCurrentIndex 触发信号与显式调用可能重复进入
+    if (m_loaded_index_ == index && m_current_plugin) {
+        return;
+    }
+    m_loaded_index_ = index;
+
     if (m_instant_conn) {
         disconnect(m_instant_conn);
         m_instant_conn = {};
@@ -134,6 +151,14 @@ void EQWidget::switch_plugin(int index)
     if (m_plugin_widget) {
         m_plugin_host->layout()->addWidget(m_plugin_widget);
     }
+
+    // 用后端当前配置同步插件 UI(启动恢复/持久化的配置)。
+    // 必须在连接 sgn_config_changed 之前执行, 避免 restore 引发的
+    // valueChanged 触发即时推送。
+    m_current_plugin->restore_from_config(ctx_.playback_controller_->eq_config());
+
+    // 记录本次选中的插件(退出时持久化)
+    ctx_.playback_controller_->set_eq_plugin_id(m_current_plugin->id());
 
     // 即时模式: 插件 UI 改动即同步后端
     m_instant_conn = connect(m_current_plugin, &IEqPlugin::sgn_config_changed, this,

@@ -34,6 +34,7 @@ public:
     void apply_current() override;
     void revert() override;
     void reset() override;
+    void restore_from_config(const EqConfig& cfg) override;
 
 private:
     void sync_sliders();

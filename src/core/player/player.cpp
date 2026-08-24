@@ -340,11 +340,6 @@ void Player::refresh_device_cache()
                  m_audio_devices.first().description());
 }
 
-void Player::set_eq(gains_t gains)
-{
-    m_player_engine->set_eq(gains);
-}
-
 void Player::set_eq_config(std::shared_ptr<const EqConfig> cfg)
 {
     m_player_engine->set_eq_config(std::move(cfg));
@@ -358,9 +353,4 @@ std::shared_ptr<const EqConfig> Player::eq_config() const
 float Player::volume() const
 {
     return m_player_engine->volume();
-}
-
-const gains_t Player::gains() const
-{
-    return m_player_engine->gains();
 }

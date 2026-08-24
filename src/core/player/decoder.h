@@ -11,7 +11,6 @@ extern "C" {
 }
 
 #include "core/player/config.h"
-#include "core/player_types.h"
 #include "plugin/eq_types.h"
 #include "ring_buffer.hpp"
 
@@ -34,13 +33,10 @@ public:
     void stop();
     void seek(int64_t position_ms);
     const std::unordered_map<std::string, std::string> metadata();
-    /// 兼容 shim: ±12dB 钳制后转换为 10 段 EqConfig(旧 UI 路径)
-    void set_eq_gain(gains_t gains);
     /// 插件路径: 任意 band, 无增益上下限
     void set_eq_config(std::shared_ptr<const EqConfig> cfg);
-    /// 查询当前请求的 EQ 配置(插件路径)
+    /// 查询当前请求的 EQ 配置
     std::shared_ptr<const EqConfig> eq_config() const;
-    const gains_t gains() const;
     int64_t position();
 
 private:
@@ -81,8 +77,6 @@ private:
     std::atomic<std::shared_ptr<const EqConfig>> m_pending_eq{nullptr};
     std::shared_ptr<const EqConfig> m_applied_eq; // 解码线程独占
     std::atomic_bool m_has_eq_changed{false};
-
-    std::atomic<gains_t> m_gains; // 兼容查询用(非 lock-free, 可接受)
 
     std::atomic<int64_t> m_pos_ms{0};
 };
