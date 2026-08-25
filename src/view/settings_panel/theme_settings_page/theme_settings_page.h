@@ -33,14 +33,14 @@ private:
 
     ThemeService* m_service;
 
-    // 来源过滤 RadioButton
+    // 来源过滤
     QRadioButton* m_rb_all;
     QRadioButton* m_rb_system;
     QRadioButton* m_rb_builtin;
     QRadioButton* m_rb_external;
     QButtonGroup* m_source_group;
 
-    // 图标模式 RadioButton
+    // 图标模式
     QRadioButton* m_rb_icon_auto;
     QRadioButton* m_rb_icon_light;
     QRadioButton* m_rb_icon_dark;

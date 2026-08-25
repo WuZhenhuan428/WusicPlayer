@@ -17,6 +17,7 @@
 #include "core/theme/builtin/wusic_light_palette.h"
 #include "core/theme/theme_manager.h"
 #include "core/types.h"
+#include "core/utils/icon.hpp"
 #include "model/library/library_manager.h"
 #include "model/playback_queue/playback_queue_service.h"
 #include "model/playlist/playlist_manager.h"
@@ -48,6 +49,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QTreeView>
+
 #include <format>
 #include <string>
 
@@ -506,6 +508,8 @@ void AppController::setup_status_bar_connections()
 }
 
 #include <QApplication>
+#include <QGuiApplication>
+#include <QStyleHints>
 void AppController::initialize_sys_tray()
 {
     if (!QSystemTrayIcon::isSystemTrayAvailable()) {
@@ -515,21 +519,31 @@ void AppController::initialize_sys_tray()
     sys_tray_->setIcon(QIcon(":icons/main.ico"));
     sys_tray_->setToolTip("WusicPlayer");
 
+    // 仅在启动时做主题检测, 启动后将不会响应主题变化
+    bool is_dark_mode =
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+        QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark;
+#else // 暂时不做低版本兼容
+        false;
+#endif
+
     QMenu* menu         = new QMenu(main_window_.get());
     QAction* play_pause = new QAction(tr("Play/Pause"), menu);
-    play_pause->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)));
+    play_pause->setIcon(QIcon(utils::icon::colored_icon_path("play", is_dark_mode)));
     QAction* stop = new QAction(tr("Stop"), menu);
-    stop->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaStop)));
+    stop->setIcon(QIcon(QIcon(utils::icon::colored_icon_path("stop", is_dark_mode))));
     QAction* mute = new QAction(tr("Mute"), menu);
     mute->setCheckable(true);
     QAction* next = new QAction(tr("Next"), menu);
-    next->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_ArrowRight)));
+    next->setIcon(QIcon(QIcon(utils::icon::colored_icon_path("next", is_dark_mode))));
     QAction* prev = new QAction(tr("Previous"), menu);
-    prev->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_ArrowLeft)));
+    prev->setIcon(QIcon(QIcon(utils::icon::colored_icon_path("prev", is_dark_mode))));
     QAction* show = new QAction(tr("Show"), menu);
+    show->setIcon(QIcon(QIcon(utils::icon::colored_icon_path("maximum", is_dark_mode))));
     QAction* hide = new QAction(tr("Hide"), menu);
+    hide->setIcon(QIcon(QIcon(utils::icon::colored_icon_path("minimum", is_dark_mode))));
     QAction* exit = new QAction(tr("Exit"), menu);
-    exit->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogCloseButton)));
+    exit->setIcon(QIcon(QIcon(utils::icon::general_icon_path("exit"))));
 
     menu->addAction(play_pause);
     menu->addAction(stop);
@@ -545,13 +559,13 @@ void AppController::initialize_sys_tray()
     sys_tray_->show();
     sys_tray_->setContextMenu(menu);
 
-    connect(play_pause, &QAction::triggered, this, [this, play_pause]() {
+    connect(play_pause, &QAction::triggered, this, [this, play_pause, is_dark_mode]() {
         if (this->playback_service_->is_playing()) {
             this->playback_controller_->pause();
-            play_pause->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)));
+            play_pause->setIcon(QIcon(utils::icon::colored_icon_path("play", is_dark_mode)));
         } else {
             this->playback_controller_->play();
-            play_pause->setIcon(QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPause)));
+            play_pause->setIcon(QIcon(utils::icon::colored_icon_path("pause", is_dark_mode)));
         }
     });
     connect(stop, &QAction::triggered, this, [this]() { this->playback_controller_->stop(); });

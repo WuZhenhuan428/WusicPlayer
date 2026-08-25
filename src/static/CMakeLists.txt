@@ -10,6 +10,7 @@ function(wusic_add_static_resources target_name)
 
         "${_static_root}/icons/main.ico"
 	"${_static_root}/icons/main_64_64.ico"
+        "${_static_root}/icons/exit.svg"
 
         "${_static_root}/icons/light/device.svg"
         "${_static_root}/icons/light/in_order.svg"
@@ -27,6 +28,8 @@ function(wusic_add_static_resources target_name)
         "${_static_root}/icons/light/volume_2.svg"
         "${_static_root}/icons/light/volume_3.svg"
         "${_static_root}/icons/light/volume_x.svg"
+        "${_static_root}/icons/light/maximum.svg"
+        "${_static_root}/icons/light/minimum.svg"
 
         "${_static_root}/icons/dark/device.svg"
         "${_static_root}/icons/dark/in_order.svg"
@@ -44,7 +47,8 @@ function(wusic_add_static_resources target_name)
         "${_static_root}/icons/dark/volume_2.svg"
         "${_static_root}/icons/dark/volume_3.svg"
         "${_static_root}/icons/dark/volume_x.svg"
-
+        "${_static_root}/icons/dark/maximum.svg"
+        "${_static_root}/icons/dark/minimum.svg"
     )
 
     qt_add_resources(${target_name} "wusic_assets"

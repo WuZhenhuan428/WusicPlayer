@@ -19,10 +19,6 @@ ThemeSettingsPage::ThemeSettingsPage(ThemeService* service, QWidget* parent) :
     refresh_current_label();
 }
 
-// ============================================================================
-// UI
-// ============================================================================
-
 void ThemeSettingsPage::init_ui()
 {
     // 来源过滤 RadioButton
@@ -111,10 +107,6 @@ void ThemeSettingsPage::init_ui()
     m_vbl_main->addLayout(m_hbl_actions);
 }
 
-// ============================================================================
-// 连接
-// ============================================================================
-
 void ThemeSettingsPage::init_connections()
 {
     connect(m_source_group, &QButtonGroup::idClicked, this,
@@ -145,10 +137,6 @@ void ThemeSettingsPage::init_connections()
         }
     });
 }
-
-// ============================================================================
-// 槽
-// ============================================================================
 
 void ThemeSettingsPage::on_source_filter_changed(int /*id*/)
 {

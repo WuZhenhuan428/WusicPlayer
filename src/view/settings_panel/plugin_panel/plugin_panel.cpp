@@ -23,8 +23,13 @@ void PluginPanel::init_ui()
     tw_plugin_list_->setHorizontalHeaderLabels(
         {tr("ID"), tr("Name"), tr("Version"), tr("Description"), tr("Author"), tr("Categories")});
     tw_plugin_list_->horizontalHeader()->setSectionResizeMode(5, QHeaderView::Stretch);
+    tw_plugin_list_->horizontalHeader()->setSectionsMovable(true);
+    tw_plugin_list_->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft);
     tw_plugin_list_->setSelectionBehavior(QAbstractItemView::SelectRows);
     tw_plugin_list_->setSelectionMode(QAbstractItemView::SingleSelection);
+    tw_plugin_list_->verticalHeader()->hide();
+    tw_plugin_list_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    tw_plugin_list_->setDragEnabled(true);
 
     btn_refresh_     = new QPushButton(tr("Refresh"), this);
     btn_import_      = new QPushButton(tr("Import"), this);
