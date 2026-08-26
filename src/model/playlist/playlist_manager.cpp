@@ -6,8 +6,6 @@
 #include <QFileInfo>
 #include <QTimer>
 
-#include <optional>
-
 #include "core/logger/logger_manager.h"
 namespace
 {
@@ -114,7 +112,7 @@ void PlaylistManager::add_track(const PlaylistId& pid, const QString& filepath,
     const AddFilePolicy eff = resolve_effective_policy(policy, AddFilePolicy::keep_external);
     if (m_library && eff == AddFilePolicy::import_to_library) {
         const QString norm = utils::path::normalize_path(filepath);
-        if (!m_library->track_by_path(norm).has_value()) {
+        if (!m_library->track_by_path(norm)) {
             m_library->add_watched_folder(QFileInfo(norm).absolutePath());
         }
     }
@@ -152,7 +150,7 @@ int PlaylistManager::add_library_tracks(const PlaylistId& pid, const QVector<Tra
             continue;
         }
         // 库曲目:优先走库解析(元数据由库维护);库未注入时按 TrackId 直查
-        const auto lib = m_library ? m_library->track_by_id(tid) : std::nullopt;
+        const auto lib = m_library ? m_library->track_by_id(tid) : nullptr;
         if (lib) {
             Track t;
             t.source           = TrackSource::library;

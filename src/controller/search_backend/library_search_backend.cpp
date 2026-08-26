@@ -34,12 +34,12 @@ QVector<SearchHint> LibrarySearchBackend::search(const SearchQuery& query)
     hints.reserve(tracks.size());
     for (const auto& t : tracks) {
         SearchHint h;
-        h.track_id     = t.track_id;
-        h.title        = t.meta.title;
-        h.artist       = t.meta.artist;
-        h.album_artist = t.meta.album_artist;
-        h.album        = t.meta.album;
-        h.duration_s   = t.meta.duration_s;
+        h.track_id     = t->track_id;
+        h.title        = t->meta.title;
+        h.artist       = t->meta.artist;
+        h.album_artist = t->meta.album_artist;
+        h.album        = t->meta.album;
+        h.duration_s   = t->meta.duration_s;
         h.score        = 0;
 
         // FTS5 默认大小写不敏感;case_sensitive 时后置精确过滤

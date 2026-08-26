@@ -93,7 +93,7 @@ static void test_find_and_remove()
     if (found) {
         CHECK(found->filepath == t.filepath);
     }
-    CHECK(pl.find_track_by_id(EntryId()) == nullptr);             // 空身份未命中
+    CHECK(pl.find_track_by_id(EntryId()) == nullptr);              // 空身份未命中
     CHECK(pl.find_track_by_id(EntryId::create_uuid()) == nullptr); // 随机身份未命中
 
     pl.remove_track(t.entry_id);
@@ -217,10 +217,11 @@ static void test_repo_load_batched()
     PlaylistRepo repo2;
     QEventLoop loop;
     bool finished = false;
-    QObject::connect(&repo2, &PlaylistRepo::sgn_playlist_load_finished, &loop, [&](const PlaylistId&) {
-        finished = true;
-        loop.quit();
-    });
+    QObject::connect(&repo2, &PlaylistRepo::sgn_playlist_load_finished, &loop,
+                     [&](const PlaylistId&) {
+                         finished = true;
+                         loop.quit();
+                     });
 
     PlaylistId new_pid = repo2.load_list_batched(file, 10);
     CHECK(!new_pid.is_null());
@@ -290,16 +291,16 @@ static void test_upgrade_external()
 
     const TrackId lib_id = TrackId::create_uuid();
     const int upgraded =
-        pl.upgrade_external_tracks([&](const QString& path) -> std::optional<LibraryTrack> {
+        pl.upgrade_external_tracks([&](const QString& path) -> std::shared_ptr<const LibraryTrack> {
             if (path == utils::path::normalize_path("/lib/now_in_lib.mp3")) {
                 LibraryTrack lt;
                 lt.track_id     = lib_id;
                 lt.filepath     = path;
                 lt.meta.title   = "In Library";
                 lt.meta.isValid = true;
-                return lt;
+                return std::make_shared<const LibraryTrack>(std::move(lt));
             }
-            return std::nullopt;
+            return nullptr;
         });
     CHECK(upgraded == 1);
     const Track* t = pl.find_track_by_id(ext.entry_id);
@@ -312,7 +313,7 @@ static void test_upgrade_external()
 
     // 路径不在库中 → 不升级
     const int upgraded2 = pl.upgrade_external_tracks(
-        [](const QString&) -> std::optional<LibraryTrack> { return std::nullopt; });
+        [](const QString&) -> std::shared_ptr<const LibraryTrack> { return nullptr; });
     CHECK(upgraded2 == 0);
     CHECK(pl.find_track_by_id(ext.entry_id)->source == TrackSource::library); // 已升级,保持
 }
@@ -336,19 +337,20 @@ static void test_library_ref_and_missing()
     CHECK(pl.set_track_missing(ext.entry_id, true));
     CHECK(pl.find_track_by_id(ext.entry_id)->missing);
 
-    // refresh_library_tracks:仅刷新库引用条目;解析器返回 nullopt 表示库中已无
-    int updated = pl.refresh_library_tracks([&](const TrackId& id) -> std::optional<LibraryTrack> {
-        if (id == lib_track.library_track_id) {
-            LibraryTrack lt;
-            lt.track_id     = id;
-            lt.filepath     = "/lib/1.mp3";
-            lt.missing      = true; // 库中标记缺失
-            lt.meta.title   = "New";
-            lt.meta.isValid = true;
-            return lt;
-        }
-        return std::nullopt;
-    });
+    // refresh_library_tracks:仅刷新库引用条目;解析器返回 nullptr 表示库中已无
+    int updated =
+        pl.refresh_library_tracks([&](const TrackId& id) -> std::shared_ptr<const LibraryTrack> {
+            if (id == lib_track.library_track_id) {
+                LibraryTrack lt;
+                lt.track_id     = id;
+                lt.filepath     = "/lib/1.mp3";
+                lt.missing      = true; // 库中标记缺失
+                lt.meta.title   = "New";
+                lt.meta.isValid = true;
+                return std::make_shared<const LibraryTrack>(std::move(lt));
+            }
+            return nullptr;
+        });
     CHECK(updated == 1); // 外部条目不参与刷新
     CHECK(pl.track_count() == 2);
     const Track* t = pl.find_track_by_id(lib_track.entry_id);

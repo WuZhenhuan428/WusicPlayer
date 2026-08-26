@@ -5,7 +5,7 @@
 #include <QHash>
 #include <QString>
 
-#include <optional>
+#include <memory>
 
 /**
  * @brief 音乐库内存索引:规范化路径 → 库曲目。
@@ -23,13 +23,14 @@ public:
     void clear();
 
     // ---- 只读查询 ----
-    std::optional<LibraryTrack> track_by_path(const QString& normalized_path) const;
-    std::optional<LibraryTrack> track_by_id(TrackId id) const;
+    // 返回共享引用(权威副本由本容器持有, 零拷贝); nullptr 表示不存在
+    std::shared_ptr<const LibraryTrack> track_by_path(const QString& normalized_path) const;
+    std::shared_ptr<const LibraryTrack> track_by_id(TrackId id) const;
     // 非拥有:返回内部容器的 const 引用,仅本次调用内有效
-    const QHash<QString, LibraryTrack>& index() const;
+    const QHash<QString, std::shared_ptr<const LibraryTrack>>& index() const;
     int track_count() const;
 
 private:
-    QHash<QString, LibraryTrack> m_by_path; // path → track
-    QHash<TrackId, QString> m_id_to_path;   // track_id → path
+    QHash<QString, std::shared_ptr<const LibraryTrack>> m_by_path; // path → track(共享)
+    QHash<TrackId, QString> m_id_to_path;                          // track_id → path
 };

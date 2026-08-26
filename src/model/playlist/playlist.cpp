@@ -86,7 +86,7 @@ bool Playlist::set_track_missing(const EntryId& eid, bool missing)
 }
 
 int Playlist::refresh_library_tracks(
-    const std::function<std::optional<LibraryTrack>(const TrackId&)>& resolver)
+    const std::function<std::shared_ptr<const LibraryTrack>(const TrackId&)>& resolver)
 {
     int updated = 0;
     for (auto& t : m_tracks) {
@@ -106,7 +106,7 @@ int Playlist::refresh_library_tracks(
 }
 
 int Playlist::upgrade_external_tracks(
-    const std::function<std::optional<LibraryTrack>(const QString& path)>& resolver)
+    const std::function<std::shared_ptr<const LibraryTrack>(const QString& path)>& resolver)
 {
     int upgraded = 0;
     for (auto& t : m_tracks) {

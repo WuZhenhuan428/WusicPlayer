@@ -58,10 +58,10 @@ static void test_library_index()
     lib.upsert(t1);
     lib.upsert(t2);
     CHECK(lib.track_count() == 2);
-    CHECK(lib.track_by_path(norm("/a/1.mp3")).has_value());
-    CHECK(lib.track_by_id(t2.track_id).has_value());
-    CHECK(lib.track_by_id(TrackId::create_uuid()) == std::nullopt);
-    CHECK(lib.track_by_path(norm("/a/3.mp3")) == std::nullopt);
+    CHECK(lib.track_by_path(norm("/a/1.mp3")) != nullptr);
+    CHECK(lib.track_by_id(t2.track_id) != nullptr);
+    CHECK(lib.track_by_id(TrackId::create_uuid()) == nullptr);
+    CHECK(lib.track_by_path(norm("/a/3.mp3")) == nullptr);
 
     // upsert 同一路径:身份保持,元数据更新
     t1.meta.title = "Updated";
@@ -78,7 +78,7 @@ static void test_library_index()
     // 移除
     lib.remove_by_path(norm("/a/2.mp3"));
     CHECK(lib.track_count() == 1);
-    CHECK(lib.track_by_id(t2.track_id) == std::nullopt);
+    CHECK(lib.track_by_id(t2.track_id) == nullptr);
 }
 
 /* ---- LibraryRepo SQLite 持久化 ---- */
@@ -231,14 +231,14 @@ static void test_manager_scan()
     CHECK(mgr.track_count() == 2);
     const QString p = norm(music_dir.path() + "/m1.mp3");
     auto found      = mgr.track_by_path(p);
-    CHECK(found.has_value());
+    CHECK(found != nullptr);
     CHECK(mgr.watched_folders() == QStringList{norm(music_dir.path())});
 
     // 重新初始化:从数据库恢复
     LibraryManager mgr2;
     CHECK(mgr2.initialize(data_dir.filePath("lib.db")));
     CHECK(mgr2.track_count() == 2);
-    CHECK(mgr2.track_by_path(p).has_value());
+    CHECK(mgr2.track_by_path(p) != nullptr);
 }
 
 /* ---- 播放列表-音乐库集成:add_track 通过库解析 ---- */

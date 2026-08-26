@@ -9,7 +9,7 @@
 #include <QVector>
 
 #include <functional>
-#include <optional>
+#include <memory>
 
 class Playlist
 {
@@ -34,10 +34,10 @@ public:
     bool set_track_missing(const EntryId& eid, bool missing);
     // 用库解析器刷新所有库引用条目(source==library)的元数据/缺失标记;返回更新的条目数
     int refresh_library_tracks(
-        const std::function<std::optional<LibraryTrack>(const TrackId&)>& resolver);
+        const std::function<std::shared_ptr<const LibraryTrack>(const TrackId&)>& resolver);
     // 将路径已在库中的外部条目升级为库引用条目(库变更后调用);返回升级数
     int upgrade_external_tracks(
-        const std::function<std::optional<LibraryTrack>(const QString& path)>& resolver);
+        const std::function<std::shared_ptr<const LibraryTrack>(const QString& path)>& resolver);
     int remove_missing_tracks();
     void remove_track(const EntryId& eid);
 

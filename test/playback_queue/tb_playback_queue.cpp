@@ -470,7 +470,7 @@ static void test_service_library_track()
 
     const auto& idx = lib.index();
     CHECK(idx.size() == 1);
-    const TrackId tid = idx.constBegin()->track_id;
+    const TrackId tid = idx.constBegin().value()->track_id;
 
     PlaylistManager pm;
     AppContext ctx = make_ctx(&pm, &lib);

@@ -139,8 +139,8 @@ bool PlaybackQueueService::enqueue_library_track(const TrackId& track_id)
     if (library_ == nullptr) {
         return false;
     }
-    const std::optional<LibraryTrack> lt = library_->track_by_id(track_id);
-    if (!lt.has_value()) {
+    const auto lt = library_->track_by_id(track_id);
+    if (!lt) {
         return false;
     }
     QueueItem item;

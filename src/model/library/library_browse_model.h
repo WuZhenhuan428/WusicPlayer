@@ -8,6 +8,8 @@
 #include <QStringList>
 #include <QVector>
 
+#include <memory>
+
 class LibraryManager;
 
 /**
@@ -83,7 +85,8 @@ private:
     struct Group
     {
         QString key; // 分组键(空 → "(Unknown)")
-        QVector<LibraryTrack> tracks;
+        // 共享引用(指向 Library 权威副本), 避免整份复制
+        QVector<std::shared_ptr<const LibraryTrack>> tracks;
     };
 
     void rebuild();

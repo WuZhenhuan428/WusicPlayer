@@ -87,17 +87,18 @@ QStringList LibraryManager::watched_folders() const
     return m_repo->watched_folders();
 }
 
-std::optional<LibraryTrack> LibraryManager::track_by_id(TrackId id) const
+std::shared_ptr<const LibraryTrack> LibraryManager::track_by_id(TrackId id) const
 {
     return m_library->track_by_id(id);
 }
 
-std::optional<LibraryTrack> LibraryManager::track_by_path(const QString& normalized_path) const
+std::shared_ptr<const LibraryTrack>
+LibraryManager::track_by_path(const QString& normalized_path) const
 {
     return m_library->track_by_path(normalized_path);
 }
 
-const QHash<QString, LibraryTrack>& LibraryManager::index() const
+const QHash<QString, std::shared_ptr<const LibraryTrack>>& LibraryManager::index() const
 {
     return m_library->index();
 }
@@ -107,10 +108,17 @@ int LibraryManager::track_count() const
     return m_library->track_count();
 }
 
-QVector<LibraryTrack> LibraryManager::search(const QString& keyword, SearchQueryMode mode,
-                                             int limit) const
+QVector<std::shared_ptr<const LibraryTrack>>
+LibraryManager::search(const QString& keyword, SearchQueryMode mode, int limit) const
 {
-    return m_repo->search(keyword, mode, limit);
+    // SQLite 行 → 值 → 共享引用(避免浏览模型等持有整份副本)
+    const QVector<LibraryTrack> rows = m_repo->search(keyword, mode, limit);
+    QVector<std::shared_ptr<const LibraryTrack>> result;
+    result.reserve(rows.size());
+    for (const LibraryTrack& t : rows) {
+        result.append(std::make_shared<const LibraryTrack>(t));
+    }
+    return result;
 }
 
 void LibraryManager::start_scan()
@@ -167,8 +175,8 @@ LibrarySnapshot LibraryManager::make_snapshot() const
     LibrarySnapshot snap;
     const auto& idx = m_library->index();
     for (auto it = idx.constBegin(); it != idx.constEnd(); ++it) {
-        const LibraryTrack& t = it.value();
-        snap.insert(t.filepath, FileStamp{t.file_size, t.mtime, t.track_id});
+        const auto& t = it.value();
+        snap.insert(t->filepath, FileStamp{t->file_size, t->mtime, t->track_id});
     }
     return snap;
 }

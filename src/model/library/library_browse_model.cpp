@@ -64,16 +64,18 @@ QString format_duration(int ms)
 }
 
 // 组内排序:track_number → title
-void sort_tracks(QVector<LibraryTrack>& tracks)
+void sort_tracks(QVector<std::shared_ptr<const LibraryTrack>>& tracks)
 {
-    std::sort(tracks.begin(), tracks.end(), [](const LibraryTrack& a, const LibraryTrack& b) {
-        const int tn_a = a.meta.track_number > 0 ? a.meta.track_number : 1000000;
-        const int tn_b = b.meta.track_number > 0 ? b.meta.track_number : 1000000;
-        if (tn_a != tn_b) {
-            return tn_a < tn_b;
-        }
-        return a.meta.title.toLower() < b.meta.title.toLower();
-    });
+    std::sort(tracks.begin(), tracks.end(),
+              [](const std::shared_ptr<const LibraryTrack>& a,
+                 const std::shared_ptr<const LibraryTrack>& b) {
+                  const int tn_a = a->meta.track_number > 0 ? a->meta.track_number : 1000000;
+                  const int tn_b = b->meta.track_number > 0 ? b->meta.track_number : 1000000;
+                  if (tn_a != tn_b) {
+                      return tn_a < tn_b;
+                  }
+                  return a->meta.title.toLower() < b->meta.title.toLower();
+              });
 }
 
 } // namespace
@@ -143,7 +145,7 @@ std::optional<TrackId> LibraryBrowseModel::track_id_at(const QModelIndex& index)
     if (r < 0 || r >= tracks.size()) {
         return std::nullopt;
     }
-    return tracks.at(r).track_id;
+    return tracks.at(r)->track_id;
 }
 
 QVector<TrackId> LibraryBrowseModel::collect_track_ids(const QModelIndexList& indexes) const
@@ -164,9 +166,9 @@ QVector<TrackId> LibraryBrowseModel::collect_track_ids(const QModelIndexList& in
         if (!is_leaf(id)) {
             const int g = group_row(id);
             if (g >= 0 && g < m_groups.size()) {
-                for (const LibraryTrack& t : m_groups.at(g).tracks) {
-                    if (!result.contains(t.track_id)) {
-                        result.push_back(t.track_id);
+                for (const auto& t : m_groups.at(g).tracks) {
+                    if (!result.contains(t->track_id)) {
+                        result.push_back(t->track_id);
                     }
                 }
             }
@@ -316,24 +318,24 @@ QVariant LibraryBrowseModel::data(const QModelIndex& index, int role) const
     if (r < 0 || r >= tracks.size()) {
         return {};
     }
-    const LibraryTrack& lt = tracks.at(r);
+    const auto& lt = tracks.at(r);
 
     if (role == Qt::DisplayRole) {
         switch (col) {
         case 0:
-            return lt.meta.title.isEmpty() ? lt.meta.filename : lt.meta.title;
+            return lt->meta.title.isEmpty() ? lt->meta.filename : lt->meta.title;
         case 1:
-            return lt.meta.artist;
+            return lt->meta.artist;
         case 2:
-            return lt.meta.album;
+            return lt->meta.album;
         case 3:
-            return format_duration(lt.duration_ms);
+            return format_duration(lt->duration_ms);
         default:
             break;
         }
     }
     if (role == Qt::ToolTipRole) {
-        return lt.filepath;
+        return lt->filepath;
     }
     return {};
 }
@@ -394,13 +396,13 @@ void LibraryBrowseModel::sort_groups()
 
 void LibraryBrowseModel::rebuild()
 {
-    QVector<LibraryTrack> tracks;
+    QVector<std::shared_ptr<const LibraryTrack>> tracks;
     if (m_lib != nullptr) {
         if (m_keyword.trimmed().isEmpty()) {
-            // 全量:内存索引
+            // 全量:内存索引(共享引用, 零拷贝)
             const auto& idx = m_lib->index();
             tracks.reserve(idx.size());
-            for (const LibraryTrack& lt : idx) {
+            for (const auto& lt : idx) {
                 tracks.append(lt);
             }
         } else {
@@ -409,9 +411,9 @@ void LibraryBrowseModel::rebuild()
         }
     }
 
-    QHash<QString, QVector<LibraryTrack>> by_key;
-    for (const LibraryTrack& lt : tracks) {
-        by_key[group_key(lt)].append(lt);
+    QHash<QString, QVector<std::shared_ptr<const LibraryTrack>>> by_key;
+    for (const auto& lt : tracks) {
+        by_key[group_key(*lt)].append(lt);
     }
 
     beginResetModel();
