@@ -494,7 +494,7 @@ TrackMetaData PlaylistManager::get_current_metadata()
             return track->meta;
         }
     }
-    TrackMetaData empty_meta;
+    TrackMetaData empty_meta{};
     empty_meta.isValid = false;
     return empty_meta;
 }

@@ -49,15 +49,15 @@ rgb_t hsv_to_rgb(hsv_t hsv)
 {
     rgb_t rgb = {0, 0, 0};
 
-    float r, g, b;
-    float h, s, v;
-    float f, p, q, t;
-    int hi;
+    float r = 0, g = 0, b = 0;
+    float h = 0, s = 0, v = 0;
+    float f = 0, p = 0, q = 0, t = 0;
+    int hi = 0;
 
     // normalize
-    h = hsv.h / 360.0;
-    s = hsv.s / 100.0;
-    v = hsv.v / 100.0;
+    h      = hsv.h / 360.0;
+    s      = hsv.s / 100.0;
+    v      = hsv.v / 100.0;
 
     // boundary
     if (s <= 0.0f) {
