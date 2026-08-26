@@ -39,6 +39,9 @@ public:
     void set_device_by_id(QByteArray id);
     QVector<AudioDeviceInfo> available_devices();
     QByteArray current_device_id();
+    /// 是否跟随系统默认播放设备(持久化)
+    bool follow_system_device() const;
+    void set_follow_system_device(bool on);
 
     int last_position_ms() const;
     bool last_was_playing() const;
@@ -54,6 +57,7 @@ signals:
     void sgn_playback_state_changed(PlayingState state);
     void sgn_playback_natural_end();
     void sgn_devices_changed(QVector<AudioDeviceInfo> devs, QByteArray id);
+    void sgn_follow_system_changed(bool on);
     void sgn_volume_changed(int percent);
     void sgn_mute_changed(bool muted);
 
@@ -61,8 +65,9 @@ private:
     Player* m_player;
 
     bool m_is_muted;
-    int m_last_position_ms  = 0;
-    bool m_last_was_playing = false;
+    int m_last_position_ms      = 0;
+    bool m_last_was_playing     = false;
+    bool m_follow_system_device = true; // 跟随系统默认设备(持久化)
 
     QString m_eq_plugin_id; // 选中的 EQ 插件 id(持久化)
     std::shared_ptr<const EqConfig> m_eq_config_cache;

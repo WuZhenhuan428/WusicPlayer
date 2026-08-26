@@ -254,6 +254,14 @@ void ControlBar::set_device(const QVector<AudioDeviceInfo>& devices, const QByte
     m_devices = devices;
 
     m_menu_devices->clear();
+
+    // “跟随系统设备”选项(勾选 = 跟随系统默认; 取消 = 固定所选设备)
+    m_act_follow_system = m_menu_devices->addAction(tr("Follow System Device"));
+    m_act_follow_system->setCheckable(true);
+    m_act_follow_system->setChecked(m_follow_system);
+    connect(m_act_follow_system, &QAction::toggled, this, &ControlBar::sgnFollowSystemToggled);
+    m_menu_devices->addSeparator();
+
     auto* group = new QActionGroup(m_menu_devices);
     group->setExclusive(true);
     for (const auto& dev : m_devices) {
@@ -265,6 +273,15 @@ void ControlBar::set_device(const QVector<AudioDeviceInfo>& devices, const QByte
 
         connect(act, &QAction::triggered, this,
                 [this, act]() { emit sgnSelectDeviceId(act->data().toByteArray()); });
+    }
+}
+
+void ControlBar::set_follow_system(bool on)
+{
+    m_follow_system = on;
+    if (m_act_follow_system) {
+        QSignalBlocker blocker(m_act_follow_system);
+        m_act_follow_system->setChecked(on);
     }
 }
 

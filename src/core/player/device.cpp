@@ -167,6 +167,28 @@ std::vector<std::string> Device::list_playback_devices() const
     return enum_playback_names();
 }
 
+std::string Device::default_playback_device_name() const
+{
+    ma_context context;
+    if (ma_context_init(nullptr, 0, nullptr, &context) != MA_SUCCESS) {
+        return {};
+    }
+    std::string result;
+    ma_device_info* playback_infos = nullptr;
+    ma_uint32 playback_count       = 0;
+    if (ma_context_get_devices(&context, &playback_infos, &playback_count, nullptr, nullptr) ==
+        MA_SUCCESS) {
+        for (ma_uint32 i = 0; i < playback_count; ++i) {
+            if (playback_infos[i].isDefault) {
+                result = playback_infos[i].name;
+                break;
+            }
+        }
+    }
+    ma_context_uninit(&context);
+    return result;
+}
+
 std::string Device::current_playback_device_name() const
 {
     return m_active_device_name;

@@ -21,8 +21,23 @@ PlaybackController::PlaybackController(Player* player, QObject* parent) :
     connect(m_player, &Player::sgn_device_changed, this, [this](AudioDeviceInfo device) {
         emit sgn_devices_changed(this->available_devices(), device.id);
     });
+    connect(m_player, &Player::sgn_follow_system_changed, this,
+            &PlaybackController::sgn_follow_system_changed);
 
     emit sgn_devices_changed(this->available_devices(), this->current_device_id());
+}
+
+bool PlaybackController::follow_system_device() const
+{
+    return m_follow_system_device;
+}
+
+void PlaybackController::set_follow_system_device(bool on)
+{
+    m_follow_system_device = on;
+    if (m_player) {
+        m_player->set_follow_system_device(on);
+    }
 }
 
 PlaybackController::~PlaybackController() {}
@@ -188,7 +203,14 @@ void PlaybackController::load_from_json(const QJsonObject& json)
     double volume_double = obj.value("volume").toDouble();
     this->set_volume(static_cast<int>(volume_double * 100));
     this->set_mute(obj.value("muted").toBool());
-    this->set_device_by_id(QByteArray::fromBase64(obj.value("last_device").toString().toUtf8()));
+
+    // 设备: 默认跟随系统; 仅当用户明确关闭跟随时恢复固定设备
+    const bool follow = obj.value("follow_system_device").toBool(true);
+    this->set_follow_system_device(follow);
+    if (!follow) {
+        this->set_device_by_id(
+            QByteArray::fromBase64(obj.value("last_device").toString().toUtf8()));
+    }
 
     m_last_position_ms       = obj.value("last_position_ms").toInt();
     m_last_was_playing       = obj.value("last_was_playing").toBool(false);
@@ -223,14 +245,15 @@ QJsonObject PlaybackController::save_to_json()
 {
     QJsonObject obj;
 
-    m_last_was_playing      = this->state() == PlayingState::PLAYING;
-    m_last_position_ms      = this->state() != PlayingState::STOP ? m_player->position() : 0;
+    m_last_was_playing          = this->state() == PlayingState::PLAYING;
+    m_last_position_ms          = this->state() != PlayingState::STOP ? m_player->position() : 0;
 
-    obj["volume"]           = m_player->volume();
-    obj["muted"]            = m_is_muted;
-    obj["last_device"]      = QString::fromUtf8(this->current_device_id().toBase64());
-    obj["last_was_playing"] = m_last_was_playing;
-    obj["last_position_ms"] = m_last_position_ms;
+    obj["volume"]               = m_player->volume();
+    obj["muted"]                = m_is_muted;
+    obj["last_device"]          = QString::fromUtf8(this->current_device_id().toBase64());
+    obj["follow_system_device"] = m_follow_system_device;
+    obj["last_was_playing"]     = m_last_was_playing;
+    obj["last_position_ms"]     = m_last_position_ms;
 
     // EQ 配置(插件路径)
     QJsonObject eq_obj;

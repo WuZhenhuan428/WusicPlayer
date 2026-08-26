@@ -35,9 +35,11 @@
 
 #include <QAbstractItemModel>
 #include <QAbstractItemView>
+#include <QApplication>
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
+#include <QGuiApplication>
 #include <QJsonObject>
 #include <QKeySequence>
 #include <QListWidgetItem>
@@ -45,6 +47,7 @@
 #include <QShortcut>
 #include <QStandardPaths>
 #include <QString>
+#include <QStyleHints>
 #include <QSystemTrayIcon>
 #include <QThread>
 #include <QTimer>
@@ -507,9 +510,6 @@ void AppController::setup_status_bar_connections()
         Qt::SingleShotConnection);
 }
 
-#include <QApplication>
-#include <QGuiApplication>
-#include <QStyleHints>
 void AppController::initialize_sys_tray()
 {
     if (!QSystemTrayIcon::isSystemTrayAvailable()) {

@@ -227,6 +227,14 @@ std::vector<std::string> PlayerEngine::output_devices() const
     return m_device->list_playback_devices();
 }
 
+std::string PlayerEngine::default_output_device_name() const
+{
+    if (!m_device) {
+        return {};
+    }
+    return m_device->default_playback_device_name();
+}
+
 std::string PlayerEngine::current_output_device_name() const
 {
     if (!m_device) {

@@ -22,6 +22,8 @@ public:
     ~ControlBar();
     void set_play_mode(PlayMode mode);
     void set_device(const QVector<AudioDeviceInfo>& devices, const QByteArray& current_id);
+    // 同步“跟随系统设备”状态(不触发信号, 供外部状态回灌)
+    void set_follow_system(bool on);
     QSlider* get_progress_slider() const;
     QSlider* get_volume_slider() const;
 
@@ -48,6 +50,7 @@ signals:
     void sgnOutOfOrderTrack();
     void sgnOutOfOrderGroup();
     void sgnSelectDeviceId(QByteArray id);
+    void sgnFollowSystemToggled(bool on);
 
 private:
     void update_volume_slider_icon(int volume_by_percent);
@@ -77,6 +80,8 @@ private:
     QHBoxLayout* m_hbl_main;
 
     QMenu* m_menu_devices;
+    QAction* m_act_follow_system = nullptr; // 跟随系统设备
+    bool m_follow_system         = true;    // 当前跟随状态
     QVector<AudioDeviceInfo> m_devices;
 
     bool m_is_playing           = false;

@@ -20,6 +20,8 @@ public:
     bool set_volume(float volume); // 0.0 ~ 1.0
     float get_volume();
     std::vector<std::string> list_playback_devices() const;
+    /// 系统默认播放设备名(ma_device_info.isDefault), 空表示无
+    std::string default_playback_device_name() const;
     std::string current_playback_device_name() const;
     bool switch_playback_device_by_name(const std::string& device_name, bool start_after_switch);
 

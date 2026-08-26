@@ -54,6 +54,8 @@ public:
     void set_playback_finished_callback(std::function<void(StopReason)> func);
     size_t get_recent_audio_frames(F32StereoFrame* out_buffer, size_t count);
     std::vector<std::string> output_devices() const;
+    /// 系统默认输出设备名(空表示无)
+    std::string default_output_device_name() const;
     std::string current_output_device_name() const;
     bool set_output_device_by_name(const std::string& name);
 

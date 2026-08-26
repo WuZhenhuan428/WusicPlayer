@@ -57,6 +57,13 @@ void PlaybackService::bind()
             &PlaybackController::set_volume);
     connect(control_bar, &ControlBar::sgnSelectDeviceId, playback_ctl,
             &PlaybackController::set_device_by_id);
+    // 跟随系统设备: UI → 控制器; 控制器状态 → UI 回灌(避免循环)
+    connect(control_bar, &ControlBar::sgnFollowSystemToggled, playback_ctl,
+            &PlaybackController::set_follow_system_device);
+    connect(playback_ctl, &PlaybackController::sgn_follow_system_changed, control_bar,
+            &ControlBar::set_follow_system);
+    // 初始同步(启动时按持久化状态勾选)
+    control_bar->set_follow_system(playback_ctl->follow_system_device());
 
     connect(playback_ctl, &PlaybackController::sgn_devices_changed, control_bar,
             &ControlBar::set_device);

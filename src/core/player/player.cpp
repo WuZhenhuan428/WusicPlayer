@@ -206,8 +206,13 @@ qint64 Player::position() const
 
 void Player::set_output_device(const AudioDeviceInfo& device)
 {
+    this->apply_output_device(device, /*manual=*/true);
+}
+
+void Player::apply_output_device(const AudioDeviceInfo& device, bool manual)
+{
     if (!m_player_engine || device.id.isEmpty()) {
-        logger->warn("set_output_device ignored. m_player_engine/device invalid.");
+        logger->warn("apply_output_device ignored. m_player_engine/device invalid.");
         return;
     }
 
@@ -220,6 +225,11 @@ void Player::set_output_device(const AudioDeviceInfo& device)
     }
 
     m_preferred_output_id = device.id;
+    if (manual && m_follow_system_device) {
+        // 用户手动选择设备 → 退出“跟随系统”
+        m_follow_system_device = false;
+        emit sgn_follow_system_changed(false);
+    }
     refresh_device_cache();
     logger->info("output switch applied. active={} id='{}'", current_output_device().description,
                  current_output_device().id);
@@ -283,6 +293,19 @@ void Player::refresh_device_cache()
         info.description = QString::fromUtf8(n.data(), static_cast<int>(n.size()));
         devices.push_back(std::move(info));
     }
+
+    // 标记系统默认设备
+    const std::string default_name = m_player_engine->default_output_device_name();
+    m_default_device_id.clear();
+    if (!default_name.empty()) {
+        for (auto& dev : devices) {
+            if (dev.description.toStdString() == default_name) {
+                dev.is_default      = true;
+                m_default_device_id = dev.id;
+                break;
+            }
+        }
+    }
     m_audio_devices = std::move(devices);
 
     if (m_audio_devices.isEmpty()) {
@@ -317,6 +340,7 @@ void Player::refresh_device_cache()
 void Player::poll_devices()
 {
     const QVector<AudioDeviceInfo> previous = m_audio_devices;
+    const QByteArray prev_default           = m_default_device_id;
     this->refresh_device_cache();
 
     bool changed = (previous.size() != m_audio_devices.size());
@@ -328,10 +352,35 @@ void Player::poll_devices()
             }
         }
     }
-    if (!changed) {
+
+    // 设备恢复: 因丢失而静音后, 设备重新出现则解除静音
+    if (m_mute_due_device_loss) {
+        bool back = false;
+        for (const auto& dev : m_audio_devices) {
+            if (dev.id == m_current_output_id) {
+                back = true;
+                break;
+            }
+        }
+        if (back && !m_audio_devices.isEmpty()) {
+            m_mute_due_device_loss = false;
+            this->set_mute(false);
+            logger->info("device recovered, unmuting");
+        }
+    }
+
+    if (changed) {
+        this->handle_devices_changed();
         return;
     }
-    this->handle_devices_changed();
+
+    // 跟随系统: 系统默认设备变化 → 自动切换
+    if (m_follow_system_device && !prev_default.isEmpty() && m_default_device_id != prev_default) {
+        logger->info("system default device changed: {} -> {}", prev_default, m_default_device_id);
+        if (const AudioDeviceInfo* def = this->find_default_device()) {
+            this->apply_output_device(*def, /*manual=*/false);
+        }
+    }
 }
 
 void Player::handle_devices_changed()
@@ -343,7 +392,9 @@ void Player::handle_devices_changed()
 
     if (m_audio_devices.isEmpty()) {
         m_current_output_id.clear();
-        logger->warn("no available output devices after hot-plug.");
+        m_mute_due_device_loss = true;
+        this->set_mute(true); // 全部设备丢失 → 静音
+        logger->warn("no available output devices after hot-plug; muting.");
         emit sgn_device_changed(AudioDeviceInfo{});
         return;
     }
@@ -357,27 +408,63 @@ void Player::handle_devices_changed()
     }
 
     if (!old_still_exists) {
-        logger->info("previous output removed. trying fallback strategy.");
-        bool preferred_exists = false;
-        for (const auto& dev : m_audio_devices) {
-            if (!m_preferred_output_id.isEmpty() && dev.id == m_preferred_output_id) {
-                preferred_exists = true;
-                logger->info("restoring preferred device: {}", dev.description);
-                set_output_device(dev);
-                break;
+        logger->info("current output device removed.");
+        if (m_follow_system_device) {
+            // 跟随系统: 切到当前系统默认(或第一个可用)
+            const AudioDeviceInfo* target = this->find_default_device();
+            if (!target) {
+                target = &m_audio_devices.first();
             }
-        }
-
-        if (!preferred_exists) {
-            logger->info("preferred device unavailable. fallback to: {}",
-                         m_audio_devices.first().description);
-            set_output_device(m_audio_devices.first());
+            logger->info("following system default: {}", target->description);
+            this->apply_output_device(*target, /*manual=*/false);
+        } else {
+            // 非跟随: 当前设备丢失 → 静音, 等待设备恢复
+            logger->warn("device lost while not following system; muting.");
+            m_mute_due_device_loss = true;
+            this->set_mute(true);
         }
         return;
     }
 
     logger->info("output device still valid: {}", current_output_device().description);
     emit sgn_device_changed(current_output_device());
+}
+
+bool Player::follow_system_device() const
+{
+    return m_follow_system_device;
+}
+
+void Player::set_follow_system_device(bool on)
+{
+    if (m_follow_system_device == on) {
+        return;
+    }
+    m_follow_system_device = on;
+    emit sgn_follow_system_changed(on);
+    if (on) {
+        // 开启跟随 → 立即切到系统默认设备
+        logger->info("follow system device enabled");
+        if (const AudioDeviceInfo* def = this->find_default_device()) {
+            this->apply_output_device(*def, /*manual=*/false);
+        }
+    } else {
+        // 关闭跟随 → 固定当前设备
+        logger->info("follow system device disabled, pinning current device");
+        if (!m_current_output_id.isEmpty()) {
+            m_preferred_output_id = m_current_output_id;
+        }
+    }
+}
+
+const AudioDeviceInfo* Player::find_default_device() const
+{
+    for (const auto& dev : m_audio_devices) {
+        if (dev.is_default) {
+            return &dev;
+        }
+    }
+    return m_audio_devices.isEmpty() ? nullptr : &m_audio_devices.first();
 }
 
 void Player::set_eq_config(std::shared_ptr<const EqConfig> cfg)
