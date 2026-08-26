@@ -249,7 +249,7 @@ void ControlBar::set_play_mode(PlayMode mode)
     }
 }
 
-void ControlBar::set_device(const QList<QAudioDevice>& devices, const QByteArray& current_id)
+void ControlBar::set_device(const QVector<AudioDeviceInfo>& devices, const QByteArray& current_id)
 {
     m_devices = devices;
 
@@ -257,10 +257,10 @@ void ControlBar::set_device(const QList<QAudioDevice>& devices, const QByteArray
     auto* group = new QActionGroup(m_menu_devices);
     group->setExclusive(true);
     for (const auto& dev : m_devices) {
-        QAction* act = m_menu_devices->addAction(dev.description());
+        QAction* act = m_menu_devices->addAction(dev.description);
         act->setCheckable(true);
-        act->setChecked(dev.id() == current_id);
-        act->setData(dev.id());
+        act->setChecked(dev.id == current_id);
+        act->setData(dev.id);
         group->addAction(act);
 
         connect(act, &QAction::triggered, this,

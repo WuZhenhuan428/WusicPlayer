@@ -25,7 +25,6 @@ target_link_libraries(wusic_controller
     PUBLIC
         Qt6::Core
         Qt6::Widgets
-        Qt6::Multimedia
         wusic_model
         wusic_core
         wusic_headers

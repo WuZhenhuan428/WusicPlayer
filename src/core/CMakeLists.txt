@@ -73,7 +73,6 @@ target_link_libraries(wusic_core
     PUBLIC
         Qt6::Core
         Qt6::Widgets
-        Qt6::Multimedia
         Qt6::Network
         OpenSSL::Crypto
         ZLIB::ZLIB

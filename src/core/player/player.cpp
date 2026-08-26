@@ -11,8 +11,7 @@ Logger* logger = LoggerManager::file_logger("player", {"console", "gui"});
 }
 
 Player::Player(QObject* parent) :
-    QObject(parent), m_player_engine(std::make_unique<PlayerEngine>()),
-    m_media_devices(new QMediaDevices(this)), m_min_db(-50.0)
+    QObject(parent), m_player_engine(std::make_unique<PlayerEngine>()), m_min_db(-50.0)
 {
     if (!m_player_engine->start_device()) {
         return;
@@ -32,51 +31,12 @@ Player::Player(QObject* parent) :
     m_player_engine->set_watchdog();
 
     refresh_device_cache();
-    connect(m_media_devices, &QMediaDevices::audioOutputsChanged, this, [this]() {
-        const QByteArray old_id = m_current_output_id;
-        logger->info("audioOutputsChanged triggered. old_id='{}'", old_id);
-        refresh_device_cache();
-        logger->info("refreshed outputs count={} current_id='{}'", m_audio_devices.size(),
-                     m_current_output_id);
 
-        if (m_audio_devices.isEmpty()) {
-            m_current_output_id.clear();
-            logger->warn("no available output devices after hot-plug.");
-            emit sgn_device_changed(QAudioDevice());
-            return;
-        }
-
-        bool old_still_exists = false;
-        for (const auto& dev : m_audio_devices) {
-            if (dev.id() == old_id) {
-                old_still_exists = true;
-                break;
-            }
-        }
-
-        if (!old_still_exists) {
-            logger->info("previous output removed. trying fallback strategy.");
-            bool preferred_exists = false;
-            for (const auto& dev : m_audio_devices) {
-                if (!m_preferred_output_id.isEmpty() && dev.id() == m_preferred_output_id) {
-                    preferred_exists = true;
-                    logger->info("restoring preferred device: {}", dev.description());
-                    set_output_device(dev);
-                    break;
-                }
-            }
-
-            if (!preferred_exists) {
-                logger->info("preferred device unavailable. fallback to: {}",
-                             m_audio_devices.first().description());
-                set_output_device(m_audio_devices.first());
-            }
-            return;
-        }
-
-        logger->info("output device still valid: {}", current_output_device().description());
-        emit sgn_device_changed(current_output_device());
-    });
+    // 设备热插拔轮询(miniaudio 无变化信号, 每 2s 检测一次)
+    m_device_poll_timer = new QTimer(this);
+    m_device_poll_timer->setInterval(2000);
+    connect(m_device_poll_timer, &QTimer::timeout, this, &Player::poll_devices);
+    m_device_poll_timer->start();
 
     m_position_timer = new QTimer(this);
     m_position_timer->setInterval(100);
@@ -244,25 +204,25 @@ qint64 Player::position() const
     return (qint64)(m_player_engine->position());
 }
 
-void Player::set_output_device(const QAudioDevice& device)
+void Player::set_output_device(const AudioDeviceInfo& device)
 {
-    if (!m_player_engine || device.isNull()) {
+    if (!m_player_engine || device.id.isEmpty()) {
         logger->warn("set_output_device ignored. m_player_engine/device invalid.");
         return;
     }
 
-    logger->info("switching output device to {} id='{}'", device.description(), device.id());
+    logger->info("switching output device to {} id='{}'", device.description, device.id);
 
-    const bool ok = m_player_engine->set_output_device_by_name(device.description().toStdString());
+    const bool ok = m_player_engine->set_output_device_by_name(device.description.toStdString());
     if (!ok) {
-        logger->warn("backend switch failed for {}", device.description());
+        logger->warn("backend switch failed for '{}'", device.description);
         return;
     }
 
-    m_preferred_output_id = device.id();
+    m_preferred_output_id = device.id;
     refresh_device_cache();
-    logger->info("output switch applied. active={} id='{}'", current_output_device().description(),
-                 current_output_device().id());
+    logger->info("output switch applied. active={} id='{}'", current_output_device().description,
+                 current_output_device().id);
     emit sgn_device_changed(current_output_device());
 }
 
@@ -276,7 +236,7 @@ void Player::set_output_device_by_id(const QByteArray& id)
     logger->info("request switch by id='{}'", id);
 
     for (const auto& dev : m_audio_devices) {
-        if (dev.id() == id) {
+        if (dev.id == id) {
             set_output_device(dev);
             return;
         }
@@ -285,15 +245,15 @@ void Player::set_output_device_by_id(const QByteArray& id)
     logger->warn("no matching output device id found: {}", id);
 }
 
-QList<QAudioDevice> Player::devices() const
+QVector<AudioDeviceInfo> Player::devices() const
 {
     return m_audio_devices;
 }
 
-QAudioDevice Player::current_output_device() const
+AudioDeviceInfo Player::current_output_device() const
 {
     for (const auto& dev : m_audio_devices) {
-        if (dev.id() == m_current_output_id) {
+        if (dev.id == m_current_output_id) {
             return dev;
         }
     }
@@ -307,37 +267,117 @@ QAudioDevice Player::current_output_device() const
 
 void Player::refresh_device_cache()
 {
-    m_audio_devices = QMediaDevices::audioOutputs();
-    if (m_audio_devices.isEmpty() || !m_player_engine) {
-
-        logger->warn("refresh_device_cache got empty list or null m_player_engine.");
+    if (!m_player_engine) {
+        m_audio_devices.clear();
         m_current_output_id.clear();
+        return;
+    }
+
+    // 枚举来自 miniaudio(miniaudio 的 ma_context_get_devices)
+    const auto names = m_player_engine->output_devices();
+    QVector<AudioDeviceInfo> devices;
+    devices.reserve(static_cast<qsizetype>(names.size()));
+    for (const auto& n : names) {
+        AudioDeviceInfo info;
+        info.id          = QByteArray(n.data(), static_cast<int>(n.size()));
+        info.description = QString::fromUtf8(n.data(), static_cast<int>(n.size()));
+        devices.push_back(std::move(info));
+    }
+    m_audio_devices = std::move(devices);
+
+    if (m_audio_devices.isEmpty()) {
+        m_current_output_id.clear();
+        logger->warn("refresh_device_cache got empty list.");
         return;
     }
 
     const std::string active_name = m_player_engine->current_output_device_name();
     for (const auto& dev : m_audio_devices) {
-        if (dev.description().toStdString() == active_name) {
-            m_current_output_id = dev.id();
-            logger->info("active backend device mapped to Qt device: {}", dev.description());
+        if (dev.description.toStdString() == active_name) {
+            m_current_output_id = dev.id;
+            logger->info("active backend device mapped: {}", dev.description);
             return;
         }
     }
 
     if (!m_preferred_output_id.isEmpty()) {
         for (const auto& dev : m_audio_devices) {
-            if (dev.id() == m_preferred_output_id) {
-                m_current_output_id = dev.id();
-                logger->info("backend device not in Qt list. use preferred Qt device: {}",
-                             dev.description());
+            if (dev.id == m_preferred_output_id) {
+                m_current_output_id = dev.id;
+                logger->info("use preferred device: {}", dev.description);
                 return;
             }
         }
     }
 
-    m_current_output_id = m_audio_devices.first().id();
-    logger->info("using first available Qt output device: {}",
-                 m_audio_devices.first().description());
+    m_current_output_id = m_audio_devices.first().id;
+    logger->info("using first available output device: {}", m_audio_devices.first().description);
+}
+
+void Player::poll_devices()
+{
+    const QVector<AudioDeviceInfo> previous = m_audio_devices;
+    this->refresh_device_cache();
+
+    bool changed = (previous.size() != m_audio_devices.size());
+    if (!changed) {
+        for (qsizetype i = 0; i < m_audio_devices.size(); ++i) {
+            if (previous[i].id != m_audio_devices[i].id) {
+                changed = true;
+                break;
+            }
+        }
+    }
+    if (!changed) {
+        return;
+    }
+    this->handle_devices_changed();
+}
+
+void Player::handle_devices_changed()
+{
+    const QByteArray old_id = m_current_output_id;
+    logger->info("output devices changed. old_id='{}'", old_id);
+    logger->info("refreshed outputs count={} current_id='{}'", m_audio_devices.size(),
+                 m_current_output_id);
+
+    if (m_audio_devices.isEmpty()) {
+        m_current_output_id.clear();
+        logger->warn("no available output devices after hot-plug.");
+        emit sgn_device_changed(AudioDeviceInfo{});
+        return;
+    }
+
+    bool old_still_exists = false;
+    for (const auto& dev : m_audio_devices) {
+        if (dev.id == old_id) {
+            old_still_exists = true;
+            break;
+        }
+    }
+
+    if (!old_still_exists) {
+        logger->info("previous output removed. trying fallback strategy.");
+        bool preferred_exists = false;
+        for (const auto& dev : m_audio_devices) {
+            if (!m_preferred_output_id.isEmpty() && dev.id == m_preferred_output_id) {
+                preferred_exists = true;
+                logger->info("restoring preferred device: {}", dev.description);
+                set_output_device(dev);
+                break;
+            }
+        }
+
+        if (!preferred_exists) {
+            logger->info("preferred device unavailable. fallback to: {}",
+                         m_audio_devices.first().description);
+            set_output_device(m_audio_devices.first());
+        }
+        return;
+    }
+
+    logger->info("output device still valid: {}", current_output_device().description);
+    emit sgn_device_changed(current_output_device());
 }
 
 void Player::set_eq_config(std::shared_ptr<const EqConfig> cfg)

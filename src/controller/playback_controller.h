@@ -4,11 +4,10 @@
 #include "core/player/player.h"
 #include "plugin/eq_types.h"
 
-#include <QAudioDevice>
 #include <QByteArray>
-#include <QList>
 #include <QObject>
 #include <QString>
+#include <QVector>
 #include <memory>
 
 class PlaybackController : public QObject, public IConfigurable
@@ -36,9 +35,9 @@ public:
     void flip_mute();
     void read(QString filepath);
 
-    void set_device(QAudioDevice dev);
+    void set_device(const AudioDeviceInfo& dev);
     void set_device_by_id(QByteArray id);
-    QList<QAudioDevice> available_devices();
+    QVector<AudioDeviceInfo> available_devices();
     QByteArray current_device_id();
 
     int last_position_ms() const;
@@ -54,7 +53,7 @@ signals:
     void sgn_duration_changed(qint64 dur_ms);
     void sgn_playback_state_changed(PlayingState state);
     void sgn_playback_natural_end();
-    void sgn_devices_changed(QList<QAudioDevice> devs, QByteArray id);
+    void sgn_devices_changed(QVector<AudioDeviceInfo> devs, QByteArray id);
     void sgn_volume_changed(int percent);
     void sgn_mute_changed(bool muted);
 

@@ -18,8 +18,8 @@ PlaybackController::PlaybackController(Player* player, QObject* parent) :
             [this](PlayingState state) { emit sgn_playback_state_changed(state); });
     connect(m_player, &Player::sgn_playback_natural_end, this,
             [this]() { emit sgn_playback_natural_end(); });
-    connect(m_player, &Player::sgn_device_changed, this, [this](QAudioDevice device) {
-        emit sgn_devices_changed(this->available_devices(), device.id());
+    connect(m_player, &Player::sgn_device_changed, this, [this](AudioDeviceInfo device) {
+        emit sgn_devices_changed(this->available_devices(), device.id);
     });
 
     emit sgn_devices_changed(this->available_devices(), this->current_device_id());
@@ -148,7 +148,7 @@ void PlaybackController::flip_mute()
     this->set_mute(!m_is_muted);
 }
 
-void PlaybackController::set_device(QAudioDevice dev)
+void PlaybackController::set_device(const AudioDeviceInfo& dev)
 {
     if (!m_player) {
         return;
@@ -166,7 +166,7 @@ void PlaybackController::set_device_by_id(QByteArray id)
     emit sgn_devices_changed(this->available_devices(), this->current_device_id());
 }
 
-QList<QAudioDevice> PlaybackController::available_devices()
+QVector<AudioDeviceInfo> PlaybackController::available_devices()
 {
     if (!m_player) {
         return {};
@@ -179,7 +179,7 @@ QByteArray PlaybackController::current_device_id()
     if (!m_player) {
         return {};
     }
-    return m_player->current_output_device().id();
+    return m_player->current_output_device().id;
 }
 
 void PlaybackController::load_from_json(const QJsonObject& json)

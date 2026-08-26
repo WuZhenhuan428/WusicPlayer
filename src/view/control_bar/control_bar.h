@@ -1,14 +1,13 @@
 #pragma once
 
+#include "core/player/audio_device_info.h"
 #include "core/player/player_engine.h"
 #include "core/types.h"
 #include "view/control_bar/time_progress.h"
 
 #include <QAction>
 #include <QActionGroup>
-#include <QAudioDevice>
 #include <QHBoxLayout>
-#include <QList>
 #include <QMenu>
 #include <QPushButton>
 #include <QSlider>
@@ -22,7 +21,7 @@ public:
     explicit ControlBar(QWidget* parent = nullptr);
     ~ControlBar();
     void set_play_mode(PlayMode mode);
-    void set_device(const QList<QAudioDevice>& devices, const QByteArray& current_id);
+    void set_device(const QVector<AudioDeviceInfo>& devices, const QByteArray& current_id);
     QSlider* get_progress_slider() const;
     QSlider* get_volume_slider() const;
 
@@ -78,7 +77,7 @@ private:
     QHBoxLayout* m_hbl_main;
 
     QMenu* m_menu_devices;
-    QList<QAudioDevice> m_devices;
+    QVector<AudioDeviceInfo> m_devices;
 
     bool m_is_playing           = false;
     QString m_current_mode_icon = QStringLiteral("in_order"); // 当前播放模式图标名

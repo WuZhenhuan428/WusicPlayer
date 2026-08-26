@@ -89,7 +89,6 @@ target_link_libraries(wusic_view
     PUBLIC
         Qt6::Core
         Qt6::Widgets
-        Qt6::Multimedia
         Qt6::Svg
         magic_enum::magic_enum
         wusic_controller

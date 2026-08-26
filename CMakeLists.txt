@@ -30,7 +30,7 @@ endif ()
 # Custom find modules (cmake/FindFFmpeg.cmake etc.)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Multimedia Network Svg Sql)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Network Svg Sql)
 find_package(FFmpeg REQUIRED)       # cmake/FindFFmpeg.cmake
 find_package(Taglib REQUIRED)       # CMake built-in module (uses pkg-config internally)
 # Normalize target name — some distros' CMake configs don't create a target at all
