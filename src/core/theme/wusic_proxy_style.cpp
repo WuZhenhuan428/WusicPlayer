@@ -153,7 +153,7 @@ void WusicProxyStyle::drawControl(ControlElement element, const QStyleOption* op
 
     // --- 下拉菜单 ---
     case CE_MenuItem:
-        drawMenuItem(opt, p);
+        drawMenuItem(opt, p, w);
         break;
     case CE_MenuScroller:
     case CE_MenuTearoff:
@@ -717,7 +717,7 @@ void WusicProxyStyle::drawScrollBar(ComplexControl /*cc*/, const QStyleOptionCom
 // drawMenuItem
 // ============================================================================
 
-void WusicProxyStyle::drawMenuItem(const QStyleOption* opt, QPainter* p) const
+void WusicProxyStyle::drawMenuItem(const QStyleOption* opt, QPainter* p, const QWidget* w) const
 {
     const auto* mi = qstyleoption_cast<const QStyleOptionMenuItem*>(opt);
     if (!mi || mi->menuItemType == QStyleOptionMenuItem::Separator) {
@@ -746,7 +746,17 @@ void WusicProxyStyle::drawMenuItem(const QStyleOption* opt, QPainter* p) const
         mi->icon.paint(p, ir.adjusted(4, 4, -4, -4));
     }
 
-    QRect tr = opt->rect.adjusted(mi->maxIconWidth + 8, 0, -12, 0);
+    // QComboBox 的弹出列表由 QComboMenuDelegate 以"菜单项"方式绘制
+    // (Qt qcombobox.cpp: QComboMenuDelegate::getStyleOption), 其 maxIconWidth
+    // 恒为 view decorationSize+4(默认 PM_ListViewIconSize=24 → 28), 即使选项
+    // 并没有图标。若照常预留 maxIconWidth+8=36px 图标列, 会把与闭合态等宽的
+    // 窄 popup 中的文本向右挤压、后半截被截断。此处对 combo 弹出项且无图标时
+    // 只保留常规 8px 左边距; 有图标的 combo 项(或普通 QMenu)仍按原逻辑对齐。
+    int leftPad = mi->maxIconWidth + 8;
+    if (qobject_cast<const QComboBox*>(w) && mi->icon.isNull())
+        leftPad = 8;
+
+    QRect tr = opt->rect.adjusted(leftPad, 0, -12, 0);
     drawItemText(p, tr, Qt::AlignLeft | Qt::AlignVCenter | Qt::TextShowMnemonic, copy.palette, ena,
                  mi->text, sel ? QPalette::HighlightedText : QPalette::Text);
 }

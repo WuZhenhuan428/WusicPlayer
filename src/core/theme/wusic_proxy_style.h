@@ -49,7 +49,7 @@ private:
     void drawSlider(const QStyleOption* opt, QPainter* p) const;
     void drawScrollBar(ComplexControl cc, const QStyleOptionComplex* opt, QPainter* p,
                        const QWidget* w) const;
-    void drawMenuItem(const QStyleOption* opt, QPainter* p) const;
+    void drawMenuItem(const QStyleOption* opt, QPainter* p, const QWidget* w) const;
     void drawMenuBarItem(const QStyleOption* opt, QPainter* p) const;
     void drawHeader(const QStyleOption* opt, QPainter* p) const;
     void drawComboBox(const QStyleOptionComplex* opt, QPainter* p) const;
