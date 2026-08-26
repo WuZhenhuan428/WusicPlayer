@@ -5,6 +5,7 @@
 
 class EQWidget;
 class LibrarySettingsPage;
+class LanguageSettingsPage;
 class LibraryManager;
 class LogViewerDialog;
 class LyricsSettingPanel;
@@ -72,6 +73,7 @@ private:
     QPointer<LyricsSettingPanel> lyrics_settings_panel_;
     QPointer<ThemeSettingsPage> theme_settings_page_;
     QPointer<LibrarySettingsPage> library_settings_page_;
+    QPointer<LanguageSettingsPage> language_settings_page_;
     QPointer<PluginPanel> plugin_panel_;
 
     QPointer<LogViewerDialog> log_viewer_;

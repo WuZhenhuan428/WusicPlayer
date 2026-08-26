@@ -25,10 +25,10 @@ void ThemeSettingsPage::init_ui()
     m_source_group = new QButtonGroup(this);
     m_source_group->setExclusive(true);
 
-    m_rb_all      = new QRadioButton(QStringLiteral("All"), this);
-    m_rb_system   = new QRadioButton(QStringLiteral("System"), this);
-    m_rb_builtin  = new QRadioButton(QStringLiteral("Builtin"), this);
-    m_rb_external = new QRadioButton(QStringLiteral("External"), this);
+    m_rb_all      = new QRadioButton(tr("All"), this);
+    m_rb_system   = new QRadioButton(tr("System"), this);
+    m_rb_builtin  = new QRadioButton(tr("Builtin"), this);
+    m_rb_external = new QRadioButton(tr("External"), this);
 
     m_source_group->addButton(m_rb_all, 0);
     m_source_group->addButton(m_rb_system, 1);
@@ -37,7 +37,7 @@ void ThemeSettingsPage::init_ui()
     m_rb_all->setChecked(true);
 
     m_hbl_filter = new QHBoxLayout();
-    m_hbl_filter->addWidget(new QLabel(QStringLiteral("Source:"), this));
+    m_hbl_filter->addWidget(new QLabel(tr("Source:"), this));
     m_hbl_filter->addWidget(m_rb_all);
     m_hbl_filter->addWidget(m_rb_system);
     m_hbl_filter->addWidget(m_rb_builtin);
@@ -47,9 +47,9 @@ void ThemeSettingsPage::init_ui()
     // 图标模式选择
     m_icon_group = new QButtonGroup(this);
     m_icon_group->setExclusive(true);
-    m_rb_icon_auto  = new QRadioButton(QStringLiteral("Auto"), this);
-    m_rb_icon_light = new QRadioButton(QStringLiteral("Light"), this);
-    m_rb_icon_dark  = new QRadioButton(QStringLiteral("Dark"), this);
+    m_rb_icon_auto  = new QRadioButton(tr("Auto"), this);
+    m_rb_icon_light = new QRadioButton(tr("Light"), this);
+    m_rb_icon_dark  = new QRadioButton(tr("Dark"), this);
     m_icon_group->addButton(m_rb_icon_auto, 0);
     m_icon_group->addButton(m_rb_icon_light, 1);
     m_icon_group->addButton(m_rb_icon_dark, 2);
@@ -68,7 +68,7 @@ void ThemeSettingsPage::init_ui()
     }
 
     QHBoxLayout* hbl_icon = new QHBoxLayout();
-    hbl_icon->addWidget(new QLabel(QStringLiteral("Icon:"), this));
+    hbl_icon->addWidget(new QLabel(tr("Icon:"), this));
     hbl_icon->addWidget(m_rb_icon_auto);
     hbl_icon->addWidget(m_rb_icon_light);
     hbl_icon->addWidget(m_rb_icon_dark);
@@ -76,8 +76,7 @@ void ThemeSettingsPage::init_ui()
 
     // 当前主题标签
     m_lb_current = new QLabel(this);
-    m_lb_hint    = new QLabel(
-        QStringLiteral("Double-click a theme to apply, or select and click Apply."), this);
+    m_lb_hint = new QLabel(tr("Double-click a theme to apply, or select and click Apply."), this);
 
     // 表格
     m_table_view = new QTableView(this);
@@ -89,8 +88,8 @@ void ThemeSettingsPage::init_ui()
     m_table_view->setAlternatingRowColors(true);
 
     // 按钮
-    m_btn_apply   = new QPushButton(QStringLiteral("Apply"), this);
-    m_btn_rescan  = new QPushButton(QStringLiteral("Rescan Plugins"), this);
+    m_btn_apply   = new QPushButton(tr("Apply"), this);
+    m_btn_rescan  = new QPushButton(tr("Rescan Plugins"), this);
 
     m_hbl_actions = new QHBoxLayout();
     m_hbl_actions->addStretch();
@@ -146,11 +145,11 @@ void ThemeSettingsPage::on_source_filter_changed(int /*id*/)
 
     QString filter;
     if (m_rb_system->isChecked())
-        filter = QStringLiteral("System");
+        filter = tr("System");
     else if (m_rb_builtin->isChecked())
-        filter = QStringLiteral("Builtin");
+        filter = tr("Builtin");
     else if (m_rb_external->isChecked())
-        filter = QStringLiteral("External");
+        filter = tr("External");
     // "All" 时 filter 为空，显示全部
 
     // 遍历模型行，隐藏不匹配的
@@ -180,7 +179,7 @@ void ThemeSettingsPage::on_rescan_clicked()
 {
     // 简易选择外部插件目录；用户可取消
     QString dir = QFileDialog::getExistingDirectory(
-        this, QStringLiteral("Select external theme plugins directory"), QString());
+        this, tr("Select external theme plugins directory"), QString());
     if (dir.isEmpty())
         return;
 
@@ -192,13 +191,13 @@ void ThemeSettingsPage::on_rescan_clicked()
 
 void ThemeSettingsPage::refresh_current_label()
 {
-    m_lb_current->setText(QStringLiteral("Current: %1").arg(m_service->current_theme_name()));
+    m_lb_current->setText(tr("Current: %1").arg(m_service->current_theme_name()));
 }
 
 QListWidgetItem* ThemeSettingsPage::get_title_item()
 {
     if (!m_title_item) {
-        m_title_item = new QListWidgetItem(QStringLiteral("Appearance"));
+        m_title_item = new QListWidgetItem(tr("Appearance"));
     }
     return m_title_item;
 }

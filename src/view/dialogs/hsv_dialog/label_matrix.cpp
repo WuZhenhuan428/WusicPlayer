@@ -21,12 +21,12 @@ LabelMatrix::LabelMatrix(QWidget* parent) : QWidget(parent)
     m_blVB   = new QHBoxLayout;
     m_blMain = new QVBoxLayout;
 
-    m_lbR->setText("R: ");
-    m_lbG->setText("G: ");
-    m_lbB->setText("B: ");
-    m_lbH->setText("H: ");
-    m_lbS->setText("S: ");
-    m_lbV->setText("V: ");
+    m_lbR->setText(tr("R: "));
+    m_lbG->setText(tr("G: "));
+    m_lbB->setText(tr("B: "));
+    m_lbH->setText(tr("H: "));
+    m_lbS->setText(tr("S: "));
+    m_lbV->setText(tr("V: "));
 
     m_blHR->addWidget(m_lbH);
     m_blHR->addWidget(m_leH);

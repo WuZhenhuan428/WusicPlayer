@@ -34,7 +34,7 @@ TagEditWidget::~TagEditWidget() {}
 void TagEditWidget::init_ui()
 {
     m_hbl_filepath = new QHBoxLayout();
-    m_lb_filepath  = new QLabel("Location: ", this);
+    m_lb_filepath  = new QLabel(tr("Location: "), this);
     m_le_filepath  = new QLineEdit(this);
     m_hbl_filepath->addWidget(m_lb_filepath);
     m_hbl_filepath->addWidget(m_le_filepath);
@@ -76,8 +76,8 @@ void TagEditWidget::init_connections()
 {
     connect(m_btn_help, &QPushButton::clicked, this, [this]() {
         QMessageBox* msb = new QMessageBox(this);
-        msb->setWindowTitle("Help");
-        msb->setText("This is help message box");
+        msb->setWindowTitle(tr("Help"));
+        msb->setText(tr("This is help message box"));
         msb->setIcon(QMessageBox::Icon::Information);
         msb->setStandardButtons(QMessageBox::Ok);
         msb->setAttribute(Qt::WA_DeleteOnClose);

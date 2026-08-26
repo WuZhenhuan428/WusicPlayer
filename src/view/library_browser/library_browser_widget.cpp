@@ -30,12 +30,12 @@ void LibraryBrowserWidget::init_ui()
     m_cb_grouping->addItem(tr("Year"), int(LibraryGrouping::year));
     m_cb_grouping->addItem(tr("None"), int(LibraryGrouping::none));
 
-    m_btn_settings = new QPushButton(tr("设置"));
+    m_btn_settings = new QPushButton(tr("Settings"));
     m_btn_settings->setEnabled(false); // DSL 自定义规则后续统一改造
-    m_btn_settings->setToolTip(tr("分类设置(DSL 自定义规则,后续版本)"));
+    m_btn_settings->setToolTip(tr("Sort Settings (DSL customize rules, subsequent version)"));
 
-    m_btn_config = new QPushButton(tr("配置"));
-    m_btn_config->setToolTip(tr("打开设置面板-媒体库(添加媒体库路径的唯一入口)"));
+    m_btn_config = new QPushButton(tr("Configure"));
+    m_btn_config->setToolTip(tr("Goto Settings->Library (the only entrance of setting library paths)"));
 
     auto* top = new QHBoxLayout;
     top->setContentsMargins(0, 0, 0, 0);
@@ -45,7 +45,7 @@ void LibraryBrowserWidget::init_ui()
     top->addWidget(m_btn_config);
 
     m_le_keyword = new QLineEdit;
-    m_le_keyword->setPlaceholderText(tr("搜索媒体库 (FTS5)..."));
+    m_le_keyword->setPlaceholderText(tr("Search in library (FTS5)..."));
 
     m_tree = new QTreeView;
     m_tree->setAlternatingRowColors(true);

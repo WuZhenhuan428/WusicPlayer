@@ -26,6 +26,7 @@
 */
 class WSortTypeSetDialog : public QDialog
 {
+    Q_OBJECT
 public:
     explicit WSortTypeSetDialog(QDialog* parent = nullptr);
     ~WSortTypeSetDialog();
@@ -71,6 +72,7 @@ private:
 
 class WInsertColumnDialog : public QDialog
 {
+    Q_OBJECT
 public:
     explicit WInsertColumnDialog();
     ~WInsertColumnDialog();
@@ -102,6 +104,7 @@ private:
 
 class WColumnIndexDialog : public QDialog
 {
+    Q_OBJECT
 public:
     explicit WColumnIndexDialog(const QString& title, const QString& prompt,
                                 QWidget* parent = nullptr);

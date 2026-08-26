@@ -105,7 +105,7 @@ void PluginPanel::refresh(const QVector<PluginDescriptor> descriptors)
 QListWidgetItem* PluginPanel::get_title_item()
 {
     if (!title_item_) {
-        title_item_ = new QListWidgetItem(QStringLiteral("Plugins"));
+        title_item_ = new QListWidgetItem(tr("Plugins"));
     }
     return title_item_;
 }

@@ -16,9 +16,9 @@ void TextEditorDialog::init_ui()
 {
     m_btn_import_file = new QPushButton("Import file", this);
     m_btn_save_as     = new QPushButton("Save as", this);
-    m_lb_font         = new QLabel("Font: ", this);
+    m_lb_font         = new QLabel(tr("Font: "), this);
     m_cb_font         = new QFontComboBox(this);
-    m_lb_font_size    = new QLabel("Size: ", this);
+    m_lb_font_size    = new QLabel(tr("Size: "), this);
     m_sb_font_size    = new QSpinBox(this);
     m_sb_font_size->setMinimum(5);
     m_sb_font_size->setMaximum(50);

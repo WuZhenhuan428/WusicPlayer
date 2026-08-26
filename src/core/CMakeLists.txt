@@ -24,6 +24,8 @@ add_library(wusic_core STATIC
     config_manager/config_manager.h
     config_manager/config_manager.cpp
     config_manager/i_configurable.h
+    config_manager/language_settings.h
+    config_manager/language_settings.cpp
 
     theme/theme_palette.h
     theme/wusic_proxy_style.h

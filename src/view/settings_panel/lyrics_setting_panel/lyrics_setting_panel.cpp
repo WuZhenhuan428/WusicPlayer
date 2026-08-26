@@ -20,7 +20,7 @@ LyricsSettingPanel::LyricsSettingPanel(rgb_t active, rgb_t inactive, QWidget* pa
 QListWidgetItem* LyricsSettingPanel::get_title_item()
 {
     if (!m_title_widget) {
-        m_title_widget = new QListWidgetItem("Lyrics");
+        m_title_widget = new QListWidgetItem(tr("Lyrics"));
     }
     return m_title_widget;
 }
@@ -51,19 +51,19 @@ QString LyricsSettingPanel::make_font_view(const QString& raw_string)
 void LyricsSettingPanel::init_UI()
 {
     // font line
-    m_lb_font = new QLabel("Font: ", this);
+    m_lb_font = new QLabel(tr("Font: "), this);
     m_le_font = new QLineEdit(this);
     m_le_font->setReadOnly(true);
-    m_btn_font = new QPushButton("Edit", this);
+    m_btn_font = new QPushButton(tr("Edit"), this);
     m_hbl_font = new QHBoxLayout;
     m_hbl_font->addWidget(m_lb_font);
     m_hbl_font->addWidget(m_le_font);
     m_hbl_font->addWidget(m_btn_font);
 
     // line mode
-    m_lb_mode    = new QLabel("Display Mode: ", this);
-    m_rb_oneline = new QRadioButton("One Line", this);
-    m_rb_twoline = new QRadioButton("two Line", this);
+    m_lb_mode    = new QLabel(tr("Display Mode: "), this);
+    m_rb_oneline = new QRadioButton(tr("One Line"), this);
+    m_rb_twoline = new QRadioButton(tr("two Line"), this);
     m_hbl_mode   = new QHBoxLayout;
     m_hbl_mode->addWidget(m_lb_mode);
     m_hbl_mode->addWidget(m_rb_oneline);
@@ -77,9 +77,9 @@ void LyricsSettingPanel::init_UI()
     m_rb_oneline->setChecked(true);
 
     // color
-    m_lb_color           = new QLabel("Color: ", this);
-    m_lb_active          = new QLabel("Active color: ", this);
-    m_lb_inactive        = new QLabel("Inactive color: ", this);
+    m_lb_color           = new QLabel(tr("Color: "), this);
+    m_lb_active          = new QLabel(tr("Active color: "), this);
+    m_lb_inactive        = new QLabel(tr("Inactive color: "), this);
     m_btn_active_color   = new QPushButton(this);
     m_btn_inactive_color = new QPushButton(this);
     m_hbl_color          = new QHBoxLayout;
@@ -100,7 +100,7 @@ void LyricsSettingPanel::init_UI()
     this->setLayout(m_vbl_main);
 
     if (!m_title_widget) {
-        m_title_widget = new QListWidgetItem("Lyrics");
+        m_title_widget = new QListWidgetItem(tr("Lyrics"));
     }
 
     update_active_btn_color(m_active_rgb);

@@ -7,6 +7,7 @@
 #include "controller/search_backend/in_memory_search_backend.h"
 #include "controller/shortcuts_controller.h"
 #include "core/config_manager/config_manager.h"
+#include "core/config_manager/language_settings.h"
 #include "core/types.h"
 #include "model/library/library_manager.h"
 #include "model/shortcuts_view_model/shortcuts_types.hpp"
@@ -15,6 +16,7 @@
 #include "view/eq_widget/eq_widget.h"
 #include "view/main_window.h"
 #include "view/search_panel/search_panel.h"
+#include "view/settings_panel/language_settings_page.h"
 #include "view/settings_panel/library_settings_page.h"
 #include "view/settings_panel/lyrics_setting_panel/lyrics_setting_panel.h"
 #include "view/settings_panel/plugin_panel/plugin_panel.h"
@@ -128,7 +130,13 @@ void PanelCoordinator::open_settings_panel()
                 [this]() { plugin_panel_->refresh(this->ctx_.plugin_controller_->descriptors()); });
         settings_panel_->register_widget(plugin_panel_->get_title_item(), plugin_panel_);
     }
-
+    // 语言设置页(English / 简体中文, 切换后重启生效)
+    if (!language_settings_page_) {
+        language_settings_page_ =
+            new LanguageSettingsPage(&LanguageSettings::instance(), settings_panel_);
+        settings_panel_->register_widget(language_settings_page_->get_title_item(),
+                                         language_settings_page_);
+    }
     settings_panel_->show();
     settings_panel_->raise();
     settings_panel_->activateWindow();
@@ -273,22 +281,22 @@ void PanelCoordinator::register_default_shortcuts()
     shortcuts_controller_->set_scope_host(ShortcutScope::DesktopLyrics, main_window);
 
     shortcuts_controller_->register_operation(
-        ShortcutActionId::save_playlist, "Save Playlist", ShortcutScope::PlaylistView,
+        ShortcutActionId::save_playlist, tr("Save Playlist"), ShortcutScope::PlaylistView,
         QKeySequence(Qt::CTRL | Qt::Key_S), [&playlist_ctl]() { playlist_ctl->save_playlist(); },
         main_window, true);
 
     shortcuts_controller_->register_operation(
-        ShortcutActionId::open_file, "Open File", ShortcutScope::PlaylistView,
+        ShortcutActionId::open_file, tr("Open File"), ShortcutScope::PlaylistView,
         QKeySequence(Qt::CTRL | Qt::Key_O), [&playlist_ctl]() { playlist_ctl->import_files(); },
         main_window, true);
 
     shortcuts_controller_->register_operation(
-        ShortcutActionId::open_playlist, "Open playlist", ShortcutScope::PlaylistView,
+        ShortcutActionId::open_playlist, tr("Open playlist"), ShortcutScope::PlaylistView,
         QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_O),
         [playlist_ctl]() { playlist_ctl->load_playlist(); }, main_window, true);
 
     shortcuts_controller_->register_operation(
-        ShortcutActionId::play_pause, "Play / Pause", ShortcutScope::Application,
+        ShortcutActionId::play_pause, tr("Play / Pause"), ShortcutScope::Application,
         QKeySequence(Qt::Key_Space),
         [&playback_ctl]() {
             if (playback_ctl->state() == PlayingState::PLAYING) {
@@ -300,19 +308,19 @@ void PanelCoordinator::register_default_shortcuts()
         main_window, true);
 
     shortcuts_controller_->register_operation(
-        ShortcutActionId::open_settings, "Open settings", ShortcutScope::MainWindow,
+        ShortcutActionId::open_settings, tr("Open settings"), ShortcutScope::MainWindow,
         QKeySequence(Qt::CTRL | Qt::Key_Comma), [this]() { open_settings_panel(); }, this, true);
 
     shortcuts_controller_->register_operation(
-        ShortcutActionId::stop, "Stop", ShortcutScope::Application, QKeySequence(Qt::Key_S),
+        ShortcutActionId::stop, tr("Stop"), ShortcutScope::Application, QKeySequence(Qt::Key_S),
         [&playback_ctl]() { playback_ctl->stop(); }, main_window, true);
 
     shortcuts_controller_->register_operation(
-        ShortcutActionId::open_search, "Open Search Panel", ShortcutScope::MainWindow,
+        ShortcutActionId::open_search, tr("Open Search Panel"), ShortcutScope::MainWindow,
         QKeySequence(Qt::CTRL | Qt::Key_F), [this]() { open_search_panel(); }, main_window, true);
 
     shortcuts_controller_->register_operation(
-        ShortcutActionId::show_hide_desktop_lyrics, "Show / Hide Desktop Lyrics",
+        ShortcutActionId::show_hide_desktop_lyrics, tr("Show / Hide Desktop Lyrics"),
         ShortcutScope::Application, QKeySequence(Qt::CTRL | Qt::Key_L),
         [&main_window]() {
             auto* desktopLyrics = main_window->desktop_lyrics_widget();

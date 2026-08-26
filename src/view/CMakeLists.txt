@@ -49,6 +49,8 @@ add_library(wusic_view STATIC
 
     settings_panel/library_settings_page.cpp
     settings_panel/library_settings_page.h
+    settings_panel/language_settings_page.cpp
+    settings_panel/language_settings_page.h
 
     settings_panel/plugin_panel/plugin_panel.cpp
     settings_panel/plugin_panel/plugin_panel.h

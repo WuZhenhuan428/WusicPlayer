@@ -49,7 +49,7 @@ void PlaybackRestoreService::restore()
         this->ctx_.event_bus_->publish(EventBus::Topic::NotificationShown,
                                        AppNotification{
                                            .level       = AppNotification::Level::Info,
-                                           .message     = "Playlist Load Finished",
+                                           .message     = tr("Playlist Load Finished"),
                                            .duration_ms = 5000,
                                        });
     });

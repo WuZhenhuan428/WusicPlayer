@@ -2,11 +2,13 @@
 
 #include "controller/playback_controller.h"
 #include "core/config_manager/config_manager.h"
+#include "core/config_manager/language_settings.h"
 #include "core/logger/logger_manager.h"
 #include "core/theme/theme_manager.h"
 
 #include <QApplication>
 #include <QIcon>
+#include <QTranslator>
 #include <qtenvironmentvariables.h>
 
 int main(int argc, char* argv[])
@@ -36,11 +38,28 @@ int main(int argc, char* argv[])
 
     Player player;
     PlaybackController playback_controller(&player);
-    ConfigManager::get_instance();
+    ConfigManager& cfg_mgr  = ConfigManager::get_instance();
 
-    // 在 ConfigManager::load_all() 中恢复上次使用的主题
-    ConfigManager::get_instance().register_module(&theme_mgr);
-    ConfigManager::get_instance().load_all();
+    // 多语言: 语言设置模块在 load_all() 前注册, 以便恢复上次选择的语言
+    auto& language_settings = LanguageSettings::instance();
+    cfg_mgr.register_module(&language_settings);
+
+    // 在 ConfigManager::load_all() 中恢复上次使用的主题/语言
+    cfg_mgr.register_module(&theme_mgr);
+    cfg_mgr.load_all();
+
+    // 按语言加载翻译(.qm 位于可执行文件旁的 translations/)
+    QTranslator translator;
+    const QString qm_path = QCoreApplication::applicationDirPath() +
+                            QStringLiteral("/translations/wusicplayer_") +
+                            language_settings.locale() + QStringLiteral(".qm");
+    Logger* i18n_logger = LoggerManager::file_logger("i18n", {"console", "gui"});
+    if (translator.load(qm_path)) {
+        a.installTranslator(&translator);
+        i18n_logger->info("translation loaded: {}", qm_path.toStdString());
+    } else {
+        i18n_logger->warn("translation NOT found: {}", qm_path.toStdString());
+    }
 
     AppController appController(&playback_controller);
     appController.show_main_window();

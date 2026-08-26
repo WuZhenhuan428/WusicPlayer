@@ -32,6 +32,7 @@ class LicenseDialog : public QWidget
 
 class AboutInfoDialog : public QWidget
 {
+    Q_OBJECT
 public:
     AboutInfoDialog(QWidget* parent = nullptr);
 

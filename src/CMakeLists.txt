@@ -42,3 +42,13 @@ target_link_libraries(WusicPlayer
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_options(WusicPlayer PRIVATE "-rdynamic")
 endif()
+
+# 多语言: 依赖 .qm 生成并复制到可执行文件旁(运行时按目录加载)
+if(TARGET translations)
+    add_dependencies(WusicPlayer translations)
+    add_custom_command(TARGET WusicPlayer POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_BINARY_DIR}/translations/wusicplayer_zh_CN.qm"
+            "$<TARGET_FILE_DIR:WusicPlayer>/translations/"
+    )
+endif()

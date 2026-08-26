@@ -8,7 +8,7 @@
 ShortcutsPanel::ShortcutsPanel(ConfigManager* cfg_mgr, QWidget* parent) :
     QWidget(parent), m_cfg_mgr(cfg_mgr)
 {
-    m_lb_search       = new QLabel("Search functions:", this);
+    m_lb_search       = new QLabel(tr("Search functions:"), this);
     m_le_search       = new QLineEdit(this);
     m_hbl_search_line = new QHBoxLayout();
 
@@ -22,9 +22,9 @@ ShortcutsPanel::ShortcutsPanel(ConfigManager* cfg_mgr, QWidget* parent) :
     m_table_view_shortcuts->verticalHeader()->setVisible(false);
     m_table_view_shortcuts->horizontalHeader()->setStretchLastSection(true);
 
-    m_btn_apply   = new QPushButton("Apply", this);
-    m_btn_restore = new QPushButton("Restore", this);
-    m_btn_default = new QPushButton("Default", this);
+    m_btn_apply   = new QPushButton(tr("Apply"), this);
+    m_btn_restore = new QPushButton(tr("Restore"), this);
+    m_btn_default = new QPushButton(tr("Default"), this);
     m_hbl_buttom  = new QHBoxLayout();
     m_hbl_buttom->addWidget(m_btn_apply);
     m_hbl_buttom->addWidget(m_btn_restore);
@@ -56,7 +56,7 @@ void ShortcutsPanel::closeEvent(QCloseEvent* event)
 QListWidgetItem* ShortcutsPanel::get_list_item()
 {
     if (!m_list_item) {
-        m_list_item = new QListWidgetItem("Shortctus");
+        m_list_item = new QListWidgetItem(tr("Shortctus"));
     }
     return m_list_item;
 }

@@ -29,7 +29,7 @@ SidePanel::SidePanel(QWidget* parent) : QWidget(parent)
     m_lb_title->setAlignment(Qt::AlignHCenter);
 
     m_lb_album = new ElidedLabel(this);
-    m_lb_album->setText("Version 0.01");
+    m_lb_album->setText(tr("Version 0.01"));
     m_lb_album->setAlignment(Qt::AlignHCenter);
 
     m_lb_title->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);

@@ -132,13 +132,13 @@ QVariant ShortcutsViewModel::headerData(int section, Qt::Orientation orientation
         return {};
     switch (section) {
     case ColActionName:
-        return "Action";
+        return tr("Action");
     case ColKeySequence:
-        return "Shortcuts";
+        return tr("Shortcuts");
     case ColScope:
-        return "Scope";
+        return tr("Scope");
     case ColConflict:
-        return "Status";
+        return tr("Status");
     default:
         return {};
     }

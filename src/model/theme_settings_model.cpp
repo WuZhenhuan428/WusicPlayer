@@ -35,7 +35,7 @@ QVariant ThemeSettingsModel::data(const QModelIndex& index, int role) const
         case ColAuthor:
             return e.author;
         case ColDark:
-            return e.isDark ? "Dark" : "Light";
+            return e.isDark ? tr("Dark") : tr("Light");
         }
     }
 
@@ -53,13 +53,13 @@ QVariant ThemeSettingsModel::headerData(int section, Qt::Orientation orientation
         return {};
     switch (section) {
     case ColName:
-        return QStringLiteral("Name");
+        return tr("Name");
     case ColSource:
-        return QStringLiteral("Source");
+        return tr("Source");
     case ColAuthor:
-        return QStringLiteral("Author");
+        return tr("Author");
     case ColDark:
-        return QStringLiteral("Mode");
+        return tr("Mode");
     }
     return {};
 }

@@ -129,11 +129,11 @@ void MainWindow::build_menu_bar()
 {
     m_menubar_main      = new QMenuBar;
 
-    m_menu_file         = new QMenu("&File", m_menubar_main);
-    m_act_open_file     = new QAction("&Open", m_menu_file);
-    m_act_new_playlist  = new QAction("New playlist", m_menu_file);
-    m_act_load_playlist = new QAction("&Load playlist", m_menu_file);
-    m_act_exit          = new QAction("&Exit", m_menu_file);
+    m_menu_file         = new QMenu(tr("&File"), m_menubar_main);
+    m_act_open_file     = new QAction(tr("&Open"), m_menu_file);
+    m_act_new_playlist  = new QAction(tr("&New playlist"), m_menu_file);
+    m_act_load_playlist = new QAction(tr("&Load playlist"), m_menu_file);
+    m_act_exit          = new QAction(tr("&Exit"), m_menu_file);
     m_menu_file->addAction(m_act_open_file);
     m_menu_file->addSeparator();
     m_menu_file->addAction(m_act_new_playlist);
@@ -142,38 +142,38 @@ void MainWindow::build_menu_bar()
     m_menu_file->addAction(m_act_exit);
     m_menubar_main->addMenu(m_menu_file);
 
-    m_menu_view         = new QMenu("&View", m_menubar_main);
-    m_act_set_sort_rule = new QAction("Set sort rule", m_menu_view);
-    m_act_insert_column = new QAction("Insert a column (&I)", m_menu_view);
-    m_act_remove_column = new QAction("Remove a column (&R)", m_menu_view);
-    m_act_search_panel  = new QAction("Open search panel (&S)", m_menu_view);
-    m_act_log_viewer    = new QAction("Open Log (&L)", m_menu_view);
+    m_menu_view         = new QMenu(tr("&View"), m_menubar_main);
+    m_act_set_sort_rule = new QAction(tr("Set sort rule"), m_menu_view);
+    m_act_insert_column = new QAction(tr("Insert a column (&I)"), m_menu_view);
+    m_act_remove_column = new QAction(tr("Remove a column (&R)"), m_menu_view);
+    m_act_search_panel  = new QAction(tr("Open search panel (&S)"), m_menu_view);
+    m_act_log_viewer    = new QAction(tr("Open Log (&L)"), m_menu_view);
     m_menu_view->addAction(m_act_set_sort_rule);
     m_menu_view->addAction(m_act_insert_column);
     m_menu_view->addAction(m_act_remove_column);
     m_menu_view->addAction(m_act_search_panel);
     m_menu_view->addAction(m_act_log_viewer);
     m_menu_view->addSeparator();
-    m_act_show_desktop_lyrics = new QAction("Show Desktop Lyrics (&D)", m_menu_view);
+    m_act_show_desktop_lyrics = new QAction(tr("Show Desktop Lyrics (&D)"), m_menu_view);
     m_act_show_desktop_lyrics->setCheckable(true);
-    m_act_lock_desktop_lyrics = new QAction("Lock Desktop Lyrics", m_menu_view);
+    m_act_lock_desktop_lyrics = new QAction(tr("Lock Desktop Lyrics"), m_menu_view);
     m_act_lock_desktop_lyrics->setCheckable(true);
     m_menu_view->addAction(m_act_show_desktop_lyrics);
     m_menu_view->addAction(m_act_lock_desktop_lyrics);
     m_menubar_main->addMenu(m_menu_view);
 
-    m_menu_playback = new QMenu("&Playback", m_menubar_main);
-    m_act_open_eq   = new QAction("&Open EQ", m_menu_playback);
+    m_menu_playback = new QMenu(tr("&Playback"), m_menubar_main);
+    m_act_open_eq   = new QAction(tr("&Open EQ"), m_menu_playback);
     m_menu_playback->addAction(m_act_open_eq);
     m_menubar_main->addMenu(m_menu_playback);
 
-    m_menu_settings = new QMenu("&Settings", m_menubar_main);
-    m_act_settings  = new QAction("&Settings", m_menu_settings);
+    m_menu_settings = new QMenu(tr("&Settings"), m_menubar_main);
+    m_act_settings  = new QAction(tr("&Settings"), m_menu_settings);
     m_menu_settings->addAction(m_act_settings);
     m_menubar_main->addMenu(m_menu_settings);
 
-    m_menu_help = new QMenu("&Help", m_menubar_main);
-    m_act_about = new QAction("&About", m_menu_help);
+    m_menu_help = new QMenu(tr("&Help"), m_menubar_main);
+    m_act_about = new QAction(tr("&About"), m_menu_help);
     m_menu_help->addAction(m_act_about);
     m_menubar_main->addMenu(m_menu_help);
 

@@ -245,7 +245,7 @@ void PlaylistController::save_playlist(const PlaylistId& id)
         return;
 
     QFileDialog dialog(m_dialogParent);
-    dialog.setWindowTitle("Save playlist file");
+    dialog.setWindowTitle(tr("Save playlist file"));
     dialog.setAcceptMode(QFileDialog::AcceptSave);
     dialog.setNameFilters(QStringList() << tr("WusicPlayer playlist (*.wcpl)"));
 

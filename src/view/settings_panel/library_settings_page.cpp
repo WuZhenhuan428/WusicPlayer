@@ -17,7 +17,7 @@ LibrarySettingsPage::LibrarySettingsPage(LibraryManager* lib, QWidget* parent) :
 QListWidgetItem* LibrarySettingsPage::get_title_item()
 {
     if (m_title_item == nullptr) {
-        m_title_item = new QListWidgetItem("Media Library");
+        m_title_item = new QListWidgetItem(tr("Media Library"));
     }
     return m_title_item;
 }
@@ -32,7 +32,8 @@ void LibrarySettingsPage::init_ui()
     m_cb_add_policy->addItem(tr("Import to library"), int(AddFilePolicy::import_to_library));
     m_cb_add_policy->addItem(tr("Keep external"), int(AddFilePolicy::keep_external));
     m_cb_add_policy->addItem(tr("Ask every time"), int(AddFilePolicy::always_ask));
-    m_cb_add_policy->setToolTip(tr("文件夹默认同步入库,单文件默认仅外部;此处可覆盖默认行为"));
+    m_cb_add_policy->setToolTip(tr("Folders add to library by default, Single file keeps external; "
+                                   "Default behavior can be overriden here"));
     policy_row->addWidget(lbl_policy);
     policy_row->addWidget(m_cb_add_policy, 1);
 

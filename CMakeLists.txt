@@ -66,6 +66,54 @@ qt_standard_project_setup()
 add_subdirectory(thirdparty/lrc-parser)
 add_subdirectory(src)
 
+# ---- 多语言(i18n): lupdate 提取 / lrelease 编译 ----
+# 优先 Qt6 自带的翻译工具(避免误用系统 Qt5 wrapper)
+find_program(QT_LUPDATE_EXECUTABLE
+    NAMES lupdate-qt6 lupdate
+    HINTS "${QT6_INSTALL_BINS}" "${CMAKE_INSTALL_PREFIX}/lib/qt6/bin" /usr/lib/qt6/bin
+    DOC "Path to the Qt6 lupdate tool")
+find_program(QT_LRELEASE_EXECUTABLE
+    NAMES lrelease-qt6 lrelease
+    HINTS "${QT6_INSTALL_BINS}" "${CMAKE_INSTALL_PREFIX}/lib/qt6/bin" /usr/lib/qt6/bin
+    DOC "Path to the Qt6 lrelease tool")
+if(QT_LUPDATE_EXECUTABLE AND QT_LRELEASE_EXECUTABLE)
+    set(WUSIC_TRANSLATIONS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/translations")
+    set(WUSIC_TS_FILES
+        "${WUSIC_TRANSLATIONS_DIR}/wusicplayer_zh_CN.ts"
+    )
+    set(WUSIC_QM_DIR "${CMAKE_CURRENT_BINARY_DIR}/translations")
+
+    # 更新 .ts(手动: cmake --build build --target translations_update)
+    add_custom_target(translations_update
+        COMMAND ${QT_LUPDATE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/src
+                -ts ${WUSIC_TS_FILES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Updating translation source files (.ts)"
+    )
+
+    # 编译 .qm(构建时自动执行)
+    add_custom_command(
+        OUTPUT "${WUSIC_QM_DIR}/wusicplayer_zh_CN.qm"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${WUSIC_QM_DIR}"
+        COMMAND ${QT_LRELEASE_EXECUTABLE} ${WUSIC_TS_FILES}
+                -qm "${WUSIC_QM_DIR}/wusicplayer_zh_CN.qm"
+        DEPENDS ${WUSIC_TS_FILES}
+        COMMENT "Compiling translations to .qm"
+    )
+    add_custom_target(translations ALL
+        DEPENDS "${WUSIC_QM_DIR}/wusicplayer_zh_CN.qm"
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+                "$<TARGET_FILE_DIR:WusicPlayer>/translations"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${WUSIC_QM_DIR}/wusicplayer_zh_CN.qm"
+                "$<TARGET_FILE_DIR:WusicPlayer>/translations/"
+        COMMENT "Deploying .qm next to the executable"
+    )
+    message(STATUS "i18n: lupdate/lrelease enabled")
+else()
+    message(WARNING "lupdate/lrelease not found; translations disabled")
+endif()
+
 if (WUSIC_BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)

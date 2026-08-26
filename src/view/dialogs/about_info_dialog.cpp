@@ -52,7 +52,7 @@ AboutItem::AboutItem(const QString& title, const QString& text, const QString& u
 
 AboutInfoDialog::AboutInfoDialog(QWidget* parent) : QWidget(parent)
 {
-    this->setWindowTitle("About");
+    this->setWindowTitle(tr("About"));
     this->setWindowFlag(Qt::Window);
 
     // 1.1 头部文字

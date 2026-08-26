@@ -14,7 +14,7 @@
 SearchPanel::SearchPanel(ConfigManager* cfg_mgr, QWidget* parent) :
     QWidget(parent), m_cfg_mgr(cfg_mgr)
 {
-    setWindowTitle("Search");
+    setWindowTitle(tr("Search"));
     m_le_keyword = new QLineEdit;
     m_cb_mode    = new QComboBox;
     m_le_keyword->setAttribute(Qt::WA_InputMethodEnabled, true);

@@ -127,20 +127,20 @@ void FontSelectDialog::update_preview()
 
 void FontSelectDialog::init_UI()
 {
-    m_lb_font   = new QLabel("Fonts:", this);
+    m_lb_font   = new QLabel(tr("Fonts:"), this);
     m_list_font = new QListWidget(this);
     m_vbl_font  = new QVBoxLayout;
 
     m_vbl_font->addWidget(m_lb_font);
     m_vbl_font->addWidget(m_list_font);
 
-    m_lb_style   = new QLabel("Style:", this);
+    m_lb_style   = new QLabel(tr("Style:"), this);
     m_list_style = new QListWidget(this);
     m_vbl_style  = new QVBoxLayout;
     m_vbl_style->addWidget(m_lb_style);
     m_vbl_style->addWidget(m_list_style);
 
-    m_lb_size       = new QLabel("Size:", this);
+    m_lb_size       = new QLabel(tr("Size:"), this);
     m_spin_box_size = new QSpinBox(this);
     m_list_size     = new QListWidget(this);
     m_vbl_size      = new QVBoxLayout;

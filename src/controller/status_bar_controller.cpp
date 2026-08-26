@@ -14,7 +14,7 @@ StatusBarController::StatusBarController(QStatusBar* status_bar, QObject* parent
     this->timer_->setSingleShot(true);
     connect(this->timer_, &QTimer::timeout, this, [this]() { this->lb_temp_msg_->clear(); });
 
-    this->show_temp_message("Loading", 5000);
+    this->show_temp_message(tr("Loading"), 5000);
 }
 
 void StatusBarController::register_item(const QString& id, const QString& default_message)

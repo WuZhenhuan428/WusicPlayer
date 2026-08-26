@@ -13,19 +13,19 @@ NewTagItemDialog::~NewTagItemDialog() {}
 
 void NewTagItemDialog::init_ui()
 {
-    m_lb_type  = new QLabel("Type: ", this);
+    m_lb_type  = new QLabel(tr("Type: "), this);
     m_cb_type  = new QComboBox(this);
     m_hbl_type = new QHBoxLayout;
     m_hbl_type->addWidget(m_lb_type);
     m_hbl_type->addWidget(m_cb_type);
 
-    m_lb_other  = new QLabel("Other: ", this);
+    m_lb_other  = new QLabel(tr("Other: "), this);
     m_le_other  = new QLineEdit(this);
     m_hbl_other = new QHBoxLayout;
     m_hbl_other->addWidget(m_lb_other);
     m_hbl_other->addWidget(m_le_other);
 
-    m_lb_value  = new QLabel("value: ", this);
+    m_lb_value  = new QLabel(tr("value: "), this);
     m_le_value  = new QLineEdit(this);
     m_hbl_value = new QHBoxLayout;
     m_hbl_value->addWidget(m_lb_value);
@@ -68,8 +68,8 @@ void NewTagItemDialog::init_connections()
 
     connect(m_btn_help, &QPushButton::clicked, this, [this]() {
         QMessageBox* msb = new QMessageBox(this);
-        msb->setWindowTitle("Help");
-        msb->setText("This is help message box about\nrules of create new tag");
+        msb->setWindowTitle(tr("Help"));
+        msb->setText(tr("This is help message box about\nrules of create new tag"));
         msb->setIcon(QMessageBox::Icon::Information);
         msb->setStandardButtons(QMessageBox::Ok);
         msb->setAttribute(Qt::WA_DeleteOnClose);
@@ -83,8 +83,8 @@ void NewTagItemDialog::init_connections()
             this->close();
         } else {
             QMessageBox* msb = new QMessageBox(this);
-            msb->setWindowTitle("Warning");
-            msb->setText("Please choose/input correct type of tag!");
+            msb->setWindowTitle(tr("Warning"));
+            msb->setText(tr("Please choose/input correct type of tag!"));
             msb->setIcon(QMessageBox::Icon::Warning);
             msb->setStandardButtons(QMessageBox::Ok);
             msb->setAttribute(Qt::WA_DeleteOnClose);

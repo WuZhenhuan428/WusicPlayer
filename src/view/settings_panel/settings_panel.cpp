@@ -14,7 +14,7 @@ SettingsPanel::SettingsPanel(ConfigManager* cfg_mgr, QWidget* parent) :
     m_hbl_settings->addWidget(m_list_widget);
     m_hbl_settings->addWidget(m_stacked_widget);
 
-    m_btn_close  = new QPushButton("Close", this);
+    m_btn_close  = new QPushButton(tr("Close"), this);
     m_hbl_bottom = new QHBoxLayout();
     m_hbl_bottom->addStretch();
     m_hbl_bottom->addWidget(m_btn_close);

@@ -5,11 +5,11 @@
 // ==== WSortTypeSetDialog ==== //
 WSortTypeSetDialog::WSortTypeSetDialog(QDialog* parent) : QDialog(parent)
 {
-    lbPrompt      = new QLabel("Input sorting expression:");
+    lbPrompt      = new QLabel(tr("Input sorting expression:"));
     txtExpression = new QLineEdit(this);
-    btnEnter      = new QPushButton("OK");
-    btnCancel     = new QPushButton("Cancel");
-    btnHelp       = new QPushButton("Help");
+    btnEnter      = new QPushButton(tr("OK"));
+    btnCancel     = new QPushButton(tr("Cancel"));
+    btnHelp       = new QPushButton(tr("Help"));
     sldMain       = new QSlider();
     sldBtn        = new QSlider();
     hbPrompt      = new QHBoxLayout();
@@ -18,8 +18,10 @@ WSortTypeSetDialog::WSortTypeSetDialog(QDialog* parent) : QDialog(parent)
 
     connect(btnEnter, &QPushButton::clicked, this, &QDialog::accept);
     connect(btnCancel, &QPushButton::clicked, this, &QDialog::reject);
-    connect(btnHelp, &QPushButton::clicked, this,
-            [this]() { QMessageBox::information(this, "foo", "bar"); });
+    connect(btnHelp, &QPushButton::clicked, this, [this]() {
+        QMessageBox::information(this, tr("Help"),
+                                 tr("Enter sorting expression like: title - artist"));
+    });
 
     hbPrompt->addWidget(lbPrompt);
     hbPrompt->addStretch();
@@ -45,7 +47,7 @@ WSortTypeSetDialog::~WSortTypeSetDialog() {};
 WInsertColumnDialog::WInsertColumnDialog()
 {
     // index
-    lbIndex  = new QLabel("Index:");
+    lbIndex  = new QLabel(tr("Index:"));
     txtIndex = new QLineEdit(this);
     txtIndex->setText("1");
     hbIndex = new QHBoxLayout();
@@ -53,14 +55,14 @@ WInsertColumnDialog::WInsertColumnDialog()
     hbIndex->addWidget(txtIndex);
 
     // input title
-    lbTitle  = new QLabel("Title:");
+    lbTitle  = new QLabel(tr("Title:"));
     txtTitle = new QLineEdit(this);
     hbTitle  = new QHBoxLayout();
     hbTitle->addWidget(lbTitle);
     hbTitle->addWidget(txtTitle);
 
     // choose type
-    lbType                 = new QLabel("Type:");
+    lbType                 = new QLabel(tr("Type:"));
     cbType                 = new QComboBox();
     QVector<QString> types = {"title",    "artist",   "album",    "album artist", "genre",
                               "composer", "year",     "date",     "track",        "disc",
@@ -71,8 +73,8 @@ WInsertColumnDialog::WInsertColumnDialog()
     hbType->addWidget(cbType);
 
     // button
-    btnOK     = new QPushButton("OK");
-    btnCancel = new QPushButton("Cancel");
+    btnOK     = new QPushButton(tr("OK"));
+    btnCancel = new QPushButton(tr("Cancel"));
     hbBtn     = new QHBoxLayout();
     hbBtn->addStretch();
     hbBtn->addWidget(btnOK);
@@ -91,17 +93,18 @@ WInsertColumnDialog::WInsertColumnDialog()
         bool ok         = false;
         qlonglong value = txtIndex ? txtIndex->text().toLongLong(&ok) : 0;
         if (!ok || value <= 0) {
-            QMessageBox::warning(this, "Invalid index",
-                                 "Index must be a positive integer (not 0).");
+            QMessageBox::warning(this, tr("Invalid index"),
+                                 tr("Index must be a positive integer (not 0)."));
             return;
         }
         if (value > std::numeric_limits<int>::max()) {
-            QMessageBox::warning(this, "Invalid index", "Index is too large.");
+            QMessageBox::warning(this, tr("Invalid index"), tr("Index is too large."));
             return;
         }
         int intValue = static_cast<int>(value);
         if (m_maxIndex > 0 && intValue > m_maxIndex) {
-            QMessageBox::warning(this, "Invalid index", "Index is out of range. Clamped to max.");
+            QMessageBox::warning(this, tr("Invalid index"),
+                                 tr("Index is out of range. Clamped to max."));
             txtIndex->setText(QString::number(m_maxIndex));
             accept();
             return;
@@ -152,8 +155,8 @@ WColumnIndexDialog::WColumnIndexDialog(const QString& title, const QString& prom
     hbIndex->addWidget(lbPrompt);
     hbIndex->addWidget(txtIndex);
 
-    btnOK     = new QPushButton("OK");
-    btnCancel = new QPushButton("Cancel");
+    btnOK     = new QPushButton(tr("OK"));
+    btnCancel = new QPushButton(tr("Cancel"));
     hbBtn     = new QHBoxLayout();
     hbBtn->addStretch();
     hbBtn->addWidget(btnOK);
@@ -169,17 +172,18 @@ WColumnIndexDialog::WColumnIndexDialog(const QString& title, const QString& prom
         bool ok         = false;
         qlonglong value = txtIndex ? txtIndex->text().toLongLong(&ok) : 0;
         if (!ok || value <= 0) {
-            QMessageBox::warning(this, "Invalid index",
-                                 "Index must be a positive integer (not 0).");
+            QMessageBox::warning(this, tr("Invalid index"),
+                                 tr("Index must be a positive integer (not 0)."));
             return;
         }
         if (value > std::numeric_limits<int>::max()) {
-            QMessageBox::warning(this, "Invalid index", "Index is too large.");
+            QMessageBox::warning(this, tr("Invalid index"), tr("Index is too large."));
             return;
         }
         int intValue = static_cast<int>(value);
         if (m_maxIndex > 0 && intValue > m_maxIndex) {
-            QMessageBox::warning(this, "Invalid index", "Index is out of range. Clamped to max.");
+            QMessageBox::warning(this, tr("Invalid index"),
+                                 tr("Index is out of range. Clamped to max."));
             txtIndex->setText(QString::number(m_maxIndex));
             accept();
             return;

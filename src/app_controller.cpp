@@ -53,9 +53,6 @@
 #include <QTimer>
 #include <QTreeView>
 
-#include <format>
-#include <string>
-
 #include "core/logger/logger_manager.h"
 namespace
 {
@@ -152,9 +149,9 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     QDir().mkpath(data_dir);
     // 最小通知通路:库扫描完成 → EventBus → NotificationService → 状态栏临时消息
     connect(library_manager_.get(), &LibraryManager::sgn_scan_finished, this, [this]() {
-        event_bus_->publish(EventBus::Topic::NotificationShown,
-                            AppNotification{AppNotification::Level::Info,
-                                            QStringLiteral("Library scan finished"), 5000});
+        event_bus_->publish(
+            EventBus::Topic::NotificationShown,
+            AppNotification{AppNotification::Level::Info, tr("Library scan finished"), 5000});
     });
     if (library_manager_->initialize(data_dir + "/library.db")) {
         library_manager_->start_scan();
@@ -471,13 +468,13 @@ void AppController::setup_status_bar_connections()
                 QString hint = "";
                 switch (state) {
                 case PlayingState::PAUSE:
-                    hint = "PAUSE";
+                    hint = tr("PAUSE");
                     break;
                 case PlayingState::PLAYING:
-                    hint = "PLAYING";
+                    hint = tr("PLAYING");
                     break;
                 case PlayingState::STOP:
-                    hint = "STOP";
+                    hint = tr("STOP");
                     break;
                 }
                 status_bar_controller_->update_item_by_id("play_state", hint);
@@ -490,15 +487,17 @@ void AppController::setup_status_bar_connections()
             // 播放列表可能为空(如删除最后一个列表),需空指针保护
             auto show_track_count = [this]() {
                 const auto pl = playlist_controller_->current_playlist();
-                const std::string tracks =
-                    pl ? std::format("{} track(s)", pl->track_count()) : "0 track(s)";
-                status_bar_controller_->update_item_by_id("playlist_track_num", tracks.c_str());
+                const QString tracks =
+                    pl ? QString("%1 %2").arg(pl->track_count()).arg(tr("track(s)"))
+                       : tr("0 track");
+                status_bar_controller_->update_item_by_id("playlist_track_num", tracks);
             };
             {
                 const auto pl = playlist_controller_->current_playlist();
-                const std::string tracks =
-                    pl ? std::format("{} track(s)", pl->track_count()) : "0 track(s)";
-                status_bar_controller_->register_item("playlist_track_num", tracks.c_str());
+                const QString tracks =
+                    pl ? QString("%1 %2").arg(pl->track_count()).arg(tr("track(s)"))
+                       : tr("0 track");
+                status_bar_controller_->register_item("playlist_track_num", tracks);
             }
             // 双击列表项目时触发 &PlaylistTreeWidget::sgnSwitchPlaylist
             // CRUD 时触发 `&PlaylistController::sgn_playlist_changed`
