@@ -1275,7 +1275,7 @@ Add to library (library reference), or keep as external file?</source>
     <message>
         <location filename="../src/model/theme_settings_model.cpp" line="38"/>
         <source>Light</source>
-        <translation>亮色</translation>
+        <translation>浅色</translation>
     </message>
     <message>
         <location filename="../src/model/theme_settings_model.cpp" line="56"/>
@@ -1336,7 +1336,7 @@ Add to library (library reference), or keep as external file?</source>
     <message>
         <location filename="../src/view/settings_panel/theme_settings_page/theme_settings_page.cpp" line="51"/>
         <source>Light</source>
-        <translation>亮色</translation>
+        <translation>浅色</translation>
     </message>
     <message>
         <location filename="../src/view/settings_panel/theme_settings_page/theme_settings_page.cpp" line="52"/>
