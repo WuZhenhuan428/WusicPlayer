@@ -15,7 +15,6 @@
 #include <QTimer>
 
 #include <cstdio>
-#include <optional>
 
 static int g_checks   = 0;
 static int g_failures = 0;

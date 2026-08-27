@@ -16,10 +16,16 @@ add_library(wusic_core STATIC
     logger/log_sink_gui.h
     logger/log_sink.h
 
+    utils/audio.cpp
     utils/audio.hpp
-    utils/path.hpp
+    utils/font.cpp
     utils/font.hpp
+    utils/icon.cpp
     utils/icon.hpp
+    utils/path.cpp
+    utils/path.hpp
+    utils/string.cpp
+    utils/string.hpp
 
     config_manager/config_manager.h
     config_manager/config_manager.cpp
@@ -81,6 +87,7 @@ target_link_libraries(wusic_core
         wusic_headers
         magic_enum::magic_enum
         FFMPEG::FFMPEG
+        Taglib::Taglib
         Threads::Threads
         $<$<CXX_COMPILER_ID:GNU>:atomic>
         stdc++exp
