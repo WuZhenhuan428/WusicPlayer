@@ -3,6 +3,8 @@
 #include <QString>
 #include <QStringList>
 
+#include <print>
+
 static int g_CHECKs;
 static int g_failures;
 
@@ -19,6 +21,7 @@ using namespace utils::path;
 
 int main()
 {
+#if defined(Q_OS_UNIX)
     QString root    = "/abs/path/";
 
     QStringList sos = {
@@ -38,17 +41,18 @@ int main()
         "have_empty_fileld_3.so.1.2.",
     };
 
+    // normal
     bool OK = false;
     OK      = contains_suffix(normal, {"so"});
     CHECK(OK); // pass
-    // normal
     OK = !parse_versioned_unix_so(normal).has_value();
     CHECK(OK);
 
     // relative:
     for (const auto& path : sos) {
-        OK = parse_versioned_unix_so(path).has_value();
+      OK = parse_versioned_unix_so(path).has_value();
         CHECK(OK);
+        CHECK(!OK);
     }
 
     // absolute
@@ -62,7 +66,9 @@ int main()
         OK = !parse_versioned_unix_so(err).has_value();
         CHECK(OK);
     }
-
-    std::printf("== utils_path: %d CHECKs, %d failures ==\n", g_CHECKs, g_failures);
+#else
+    std::println("Test on non-unix system, skip \"parse_versioned_unix_so()\"");
+#endif
+    std::println("== utils_path: {} CHECKs, {} failures ==\n", g_CHECKs, g_failures);
     return g_failures == 0 ? 0 : 1;
 }

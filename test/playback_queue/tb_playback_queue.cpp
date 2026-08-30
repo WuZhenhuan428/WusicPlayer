@@ -249,7 +249,11 @@ static void test_nav_shuffle()
     for (int i = 0; i < 20; ++i) {
         auto n = q.next(PlayMode::shuffle);
         CHECK(n.has_value());
+#if defined(Q_OS_WIN) // windows 下标准路径会默认添加 "c:" 前缀
+        CHECK(n->filepath.startsWith("c:/a/"));
+#else
         CHECK(n->filepath.startsWith("/a/"));
+#endif
         CHECK(q.current_index() >= 0 && q.current_index() < 3);
         // out_of_order_* 同样走随机
         auto g = q.prev(PlayMode::out_of_order_track);
