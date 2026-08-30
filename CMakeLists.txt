@@ -67,15 +67,31 @@ add_subdirectory(thirdparty/lrc-parser)
 add_subdirectory(src)
 
 # ---- 多语言(i18n): lupdate 提取 / lrelease 编译 ----
-# 优先 Qt6 自带的翻译工具(避免误用系统 Qt5 wrapper)
-find_program(QT_LUPDATE_EXECUTABLE
-    NAMES lupdate-qt6 lupdate
-    HINTS "${QT6_INSTALL_BINS}" "${CMAKE_INSTALL_PREFIX}/lib/qt6/bin" /usr/lib/qt6/bin
-    DOC "Path to the Qt6 lupdate tool")
-find_program(QT_LRELEASE_EXECUTABLE
-    NAMES lrelease-qt6 lrelease
-    HINTS "${QT6_INSTALL_BINS}" "${CMAKE_INSTALL_PREFIX}/lib/qt6/bin" /usr/lib/qt6/bin
-    DOC "Path to the Qt6 lrelease tool")
+# 跨平台策略:
+#   1) 优先使用 Qt LinguistTools 的导入目标 Qt6::lupdate / Qt6::lrelease,
+#      由 Qt CMake 包自动定位工具(Windows 官方 Qt / MSYS2、Linux、macOS 均可用)
+#   2) 回退 find_program, 兼容只装了可执行文件、没有 CMake 包的发行版
+find_package(Qt6 COMPONENTS LinguistTools QUIET)
+
+if(TARGET Qt6::lupdate)
+    set(QT_LUPDATE_EXECUTABLE Qt6::lupdate)
+else()
+    # 优先 Qt6 自带的翻译工具(避免误用系统 Qt5 wrapper)
+    find_program(QT_LUPDATE_EXECUTABLE
+        NAMES lupdate-qt6 lupdate
+        HINTS "${QT6_INSTALL_BINS}" "${CMAKE_INSTALL_PREFIX}/lib/qt6/bin" /usr/lib/qt6/bin
+        DOC "Path to the Qt6 lupdate tool")
+endif()
+
+if(TARGET Qt6::lrelease)
+    set(QT_LRELEASE_EXECUTABLE Qt6::lrelease)
+else()
+    find_program(QT_LRELEASE_EXECUTABLE
+        NAMES lrelease-qt6 lrelease
+        HINTS "${QT6_INSTALL_BINS}" "${CMAKE_INSTALL_PREFIX}/lib/qt6/bin" /usr/lib/qt6/bin
+        DOC "Path to the Qt6 lrelease tool")
+endif()
+
 if(QT_LUPDATE_EXECUTABLE AND QT_LRELEASE_EXECUTABLE)
     set(WUSIC_TRANSLATIONS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/translations")
     set(WUSIC_TS_FILES

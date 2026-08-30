@@ -205,14 +205,14 @@ void SongTableView::call_song_context_menu(const QPoint& pos)
         const QString path        = meta.filepath;
         const EntryId tid         = selected.first();
 
-        QAction* actPlay          = menu.addAction("&Play");
-        QAction* actRemove        = menu.addAction("&Remove");
-        QAction* actRemoveMissing = menu.addAction("Remove &Missing Tracks");
+        QAction* actPlay          = menu.addAction(tr("&Play"));
+        QAction* actRemove        = menu.addAction(tr("&Remove"));
+        QAction* actRemoveMissing = menu.addAction(tr("Remove &Missing Tracks"));
         menu.addSeparator();
         build_add_to_playlist_menu(&menu, selected);
         menu.addSeparator();
-        QAction* actOpen = menu.addAction("&Open in file explorer");
-        QAction* actProp = menu.addAction("Property");
+        QAction* actOpen = menu.addAction(tr("&Open in file explorer"));
+        QAction* actProp = menu.addAction(tr("Property"));
 
         connect(actPlay, &QAction::triggered, this,
                 [this, index]() { emit sgnPlayTrackByModelIndex(index); });

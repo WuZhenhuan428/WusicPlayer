@@ -1,0 +1,13 @@
+# 使文本在提交时自动转换为 LF
+* text=auto
+
+# 明确指定文本文件（显式控制）
+*.svg text -diff
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# 明确指定二进制文件（防止损坏）
+*.png binary
+*.jpg binary
+*.ico binary
+

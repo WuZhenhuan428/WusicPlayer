@@ -66,11 +66,14 @@ windeployqt --release build/debug/WusicPlayer.exe
 打开 **MSYS2 MINGW64** 终端:
 ```bash
 pacman -Syu
+# 注意: mingw-w64-x86_64-qt6-tools 提供翻译工具 lupdate/lrelease/linguist
+#       以及 LinguistTools CMake 包(i18n 必需)
 pacman -S \
     mingw-w64-x86_64-qt6-base \
     mingw-w64-x86_64-qt6-multimedia \
     mingw-w64-x86_64-qt6-svg \
     mingw-w64-x86_64-qt6-sql \
+    mingw-w64-x86_64-qt6-tools \
     mingw-w64-x86_64-ffmpeg \
     mingw-w64-x86_64-taglib \
     mingw-w64-x86_64-openssl \
@@ -93,7 +96,9 @@ cmake --build --preset debug
 
 ### 1. 安装依赖
 ```bash
+# qttools6-dev(-tools) 提供翻译工具 lupdate/lrelease/linguist 及 LinguistTools CMake 包
 sudo apt install qt6-base-dev qt6-multimedia-dev qt6-svg-dev \
+    qttools6-dev qttools6-dev-tools \
     libavcodec-dev libavformat-dev libavutil-dev libavfilter-dev \
     libtag1-dev libssl-dev zlib1g-dev \
     ninja-build pkgconf git

@@ -41,9 +41,9 @@ void TagEditWidget::init_ui()
 
     m_table_metadata = new QTableView(this);
 
-    m_btn_help       = new QPushButton("Help", this);
-    m_btn_ok         = new QPushButton("OK", this);
-    m_btn_cancel     = new QPushButton("Cancel", this);
+    m_btn_help       = new QPushButton(tr("Help"), this);
+    m_btn_ok         = new QPushButton(tr("OK"), this);
+    m_btn_cancel     = new QPushButton(tr("Cancel"), this);
     m_hbl_buttons    = new QHBoxLayout();
     m_hbl_buttons->addWidget(m_btn_help);
     m_hbl_buttons->addStretch();
@@ -97,8 +97,8 @@ void TagEditWidget::handle_show_menu(const QPoint& pos)
     if (index.isValid()) {                                   // right click on item: edit or delete
         index               = index.sibling(index.row(), 1); // move to value
 
-        QAction* act_edit   = menu.addAction("Edit");
-        QAction* act_delete = menu.addAction("Delete");
+        QAction* act_edit   = menu.addAction(tr("Edit"));
+        QAction* act_delete = menu.addAction(tr("Delete"));
 
         connect(act_edit, &QAction::triggered, this, [this, index]() { handle_edit_item(index); });
         connect(act_delete, &QAction::triggered, this,
@@ -106,7 +106,7 @@ void TagEditWidget::handle_show_menu(const QPoint& pos)
     }
 
     // all cases:
-    QAction* act_add = menu.addAction("Add new filed");
+    QAction* act_add = menu.addAction(tr("Add new field"));
 
     connect(act_add, &QAction::triggered, this, [this]() { handle_add_new_field(); });
     menu.exec(this->m_table_metadata->viewport()->mapToGlobal(pos));

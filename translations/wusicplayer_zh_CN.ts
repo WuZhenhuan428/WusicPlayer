@@ -214,7 +214,7 @@
         <location filename="../src/view/eq_widget/eq_widget.cpp" line="105"/>
         <location filename="../src/view/eq_widget/eq_widget.cpp" line="145"/>
         <source>Current plugin: (none)</source>
-        <translation>当前插件：（无）</translation>
+        <translation>当前插件：(无)</translation>
     </message>
     <message>
         <location filename="../src/view/eq_widget/eq_widget.cpp" line="149"/>
@@ -333,7 +333,7 @@
     <message>
         <location filename="../src/view/library_browser/library_browser_widget.cpp" line="35"/>
         <source>Sort Settings (DSL customize rules, subsequent version)</source>
-        <translation>设置排序规则（DSL 自定义规则，由后续版本实现）</translation>
+        <translation>设置排序规则 (DSL 自定义规则，由后续版本实现)</translation>
     </message>
     <message>
         <location filename="../src/view/library_browser/library_browser_widget.cpp" line="37"/>
@@ -343,7 +343,7 @@
     <message>
         <location filename="../src/view/library_browser/library_browser_widget.cpp" line="38"/>
         <source>Goto Settings-&gt;Library (the only entrance of setting library paths)</source>
-        <translation>跳转至设置-&gt;媒体库（媒体库路径设置唯一入口）</translation>
+        <translation>跳转至设置-&gt;媒体库 (媒体库路径设置唯一入口)</translation>
     </message>
     <message>
         <location filename="../src/view/library_browser/library_browser_widget.cpp" line="48"/>
@@ -353,7 +353,7 @@
     <message>
         <location filename="../src/view/library_browser/library_browser_widget.cpp" line="218"/>
         <source>&amp;Play</source>
-        <translation>播放（&amp;P）</translation>
+        <translation>播放 (&amp;P)</translation>
     </message>
     <message>
         <location filename="../src/view/library_browser/library_browser_widget.cpp" line="219"/>
@@ -364,7 +364,7 @@
     <message>
         <location filename="../src/view/library_browser/library_browser_widget.cpp" line="221"/>
         <source>&amp;Refresh Library</source>
-        <translation>刷新媒体库（&amp;R）</translation>
+        <translation>刷新媒体库 (&amp;R)</translation>
     </message>
 </context>
 <context>
@@ -392,7 +392,7 @@
     <message>
         <location filename="../src/view/settings_panel/library_settings_page.cpp" line="33"/>
         <source>Keep external</source>
-        <translation>保持外部</translation>
+        <translation>保持为外部</translation>
     </message>
     <message>
         <location filename="../src/view/settings_panel/library_settings_page.cpp" line="34"/>
@@ -566,32 +566,32 @@
     <message>
         <location filename="../src/view/main_window.cpp" line="132"/>
         <source>&amp;File</source>
-        <translation>文件（&amp;F）</translation>
+        <translation>文件 (&amp;F)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="133"/>
         <source>&amp;Open</source>
-        <translation>打开（&amp;O）</translation>
+        <translation>打开 (&amp;O)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="134"/>
         <source>&amp;New playlist</source>
-        <translation>新建播放列表（&amp;N）</translation>
+        <translation>新建播放列表 (&amp;N)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="135"/>
         <source>&amp;Load playlist</source>
-        <translation>加载播放列表（&amp;L）</translation>
+        <translation>加载播放列表 (&amp;L)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="136"/>
         <source>&amp;Exit</source>
-        <translation>退出（&amp;E）</translation>
+        <translation>退出 (&amp;E)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="145"/>
         <source>&amp;View</source>
-        <translation>视图（&amp;V）</translation>
+        <translation>视图 (&amp;V)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="146"/>
@@ -601,12 +601,12 @@
     <message>
         <location filename="../src/view/main_window.cpp" line="147"/>
         <source>Insert a column (&amp;I)</source>
-        <translation>插入列（&amp;I）</translation>
+        <translation>插入列 (&amp;I)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="148"/>
         <source>Remove a column (&amp;R)</source>
-        <translation>移除列（&amp;R）</translation>
+        <translation>移除列 (&amp;R)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="149"/>
@@ -616,12 +616,12 @@
     <message>
         <location filename="../src/view/main_window.cpp" line="150"/>
         <source>Open Log (&amp;L)</source>
-        <translation>打开日志面板（&amp;L）</translation>
+        <translation>打开日志面板 (&amp;L)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="157"/>
         <source>Show Desktop Lyrics (&amp;D)</source>
-        <translation>显示桌面歌词（&amp;D）</translation>
+        <translation>显示桌面歌词 (&amp;D)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="159"/>
@@ -631,28 +631,28 @@
     <message>
         <location filename="../src/view/main_window.cpp" line="165"/>
         <source>&amp;Playback</source>
-        <translation>回放（&amp;P）</translation>
+        <translation>回放 (&amp;P)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="166"/>
         <source>&amp;Open EQ</source>
-        <translation>均衡器（&amp;O）</translation>
+        <translation>均衡器 (&amp;O)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="170"/>
         <location filename="../src/view/main_window.cpp" line="171"/>
         <source>&amp;Settings</source>
-        <translation>设置（&amp;S）</translation>
+        <translation>设置 (&amp;S)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="175"/>
         <source>&amp;Help</source>
-        <translation>帮助（&amp;H）</translation>
+        <translation>帮助 (&amp;H)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="176"/>
         <source>&amp;About</source>
-        <translation>关于（&amp;A）</translation>
+        <translation>关于 (&amp;A)</translation>
     </message>
     <message>
         <location filename="../src/view/main_window.cpp" line="294"/>
@@ -765,7 +765,7 @@ rules of create new tag</source>
     <message>
         <location filename="../src/controller/playlist_controller.cpp" line="102"/>
         <source>Audio Files (*.mp3 *.wav *.flac *.ogg *.m4a);;All Files (*)</source>
-        <translation>音频文件（*.mp3 *.wav *.flac *.ogg *.m4a）;;所有文件（*）</translation>
+        <translation>音频文件 (*.mp3 *.wav *.flac *.ogg *.m4a);;所有文件 (*)</translation>
     </message>
     <message>
         <location filename="../src/controller/playlist_controller.cpp" line="118"/>
@@ -792,7 +792,7 @@ Add to library (library reference), or keep as external file?</source>
         <location filename="../src/controller/playlist_controller.cpp" line="180"/>
         <location filename="../src/controller/playlist_controller.cpp" line="250"/>
         <source>WusicPlayer playlist (*.wcpl)</source>
-        <translation>WusicPlayer 播放列表（*.wcpl）</translation>
+        <translation>WusicPlayer 播放列表 (*.wcpl)</translation>
     </message>
     <message>
         <location filename="../src/controller/playlist_controller.cpp" line="201"/>
@@ -836,7 +836,7 @@ Add to library (library reference), or keep as external file?</source>
     <message>
         <location filename="../src/controller/plugin_controller/plugin_controller.cpp" line="22"/>
         <source>Plugins (*.so *.dll *.dylib *.bundle);;All files (*)</source>
-        <translation>插件（*.so *.dll *.dylib *.bundle）;;所有文件（*）</translation>
+        <translation>插件 (*.so *.dll *.dylib *.bundle);;所有文件 (*)</translation>
     </message>
 </context>
 <context>
@@ -1073,7 +1073,7 @@ Add to library (library reference), or keep as external file?</source>
         <location filename="../src/view/side_panel/side_panel.cpp" line="224"/>
         <location filename="../src/view/side_panel/side_panel.cpp" line="290"/>
         <source>LRC files (*.lrc);;Text files (*.txt);;All files (*)</source>
-        <translation>歌词文件（*.lrc）;;文本文件（*.txt）;;所有文件（*）</translation>
+        <translation>歌词文件 (*.lrc);;文本文件 (*.txt);;所有文件 (*)</translation>
     </message>
     <message>
         <location filename="../src/view/side_panel/side_panel.cpp" line="231"/>
@@ -1105,6 +1105,31 @@ Add to library (library reference), or keep as external file?</source>
 <context>
     <name>SongTableView</name>
     <message>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="208"/>
+        <source>&amp;Play</source>
+        <translation>播放 (&amp;P)</translation>
+    </message>
+    <message>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="209"/>
+        <source>&amp;Remove</source>
+        <translation>移除 (&amp;R)</translation>
+    </message>
+    <message>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="210"/>
+        <source>Remove &amp;Missing Tracks</source>
+        <translation>移除已丢失的音轨 (&amp;M)</translation>
+    </message>
+    <message>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="214"/>
+        <source>&amp;Open in file explorer</source>
+        <translation>在文件管理器中打开 (&amp;O)</translation>
+    </message>
+    <message>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="215"/>
+        <source>Property</source>
+        <translation>属性</translation>
+    </message>
+    <message>
         <location filename="../src/view/song_table/song_table_view.cpp" line="248"/>
         <source>Add to Playlist...</source>
         <translation>添加到播放列表...</translation>
@@ -1112,7 +1137,7 @@ Add to library (library reference), or keep as external file?</source>
     <message>
         <location filename="../src/view/song_table/song_table_view.cpp" line="251"/>
         <source>(No playlist)</source>
-        <translation>（无播放列表）</translation>
+        <translation>(无播放列表)</translation>
     </message>
     <message>
         <location filename="../src/view/song_table/song_table_view.cpp" line="293"/>
@@ -1141,14 +1166,40 @@ Add to library (library reference), or keep as external file?</source>
         <translation>位置：</translation>
     </message>
     <message>
+        <location filename="../src/view/tag_edit_widget/tag_edit_widget.cpp" line="44"/>
         <location filename="../src/view/tag_edit_widget/tag_edit_widget.cpp" line="79"/>
         <source>Help</source>
         <translation>帮助</translation>
     </message>
     <message>
+        <location filename="../src/view/tag_edit_widget/tag_edit_widget.cpp" line="45"/>
+        <source>OK</source>
+        <translation>确定</translation>
+    </message>
+    <message>
+        <location filename="../src/view/tag_edit_widget/tag_edit_widget.cpp" line="46"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
         <location filename="../src/view/tag_edit_widget/tag_edit_widget.cpp" line="80"/>
         <source>This is help message box</source>
         <translation>这是帮助消息框</translation>
+    </message>
+    <message>
+        <location filename="../src/view/tag_edit_widget/tag_edit_widget.cpp" line="100"/>
+        <source>Edit</source>
+        <translation>编辑</translation>
+    </message>
+    <message>
+        <location filename="../src/view/tag_edit_widget/tag_edit_widget.cpp" line="101"/>
+        <source>Delete</source>
+        <translation>删除</translation>
+    </message>
+    <message>
+        <location filename="../src/view/tag_edit_widget/tag_edit_widget.cpp" line="109"/>
+        <source>Add new field</source>
+        <translation>添加新属性域</translation>
     </message>
     <message>
         <location filename="../src/view/tag_edit_widget/tag_edit_widget.cpp" line="191"/>
@@ -1257,7 +1308,7 @@ Add to library (library reference), or keep as external file?</source>
         <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="60"/>
         <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="75"/>
         <source>LRC files (*.lrc);;Text files (*.txt);;All files (*)</source>
-        <translation>歌词文件（*.lrc）;;文本文件（*.txt）;;所有文件（*）</translation>
+        <translation>歌词文件 (*.lrc);;文本文件 (*.txt);;所有文件 (*)</translation>
     </message>
     <message>
         <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="74"/>
@@ -1401,7 +1452,7 @@ Add to library (library reference), or keep as external file?</source>
     <message>
         <location filename="../src/view/playlist/playlist_widgets.cpp" line="176"/>
         <source>Index must be a positive integer (not 0).</source>
-        <translation>索引必须是正整数（不能为 0）。</translation>
+        <translation>索引必须是正整数 (不能为 0)。</translation>
     </message>
     <message>
         <location filename="../src/view/playlist/playlist_widgets.cpp" line="180"/>
@@ -1451,7 +1502,7 @@ Add to library (library reference), or keep as external file?</source>
     <message>
         <location filename="../src/view/playlist/playlist_widgets.cpp" line="97"/>
         <source>Index must be a positive integer (not 0).</source>
-        <translation>索引必须是正整数（不能为 0）。</translation>
+        <translation>索引必须是正整数 (不能为 0)。</translation>
     </message>
     <message>
         <location filename="../src/view/playlist/playlist_widgets.cpp" line="101"/>
