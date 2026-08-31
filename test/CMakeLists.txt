@@ -119,3 +119,15 @@ target_link_libraries(tb_dsl_lexer
 )
 
 add_test(NAME tb_dsl_lexer COMMAND tb_dsl_lexer)
+
+# ======== tb_dsl_parser ========
+add_executable(tb_dsl_parser
+    dsl/tb_dsl_parser.cpp
+)
+
+target_link_libraries(tb_dsl_parser
+    PRIVATE
+        wusic_core
+)
+
+add_test(NAME tb_dsl_parser COMMAND tb_dsl_parser)

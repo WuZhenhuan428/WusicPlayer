@@ -28,8 +28,11 @@ add_library(wusic_core STATIC
     utils/string.hpp
 
     dsl/dsl_token.h
+    dsl/ast.h
     dsl/lexer.h
     dsl/lexer.cpp
+    dsl/parser.h
+    dsl/parser.cpp
 
     config_manager/config_manager.h
     config_manager/config_manager.cpp
