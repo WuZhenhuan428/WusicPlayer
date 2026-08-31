@@ -206,77 +206,8 @@ void PlaylistViewModel::set_playlist(const PlaylistId& pid)
 
 void PlaylistViewModel::set_sort_expression(const QString& expression)
 {
-    QStringList splited_exp = expression.split("|", Qt::SkipEmptyParts);
-    QString group_expression;
-    QString sort_expression;
-
-    if (splited_exp.size() == 0) { // str is null or contains `|` only
-        return;
-    } else if (splited_exp.size() == 1) { // all group_exp
-        group_expression = splited_exp[0];
-    } else {
-        group_expression = splited_exp[0];
-        // if there are more than one `|`, only use the first `|`
-        sort_expression  = expression.mid(expression.indexOf("|") + 1);
-    }
-
-    auto extractKeys = [](const QString& str) -> QVector<QString> {
-        QVector<QString> keys;
-        if (str.trimmed().isEmpty()) {
-            return keys;
-        }
-
-        QRegularExpression re(R"(%([^%]+)%)");
-        QRegularExpressionMatchIterator it = re.globalMatch(str);
-        while (it.hasNext()) {
-            QRegularExpressionMatch match = it.next();
-            keys.append(match.captured(1).trimmed());
-        }
-        return keys;
-    };
-
-    QVector<QString> group_list = extractKeys(group_expression);
-    QVector<QString> sort_list  = extractKeys(sort_expression);
-
-    auto check_match            = [](const QString& str) -> SortType {
-        return mapStrToSorttype.value(str.toLower(), SortType::not_sorted);
-    };
-
-    auto string_to_sort_type = [check_match](const QVector<QString>& list) -> QVector<SortType> {
-        QVector<SortType> types;
-        for (const auto& it : list) {
-            types.append(check_match(it));
-        }
-        return types;
-    };
-
-    QVector<SortType> group_type = string_to_sort_type(group_list);
-    QVector<SortType> sort_type  = string_to_sort_type(sort_list);
-
-    QVector<SortRule> group_rule;
-    QVector<SortRule> sort_rule;
-
-    for (auto type : group_type) {
-        SortRule rule = SortRule();
-        rule.type     = type;
-        if (type == SortType::year) {
-            rule.order = Qt::DescendingOrder;
-        } // default: Qt::AscendingOrder
-        group_rule.append(rule);
-    }
-
-    for (auto type : sort_type) {
-        SortRule rule = SortRule();
-        rule.type     = type;
-        if (type == SortType::year) {
-            rule.order = Qt::DescendingOrder;
-        } // default: Qt::AscendingOrder
-        sort_rule.append(rule);
-    }
-
-    m_layout_builder.set_group_rule(group_rule);
-    m_layout_builder.set_sort_rule(sort_rule);
-
+    // DSL 路径(排序/分组/分类); 空串 → 清除 DSL, 回退内置规则
+    m_layout_builder.set_dsl(expression);
     this->rebuild_async();
 }
 

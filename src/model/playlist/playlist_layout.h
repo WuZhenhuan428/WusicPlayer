@@ -1,11 +1,14 @@
 #pragma once
 
+#include "core/dsl/evaluator.h"
 #include "core/types.h"
 #include "model/playlist/playlist.h"
 
 #include <QString>
 #include <QUuid>
 #include <QVector>
+
+#include <memory>
 
 struct Node
 {
@@ -66,6 +69,22 @@ public:
     const QVector<SortRule> group_rules() const;
 
     /**
+     * @brief DSL 路径(与 SortRule 二选一; 设置成功后 build 优先使用 DSL)。
+     * @param expression DSL 源文本; 空串 → 清除 DSL
+     * @return 解析 + 静态校验是否成功; 失败时保留原 DSL 并可通过 dsl_error() 取错误
+     */
+    bool set_dsl(const QString& expression);
+    void clear_dsl();
+    bool has_dsl() const
+    {
+        return m_dsl != nullptr;
+    }
+    const QString& dsl_error() const
+    {
+        return m_dsl_error;
+    }
+
+    /**
      * @brief Auxiliary: used to handle event such as table header was clicked
      * @param overrideExisting true=override, false=append
      * @note only one SortRule for group is supported
@@ -77,4 +96,9 @@ public:
 private:
     QVector<SortRule> m_group_rules;
     QVector<SortRule> m_sort_rules;
+
+    // DSL 路径(非空时优先于 m_group_rules/m_sort_rules);
+    // 用 shared_ptr: builder 会被拷贝进 worker 线程, evaluator 只读共享
+    std::shared_ptr<dsl::Evaluator> m_dsl;
+    QString m_dsl_error;
 };

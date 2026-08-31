@@ -34,6 +34,11 @@ public:
     void set_sort_rules(const QVector<SortRule>& rules);
     const QVector<SortRule> group_rules() const;
     const QVector<SortRule> sort_rules() const;
+    // 最近一次 DSL 解析/校验错误(空 = 无错误)
+    const QString& dsl_error() const
+    {
+        return m_layout_builder.dsl_error();
+    }
 
     /**
      * @attention default group rule = title or filename if title does not exist

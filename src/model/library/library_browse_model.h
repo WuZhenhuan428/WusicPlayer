@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/dsl/evaluator.h"
 #include "core/types.h"
 #include "model/library/library_track.h"
 
@@ -44,6 +45,17 @@ public:
     LibraryGrouping grouping() const
     {
         return m_grouping;
+    }
+    /**
+     * @brief DSL 自定义分类(与预设 set_grouping 互斥; 设置成功后优先)。
+     * 单级视图: bucket 全量生效; group 取第一级键。
+     * @return 解析 + 校验是否成功; 失败保留原状态, 错误见 dsl_error()
+     */
+    bool set_dsl_grouping(const QString& expression);
+    void clear_dsl_grouping();
+    const QString& dsl_error() const
+    {
+        return m_dsl_error;
     }
     void set_keyword(const QString& keyword);
     QString keyword() const
@@ -91,10 +103,15 @@ private:
 
     void rebuild();
     QString group_key(const LibraryTrack& lt) const;
+    void sort_tracks(QVector<std::shared_ptr<const LibraryTrack>>& tracks);
     void sort_groups();
 
     LibraryManager* m_lib      = nullptr; // 非拥有
     LibraryGrouping m_grouping = LibraryGrouping::artist;
     QString m_keyword;
     QVector<Group> m_groups;
+
+    // DSL 自定义分类(非空时优先于 m_grouping)
+    std::unique_ptr<dsl::Evaluator> m_dsl;
+    QString m_dsl_error;
 };

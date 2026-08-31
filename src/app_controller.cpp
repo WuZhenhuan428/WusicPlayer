@@ -336,8 +336,12 @@ void AppController::handle_set_sort_rule_requested()
     auto* playlist_controller = playlist_controller_.get();
     WSortTypeSetDialog dialog;
     if (dialog.exec() == QDialog::Accepted) {
-        QString input = dialog.getText();
-        playlist_controller->view_model()->set_sort_expression(input);
+        QString input    = dialog.getText();
+        auto* view_model = playlist_controller->view_model();
+        view_model->set_sort_expression(input);
+        if (!view_model->dsl_error().isEmpty()) {
+            QMessageBox::warning(&dialog, tr("Sort Rule Error"), view_model->dsl_error());
+        }
     }
 }
 

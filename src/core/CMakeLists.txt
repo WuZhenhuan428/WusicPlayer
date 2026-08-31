@@ -37,6 +37,8 @@ add_library(wusic_core STATIC
     dsl/registry.cpp
     dsl/evaluator.h
     dsl/evaluator.cpp
+    dsl/track_meta_row.h
+    dsl/track_meta_row.cpp
 
     config_manager/config_manager.h
     config_manager/config_manager.cpp

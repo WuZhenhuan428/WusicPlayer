@@ -1,8 +1,13 @@
 #include "model/library/library_browse_model.h"
 
+#include "core/dsl/lexer.h"
+#include "core/dsl/parser.h"
+#include "core/dsl/registry.h"
+#include "core/dsl/track_meta_row.h"
 #include "core/search_types.h"
 #include "model/library/library_manager.h"
 
+#include <QCollator>
 #include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -63,21 +68,6 @@ QString format_duration(int ms)
     return QStringLiteral("%1:%2").arg(m).arg(s, 2, 10, QLatin1Char('0'));
 }
 
-// 组内排序:track_number → title
-void sort_tracks(QVector<std::shared_ptr<const LibraryTrack>>& tracks)
-{
-    std::sort(tracks.begin(), tracks.end(),
-              [](const std::shared_ptr<const LibraryTrack>& a,
-                 const std::shared_ptr<const LibraryTrack>& b) {
-                  const int tn_a = a->meta.track_number > 0 ? a->meta.track_number : 1000000;
-                  const int tn_b = b->meta.track_number > 0 ? b->meta.track_number : 1000000;
-                  if (tn_a != tn_b) {
-                      return tn_a < tn_b;
-                  }
-                  return a->meta.title.toLower() < b->meta.title.toLower();
-              });
-}
-
 } // namespace
 
 LibraryBrowseModel::LibraryBrowseModel(LibraryManager* lib, QObject* parent) :
@@ -95,6 +85,43 @@ void LibraryBrowseModel::set_grouping(LibraryGrouping grouping)
         return;
     }
     m_grouping = grouping;
+    clear_dsl_grouping(); // 预设切换 → 清除 DSL 自定义分类
+    rebuild();
+}
+
+bool LibraryBrowseModel::set_dsl_grouping(const QString& expression)
+{
+    if (expression.trimmed().isEmpty()) {
+        clear_dsl_grouping();
+        return true;
+    }
+
+    dsl::Lexer lexer{QStringView(expression)};
+    const auto toks = lexer.tokenize();
+    if (lexer.has_error()) {
+        m_dsl_error = lexer.error_message();
+        return false;
+    }
+    dsl::Parser parser(toks);
+    auto prog = parser.parse();
+    if (!prog.ok) {
+        m_dsl_error = prog.error;
+        return false;
+    }
+    if (!dsl::Registry::instance().validate(prog)) {
+        m_dsl_error = prog.error;
+        return false;
+    }
+    m_dsl = std::make_unique<dsl::Evaluator>(prog);
+    m_dsl_error.clear();
+    rebuild();
+    return true;
+}
+
+void LibraryBrowseModel::clear_dsl_grouping()
+{
+    m_dsl.reset();
+    m_dsl_error.clear();
     rebuild();
 }
 
@@ -361,6 +388,18 @@ QVariant LibraryBrowseModel::headerData(int section, Qt::Orientation orientation
 
 QString LibraryBrowseModel::group_key(const LibraryTrack& lt) const
 {
+    // DSL 自定义分类优先(单级视图: bucket 全量; group 取第一级键)
+    if (m_dsl) {
+        dsl::TrackMetaRow row(lt.meta, lt.filepath, lt.missing ? 1 : 0);
+        if (m_dsl->has_bucket())
+            return m_dsl->bucket_key(row);
+        if (m_dsl->has_group()) {
+            const auto keys = m_dsl->group_keys(row);
+            return keys.isEmpty() ? QString() : keys[0];
+        }
+        return QString();
+    }
+
     switch (m_grouping) {
     case LibraryGrouping::none:
         return QString();
@@ -378,8 +417,48 @@ QString LibraryBrowseModel::group_key(const LibraryTrack& lt) const
     return QString();
 }
 
+void LibraryBrowseModel::sort_tracks(QVector<std::shared_ptr<const LibraryTrack>>& tracks)
+{
+    // DSL sort 优先(组内排序)
+    if (m_dsl && m_dsl->has_sort()) {
+        std::sort(tracks.begin(), tracks.end(),
+                  [&](const std::shared_ptr<const LibraryTrack>& a,
+                      const std::shared_ptr<const LibraryTrack>& b) {
+                      dsl::TrackMetaRow ra(a->meta, a->filepath, a->missing ? 1 : 0);
+                      dsl::TrackMetaRow rb(b->meta, b->filepath, b->missing ? 1 : 0);
+                      return m_dsl->less(ra, rb);
+                  });
+        return;
+    }
+    // 默认: track_number → title
+    std::sort(tracks.begin(), tracks.end(),
+              [](const std::shared_ptr<const LibraryTrack>& a,
+                 const std::shared_ptr<const LibraryTrack>& b) {
+                  const int tn_a = a->meta.track_number > 0 ? a->meta.track_number : 1000000;
+                  const int tn_b = b->meta.track_number > 0 ? b->meta.track_number : 1000000;
+                  if (tn_a != tn_b) {
+                      return tn_a < tn_b;
+                  }
+                  return a->meta.title.toLower() < b->meta.title.toLower();
+              });
+}
+
 void LibraryBrowseModel::sort_groups()
 {
+    // DSL 分类: 组间按键排序(QCollator, 语言感知); group 首级方向生效
+    if (m_dsl) {
+        bool desc = false;
+        if (m_dsl->has_group() && !m_dsl->group_items().isEmpty())
+            desc = m_dsl->group_items()[0].desc;
+        QCollator coll;
+        coll.setCaseSensitivity(Qt::CaseInsensitive);
+        std::sort(m_groups.begin(), m_groups.end(), [&](const Group& a, const Group& b) {
+            const int c = coll.compare(a.key, b.key);
+            return desc ? (c > 0) : (c < 0);
+        });
+        return;
+    }
+
     if (m_grouping == LibraryGrouping::year) {
         std::sort(m_groups.begin(), m_groups.end(), [](const Group& a, const Group& b) {
             return a.key.toInt() > b.key.toInt(); // 年份降序

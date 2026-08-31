@@ -155,3 +155,17 @@ target_link_libraries(tb_dsl_evaluator
 )
 
 add_test(NAME tb_dsl_evaluator COMMAND tb_dsl_evaluator)
+
+# ======== tb_dsl_integration ========
+add_executable(tb_dsl_integration
+    dsl/tb_dsl_integration.cpp
+)
+
+target_link_libraries(tb_dsl_integration
+    PRIVATE
+        wusic_model
+        wusic_core
+        wusic_headers
+)
+
+add_test(NAME tb_dsl_integration COMMAND tb_dsl_integration)
