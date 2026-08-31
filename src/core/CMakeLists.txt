@@ -33,6 +33,8 @@ add_library(wusic_core STATIC
     dsl/lexer.cpp
     dsl/parser.h
     dsl/parser.cpp
+    dsl/registry.h
+    dsl/registry.cpp
 
     config_manager/config_manager.h
     config_manager/config_manager.cpp
