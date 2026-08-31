@@ -35,6 +35,8 @@ add_library(wusic_core STATIC
     dsl/parser.cpp
     dsl/registry.h
     dsl/registry.cpp
+    dsl/evaluator.h
+    dsl/evaluator.cpp
 
     config_manager/config_manager.h
     config_manager/config_manager.cpp
