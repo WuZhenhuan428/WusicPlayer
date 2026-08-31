@@ -537,10 +537,8 @@ void AppController::initialize_sys_tray()
     next->setIcon(QIcon(QIcon(utils::icon::colored_icon_path("next", is_dark_mode))));
     QAction* prev = new QAction(tr("Previous"), menu);
     prev->setIcon(QIcon(QIcon(utils::icon::colored_icon_path("prev", is_dark_mode))));
-    QAction* show = new QAction(tr("Show"), menu);
-    show->setIcon(QIcon(QIcon(utils::icon::colored_icon_path("maximum", is_dark_mode))));
-    QAction* hide = new QAction(tr("Hide"), menu);
-    hide->setIcon(QIcon(QIcon(utils::icon::colored_icon_path("minimum", is_dark_mode))));
+    QAction* show_hide = new QAction(tr("Show/Hide"), menu);
+    show_hide->setIcon(QIcon(QIcon(utils::icon::colored_icon_path("minimum", is_dark_mode))));
     QAction* exit = new QAction(tr("Exit"), menu);
     exit->setIcon(QIcon(QIcon(utils::icon::general_icon_path("exit"))));
 
@@ -550,15 +548,14 @@ void AppController::initialize_sys_tray()
     menu->addAction(next);
     menu->addAction(prev);
     menu->addSeparator();
-    menu->addAction(show);
-    menu->addAction(hide);
+    menu->addAction(show_hide);
     menu->addSeparator();
     menu->addAction(exit);
 
     sys_tray_->show();
     sys_tray_->setContextMenu(menu);
 
-    connect(play_pause, &QAction::triggered, this, [this, play_pause, is_dark_mode]() {
+    auto func_play_pause = [this, play_pause, is_dark_mode]() {
         if (this->playback_service_->is_playing()) {
             this->playback_controller_->pause();
             play_pause->setIcon(QIcon(utils::icon::colored_icon_path("play", is_dark_mode)));
@@ -566,7 +563,40 @@ void AppController::initialize_sys_tray()
             this->playback_controller_->play();
             play_pause->setIcon(QIcon(utils::icon::colored_icon_path("pause", is_dark_mode)));
         }
-    });
+    };
+
+    auto func_show_hide = [this, show_hide, is_dark_mode]() {
+        if (this->main_window_->isVisible()) {
+            this->main_window_->hide();
+            show_hide->setIcon(QIcon(utils::icon::colored_icon_path("maximum", is_dark_mode)));
+        } else {
+            this->main_window_->show();
+            show_hide->setIcon(QIcon(utils::icon::colored_icon_path("minimum", is_dark_mode)));
+        }
+    };
+
+    connect(play_pause, &QAction::triggered, this, func_play_pause);
+    connect(sys_tray_, &QSystemTrayIcon::activated, this,
+            [this, func_play_pause](QSystemTrayIcon::ActivationReason reason) {
+                switch (reason) {
+                case QSystemTrayIcon::Unknown:
+                    break;
+                case QSystemTrayIcon::Context: // setup by QSystemTrayIcon::setContextMenu()
+                    break;
+                case QSystemTrayIcon::DoubleClick:
+                    break;
+                case QSystemTrayIcon::Trigger:
+                    if (this->main_window_->isVisible()) {
+                        this->main_window_->hide();
+                    } else {
+                        this->main_window_->show();
+                    }
+                    break;
+                case QSystemTrayIcon::MiddleClick:
+                    func_play_pause();
+                    break;
+                }
+            });
     connect(stop, &QAction::triggered, this, [this]() { this->playback_controller_->stop(); });
     // 值捕获 mute: lambda 在点击时才执行, 引用捕获会悬垂
     // 生命周期由 QObject 树 (menu->main_window) 保证, 值捕获安全
@@ -578,8 +608,7 @@ void AppController::initialize_sys_tray()
             [this]() { this->playback_service_->play_next_request(); });
     connect(prev, &QAction::triggered, this,
             [this]() { this->playback_service_->play_prev_request(); });
-    connect(show, &QAction::triggered, this, [this]() { this->main_window_->show(); });
-    connect(hide, &QAction::triggered, this, [this]() { this->main_window_->hide(); });
+    connect(show_hide, &QAction::triggered, this, func_show_hide);
     connect(exit, &QAction::triggered, this, [this]() { main_window_->quit_application(); });
     // todo: 接受事件总线事件, 并在系统托盘处显示临时信息
 }

@@ -146,16 +146,11 @@
     </message>
     <message>
         <location filename="../src/app_controller.cpp" line="540"/>
-        <source>Show</source>
-        <translation>显示</translation>
+        <source>Show/Hide</source>
+        <translation>显示/隐藏</translation>
     </message>
     <message>
         <location filename="../src/app_controller.cpp" line="542"/>
-        <source>Hide</source>
-        <translation>隐藏</translation>
-    </message>
-    <message>
-        <location filename="../src/app_controller.cpp" line="544"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
