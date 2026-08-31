@@ -79,6 +79,11 @@ private:
     void on_double_clicked(const QModelIndex& index);
     void call_tree_context_menu(const QPoint& pos);
 
+    // DSL 自定义分类: 弹编辑对话框(复用播放列表的 WSortTypeSetDialog)
+    void open_dsl_dialog();
+    // 把模型当前状态(预设 or DSL)同步到分类下拉框
+    void sync_grouping_combo();
+
     QComboBox* m_cb_grouping    = nullptr;
     QPushButton* m_btn_settings = nullptr;
     QPushButton* m_btn_config   = nullptr;

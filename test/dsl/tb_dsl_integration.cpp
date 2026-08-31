@@ -2,6 +2,7 @@
 #include "core/dsl/parser.h"
 #include "core/dsl/registry.h"
 #include "core/dsl/track_meta_row.h"
+#include "model/library/library_browse_model.h"
 #include "model/playlist/playlist.h"
 #include "model/playlist/playlist_layout.h"
 
@@ -198,6 +199,24 @@ int main()
         const auto res2 = b2.build(pl);
         CHECK(res2.root->children.size() == 3);
         CHECK(res2.root->children[0]->meta.title == QStringLiteral("B"));
+    }
+
+    // 11) dsl_source 往返(持久化数据源)
+    {
+        const QString src = QStringLiteral("sort { year desc }");
+        PlaylistLayoutBuilder b;
+        CHECK(b.set_dsl(src));
+        CHECK(b.dsl_source() == src);
+        CHECK(b.set_dsl(QStringLiteral("  "))); // 空 → 清除
+        CHECK(b.dsl_source().isEmpty());
+
+        LibraryBrowseModel model(nullptr);
+        CHECK(model.set_dsl_grouping(src));
+        CHECK(model.has_dsl());
+        CHECK(model.dsl_source() == src);
+        model.clear_dsl_grouping();
+        CHECK(!model.has_dsl());
+        CHECK(model.dsl_source().isEmpty());
     }
 
     std::printf("tb_dsl_integration: %d checks, %d failures\n", g_CHECKs, g_failures);

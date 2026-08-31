@@ -2,6 +2,7 @@
 
 #include "model/library/library_manager.h"
 #include "model/playback_queue/playback_queue_service.h"
+#include "view/playlist/playlist_widgets.h"
 
 #include <QComboBox>
 #include <QHBoxLayout>
@@ -9,10 +10,18 @@
 #include <QJsonObject>
 #include <QLineEdit>
 #include <QMenu>
+#include <QMessageBox>
 #include <QModelIndexList>
 #include <QPushButton>
+#include <QSignalBlocker>
 #include <QTreeView>
 #include <QVBoxLayout>
+
+namespace
+{
+// 分类下拉框 "Custom (DSL)" 项的 data 标记(与 LibraryGrouping 枚举不冲突)
+constexpr int kCustomGroupingData = 10000;
+} // namespace
 
 LibraryBrowserWidget::LibraryBrowserWidget(QWidget* parent) : QWidget(parent)
 {
@@ -29,13 +38,14 @@ void LibraryBrowserWidget::init_ui()
     m_cb_grouping->addItem(tr("Folder"), int(LibraryGrouping::folder));
     m_cb_grouping->addItem(tr("Year"), int(LibraryGrouping::year));
     m_cb_grouping->addItem(tr("None"), int(LibraryGrouping::none));
+    m_cb_grouping->addItem(tr("Custom (DSL)..."), kCustomGroupingData);
 
     m_btn_settings = new QPushButton(tr("Settings"));
-    m_btn_settings->setEnabled(false); // DSL 自定义规则后续统一改造
-    m_btn_settings->setToolTip(tr("Sort Settings (DSL customize rules, subsequent version)"));
+    m_btn_settings->setToolTip(tr("Custom grouping rules (DSL)"));
 
     m_btn_config = new QPushButton(tr("Configure"));
-    m_btn_config->setToolTip(tr("Goto Settings->Library (the only entrance of setting library paths)"));
+    m_btn_config->setToolTip(
+        tr("Goto Settings->Library (the only entrance of setting library paths)"));
 
     auto* top = new QHBoxLayout;
     top->setContentsMargins(0, 0, 0, 0);
@@ -89,6 +99,7 @@ void LibraryBrowserWidget::init_connections()
     });
     connect(m_btn_config, &QPushButton::clicked, this,
             &LibraryBrowserWidget::sgnOpenLibrarySettingsRequested);
+    connect(m_btn_settings, &QPushButton::clicked, this, &LibraryBrowserWidget::open_dsl_dialog);
     connect(m_tree, &QTreeView::doubleClicked, this, &LibraryBrowserWidget::on_double_clicked);
     connect(m_tree, &QTreeView::customContextMenuRequested, this,
             &LibraryBrowserWidget::call_tree_context_menu);
@@ -118,7 +129,47 @@ void LibraryBrowserWidget::on_grouping_changed(int index)
         return;
     }
     const int g = m_cb_grouping->itemData(index).toInt();
+    if (g == kCustomGroupingData) {
+        open_dsl_dialog(); // 选中 "Custom (DSL)" → 弹出编辑对话框
+        return;
+    }
+    // 预设: set_grouping 内部会清除 DSL
     m_model->set_grouping(static_cast<LibraryGrouping>(g));
+}
+
+void LibraryBrowserWidget::open_dsl_dialog()
+{
+    if (m_model == nullptr) {
+        return;
+    }
+    WSortTypeSetDialog dlg(this);
+    dlg.setText(m_model->dsl_source()); // 预填当前 DSL(若有)
+    if (dlg.exec() == QDialog::Accepted) {
+        m_model->set_dsl_grouping(dlg.getText()); // 空文本 → 清除 DSL
+        if (!m_model->dsl_error().isEmpty()) {
+            QMessageBox::warning(this, tr("DSL Error"), m_model->dsl_error());
+        }
+    }
+    sync_grouping_combo();
+}
+
+void LibraryBrowserWidget::sync_grouping_combo()
+{
+    if (m_model == nullptr || m_cb_grouping == nullptr) {
+        return;
+    }
+    QSignalBlocker block(m_cb_grouping);
+    if (m_model->has_dsl()) {
+        const int idx = m_cb_grouping->findData(kCustomGroupingData);
+        if (idx >= 0) {
+            m_cb_grouping->setCurrentIndex(idx);
+        }
+    } else {
+        const int idx = m_cb_grouping->findData(int(m_model->grouping()));
+        if (idx >= 0) {
+            m_cb_grouping->setCurrentIndex(idx);
+        }
+    }
 }
 
 void LibraryBrowserWidget::load_from_json(const QJsonObject& json)
@@ -129,11 +180,19 @@ void LibraryBrowserWidget::load_from_json(const QJsonObject& json)
     if (m_model != nullptr) {
         const int g = obj.value("grouping").toInt(int(LibraryGrouping::artist));
         m_model->set_grouping(static_cast<LibraryGrouping>(g));
-        const int idx = m_cb_grouping->findData(g);
-        if (idx >= 0) {
-            m_cb_grouping->setCurrentIndex(idx);
+    }
+
+    // DSL 自定义分类(存在则优先于预设)
+    if (m_model != nullptr) {
+        const QString dsl = obj.value("dsl_grouping").toString();
+        if (!dsl.trimmed().isEmpty()) {
+            m_model->set_dsl_grouping(dsl);
+            if (!m_model->dsl_error().isEmpty()) {
+                m_model->clear_dsl_grouping(); // 历史规则失效则回退预设
+            }
         }
     }
+    sync_grouping_combo();
 
     // 关键字(直接设置模型;QLineEdit 仅展示)
     const QString keyword = obj.value("keyword").toString();
@@ -153,8 +212,9 @@ void LibraryBrowserWidget::load_from_json(const QJsonObject& json)
 QJsonObject LibraryBrowserWidget::save_to_json()
 {
     QJsonObject obj;
-    obj["grouping"] = int(m_model != nullptr ? m_model->grouping() : LibraryGrouping::artist);
-    obj["keyword"]  = m_le_keyword->text();
+    obj["grouping"]     = int(m_model != nullptr ? m_model->grouping() : LibraryGrouping::artist);
+    obj["keyword"]      = m_le_keyword->text();
+    obj["dsl_grouping"] = (m_model != nullptr) ? m_model->dsl_source() : QString();
     obj["tree_header_state"] = QString::fromUtf8(m_tree->header()->saveState().toBase64());
     return obj;
 }

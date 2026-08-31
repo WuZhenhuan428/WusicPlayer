@@ -83,6 +83,11 @@ public:
     {
         return m_dsl_error;
     }
+    /// 最近一次成功设置的 DSL 源文本(空 = 未启用 DSL)。
+    const QString& dsl_source() const
+    {
+        return m_dsl_source;
+    }
 
     /**
      * @brief Auxiliary: used to handle event such as table header was clicked
@@ -101,4 +106,5 @@ private:
     // 用 shared_ptr: builder 会被拷贝进 worker 线程, evaluator 只读共享
     std::shared_ptr<dsl::Evaluator> m_dsl;
     QString m_dsl_error;
+    QString m_dsl_source; // 最近一次成功设置的 DSL 源文本
 };

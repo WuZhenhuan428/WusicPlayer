@@ -57,6 +57,15 @@ public:
     {
         return m_dsl_error;
     }
+    bool has_dsl() const
+    {
+        return m_dsl != nullptr;
+    }
+    /// 当前生效的 DSL 源文本(空 = 未启用 DSL)。
+    const QString& dsl_source() const
+    {
+        return m_dsl_source;
+    }
     void set_keyword(const QString& keyword);
     QString keyword() const
     {
@@ -114,4 +123,5 @@ private:
     // DSL 自定义分类(非空时优先于 m_grouping)
     std::unique_ptr<dsl::Evaluator> m_dsl;
     QString m_dsl_error;
+    QString m_dsl_source; // 当前生效的 DSL 源文本
 };

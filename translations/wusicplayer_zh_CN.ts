@@ -93,64 +93,69 @@
         <translation>媒体库扫描完成</translation>
     </message>
     <message>
-        <location filename="../src/app_controller.cpp" line="471"/>
+        <location filename="../src/app_controller.cpp" line="343"/>
+        <source>Sort Rule Error</source>
+        <translation>分组规则错误</translation>
+    </message>
+    <message>
+        <location filename="../src/app_controller.cpp" line="475"/>
         <source>PAUSE</source>
         <translation>暂停播放</translation>
     </message>
     <message>
-        <location filename="../src/app_controller.cpp" line="474"/>
+        <location filename="../src/app_controller.cpp" line="478"/>
         <source>PLAYING</source>
         <translation>播放中</translation>
     </message>
     <message>
-        <location filename="../src/app_controller.cpp" line="477"/>
+        <location filename="../src/app_controller.cpp" line="481"/>
         <source>STOP</source>
         <translation>停止播放</translation>
     </message>
     <message>
-        <location filename="../src/app_controller.cpp" line="491"/>
-        <location filename="../src/app_controller.cpp" line="498"/>
+        <location filename="../src/app_controller.cpp" line="495"/>
+        <location filename="../src/app_controller.cpp" line="502"/>
         <source>track(s)</source>
         <translation>音轨</translation>
     </message>
     <message>
-        <location filename="../src/app_controller.cpp" line="492"/>
-        <location filename="../src/app_controller.cpp" line="499"/>
+        <location filename="../src/app_controller.cpp" line="496"/>
+        <location filename="../src/app_controller.cpp" line="503"/>
         <source>0 track</source>
         <translation>0 音轨</translation>
     </message>
     <message>
-        <location filename="../src/app_controller.cpp" line="530"/>
+        <location filename="../src/app_controller.cpp" line="534"/>
         <source>Play/Pause</source>
         <translation>播放/暂停</translation>
     </message>
     <message>
-        <location filename="../src/app_controller.cpp" line="532"/>
+        <location filename="../src/app_controller.cpp" line="536"/>
         <source>Stop</source>
         <translation>停止</translation>
     </message>
     <message>
-        <location filename="../src/app_controller.cpp" line="534"/>
+        <location filename="../src/app_controller.cpp" line="538"/>
         <source>Mute</source>
         <translation>静音</translation>
     </message>
     <message>
-        <location filename="../src/app_controller.cpp" line="536"/>
+        <location filename="../src/app_controller.cpp" line="540"/>
         <source>Next</source>
         <translation>下一首</translation>
     </message>
     <message>
-        <location filename="../src/app_controller.cpp" line="538"/>
+        <location filename="../src/app_controller.cpp" line="542"/>
         <source>Previous</source>
         <translation>上一首</translation>
     </message>
     <message>
-        <location filename="../src/app_controller.cpp" line="540"/>
+        <location filename="../src/app_controller.cpp" line="544"/>
         <source>Show/Hide</source>
         <translation>显示/隐藏</translation>
     </message>
     <message>
-        <location filename="../src/app_controller.cpp" line="542"/>
+        <location filename="../src/app_controller.cpp" line="546"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
@@ -291,73 +296,87 @@
 <context>
     <name>LibraryBrowserWidget</name>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="26"/>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="35"/>
         <source>Artist</source>
         <translation>艺术家</translation>
     </message>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="27"/>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="36"/>
         <source>Album</source>
         <translation>专辑</translation>
     </message>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="28"/>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="37"/>
         <source>Genre</source>
         <translation>流派</translation>
     </message>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="29"/>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="38"/>
         <source>Folder</source>
         <translation>文件夹</translation>
     </message>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="30"/>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="39"/>
         <source>Year</source>
         <translation>年份</translation>
     </message>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="31"/>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="40"/>
         <source>None</source>
         <translation>无</translation>
     </message>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="33"/>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="41"/>
+        <source>Custom (DSL)...</source>
+        <translation>自定义 (DSL)...</translation>
+    </message>
+    <message>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="43"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="35"/>
-        <source>Sort Settings (DSL customize rules, subsequent version)</source>
-        <translation>设置排序规则 (DSL 自定义规则，由后续版本实现)</translation>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="44"/>
+        <source>Custom grouping rules (DSL)</source>
+        <translation>自定义分组规则 (DSL)</translation>
     </message>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="37"/>
+        <source>Sort Settings (DSL customize rules, subsequent version)</source>
+        <translation type="vanished">设置排序规则 (DSL 自定义规则，由后续版本实现)</translation>
+    </message>
+    <message>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="46"/>
         <source>Configure</source>
         <translation>配置</translation>
     </message>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="38"/>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="48"/>
         <source>Goto Settings-&gt;Library (the only entrance of setting library paths)</source>
         <translation>跳转至设置-&gt;媒体库 (媒体库路径设置唯一入口)</translation>
     </message>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="48"/>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="58"/>
         <source>Search in library (FTS5)...</source>
         <translation>在媒体库中搜索 (FTS5)...</translation>
     </message>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="218"/>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="150"/>
+        <source>DSL Error</source>
+        <translation>DSL 错误</translation>
+    </message>
+    <message>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="278"/>
         <source>&amp;Play</source>
         <translation>播放 (&amp;P)</translation>
     </message>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="219"/>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="240"/>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="279"/>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="300"/>
         <source>Add to Playlist...</source>
         <translation>添加到播放列表...</translation>
     </message>
     <message>
-        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="221"/>
+        <location filename="../src/view/library_browser/library_browser_widget.cpp" line="281"/>
         <source>&amp;Refresh Library</source>
         <translation>刷新媒体库 (&amp;R)</translation>
     </message>
@@ -890,12 +909,12 @@ Add to library (library reference), or keep as external file?</source>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../src/app_controller.cpp" line="362"/>
+        <location filename="../src/app_controller.cpp" line="366"/>
         <source>Remove column</source>
         <translation>移除列</translation>
     </message>
     <message>
-        <location filename="../src/app_controller.cpp" line="363"/>
+        <location filename="../src/app_controller.cpp" line="367"/>
         <source>Input the column index except 0</source>
         <translation>请输入除 0 以外的列索引</translation>
     </message>
@@ -1428,34 +1447,34 @@ Add to library (library reference), or keep as external file?</source>
 <context>
     <name>WColumnIndexDialog</name>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="158"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="213"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="159"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="214"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="175"/>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="180"/>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="185"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="230"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="235"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="240"/>
         <source>Invalid index</source>
         <translation>无效索引</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="176"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="231"/>
         <source>Index must be a positive integer (not 0).</source>
         <translation>索引必须是正整数 (不能为 0)。</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="180"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="235"/>
         <source>Index is too large.</source>
         <translation>索引过大。</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="186"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="241"/>
         <source>Index is out of range. Clamped to max.</source>
         <translation>索引超出范围，已钳制到最大值。</translation>
     </message>
@@ -1463,49 +1482,49 @@ Add to library (library reference), or keep as external file?</source>
 <context>
     <name>WInsertColumnDialog</name>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="50"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="105"/>
         <source>Index:</source>
         <translation>索引：</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="58"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="113"/>
         <source>Title:</source>
         <translation>标题：</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="65"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="120"/>
         <source>Type:</source>
         <translation>类型：</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="76"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="131"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="77"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="132"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="96"/>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="101"/>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="106"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="151"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="156"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="161"/>
         <source>Invalid index</source>
         <translation>无效索引</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="97"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="152"/>
         <source>Index must be a positive integer (not 0).</source>
         <translation>索引必须是正整数 (不能为 0)。</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="101"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="156"/>
         <source>Index is too large.</source>
         <translation>索引过大。</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="107"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="162"/>
         <source>Index is out of range. Clamped to max.</source>
         <translation>索引超出范围，已钳制到最大值。</translation>
     </message>
@@ -1513,30 +1532,51 @@ Add to library (library reference), or keep as external file?</source>
 <context>
     <name>WSortTypeSetDialog</name>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="8"/>
         <source>Input sorting expression:</source>
-        <translation>输入排序表达式：</translation>
+        <translation type="vanished">输入排序表达式：</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="10"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="48"/>
+        <source>Sort / Group Rules (DSL)</source>
+        <translation>排序 / 分组规则 (DSL)</translation>
+    </message>
+    <message>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="50"/>
+        <source>Input sorting / grouping expression (DSL):</source>
+        <translation>输入排序 / 分组表达式 (DSL)</translation>
+    </message>
+    <message>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="55"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="11"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="56"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="12"/>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="22"/>
-        <source>Help</source>
-        <translation>帮助</translation>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="57"/>
+        <source>Syntax Reference</source>
+        <translation>语法参考</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="23"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="66"/>
+        <source>DSL Syntax Reference</source>
+        <translation>DSL 语法参考</translation>
+    </message>
+    <message>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="71"/>
+        <source>Close</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <source>Help</source>
+        <translation type="vanished">帮助</translation>
+    </message>
+    <message>
         <source>Enter sorting expression like: title - artist</source>
-        <translation>输入排序表达式，例如：标题 - 艺术家</translation>
+        <translation type="vanished">输入排序表达式，例如：标题 - 艺术家</translation>
     </message>
 </context>
 </TS>

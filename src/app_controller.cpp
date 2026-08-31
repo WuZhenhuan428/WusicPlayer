@@ -334,11 +334,11 @@ void AppController::locate_current_track_in_view()
 void AppController::handle_set_sort_rule_requested()
 {
     auto* playlist_controller = playlist_controller_.get();
+    auto* view_model          = playlist_controller->view_model();
     WSortTypeSetDialog dialog;
+    dialog.setText(view_model->dsl_source()); // 预填当前 DSL(便于编辑既有规则)
     if (dialog.exec() == QDialog::Accepted) {
-        QString input    = dialog.getText();
-        auto* view_model = playlist_controller->view_model();
-        view_model->set_sort_expression(input);
+        view_model->set_sort_expression(dialog.getText());
         if (!view_model->dsl_error().isEmpty()) {
             QMessageBox::warning(&dialog, tr("Sort Rule Error"), view_model->dsl_error());
         }

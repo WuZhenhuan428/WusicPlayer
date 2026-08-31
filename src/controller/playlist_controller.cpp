@@ -481,6 +481,12 @@ void PlaylistController::load_from_json(const QJsonObject& json)
     }
     this->set_sort_rules(sort_rules);
 
+    // DSL 排序/分组/分类(存在则优先于上方 SortRule 规则)
+    const QString dsl = obj.value("dsl_expression").toString();
+    if (!dsl.trimmed().isEmpty()) {
+        this->view_model()->set_sort_expression(dsl);
+    }
+
     PlayMode mode =
         static_cast<PlayMode>(obj.value("play_mode").toInt(static_cast<int>(PlayMode::in_order)));
     this->set_play_mode(mode);
@@ -518,6 +524,7 @@ QJsonObject PlaylistController::save_to_json()
         sort_array.append(ruleToJson(rule));
     }
     obj["sort_rules"]       = sort_array;
+    obj["dsl_expression"]   = m_manager->get_view_model()->dsl_source();
 
     obj["play_mode"]        = static_cast<int>(this->play_mode());
     obj["add_file_policy"]  = static_cast<int>(this->add_file_policy());

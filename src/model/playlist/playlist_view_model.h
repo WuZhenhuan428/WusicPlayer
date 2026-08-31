@@ -39,6 +39,11 @@ public:
     {
         return m_layout_builder.dsl_error();
     }
+    // 当前生效的 DSL 源文本(空 = 未启用 DSL)
+    const QString& dsl_source() const
+    {
+        return m_layout_builder.dsl_source();
+    }
 
     /**
      * @attention default group rule = title or filename if title does not exist

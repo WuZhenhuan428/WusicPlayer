@@ -240,6 +240,7 @@ bool PlaylistLayoutBuilder::set_dsl(const QString& expression)
     // 成功: 替换旧 DSL(旧的 SortRule 规则在 build 时被 DSL 屏蔽, 无需清空)
     m_dsl = std::make_shared<dsl::Evaluator>(prog);
     m_dsl_error.clear();
+    m_dsl_source = expression;
     return true;
 }
 
@@ -247,6 +248,7 @@ void PlaylistLayoutBuilder::clear_dsl()
 {
     m_dsl.reset();
     m_dsl_error.clear();
+    m_dsl_source.clear();
 }
 
 void PlaylistLayoutBuilder::update_sort(SortRule rule, bool overrideExisting)

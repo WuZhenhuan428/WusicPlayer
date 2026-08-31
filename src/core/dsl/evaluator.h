@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/dsl/ast.h"
-#include "core/dsl/registry.h"
 
 #include <QCollator>
 #include <QString>

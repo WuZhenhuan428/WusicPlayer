@@ -6,11 +6,11 @@
 #include <QDialog>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSlider>
 #include <QString>
+#include <QTextEdit>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QUuid>
@@ -28,34 +28,38 @@ class WSortTypeSetDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit WSortTypeSetDialog(QDialog* parent = nullptr);
+    explicit WSortTypeSetDialog(QWidget* parent = nullptr);
     ~WSortTypeSetDialog();
 
+    /// 当前输入的 DSL 文本(多行)。
     QString getText() const
     {
-        return txtExpression->text();
+        return txt_expression_->toPlainText();
+    }
+    /// 预填 DSL 文本(编辑既有规则)。
+    void setText(const QString& text)
+    {
+        txt_expression_->setPlainText(text);
     }
 
 private:
-    QLabel* lbPrompt;
-    QLineEdit* txtExpression;
+    QHBoxLayout* hbl_prompt_;
+    QLabel* lb_prompt_;
+    QTextEdit* txt_expression_;
 
-    QPushButton* btnEnter;
-    QPushButton* btnCancel;
-    QPushButton* btnHelp;
+    QHBoxLayout* hbl_btn_;
+    QPushButton* btn_enter_;
+    QPushButton* btn_cancel_;
+    QPushButton* btn_help_;
 
-    QSlider* sldMain;
-    QSlider* sldBtn;
-    QHBoxLayout* hbPrompt;
-    QHBoxLayout* hbBtn;
-    QVBoxLayout* vbMain;
+    QVBoxLayout* vbl_main_;
 };
 
 class WPlayListWidgetItem : public QTreeWidgetItem
 {
 public:
     WPlayListWidgetItem(QTreeWidget* parent, const QString& name, const PlaylistId& pid) :
-        QTreeWidgetItem(parent, QStringList() << name), m_pid(pid)
+        QTreeWidgetItem(parent, QStringList() << name), pid_(pid)
     {
         // 支持"选中后单击"内联重命名(SelectedClicked 编辑触发器)
         setFlags(flags() | Qt::ItemIsEditable);
@@ -63,11 +67,11 @@ public:
 
     PlaylistId id() const
     {
-        return m_pid;
+        return pid_;
     }
 
 private:
-    PlaylistId m_pid;
+    PlaylistId pid_;
 };
 
 class WInsertColumnDialog : public QDialog
@@ -82,24 +86,24 @@ public:
     int index() const;
 
 private:
-    QLabel* lbIndex;
-    QLineEdit* txtIndex;
-    QHBoxLayout* hbIndex;
-    int m_maxIndex = 0;
+    QLabel* lb_index_;
+    QLineEdit* le_index_;
+    QHBoxLayout* hbl_index_;
+    int max_index_ = 0;
 
-    QLabel* lbTitle;
-    QLineEdit* txtTitle;
-    QHBoxLayout* hbTitle;
+    QLabel* lb_title_;
+    QLineEdit* le_title_;
+    QHBoxLayout* hbl_title_;
 
-    QLabel* lbType;
-    QComboBox* cbType;
-    QHBoxLayout* hbType;
+    QLabel* lb_type_;
+    QComboBox* cb_type_;
+    QHBoxLayout* hbl_type_;
 
-    QPushButton* btnOK;
-    QPushButton* btnCancel;
-    QHBoxLayout* hbBtn;
+    QPushButton* btn_ok_;
+    QPushButton* btn_cancel_;
+    QHBoxLayout* hbl_btn_;
 
-    QVBoxLayout* vbMain;
+    QVBoxLayout* vbl_main_;
 };
 
 class WColumnIndexDialog : public QDialog
@@ -114,14 +118,14 @@ public:
     int index() const;
 
 private:
-    QLabel* lbPrompt;
-    QLineEdit* txtIndex;
-    QHBoxLayout* hbIndex;
-    int m_maxIndex = 0;
+    QLabel* lb_prompt_;
+    QLineEdit* txt_index_;
+    QHBoxLayout* hbl_index_;
+    int max_index_ = 0;
 
-    QPushButton* btnOK;
-    QPushButton* btnCancel;
-    QHBoxLayout* hbBtn;
+    QPushButton* btn_ok_;
+    QPushButton* btn_cancel_;
+    QHBoxLayout* hbl_btn_;
 
-    QVBoxLayout* vbMain;
+    QVBoxLayout* vbl_main_;
 };

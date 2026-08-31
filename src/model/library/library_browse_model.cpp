@@ -114,6 +114,7 @@ bool LibraryBrowseModel::set_dsl_grouping(const QString& expression)
     }
     m_dsl = std::make_unique<dsl::Evaluator>(prog);
     m_dsl_error.clear();
+    m_dsl_source = expression;
     rebuild();
     return true;
 }
@@ -122,6 +123,7 @@ void LibraryBrowseModel::clear_dsl_grouping()
 {
     m_dsl.reset();
     m_dsl_error.clear();
+    m_dsl_source.clear();
     rebuild();
 }
 
