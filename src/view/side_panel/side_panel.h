@@ -1,8 +1,8 @@
 #pragma once
 
+#include "core/types.h"
 #include "view/side_panel/elided_label.h"
 #include "view/side_panel/w_lyrics_panel.h"
-#include "core/types.h"
 
 #include <QLabel>
 #include <QPixmap>

@@ -1,9 +1,7 @@
 #include "view/playlist/playlist_widgets.h"
 
-#include "view/dialogs/font_select_dialog.h"
-
+#include "core/utils/font.hpp"
 #include <QLineEdit>
-
 #include <limits>
 
 namespace
@@ -14,33 +12,36 @@ QString dsl_help_text()
     return QStringLiteral("WusicPlayer 排序/分类 DSL 语法参考\n"
                           "==================================\n"
                           "三小节(可任意组合, 各至多一次):\n"
-                          "  sort   { ... }   多键排序\n"
-                          "  group  { ... }   多级分组(按属性值, 与 bucket 互斥)\n"
-                          "  bucket { ... }   条件分类(if/elif/else)\n"
+                          "    sort   { ... }   多键排序\n"
+                          "    group  { ... }   多级分组(按属性值, 与 bucket 互斥)\n"
+                          "    bucket { ... }   条件分类(if/elif/else)\n"
                           "\n"
                           "属性(大小写无关, 直接引用):\n"
-                          "  title artist album album_artist genre composer comment lyrics\n"
-                          "  encoder date filename filepath directory extension\n"
-                          "  year track disc disc_total duration bitrate start_at index missing\n"
+                          "    title artist album album_artist genre composer comment lyrics\n"
+                          "    encoder date filename filepath directory extension\n"
+                          "    year track disc disc_total duration bitrate start_at index missing\n"
                           "\n"
                           "sort/group 子句(行或分号分隔):\n"
-                          "  artist asc nulls last\n"
-                          "  year desc\n"
+                          "    artist asc nulls last\n"
+                          "    year desc\n"
                           "\n"
                           "bucket 分支:\n"
-                          "  if year >= 2010 and genre == \"摇滚\" then \"现代\"\n"
-                          "  elif duration < 180 then \"短\"\n"
-                          "  else \"其他\"\n"
+                          "    if year >= 2010 and genre == \"摇滚\" then \"现代\"\n"
+                          "    elif duration < 180 then \"短\"\n"
+                          "    else \"其他\"\n"
                           "\n"
                           "表达式运算符: == != < <= > >=  and or not  + - * / %  ? :\n"
                           "函数: contains(s, sub) starts_with(s, pre) ends_with(s, suf)\n"
                           "      matches(s, regex) in(v, a, b, ...) len(s) upper(s) lower(s)\n"
                           "\n"
                           "示例:\n"
-                          "  sort { artist asc nulls last; year desc; title asc }\n"
-                          "  bucket { if year < 1990 then \"90前\"\n"
-                          "           elif year < 2010 then \"90-00s\" else \"10后\" }\n"
-                          "  group { genre asc; album }");
+                          "    sort { artist asc nulls last; year desc; title asc }\n"
+                          "    bucket {\n"
+                          "        if year < 1990 then \"90前\"\n"
+                          "        elif year < 2010 then \"90-00s\"\n"
+                          "        else \"10后\"\n"
+                          "    }\n"
+                          "    group { genre asc; album }");
 }
 } // namespace
 
@@ -53,6 +54,9 @@ WSortTypeSetDialog::WSortTypeSetDialog(QWidget* parent) : QDialog(parent)
     txt_expression_ = new QTextEdit(this);
     txt_expression_->setMinimumHeight(140);
     txt_expression_->setLineWrapMode(QTextEdit::WidgetWidth);
+    // 获取系统等宽字体
+    QFont mono = utils::font::get_system_mono_font();
+    txt_expression_->setFont(mono);
 
     btn_enter_  = new QPushButton(tr("OK"));
     btn_cancel_ = new QPushButton(tr("Cancel"));
@@ -64,13 +68,14 @@ WSortTypeSetDialog::WSortTypeSetDialog(QWidget* parent) : QDialog(parent)
 
     connect(btn_enter_, &QPushButton::clicked, this, &QDialog::accept);
     connect(btn_cancel_, &QPushButton::clicked, this, &QDialog::reject);
-    connect(btn_help_, &QPushButton::clicked, this, [this]() {
+    connect(btn_help_, &QPushButton::clicked, this, [this, mono]() {
         QDialog dlg(this);
         dlg.setWindowTitle(tr("DSL Syntax Reference"));
         auto* te = new QTextEdit(&dlg);
         te->setPlainText(dsl_help_text());
         te->setReadOnly(true);
         te->setLineWrapMode(QTextEdit::NoWrap);
+        te->setFont(mono);
         auto* closeBtn = new QPushButton(tr("Close"), &dlg);
         connect(closeBtn, &QPushButton::clicked, &dlg, &QDialog::accept);
         auto* vbl = new QVBoxLayout(&dlg);

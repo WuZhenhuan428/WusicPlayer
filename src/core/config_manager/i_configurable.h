@@ -10,7 +10,7 @@ class QString;
 class IConfigurable
 {
 public:
-    virtual ~IConfigurable()                           = default;
+    virtual ~IConfigurable()                             = default;
     virtual void load_from_json(const QJsonObject& json) = 0;
     virtual QJsonObject save_to_json()                   = 0;
     virtual QString config_sub_key() const               = 0;

@@ -1,43 +1,48 @@
 #include "qqmusic_qt6.h"
 
 #include <QByteArray>
-#include <QEventLoop>
 #include <QDateTime>
+#include <QDebug>
+#include <QEventLoop>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QDebug>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QUrl>
 #include <QUrlQuery>
 
-namespace qqmusic_qt6 {
+namespace qqmusic_qt6
+{
 
-namespace {
-struct SongEntry {
+namespace
+{
+struct SongEntry
+{
     QString songmid;
     QString title;
     QString artist;
     QString album;
 };
 
-QByteArray doGet(const QUrl& url, QNetworkAccessManager* nam) {
+QByteArray doGet(const QUrl& url, QNetworkAccessManager* nam)
+{
     if (!nam) {
         return {};
     }
 
     QNetworkRequest req(url);
     req.setRawHeader("Referer", "https://y.qq.com");
-    req.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36");
+    req.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, "
+                                   "like Gecko) Chrome/120 Safari/537.36");
 
     QNetworkReply* reply = nam->get(req);
     QEventLoop loop;
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
 
-    const bool ok = reply->error() == QNetworkReply::NoError;
-    const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    const bool ok         = reply->error() == QNetworkReply::NoError;
+    const int status      = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     const QString errText = reply->errorString();
     const QByteArray body = reply->readAll();
     reply->deleteLater();
@@ -49,7 +54,8 @@ QByteArray doGet(const QUrl& url, QNetworkAccessManager* nam) {
     return ok ? body : QByteArray{};
 }
 
-QByteArray doPostJson(const QUrl& url, const QJsonObject& payload, QNetworkAccessManager* nam) {
+QByteArray doPostJson(const QUrl& url, const QJsonObject& payload, QNetworkAccessManager* nam)
+{
     if (!nam) {
         return {};
     }
@@ -58,16 +64,17 @@ QByteArray doPostJson(const QUrl& url, const QJsonObject& payload, QNetworkAcces
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     req.setRawHeader("Origin", "https://y.qq.com");
     req.setRawHeader("Referer", "https://y.qq.com");
-    req.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36");
+    req.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, "
+                                   "like Gecko) Chrome/120 Safari/537.36");
 
     const QByteArray bodyData = QJsonDocument(payload).toJson(QJsonDocument::Compact);
-    QNetworkReply* reply = nam->post(req, bodyData);
+    QNetworkReply* reply      = nam->post(req, bodyData);
     QEventLoop loop;
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
 
-    const bool ok = reply->error() == QNetworkReply::NoError;
-    const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    const bool ok         = reply->error() == QNetworkReply::NoError;
+    const int status      = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     const QString errText = reply->errorString();
     const QByteArray body = reply->readAll();
     reply->deleteLater();
@@ -79,16 +86,23 @@ QByteArray doPostJson(const QUrl& url, const QJsonObject& payload, QNetworkAcces
     return body;
 }
 
-QVector<SongEntry> parseSearchList(const QJsonObject& root) {
+QVector<SongEntry> parseSearchList(const QJsonObject& root)
+{
     QVector<SongEntry> out;
 
-    QJsonArray list = root.value("data").toObject().value("song").toObject().value("list").toArray();
+    QJsonArray list =
+        root.value("data").toObject().value("song").toObject().value("list").toArray();
     if (list.isEmpty()) {
-        list = root.value("req_0").toObject()
-                    .value("data").toObject()
-                    .value("body").toObject()
-                    .value("song").toObject()
-                    .value("list").toArray();
+        list = root.value("req_0")
+                   .toObject()
+                   .value("data")
+                   .toObject()
+                   .value("body")
+                   .toObject()
+                   .value("song")
+                   .toObject()
+                   .value("list")
+                   .toArray();
     }
 
     for (const auto& item : list) {
@@ -120,14 +134,21 @@ QVector<SongEntry> parseSearchList(const QJsonObject& root) {
     return out;
 }
 
-QVector<SongEntry> searchSongsViaMusicu(const QString& keyword, QNetworkAccessManager* nam) {
+QVector<SongEntry> searchSongsViaMusicu(const QString& keyword, QNetworkAccessManager* nam)
+{
     QJsonObject payload;
-    payload.insert("comm", QJsonObject{{"ct", 24}, {"cv", 0}, {"uin", "0"}, {"format", "json"}, {"inCharset", "utf-8"}, {"outCharset", "utf-8"}});
-    payload.insert("req_0", QJsonObject{
-        {"module", "music.search.SearchCgiService"},
-        {"method", "DoSearchForQQMusicDesktop"},
-        {"param", QJsonObject{{"query", keyword}, {"num_per_page", 10}, {"page_num", 1}, {"search_type", 0}}}
-    });
+    payload.insert("comm", QJsonObject{{"ct", 24},
+                                       {"cv", 0},
+                                       {"uin", "0"},
+                                       {"format", "json"},
+                                       {"inCharset", "utf-8"},
+                                       {"outCharset", "utf-8"}});
+    payload.insert("req_0", QJsonObject{{"module", "music.search.SearchCgiService"},
+                                        {"method", "DoSearchForQQMusicDesktop"},
+                                        {"param", QJsonObject{{"query", keyword},
+                                                              {"num_per_page", 10},
+                                                              {"page_num", 1},
+                                                              {"search_type", 0}}}});
 
     const QByteArray body = doPostJson(QUrl("https://u.y.qq.com/cgi-bin/musicu.fcg"), payload, nam);
     if (body.isEmpty()) {
@@ -137,16 +158,18 @@ QVector<SongEntry> searchSongsViaMusicu(const QString& keyword, QNetworkAccessMa
     QJsonParseError err;
     const QJsonDocument doc = QJsonDocument::fromJson(body, &err);
     if (err.error != QJsonParseError::NoError || !doc.isObject()) {
-        qWarning() << "[QQMusic] musicu parse failed" << err.errorString() << "body=" << QString::fromUtf8(body.left(180));
+        qWarning() << "[QQMusic] musicu parse failed" << err.errorString()
+                   << "body=" << QString::fromUtf8(body.left(180));
         return {};
     }
 
     return parseSearchList(doc.object());
 }
 
-QVector<SongEntry> searchSongs(const lyrics_fetcher::TrackMeta& meta, QNetworkAccessManager* nam) {
-    const QString title = meta.rawTitle.trimmed();
-    const QString artist = meta.rawArtist.trimmed();
+QVector<SongEntry> searchSongs(const lyrics_fetcher::TrackMeta& meta, QNetworkAccessManager* nam)
+{
+    const QString title   = meta.rawTitle.trimmed();
+    const QString artist  = meta.rawArtist.trimmed();
     const QString keyword = artist.isEmpty() ? title : (title + "+" + artist);
     if (keyword.isEmpty()) {
         qWarning() << "[QQMusic] empty keyword";
@@ -196,7 +219,8 @@ QVector<SongEntry> searchSongs(const lyrics_fetcher::TrackMeta& meta, QNetworkAc
     QJsonParseError err;
     const QJsonDocument doc = QJsonDocument::fromJson(body, &err);
     if (err.error != QJsonParseError::NoError || !doc.isObject()) {
-        qWarning() << "[QQMusic] search parse failed" << err.errorString() << "body=" << QString::fromUtf8(body.left(180));
+        qWarning() << "[QQMusic] search parse failed" << err.errorString()
+                   << "body=" << QString::fromUtf8(body.left(180));
         return out;
     }
 
@@ -207,7 +231,8 @@ QVector<SongEntry> searchSongs(const lyrics_fetcher::TrackMeta& meta, QNetworkAc
     return out;
 }
 
-QString queryLyricBySongmid(const QString& songmid, QNetworkAccessManager* nam) {
+QString queryLyricBySongmid(const QString& songmid, QNetworkAccessManager* nam)
+{
     QUrlQuery q;
     q.addQueryItem("songmid", songmid);
     q.addQueryItem("pcachetime", QString::number(QDateTime::currentMSecsSinceEpoch()));
@@ -233,7 +258,8 @@ QString queryLyricBySongmid(const QString& songmid, QNetworkAccessManager* nam) 
     QJsonParseError err;
     const QJsonDocument doc = QJsonDocument::fromJson(body, &err);
     if (err.error != QJsonParseError::NoError || !doc.isObject()) {
-        qWarning() << "[QQMusic] lyric parse failed" << songmid << err.errorString() << "body=" << QString::fromUtf8(body.left(180));
+        qWarning() << "[QQMusic] lyric parse failed" << songmid << err.errorString()
+                   << "body=" << QString::fromUtf8(body.left(180));
         return {};
     }
 
@@ -245,30 +271,31 @@ QString queryLyricBySongmid(const QString& songmid, QNetworkAccessManager* nam) 
 
     return QString::fromUtf8(QByteArray::fromBase64(b64.toUtf8()));
 }
-}
+} // namespace
 
-Config getConfig() {
+Config getConfig()
+{
     return {QStringLiteral("QQ Music"), QStringLiteral("0.1"), QStringLiteral("ohyeah")};
 }
 
-void getLyrics(const lyrics_fetcher::TrackMeta& meta,
-               lyrics_fetcher::LyricsSink& sink,
-               QNetworkAccessManager* nam) {
+void getLyrics(const lyrics_fetcher::TrackMeta& meta, lyrics_fetcher::LyricsSink& sink,
+               QNetworkAccessManager* nam)
+{
     qDebug() << "[QQMusic] search start title=" << meta.rawTitle << "artist=" << meta.rawArtist;
     const QVector<SongEntry> songs = searchSongs(meta, nam);
-    int added = 0;
+    int added                      = 0;
     for (const SongEntry& song : songs) {
         const QString lyric = queryLyricBySongmid(song.songmid, nam);
         if (lyric.trimmed().isEmpty()) {
             continue;
         }
 
-        auto result = sink.create_lyric();
-        result.title = song.title;
-        result.artist = song.artist;
-        result.album = song.album;
+        auto result      = sink.create_lyric();
+        result.title     = song.title;
+        result.artist    = song.artist;
+        result.album     = song.album;
         result.lyricText = lyric;
-        result.source = QStringLiteral("QQMusic");
+        result.source    = QStringLiteral("QQMusic");
         sink.add_lyric(result);
         ++added;
     }

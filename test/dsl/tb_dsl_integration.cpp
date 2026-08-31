@@ -1,6 +1,3 @@
-#include "core/dsl/lexer.h"
-#include "core/dsl/parser.h"
-#include "core/dsl/registry.h"
 #include "core/dsl/track_meta_row.h"
 #include "model/library/library_browse_model.h"
 #include "model/playlist/playlist.h"

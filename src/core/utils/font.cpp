@@ -1,5 +1,7 @@
 #include "font.hpp"
 
+#include <QFontDatabase>
+
 namespace utils::font
 {
 
@@ -16,6 +18,13 @@ QFont get_relative_size_font_default(int relative_pt)
     QFont new_font = default_font;
     new_font.setPointSize(curr_size + relative_pt);
     return new_font;
+}
+
+QFont get_system_mono_font()
+{
+    QFont mono = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    mono.setPointSize(QApplication::font().pointSize());
+    return mono;
 }
 
 } // namespace utils::font

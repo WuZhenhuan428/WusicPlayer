@@ -3,42 +3,47 @@
 #include "krc_qrc_parser.h"
 
 #include <QByteArray>
+#include <QDebug>
 #include <QEventLoop>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QDebug>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QUrl>
 #include <QUrlQuery>
 #include <algorithm>
 
-namespace kugou_qt6 {
+namespace kugou_qt6
+{
 
-namespace {
-struct Candidate {
+namespace
+{
+struct Candidate
+{
     QString id;
     QString accessKey;
     QString title;
     QString artist;
 };
 
-QByteArray doGet(const QUrl& url, QNetworkAccessManager* nam) {
+QByteArray doGet(const QUrl& url, QNetworkAccessManager* nam)
+{
     if (!nam) {
         return {};
     }
 
     QNetworkRequest req(url);
-    req.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36");
+    req.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, "
+                                   "like Gecko) Chrome/120 Safari/537.36");
     QNetworkReply* reply = nam->get(req);
 
     QEventLoop loop;
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
 
-    const bool ok = reply->error() == QNetworkReply::NoError;
-    const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    const bool ok         = reply->error() == QNetworkReply::NoError;
+    const int status      = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     const QString errText = reply->errorString();
     const QByteArray body = reply->readAll();
     reply->deleteLater();
@@ -50,11 +55,13 @@ QByteArray doGet(const QUrl& url, QNetworkAccessManager* nam) {
     return body;
 }
 
-QVector<Candidate> searchCandidates(const lyrics_fetcher::TrackMeta& meta, QNetworkAccessManager* nam) {
+QVector<Candidate> searchCandidates(const lyrics_fetcher::TrackMeta& meta,
+                                    QNetworkAccessManager* nam)
+{
     QVector<Candidate> out;
 
-    const QString title = meta.rawTitle.trimmed();
-    const QString artist = meta.rawArtist.trimmed();
+    const QString title   = meta.rawTitle.trimmed();
+    const QString artist  = meta.rawArtist.trimmed();
     const QString keyword = artist.isEmpty() ? title : (artist + "-" + title);
     if (keyword.isEmpty()) {
         qWarning() << "[Kugou] empty keyword";
@@ -77,7 +84,8 @@ QVector<Candidate> searchCandidates(const lyrics_fetcher::TrackMeta& meta, QNetw
 
     const QByteArray body = doGet(url, nam);
     if (body.isEmpty()) {
-        qWarning() << "[Kugou] search body empty title=" << meta.rawTitle << "artist=" << meta.rawArtist << "durationSec=" << meta.durationSec;
+        qWarning() << "[Kugou] search body empty title=" << meta.rawTitle
+                   << "artist=" << meta.rawArtist << "durationSec=" << meta.durationSec;
         return out;
     }
 
@@ -86,7 +94,8 @@ QVector<Candidate> searchCandidates(const lyrics_fetcher::TrackMeta& meta, QNetw
     QJsonParseError err;
     const QJsonDocument doc = QJsonDocument::fromJson(body, &err);
     if (err.error != QJsonParseError::NoError || !doc.isObject()) {
-        qWarning() << "[Kugou] search parse failed" << err.errorString() << "body=" << QString::fromUtf8(body.left(180));
+        qWarning() << "[Kugou] search parse failed" << err.errorString()
+                   << "body=" << QString::fromUtf8(body.left(180));
         return out;
     }
 
@@ -94,10 +103,10 @@ QVector<Candidate> searchCandidates(const lyrics_fetcher::TrackMeta& meta, QNetw
     for (const auto& item : list) {
         const QJsonObject o = item.toObject();
         Candidate c;
-        c.id = QString::number(static_cast<qint64>(o.value("id").toDouble()));
+        c.id        = QString::number(static_cast<qint64>(o.value("id").toDouble()));
         c.accessKey = o.value("accesskey").toString();
-        c.title = o.value("song").toString();
-        c.artist = o.value("singer").toString();
+        c.title     = o.value("song").toString();
+        c.artist    = o.value("singer").toString();
         if (!c.id.isEmpty() && !c.accessKey.isEmpty()) {
             out.push_back(c);
         }
@@ -108,7 +117,8 @@ QVector<Candidate> searchCandidates(const lyrics_fetcher::TrackMeta& meta, QNetw
     return out;
 }
 
-QString downloadAndParse(const Candidate& c, QNetworkAccessManager* nam) {
+QString downloadAndParse(const Candidate& c, QNetworkAccessManager* nam)
+{
     QUrlQuery q;
     q.addQueryItem("ver", "1");
     q.addQueryItem("client", "pc");
@@ -129,7 +139,8 @@ QString downloadAndParse(const Candidate& c, QNetworkAccessManager* nam) {
     QJsonParseError err;
     const QJsonDocument doc = QJsonDocument::fromJson(body, &err);
     if (err.error != QJsonParseError::NoError || !doc.isObject()) {
-        qWarning() << "[Kugou] lyric parse failed id=" << c.id << err.errorString() << "body=" << QString::fromUtf8(body.left(180));
+        qWarning() << "[Kugou] lyric parse failed id=" << c.id << err.errorString()
+                   << "body=" << QString::fromUtf8(body.left(180));
         return {};
     }
 
@@ -148,21 +159,23 @@ QString downloadAndParse(const Candidate& c, QNetworkAccessManager* nam) {
 
     return lrc;
 }
-}
+} // namespace
 
-Config getConfig() {
+Config getConfig()
+{
     return {QStringLiteral("Kugou Music"), QStringLiteral("0.1"), QStringLiteral("anonymous")};
 }
 
-void getLyrics(const lyrics_fetcher::TrackMeta& meta,
-               lyrics_fetcher::LyricsSink& sink,
-               QNetworkAccessManager* nam) {
-    qDebug() << "[Kugou] search start title=" << meta.rawTitle << "artist=" << meta.rawArtist << "durationSec=" << meta.durationSec;
+void getLyrics(const lyrics_fetcher::TrackMeta& meta, lyrics_fetcher::LyricsSink& sink,
+               QNetworkAccessManager* nam)
+{
+    qDebug() << "[Kugou] search start title=" << meta.rawTitle << "artist=" << meta.rawArtist
+             << "durationSec=" << meta.durationSec;
 
     QVector<Candidate> candidates = searchCandidates(meta, nam);
     if (candidates.isEmpty() && meta.durationSec > 0) {
         lyrics_fetcher::TrackMeta fallback = meta;
-        fallback.durationSec = 0;
+        fallback.durationSec               = 0;
         qDebug() << "[Kugou] retry search without duration";
         candidates = searchCandidates(fallback, nam);
     }
@@ -174,12 +187,12 @@ void getLyrics(const lyrics_fetcher::TrackMeta& meta,
             continue;
         }
 
-        auto result = sink.create_lyric();
-        result.title = c.title;
+        auto result   = sink.create_lyric();
+        result.title  = c.title;
         result.artist = c.artist;
         result.album.clear();
         result.lyricText = lyric;
-        result.source = QStringLiteral("Kugou");
+        result.source    = QStringLiteral("Kugou");
         sink.add_lyric(result);
         ++added;
     }

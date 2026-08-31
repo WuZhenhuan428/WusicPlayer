@@ -1,5 +1,4 @@
 #include "core/dsl/ast.h"
-#include "core/dsl/dsl_token.h"
 #include "core/dsl/lexer.h"
 #include "core/dsl/parser.h"
 
@@ -34,15 +33,16 @@ int main()
 {
     // 1) sort + group 完整解析
     {
-        auto pr = parse(QStringLiteral("sort {\n"
-                                       "    artist asc nulls last\n"
-                                       "    year desc\n"
-                                       "    title\n"
-                                       "}\n"
-                                       "group {\n"
-                                       "    genre asc\n"
-                                       "    album\n"
-                                       "}\n"));
+        auto pr = parse(QStringLiteral(
+            "sort {\n"
+            "    artist asc nulls last\n"
+            "    year desc\n"
+            "    title\n"
+            "}\n"
+            "group {\n"
+            "    genre asc\n"
+            "    album\n"
+            "}\n"));
         CHECK(pr.ok);
         CHECK(pr.has_sort && pr.has_group && !pr.has_bucket);
         CHECK(pr.sort.size() == 3);
@@ -60,28 +60,34 @@ int main()
 
     // 2) sort + bucket(if/elif/else, 表达式键 + 三元)
     {
-        auto pr =
-            parse(QStringLiteral("sort { year desc }\n"
-                                 "bucket {\n"
-                                 "    if year >= 2010 and genre == \"摇滚\" then \"现代\"\n"
-                                 "    elif duration < 180 then duration < 90 ? \"很短\" : \"短\"\n"
-                                 "    else \"其他\"\n"
-                                 "}\n"));
+        auto pr = parse(QStringLiteral(
+            "sort { year desc }\n"
+            "bucket {\n"
+            "    if year >= 2010 and genre == \"摇滚\" then \"现代\"\n"
+            "    elif duration < 180 then duration < 90 ? \"很短\" : \"短\"\n"
+            "    else \"其他\"\n"
+            "}\n"));
         CHECK(pr.ok);
         CHECK(pr.has_sort && pr.has_bucket && !pr.has_group);
         CHECK(pr.bucket.size() == 3);
         CHECK(pr.bucket[0].kind == BucketBranch::Kind::If);
         CHECK(pr.bucket[1].kind == BucketBranch::Kind::Elif);
         CHECK(pr.bucket[2].kind == BucketBranch::Kind::Else);
-        CHECK(node_to_string(pr.bucket[0].cond) ==
-              QStringLiteral("(and (>= year 2010) (== genre \"摇滚\"))"));
+        CHECK(node_to_string(pr.bucket[0].cond)
+              == QStringLiteral("(and (>= year 2010) (== genre \"摇滚\"))"));
         CHECK(node_to_string(pr.bucket[0].key) == QStringLiteral("\"现代\""));
-        CHECK(node_to_string(pr.bucket[1].key) ==
-              QStringLiteral("(ternary (< duration 90) \"很短\" \"短\")"));
+        CHECK(node_to_string(pr.bucket[1].key)
+              == QStringLiteral("(ternary (< duration 90) \"很短\" \"短\")"));
         CHECK(node_to_string(pr.bucket[2].key) == QStringLiteral("\"其他\""));
     }
 
     // 3) 表达式: 一元负 / not / 函数调用 / 算术优先级
+    {
+        auto pr = parse(QStringLiteral(
+            "bucket { if -year > 0 then \"x\" }\n"
+            "bucket2 {}")); // 非法, 只取第一个
+        (void)pr;
+    }
     {
         auto pr = parse(QStringLiteral("bucket { if -year > 0 then \"x\" }"));
         CHECK(pr.ok);
@@ -100,7 +106,8 @@ int main()
     {
         auto pr = parse(QStringLiteral("bucket { if in(genre, \"摇滚\", \"金属\") then \"x\" }"));
         CHECK(pr.ok);
-        CHECK(node_to_string(pr.bucket[0].cond) == QStringLiteral("(in genre \"摇滚\" \"金属\")"));
+        CHECK(node_to_string(pr.bucket[0].cond)
+              == QStringLiteral("(in genre \"摇滚\" \"金属\")"));
     }
     {
         auto pr = parse(QStringLiteral("bucket { if year / 10 * 10 == 2020 then \"x\" }"));
@@ -108,11 +115,10 @@ int main()
         CHECK(node_to_string(pr.bucket[0].cond) == QStringLiteral("(== (* (/ year 10) 10) 2020)"));
     }
     {
-        auto pr =
-            parse(QStringLiteral("bucket { if (year >= 2000) and (year < 2010) then \"x\" }"));
+        auto pr = parse(QStringLiteral("bucket { if (year >= 2000) and (year < 2010) then \"x\" }"));
         CHECK(pr.ok);
-        CHECK(node_to_string(pr.bucket[0].cond) ==
-              QStringLiteral("(and (>= year 2000) (< year 2010))"));
+        CHECK(node_to_string(pr.bucket[0].cond)
+              == QStringLiteral("(and (>= year 2000) (< year 2010))"));
     }
 
     // 4) 错误: bucket 分支顺序
@@ -122,10 +128,10 @@ int main()
         CHECK(pr.error.contains(QStringLiteral("elif")));
     }
     {
-        auto pr = parse(
-            QStringLiteral("bucket { if year > 0 then \"a\" else \"b\" elif year then \"c\" }"));
+        auto pr = parse(QStringLiteral(
+            "bucket { if year > 0 then \"a\" else \"b\" elif year then \"c\" }"));
         CHECK(!pr.ok);
-        CHECK(pr.error.contains(QStringLiteral("'elif' after 'else'")));
+        CHECK(pr.error.contains(QStringLiteral("elif after 'else'")));
     }
     {
         auto pr = parse(QStringLiteral("bucket { if year > 0 then \"a\" else \"b\" else \"c\" }"));

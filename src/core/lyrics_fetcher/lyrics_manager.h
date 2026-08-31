@@ -28,7 +28,7 @@ struct LyricMeta
 class LyricsSink
 {
 public:
-    virtual ~LyricsSink()                        = default;
+    virtual ~LyricsSink()                         = default;
     virtual LyricMeta create_lyric()              = 0;
     virtual void add_lyric(const LyricMeta& meta) = 0;
 };
