@@ -107,3 +107,15 @@ target_link_libraries(utils_path
 )
 
 add_test(NAME utils_path COMMAND utils_path)
+
+# ======== tb_dsl_lexer ========
+add_executable(tb_dsl_lexer
+    dsl/tb_dsl_lexer.cpp
+)
+
+target_link_libraries(tb_dsl_lexer
+    PRIVATE
+        wusic_core
+)
+
+add_test(NAME tb_dsl_lexer COMMAND tb_dsl_lexer)
