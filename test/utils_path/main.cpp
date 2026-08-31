@@ -50,9 +50,8 @@ int main()
 
     // relative:
     for (const auto& path : sos) {
-      OK = parse_versioned_unix_so(path).has_value();
+        OK = parse_versioned_unix_so(path).has_value();
         CHECK(OK);
-        CHECK(!OK);
     }
 
     // absolute
