@@ -27,14 +27,14 @@
 
 ### 各层职责
 
-| 组件                 | 职责                                                                                                  |
-|----------------------|-------------------------------------------------------------------------------------------------------|
-| `PlaybackController` | 门面:播放/暂停/进度/音量/EQ 配置;持久化(`playback.eq`);缓存当前 `EqConfig`                            |
-| `Player`             | QObject 门面, 广播信号(`sgn_state_changed` 等), 内部持有 `PlayerEngine`                               |
-| `PlayerEngine`       | 播放状态机(STOP/PAUSE/PLAYING)、解码器生命周期、100ms 预填充、watchdog 守护线程、缓存待应用的 EQ 配置 |
-| `Decoder`            | FFmpeg 解码(本地文件)+ EQ filter graph; 单工作线程                                                    |
-| `SPSCRingBuffer`     | 解码线程 -> 输出线程的无锁帧缓冲                                                                      |
-| `Device`             | miniaudio 输出, 回调 `data_callback()` 拉取帧                                                         |
+| 组件                 | 职责                                                                              |
+|----------------------|-----------------------------------------------------------------------------------|
+| `PlaybackController` | 门面:播放/暂停/进度/音量/EQ 配置;持久化(`playback.eq`);缓存当前 `EqConfig`        |
+| `Player`             | QObject 门面, 广播信号(`sgn_state_changed` 等), 内部持有 `PlayerEngine`           |
+| `PlayerEngine`       | 播放状态机、解码器生命周期、100ms 预填充、watchdog 守护线程、缓存待应用的 EQ 配置 |
+| `Decoder`            | FFmpeg 解码(本地文件)+ EQ filter graph; 单工作线程                                |
+| `SPSCRingBuffer`     | 解码线程 -> 输出线程的无锁帧缓冲                                                  |
+| `Device`             | miniaudio 输出, 回调 `data_callback()` 拉取帧                                     |
 
 ## 2. 解码流程(Decoder)
 

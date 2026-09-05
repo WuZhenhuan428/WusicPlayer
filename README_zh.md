@@ -79,8 +79,8 @@ WusicPlayer 是一个个人 Qt 项目，有两个目标：
 
 ## 截图
 
-| 主窗口 | 均衡器 |
-|---|---|
+| 主窗口                                           | 均衡器                         |
+|--------------------------------------------------|--------------------------------|
 | ![Main Window](docs/screenshots/main_window.png) | ![EQ](docs/screenshots/eq.png) |
 
 更多截图见 [`docs/screenshots/`](docs/screenshots/)。
@@ -126,13 +126,13 @@ cd build/debug && ctest
 
 ## 文档
 
-| 文档 | 说明 |
-|---|---|
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 架构设计：分层、模块、关键机制、命名约定 |
-| [`docs/USAGE.md`](docs/USAGE.md) | 使用指南：界面布局、右键菜单、拖拽、搜索、快捷键 |
-| [`docs/BUILDING.md`](docs/BUILDING.md) | 各平台构建说明 |
-| [`docs/THEME_SYSTEM.md`](docs/THEME_SYSTEM.md) | 主题系统（含外部插件编写） |
-| [`docs/history/`](docs/history/) | 历史重构设计与决策记录 |
+| 文档                                           | 说明                                             |
+|------------------------------------------------|--------------------------------------------------|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 架构设计：分层、模块、关键机制、命名约定         |
+| [`docs/USAGE.md`](docs/USAGE.md)               | 使用指南：界面布局、右键菜单、拖拽、搜索、快捷键 |
+| [`docs/BUILDING.md`](docs/BUILDING.md)         | 各平台构建说明                                   |
+| [`docs/THEME_SYSTEM.md`](docs/THEME_SYSTEM.md) | 主题系统（含外部插件编写）                       |
+| [`docs/history/`](docs/history/)               | 历史重构设计与决策记录                           |
 
 ## 待办事项
 

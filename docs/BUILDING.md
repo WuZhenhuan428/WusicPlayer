@@ -55,6 +55,8 @@ cmake --build --preset debug
 windeployqt --release build/debug/WusicPlayer.exe
 ```
 
+> 已知问题: windeployqt 可能会自动填充默认格式的翻译文件, 需要手动移除
+
 ---
 
 ## Windows (MSYS2 MinGW)
@@ -131,10 +133,10 @@ cmake --build --preset debug
 
 ## CMake 选项
 
-| 选项                 | 默认    | 描述                                   |
-|----------------------|---------|----------------------------------------|
-| `WUSIC_BUILD_TESTS`  | `ON`    | 编译单元测试                           |
-| `WUSIC_ENABLE_GPROF` | `OFF`   | 启用 gprof 性能分析 (GCC only)         |
-| `CMAKE_PREFIX_PATH`  | —       | Qt 安装路径                            |
-| `FFMPEG_ROOT`        | —       | FFmpeg 安装路径 (主要用于 Windows)     |
-| `CMAKE_BUILD_TYPE`   | —       | `Debug` / `Release` / `RelWithDebInfo` |
+| 选项                 | 默认  | 描述                                   |
+|----------------------|-------|----------------------------------------|
+| `WUSIC_BUILD_TESTS`  | `ON`  | 编译单元测试                           |
+| `WUSIC_ENABLE_GPROF` | `OFF` | 启用 gprof 性能分析 (GCC only)         |
+| `CMAKE_PREFIX_PATH`  | —    | Qt 安装路径                            |
+| `FFMPEG_ROOT`        | —    | FFmpeg 安装路径 (主要用于 Windows)     |
+| `CMAKE_BUILD_TYPE`   | —    | `Debug` / `Release` / `RelWithDebInfo` |

@@ -79,8 +79,8 @@ It uses a modular `view / controller / service / model / core` layered architect
 
 ## Screenshots
 
-| Main window | Equalizer |
-|---|---|
+| Main window                                      | Equalizer                      |
+|--------------------------------------------------|--------------------------------|
 | ![Main Window](docs/screenshots/main_window.png) | ![EQ](docs/screenshots/eq.png) |
 
 More screenshots in [`docs/screenshots/`](docs/screenshots/).
@@ -126,13 +126,13 @@ Test modules (8):
 
 ## Documentation
 
-| Doc | Description |
-|---|---|
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Architecture: layers, modules, key mechanisms, naming |
-| [`docs/USAGE.md`](docs/USAGE.md) | Usage guide: layout, context menus, drag & drop, search, shortcuts |
-| [`docs/BUILDING.md`](docs/BUILDING.md) | Platform build instructions |
-| [`docs/THEME_SYSTEM.md`](docs/THEME_SYSTEM.md) | Theme system (incl. writing plugins) |
-| [`docs/history/`](docs/history/) | Historical refactor design & decision records |
+| Doc                                            | Description                                                        |
+|------------------------------------------------|--------------------------------------------------------------------|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Architecture: layers, modules, key mechanisms, naming              |
+| [`docs/USAGE.md`](docs/USAGE.md)               | Usage guide: layout, context menus, drag & drop, search, shortcuts |
+| [`docs/BUILDING.md`](docs/BUILDING.md)         | Platform build instructions                                        |
+| [`docs/THEME_SYSTEM.md`](docs/THEME_SYSTEM.md) | Theme system (incl. writing plugins)                               |
+| [`docs/history/`](docs/history/)               | Historical refactor design & decision records                      |
 
 ## Roadmap
 

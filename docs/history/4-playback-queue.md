@@ -45,23 +45,23 @@ struct QueueItem
 
 ## 4. PlaybackQueue 行为
 
-| 操作 | 语义 |
-|---|---|
-| `enqueue(item)` | 追加,返回下标 |
-| `enqueue_next(item)` | 插入到当前项之后(无当前项则头部),返回下标 |
-| `enqueue_many(items)` | 批量追加,一次信号 |
-| `remove_at(i)` | 移除;i<当前 → 当前下标前移;i==当前 → 清空当前 |
-| `move(from,to)` | 移动并修正当前下标 |
-| `set_current(i)` / `clear_current()` | 设置/清空当前项 |
-| `current()` / `item_at(i)` | 越界返回 `std::nullopt` |
+| 操作                                 | 语义                                            |
+|--------------------------------------|-------------------------------------------------|
+| `enqueue(item)`                      | 追加,返回下标                                   |
+| `enqueue_next(item)`                 | 插入到当前项之后(无当前项则头部),返回下标       |
+| `enqueue_many(items)`                | 批量追加,一次信号                               |
+| `remove_at(i)`                       | 移除;i<当前 → 当前下标前移;i==当前 → 清空当前 |
+| `move(from,to)`                      | 移动并修正当前下标                              |
+| `set_current(i)` / `clear_current()` | 设置/清空当前项                                 |
+| `current()` / `item_at(i)`           | 越界返回 `std::nullopt`                         |
 
 ### 导航(PlayMode 语义)
 
-| PlayMode | next | prev | 说明 |
-|---|---|---|---|
-| `in_order` | 当前+1;到达末尾返回 nullopt(不自动回绕) | 当前-1;到首返回 nullopt | 无当前项时 next→0、prev→末尾 |
-| `loop` | (当前+1) % size | (当前-1+size) % size | 自动回绕 |
-| `shuffle` / `out_of_order_*` | 随机下标 | 随机下标 | 允许重复,简单实现 |
+| PlayMode                     | next                                    | prev                    | 说明                           |
+|------------------------------|-----------------------------------------|-------------------------|--------------------------------|
+| `in_order`                   | 当前+1;到达末尾返回 nullopt(不自动回绕) | 当前-1;到首返回 nullopt | 无当前项时 next→0、prev→末尾 |
+| `loop`                       | (当前+1) % size                         | (当前-1+size) % size    | 自动回绕                       |
+| `shuffle` / `out_of_order_*` | 随机下标                                | 随机下标                | 允许重复,简单实现              |
 
 导航成功会更新当前下标并 `emit sgn_current_changed`。
 
@@ -99,13 +99,13 @@ signals:
 
 ## 6. 与现有代码的关系
 
-| 现有组件 | 本阶段 | 切断点 |
-|---|---|---|
-| `PlaylistContext` 曲目语义 | 不动 | 移除(当前曲目改由队列承担) |
-| `PlaylistViewModel` 队列/快照机制 | 不动 | 移除播放队列构建 |
-| `PlaylistManager::nextTrack/prevTrack` | 不动 | 移除,改队列导航 |
-| `PlaybackService` 上下曲 | 不动 | 改消费队列 |
-| `PlaybackRestoreService` | 不动 | 改队列持久化恢复 |
+| 现有组件                               | 本阶段 | 切断点                     |
+|----------------------------------------|--------|----------------------------|
+| `PlaylistContext` 曲目语义             | 不动   | 移除(当前曲目改由队列承担) |
+| `PlaylistViewModel` 队列/快照机制      | 不动   | 移除播放队列构建           |
+| `PlaylistManager::nextTrack/prevTrack` | 不动   | 移除,改队列导航            |
+| `PlaybackService` 上下曲               | 不动   | 改消费队列                 |
+| `PlaybackRestoreService`               | 不动   | 改队列持久化恢复           |
 
 ## 7. 数据流(目标态)
 

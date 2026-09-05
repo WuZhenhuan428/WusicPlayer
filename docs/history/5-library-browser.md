@@ -51,9 +51,9 @@ enum class LibraryGrouping
 
 ### 4.2 数据流
 
-| 状态 | 数据源 |
-|---|---|
-| 无关键字 | `LibraryManager::index()`(全量,内存索引) |
+| 状态     | 数据源                                              |
+|----------|-----------------------------------------------------|
+| 无关键字 | `LibraryManager::index()`(全量,内存索引)            |
 | 有关键字 | `LibraryManager::search(keyword, Plain, 500)`(FTS5) |
 
 结果统一构建为分组树:`根 → 分组节点(组名+计数) → 曲目行(title/artist/album/duration)`。

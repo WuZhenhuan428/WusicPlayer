@@ -6,12 +6,12 @@
 
 **明确不做**(属于后续阶段):
 
-| 不做的事 | 归属阶段 |
-|---|---|
-| SQLite 音乐库、扫描、文件监控 | 阶段 2 |
-| 播放列表按库解析、去重、元数据走库缓存 | 阶段 3 |
-| 搜索后端换 FTS5 | 阶段 4 |
-| AppController 拆分、信号链清理、`next_track` 返回 TrackId 等 API 改造 | 阶段 5 |
+| 不做的事                                                              | 归属阶段 |
+|-----------------------------------------------------------------------|----------|
+| SQLite 音乐库、扫描、文件监控                                         | 阶段 2   |
+| 播放列表按库解析、去重、元数据走库缓存                                | 阶段 3   |
+| 搜索后端换 FTS5                                                       | 阶段 4   |
+| AppController 拆分、信号链清理、`next_track` 返回 TrackId 等 API 改造 | 阶段 5   |
 
 ---
 
@@ -79,24 +79,24 @@ QString normalize_path(const QString& p);  // canonical + case_fold + 分隔符�
 1. `core/types.h`:新增 `TrackId` / `EntryId` / `PlaylistId`、`TrackSource`、`Track` 新字段与静态工厂;**删除旧别名 `trackId` / `playlistId`**。
 2. 全库把使用处改名(机械操作,编译器兜底):
 
-| 文件                                                   | 影响点                                             |
-|--------------------------------------------------------|----------------------------------------------------|
-| `core/types.h`                                         | 类型别名定义、`Track` 上移                         |
+| 文件                                                   | 影响点                                              |
+|--------------------------------------------------------|-----------------------------------------------------|
+| `core/types.h`                                         | 类型别名定义、`Track` 上移                          |
 | `core/search_types.h`                                  | `SearchHint::track_id` → `entry_id`,类型 `EntryId` |
 | `model/playlist/playlist.h/.cpp`                       | `Track::tid` → `entry_id`,工厂方法,`PlaylistId`    |
-| `model/playlist/playlist_context.h/.cpp`               | `setPlayTrack` / `getPlayTrackId` / 信号           |
-| `model/playlist/playlist_layout.h/.cpp`                | `Node.id` 类型                                     |
-| `model/playlist/playlist_view_model.h/.cpp`            | `setActiveTrack` / `trackAt` 等                    |
-| `model/playlist/playlist_manager.h/.cpp`               | 转发接口                                           |
-| `model/playlist/playlist_repo.h/.cpp`                  | JSON 读写                                          |
+| `model/playlist/playlist_context.h/.cpp`               | `setPlayTrack` / `getPlayTrackId` / 信号            |
+| `model/playlist/playlist_layout.h/.cpp`                | `Node.id` 类型                                      |
+| `model/playlist/playlist_view_model.h/.cpp`            | `setActiveTrack` / `trackAt` 等                     |
+| `model/playlist/playlist_manager.h/.cpp`               | 转发接口                                            |
+| `model/playlist/playlist_repo.h/.cpp`                  | JSON 读写                                           |
 | `model/search_model/*`                                 | 行→EntryId 映射                                    |
-| `controller/PlaylistController.h/.cpp`                 | `removeTrack` 等                                   |
-| `controller/search_backend/in_memory_search_backend.*` | `IndexedTrack`                                     |
-| `service/tag_writeback_service.*`                      | `requestTrackProperty`                             |
-| `service/library_interaction_service.h`                | 信号签名                                           |
-| `service/playback_restore_service.*`                   | `findQueueIndexByTrackId`                          |
-| `view/LibraryWidget/LibraryWidget.h`                   | 信号签名                                           |
-| 其余引用 `playlistId` 的文件                           | 类型 `PlaylistId`                                  |
+| `controller/PlaylistController.h/.cpp`                 | `removeTrack` 等                                    |
+| `controller/search_backend/in_memory_search_backend.*` | `IndexedTrack`                                      |
+| `service/tag_writeback_service.*`                      | `requestTrackProperty`                              |
+| `service/library_interaction_service.h`                | 信号签名                                            |
+| `service/playback_restore_service.*`                   | `findQueueIndexByTrackId`                           |
+| `view/LibraryWidget/LibraryWidget.h`                   | 信号签名                                            |
+| 其余引用 `playlistId` 的文件                           | 类型 `PlaylistId`                                   |
 
 3. **验证**:编译 + 启动 + 手动走一遍"添加文件→播放→搜索→切列表"。
 

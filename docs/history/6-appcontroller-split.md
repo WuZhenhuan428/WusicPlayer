@@ -111,11 +111,11 @@ private:
 
 ## 5. 信号链清理
 
-| 清理点 | 处理 |
-|---|---|
+| 清理点                                                      | 处理                                                                                                                                  |
+|-------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | `LibraryInteractionService::sgnTrackPropertyRequested` 转发 | **死转发**(无消费方);`TagWritebackService` 已由 AppController 直连 `SongTableView::sgnTrackPropertyRequested`。移除转发信号 + connect |
-| `AppController::tag_edit_widget_` | 死成员(实际由 `TagWritebackService::m_tag_edit_widget` 管理),删除 |
-| 面板打开信号 | `MainWindow`/`LibraryBrowserWidget`/`SidePanel` → `PanelCoordinator`(一层),不再经 AppController 中转 |
+| `AppController::tag_edit_widget_`                           | 死成员(实际由 `TagWritebackService::m_tag_edit_widget` 管理),删除                                                                     |
+| 面板打开信号                                                | `MainWindow`/`LibraryBrowserWidget`/`SidePanel` → `PanelCoordinator`(一层),不再经 AppController 中转                                 |
 
 ## 6. 验证
 
