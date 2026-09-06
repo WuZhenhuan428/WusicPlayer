@@ -91,7 +91,7 @@ void MainWindow::init_menu_connections()
     connect(m_act_new_playlist, &QAction::triggered, this, &MainWindow::sgnCreatePlaylistRequested);
     connect(m_act_load_playlist, &QAction::triggered, this, &MainWindow::sgnLoadPlaylist);
 
-    connect(m_act_exit, &QAction::triggered, this, &QWidget::close);
+    connect(m_act_exit, &QAction::triggered, this, &MainWindow::quit_application);
     connect(m_act_about, &QAction::triggered, this, &MainWindow::sgnShowAboutMessagebox);
     connect(m_act_set_sort_rule, &QAction::triggered, this, &MainWindow::sgnSetSortRuleRequested);
     connect(m_act_insert_column, &QAction::triggered, this, &MainWindow::sgnInsertColumnRequested);
