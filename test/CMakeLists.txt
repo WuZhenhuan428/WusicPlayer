@@ -169,3 +169,17 @@ target_link_libraries(tb_dsl_integration
 )
 
 add_test(NAME tb_dsl_integration COMMAND tb_dsl_integration)
+
+# ======== tb_missing_persist ========
+add_executable(tb_missing_persist
+    playlist/tb_missing_persist.cpp
+)
+
+target_link_libraries(tb_missing_persist
+    PRIVATE
+        wusic_model
+        wusic_core
+        wusic_headers
+)
+
+add_test(NAME tb_missing_persist COMMAND tb_missing_persist)

@@ -58,8 +58,12 @@ void eq_instance_name(int index, char* buf, size_t size)
 Decoder::Decoder(const std::string& filepath)
 {
     m_filepath = filepath;
+    // init_decoder() 失败(文件缺失等)时不得继续 init_filters():
+    // filter 图依赖已打开的 codec 上下文, 空指针上构建会直接崩溃。
     m_has_init = this->init_decoder();
-    m_has_init = (this->init_filters() == 0);
+    if (m_has_init) {
+        m_has_init = (this->init_filters() == 0);
+    }
     if (!m_has_init) {
         logger->error("Error: failed to init decoder/filters");
     }
@@ -228,6 +232,12 @@ void Decoder::decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffe
 void Decoder::thread_decode(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer,
                             std::atomic_bool* decode_finished)
 {
+    // 初始化失败(文件缺失等): 不触碰任何 FFmpeg 上下文, 直接标记结束
+    if (!m_has_init) {
+        decode_finished->store(true, std::memory_order_release);
+        return;
+    }
+
     // 如果没有被 abort，才继续向后解封装读取数据包
     while (!m_abort_request.load(std::memory_order_acquire)) {
 

@@ -32,6 +32,11 @@ public:
     void join();
     void stop();
     void seek(int64_t position_ms);
+    /// 文件/解码器是否初始化成功(文件缺失/无音频流/解码器不可用 → false)
+    bool is_valid() const
+    {
+        return m_has_init;
+    }
     const std::unordered_map<std::string, std::string> metadata();
     /// 插件路径: 任意 band, 无增益上下限
     void set_eq_config(std::shared_ptr<const EqConfig> cfg);

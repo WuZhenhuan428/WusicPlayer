@@ -130,7 +130,12 @@ int Playlist::remove_missing_tracks()
 {
     int removed = 0;
     for (auto it = m_tracks.begin(); it != m_tracks.end();) {
-        if (it->missing) {
+        // 判定"缺失": 显式 missing 标记, 或文件当前实际不存在。
+        // 不能只依赖 missing 标志——它可能过时(被库刷新覆盖)或对
+        // 外部条目从未设置(文件被删后仍残留, 双击即崩溃)。
+        const bool gone =
+            !it->filepath.isEmpty() && (it->missing || !QFileInfo(it->filepath).exists());
+        if (gone) {
             it = m_tracks.erase(it);
             ++removed;
         } else {

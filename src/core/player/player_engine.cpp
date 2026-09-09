@@ -98,6 +98,15 @@ void PlayerEngine::set_url(const std::string& url)
     m_decode_finished.store(false, std::memory_order_release);
 
     m_decoder = std::make_unique<Decoder>(url);
+    if (!m_decoder->is_valid()) {
+        // 打开失败(文件缺失/无音频流/解码器不可用): 进入 STOP, 不启动解码线程,
+        // 避免后续 av_read_frame 等在空上下文上崩溃。
+        logger->error("set_url: cannot open '{}', decoder init failed", url);
+        m_decoder.reset();
+        m_decode_finished.store(true, std::memory_order_release);
+        m_state.store(PlayingState::STOP, std::memory_order_release);
+        return;
+    }
     if (m_pending_eq) {
         m_decoder->set_eq_config(m_pending_eq); // apply cached EQ config
     }
