@@ -2,14 +2,18 @@
 
 #include <QColor>
 #include <QFileInfo>
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMimeData>
 #include <QPointer>
 #include <QRegularExpression>
+#include <QSet>
 #include <QThread>
 #include <QTime>
+
+#include <functional>
 #include <random>
 
 #include "core/logger/logger_manager.h"
@@ -193,6 +197,148 @@ void PlaylistViewModel::rebuild_async()
 
     QObject::connect(worker, &QThread::finished, worker, &QObject::deleteLater);
     worker->start();
+}
+
+void PlaylistViewModel::apply_missing_changes(const QVector<EntryId>& ids)
+{
+    if (!m_repo || !m_root || ids.isEmpty()) {
+        return;
+    }
+    auto playlist = m_repo->find_playlist_by_id(m_pid);
+    if (!playlist) {
+        return;
+    }
+
+    // 预取目标缺失状态(键用稳定字符串, 避免逐条遍历树)
+    QHash<QString, bool> target;
+    target.reserve(ids.size());
+    for (const EntryId& id : ids) {
+        const Track* t = playlist->find_track_by_id(id);
+        if (t) {
+            target.insert(id.to_string_without_brace(), t->missing);
+        }
+    }
+    if (target.isEmpty()) {
+        return;
+    }
+
+    // 递归遍历(支持多级分组), 只发出 dataChanged
+    std::function<void(Node*, const QModelIndex&)> walk = [&](Node* node,
+                                                              const QModelIndex& parent) {
+        for (int row = 0; row < node->children.size(); ++row) {
+            Node* child          = node->children.at(row);
+            const QModelIndex ix = index(row, 0, parent);
+            if (!ix.isValid()) {
+                continue;
+            }
+            if (child->id.is_null()) {
+                walk(child, ix); // 组节点
+                continue;
+            }
+            const auto it = target.constFind(child->id.to_string_without_brace());
+            if (it == target.constEnd() || child->missing == it.value()) {
+                continue;
+            }
+            child->missing = it.value();
+            emit dataChanged(ix, ix.siblingAtColumn(columnCount() - 1), {Qt::ForegroundRole});
+        }
+    };
+    walk(m_root, QModelIndex());
+}
+
+void PlaylistViewModel::remove_tracks_by_ids(const QVector<EntryId>& ids)
+{
+    if (!m_root || ids.isEmpty()) {
+        return;
+    }
+
+    QSet<QString> want;
+    want.reserve(ids.size());
+    for (const EntryId& id : ids) {
+        want.insert(id.to_string_without_brace());
+    }
+
+    // 1) 收集命中条目(支持多级分组)
+    struct Hit
+    {
+        Node* parent = nullptr;
+        int row      = 0;
+        Node* node   = nullptr;
+    };
+    QVector<Hit> hits;
+    std::function<void(Node*)> collect = [&](Node* parent) {
+        for (int row = 0; row < parent->children.size(); ++row) {
+            Node* child = parent->children.at(row);
+            if (child->id.is_null()) {
+                collect(child); // 组节点
+                continue;
+            }
+            if (want.contains(child->id.to_string_without_brace())) {
+                hits.append({parent, row, child});
+            }
+        }
+    };
+    collect(m_root);
+    if (hits.isEmpty()) {
+        return;
+    }
+
+    // 同一父节点内从大行号开始删除, 行号不因删除位移
+    std::sort(hits.begin(), hits.end(), [](const Hit& a, const Hit& b) {
+        if (a.parent != b.parent) {
+            return a.parent > b.parent;
+        }
+        return a.row > b.row;
+    });
+
+    // 2) 逐行删除并同步各播放队列
+    QVector<Node*> touched_groups; // 受影响的分组(用于刷新计数/删除空组)
+    for (const Hit& hit : hits) {
+        const QModelIndex parent_idx = index_of_node(hit.parent);
+        beginRemoveRows(parent_idx, hit.row, hit.row);
+
+        m_playback_queue.removeAll(hit.node->id);
+        m_single_shuffle_queue.removeAll(hit.node->id);
+        m_group_shuffle_queue.removeAll(hit.node->id);
+
+        hit.parent->children.removeAt(hit.row);
+        delete hit.node;
+        endRemoveRows();
+
+        if (hit.parent != m_root && !touched_groups.contains(hit.parent)) {
+            touched_groups.append(hit.parent);
+        }
+    }
+
+    // 3) 空组删除(仅一级分组; 多级分组保留空子组)
+    QVector<Hit> empty_groups;
+    for (Node* group : touched_groups) {
+        if (group->parent == m_root && group->children.isEmpty()) {
+            empty_groups.append({group->parent, group->row(), group});
+        }
+    }
+    std::sort(empty_groups.begin(), empty_groups.end(),
+              [](const Hit& a, const Hit& b) { return a.row > b.row; });
+    for (const Hit& hit : empty_groups) {
+        beginRemoveRows(QModelIndex(), hit.row, hit.row);
+        hit.parent->children.removeAt(hit.row);
+        delete hit.node;
+        endRemoveRows();
+    }
+
+    // 4) 非空组刷新标题(含计数)
+    for (Node* group : touched_groups) {
+        if (!group->parent || group->children.isEmpty()) {
+            continue;
+        }
+        const QModelIndex group_idx = index_of_node(group);
+        if (group_idx.isValid()) {
+            emit dataChanged(group_idx, group_idx);
+        }
+    }
+
+    logger->info("removed {} tracks from view (no reset)", static_cast<int>(hits.size()));
+    emit changedPlaybackQueue();
 }
 
 void PlaylistViewModel::set_playlist(const PlaylistId& pid)
@@ -477,6 +623,30 @@ QModelIndex PlaylistViewModel::get_current_track_index()
         return m_active_track_index;
     }
     return find_track_index(m_active_track_id);
+}
+
+QModelIndex PlaylistViewModel::index_of_node(const Node* node) const
+{
+    if (!node || !node->parent || !m_root) {
+        return QModelIndex();
+    }
+    // 自顶向下沿链构造, 保证不是 O(depth) 的 parent() 反复上升
+    QVector<const Node*> chain;
+    for (const Node* n = node; n && n->parent; n = n->parent) {
+        chain.prepend(n);
+    }
+    QModelIndex idx;
+    for (const Node* n : chain) {
+        const int row = n->parent->children.indexOf(const_cast<Node*>(n));
+        if (row < 0) {
+            return QModelIndex();
+        }
+        idx = index(row, 0, idx);
+        if (!idx.isValid()) {
+            return QModelIndex();
+        }
+    }
+    return idx;
 }
 
 QModelIndex PlaylistViewModel::find_track_index(const EntryId& tid) const

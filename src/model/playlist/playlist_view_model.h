@@ -27,6 +27,15 @@ public:
     void rebuild();
     void rebuild_async();
 
+    /// 内容级刷新: 仅同步这些条目的 missing 状态并以 dataChanged 通知,
+    /// 不 reset 模型 → 滚动位置/展开状态保持不变(用于库刷新的缺失变化)。
+    void apply_missing_changes(const QVector<EntryId>& ids);
+
+    /// 行级移除: 精确删除这些条目并以 beginRemoveRows/endRemoveRows 通知,
+    /// 组标题计数同步刷新, 空组自动删除。
+    /// 不 reset 模型 → 用于"清理缺失"等操作时列表不跳顶。
+    void remove_tracks_by_ids(const QVector<EntryId>& ids);
+
     /* ==== Context & Repo 绑定 ==== */
     void set_playlist(const PlaylistId& pid);
     void set_sort_expression(const QString& expression);
@@ -101,6 +110,8 @@ private:
     void init_default_columns();
 
     QModelIndex find_track_index(const EntryId& tid) const;
+    // 由 Node 反向构造 QModelIndex(与 index() 保持一致)
+    QModelIndex index_of_node(const Node* node) const;
     QPersistentModelIndex m_active_track_index;
 
     void schedule_batch_rebuild();

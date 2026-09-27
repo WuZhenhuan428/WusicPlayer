@@ -183,3 +183,17 @@ target_link_libraries(tb_missing_persist
 )
 
 add_test(NAME tb_missing_persist COMMAND tb_missing_persist)
+
+# ======== tb_view_remove ========
+add_executable(tb_view_remove
+    playlist/tb_view_remove.cpp
+)
+
+target_link_libraries(tb_view_remove
+    PRIVATE
+        wusic_model
+        wusic_core
+        wusic_headers
+)
+
+add_test(NAME tb_view_remove COMMAND tb_view_remove)

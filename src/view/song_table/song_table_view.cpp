@@ -17,6 +17,8 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
+#include <functional>
+
 #include "core/logger/logger_manager.h"
 namespace
 {
@@ -143,13 +145,27 @@ void SongTableView::update_song_view()
     if (!model) {
         return;
     }
-    for (int i = 0; i < model->rowCount(); ++i) {
-        QModelIndex idx = model->index(i, 0);
-        if (model->hasChildren(idx)) {
-            m_tree_view->setFirstColumnSpanned(i, QModelIndex(), true);
+
+    // 批量设置: 分组多时逐次 setExpanded 会触发大量布局/重绘(卡顿来源)
+    const bool updates_enabled = m_tree_view->updatesEnabled();
+    m_tree_view->setUpdatesEnabled(false);
+
+    // 递归展开所有分组层级(含多级分组), 组行跨列合并
+    std::function<void(const QModelIndex&)> expand_all = [&](const QModelIndex& parent) {
+        const int rows = model->rowCount(parent);
+        for (int row = 0; row < rows; ++row) {
+            const QModelIndex idx = model->index(row, 0, parent);
+            if (!model->hasChildren(idx)) {
+                continue;
+            }
+            m_tree_view->setFirstColumnSpanned(row, parent, true);
             m_tree_view->setExpanded(idx, true);
+            expand_all(idx);
         }
-    }
+    };
+    expand_all(QModelIndex());
+
+    m_tree_view->setUpdatesEnabled(updates_enabled);
 }
 
 QTreeView* SongTableView::tree_view() const

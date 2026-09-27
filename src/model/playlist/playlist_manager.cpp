@@ -225,8 +225,9 @@ void PlaylistManager::remove_track(const EntryId& tid)
         m_context->set_play_track(EntryId());
     }
 
+    // 行级移除: 不重建视图 → 滚动位置与展开状态保持
     if (m_view) {
-        m_view->rebuild_async();
+        m_view->remove_tracks_by_ids({tid});
     }
 
     emit sgn_playlist_changed();
@@ -238,13 +239,22 @@ void PlaylistManager::remove_missing_tracks()
     if (!playlist) {
         return;
     }
-    if (playlist->remove_missing_tracks() == 0) {
+    QVector<EntryId> removed_ids;
+    if (playlist->remove_missing_tracks(&removed_ids) == 0) {
         return;
     }
     m_repo->save_list_to_cache(playlist);
-    if (m_view) {
-        m_view->rebuild_async();
+
+    // 行级移除: 不重建视图 → 滚动位置与展开状态保持
+    if (m_view && !removed_ids.isEmpty()) {
+        m_view->remove_tracks_by_ids(removed_ids);
     }
+
+    // 当前播放被清理 → 清空播放上下文
+    if (removed_ids.contains(m_context->get_play_track_id())) {
+        m_context->set_play_track(EntryId());
+    }
+
     emit sgn_playlist_changed();
 }
 
@@ -288,22 +298,47 @@ void PlaylistManager::on_library_changed()
     if (!m_library) {
         return;
     }
-    bool changed = false;
+    const PlaylistId current = m_context ? m_context->get_playlist_id() : PlaylistId();
+
+    bool changed             = false;
+    bool need_full_rebuild   = false; // 当前列表: 元数据/来源变化 → 结构可能变, 需重建
+    QVector<EntryId> missing_changed_for_current;
+
     for (const auto& pl : m_repo->get_lists()) {
+        QVector<EntryId> meta_changed;
+        QVector<EntryId> missing_changed;
         const int refreshed = pl->refresh_library_tracks(
-            [this](const TrackId& id) { return m_library->track_by_id(id); });
+            [this](const TrackId& id) { return m_library->track_by_id(id); }, &meta_changed,
+            &missing_changed);
         const int upgraded = pl->upgrade_external_tracks(
             [this](const QString& path) { return m_library->track_by_path(path); });
+
+        if (pl->id() == current) {
+            // 元数据变化可能影响排序/分组键与列内容 → 保守走重建;
+            // 仅缺失状态翻转(未恢复/新标记) → 内容级通知, 保持滚动与展开。
+            if (!meta_changed.isEmpty() || upgraded > 0) {
+                need_full_rebuild = true;
+            } else {
+                missing_changed_for_current += missing_changed;
+            }
+        }
+
         if (refreshed > 0 || upgraded > 0) {
             changed = true;
         }
     }
-    if (changed) {
-        if (m_view) {
-            m_view->rebuild_async();
-        }
-        emit sgn_playlist_changed();
+
+    if (!changed) {
+        return;
     }
+    if (m_view) {
+        if (need_full_rebuild) {
+            m_view->rebuild_async();
+        } else if (!missing_changed_for_current.isEmpty()) {
+            m_view->apply_missing_changes(missing_changed_for_current);
+        }
+    }
+    emit sgn_playlist_changed();
 }
 
 // a wrap of this->add_track
