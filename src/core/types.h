@@ -125,24 +125,28 @@ struct TrackMetaData
     QString album;
     QString album_artist;
     QString artist;
-    int bitrate;
+    int bitrate = 0;
     QString comment;
     QString composer;
     QString date;
     int disc_number = 0; // e.g. `2/3` means `disc_number / disc_total`
     int disc_total  = 0;
-    int duration_s;
+    int duration_s  = 0;
     QString encoder;
     QString filepath;
     QString filename;
     QString genre;
     QString lyrics;
-    int start_at;
+    int start_at = 0;
     QString title;
-    int track_number;
-    int year     = 0;
+    int track_number                            = 0;
+    int year                                    = 0;
 
-    bool isValid = false;
+    bool isValid                                = false;
+
+    // 用于判断元数据是否真正发生变化(库刷新/播放列表刷新去重);
+    // 注意: 依赖上方所有标量字段的默认初始化, 否则比较结果不确定
+    bool operator==(const TrackMetaData&) const = default;
 };
 
 enum class TrackSource

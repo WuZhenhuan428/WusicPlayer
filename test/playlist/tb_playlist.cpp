@@ -337,19 +337,19 @@ static void test_library_ref_and_missing()
     CHECK(pl.find_track_by_id(ext.entry_id)->missing);
 
     // refresh_library_tracks:仅刷新库引用条目;解析器返回 nullptr 表示库中已无
-    int updated =
-        pl.refresh_library_tracks([&](const TrackId& id) -> std::shared_ptr<const LibraryTrack> {
-            if (id == lib_track.library_track_id) {
-                LibraryTrack lt;
-                lt.track_id     = id;
-                lt.filepath     = "/lib/1.mp3";
-                lt.missing      = true; // 库中标记缺失
-                lt.meta.title   = "New";
-                lt.meta.isValid = true;
-                return std::make_shared<const LibraryTrack>(std::move(lt));
-            }
-            return nullptr;
-        });
+    auto resolver = [&](const TrackId& id) -> std::shared_ptr<const LibraryTrack> {
+        if (id == lib_track.library_track_id) {
+            LibraryTrack lt;
+            lt.track_id     = id;
+            lt.filepath     = "/lib/1.mp3";
+            lt.missing      = true; // 库中标记缺失
+            lt.meta.title   = "New";
+            lt.meta.isValid = true;
+            return std::make_shared<const LibraryTrack>(std::move(lt));
+        }
+        return nullptr;
+    };
+    int updated = pl.refresh_library_tracks(resolver);
     CHECK(updated == 1); // 外部条目不参与刷新
     CHECK(pl.track_count() == 2);
     const Track* t = pl.find_track_by_id(lib_track.entry_id);
@@ -359,6 +359,27 @@ static void test_library_ref_and_missing()
         CHECK(t->missing); // 库的缺失标记已同步
     }
     CHECK(pl.track_count() == 2);
+
+    // 幂等: 相同库快照再次刷新 → 无真实变化, 必须返回 0
+    // (否则库每次扫描都会触发播放列表全量重建 → 视图跳动)
+    CHECK(pl.refresh_library_tracks(resolver) == 0);
+
+    // 仅缺失状态翻转时也算变化
+    auto resolver_restored = [&](const TrackId& id) -> std::shared_ptr<const LibraryTrack> {
+        if (id == lib_track.library_track_id) {
+            LibraryTrack lt;
+            lt.track_id     = id;
+            lt.filepath     = "/lib/1.mp3";
+            lt.missing      = false; // 文件恢复
+            lt.meta.title   = "New";
+            lt.meta.isValid = true;
+            return std::make_shared<const LibraryTrack>(std::move(lt));
+        }
+        return nullptr;
+    };
+    CHECK(pl.refresh_library_tracks(resolver_restored) == 1);
+    CHECK(!pl.find_track_by_id(lib_track.entry_id)->missing);
+    CHECK(pl.refresh_library_tracks(resolver_restored) == 0); // 再次幂等
 
     // 移除缺失条目(库引用条目 + 外部条目都被移除)
     int removed = pl.remove_missing_tracks();

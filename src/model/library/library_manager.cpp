@@ -152,14 +152,29 @@ void LibraryManager::apply_batch(const QVector<TrackUpdate>& batch)
     for (const auto& update : batch) {
         switch (update.change) {
         case TrackChange::added:
-        case TrackChange::modified:
+        case TrackChange::modified: {
+            // 仅有内容变化才算"变化": 扫描器在文件 mtime/size 变化时就会上报,
+            // 但元数据可能解析结果完全相同(如仅 touch 文件), 此时不应惊动订阅者。
+            const auto cur          = m_library->track_by_path(update.track.filepath);
+            const bool meta_changed = (!cur || !(cur->meta == update.track.meta));
+            const bool was_missing  = (cur && cur->missing);
             m_library->upsert(update.track);
             m_repo->upsert_track(update.track);
+            if (meta_changed || was_missing) {
+                ++m_scan_change_count;
+            }
             break;
-        case TrackChange::missing:
-            m_library->mark_missing(update.path, true);
-            m_repo->mark_missing(update.path, true);
+        }
+        case TrackChange::missing: {
+            // 缺失文件会在每次扫描中重复上报 → 仅当缺失状态真正翻转时计数
+            const auto cur = m_library->track_by_path(update.path);
+            if (cur && !cur->missing) {
+                m_library->mark_missing(update.path, true);
+                m_repo->mark_missing(update.path, true);
+                ++m_scan_change_count;
+            }
             break;
+        }
         }
     }
 }
@@ -167,7 +182,11 @@ void LibraryManager::apply_batch(const QVector<TrackUpdate>& batch)
 void LibraryManager::on_scan_finished()
 {
     emit sgn_scan_finished();
-    emit sgn_library_changed();
+    // 无真实变化时不广播: 避免订阅者(播放列表/浏览视图)做无意义的全量重建
+    if (m_scan_change_count > 0) {
+        m_scan_change_count = 0;
+        emit sgn_library_changed();
+    }
 }
 
 LibrarySnapshot LibraryManager::make_snapshot() const

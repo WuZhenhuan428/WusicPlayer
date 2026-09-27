@@ -32,13 +32,18 @@ public:
     void add_track_object(const Track& track); // 直接加入已构造好的 Track(反序列化用)
     bool update_track_meta(const EntryId& eid, const TrackMetaData& meta);
     bool set_track_missing(const EntryId& eid, bool missing);
-    // 用库解析器刷新所有库引用条目(source==library)的元数据/缺失标记;返回更新的条目数
+    // 用库解析器刷新所有库引用条目(source==library)的元数据/缺失标记;
+    // 返回"真正发生变化"的条目数;可选输出发生变化条目的 EntryId 明细,
+    // 供订阅者区分"仅缺失状态变化"(可轻量通知)与"元数据变化"(需重建)。
     int refresh_library_tracks(
-        const std::function<std::shared_ptr<const LibraryTrack>(const TrackId&)>& resolver);
+        const std::function<std::shared_ptr<const LibraryTrack>(const TrackId&)>& resolver,
+        QVector<EntryId>* meta_changed_out    = nullptr,
+        QVector<EntryId>* missing_changed_out = nullptr);
     // 将路径已在库中的外部条目升级为库引用条目(库变更后调用);返回升级数
     int upgrade_external_tracks(
         const std::function<std::shared_ptr<const LibraryTrack>(const QString& path)>& resolver);
-    int remove_missing_tracks();
+    // 删除缺失条目(显式 missing 或文件不存在);可选输出被删条目的 EntryId 明细
+    int remove_missing_tracks(QVector<EntryId>* removed_out = nullptr);
     void remove_track(const EntryId& eid);
 
     // 非拥有:返回指针生命周期由所属 Playlist 管理,Playlist 未被修改/析构前有效;调用方不得 delete

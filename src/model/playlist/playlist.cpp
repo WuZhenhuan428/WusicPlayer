@@ -86,8 +86,11 @@ bool Playlist::set_track_missing(const EntryId& eid, bool missing)
 }
 
 int Playlist::refresh_library_tracks(
-    const std::function<std::shared_ptr<const LibraryTrack>(const TrackId&)>& resolver)
+    const std::function<std::shared_ptr<const LibraryTrack>(const TrackId&)>& resolver,
+    QVector<EntryId>* meta_changed_out, QVector<EntryId>* missing_changed_out)
 {
+    // 返回"真正发生变化"的条目数(而非遍历数): 库每次扫描都会回调本方法,
+    // 若把遍历数当变化数, 会导致订阅者无条件重建视图。
     int updated = 0;
     for (auto& t : m_tracks) {
         if (t.source != TrackSource::library) {
@@ -95,12 +98,31 @@ int Playlist::refresh_library_tracks(
         }
         const auto lib = resolver(t.library_track_id);
         if (lib) {
-            t.meta    = lib->meta;
-            t.missing = lib->missing;
-        } else {
+            bool changed = false;
+            if (!(t.meta == lib->meta)) {
+                t.meta  = lib->meta;
+                changed = true;
+                if (meta_changed_out) {
+                    meta_changed_out->append(t.entry_id);
+                }
+            }
+            if (t.missing != lib->missing) {
+                t.missing = lib->missing;
+                changed   = true;
+                if (missing_changed_out) {
+                    missing_changed_out->append(t.entry_id);
+                }
+            }
+            if (changed) {
+                ++updated;
+            }
+        } else if (!t.missing) {
             t.missing = true; // 库中已无该曲目 → 标记缺失
+            ++updated;
+            if (missing_changed_out) {
+                missing_changed_out->append(t.entry_id);
+            }
         }
-        ++updated;
     }
     return updated;
 }
@@ -126,7 +148,7 @@ int Playlist::upgrade_external_tracks(
     return upgraded;
 }
 
-int Playlist::remove_missing_tracks()
+int Playlist::remove_missing_tracks(QVector<EntryId>* removed_out)
 {
     int removed = 0;
     for (auto it = m_tracks.begin(); it != m_tracks.end();) {
@@ -136,6 +158,9 @@ int Playlist::remove_missing_tracks()
         const bool gone =
             !it->filepath.isEmpty() && (it->missing || !QFileInfo(it->filepath).exists());
         if (gone) {
+            if (removed_out) {
+                removed_out->append(it->entry_id);
+            }
             it = m_tracks.erase(it);
             ++removed;
         } else {

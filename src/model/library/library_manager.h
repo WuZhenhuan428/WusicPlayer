@@ -57,6 +57,9 @@ private:
     void on_scan_finished();
     LibrarySnapshot make_snapshot() const;
 
+    /// 本次扫描中"真实变化"的条目数(新增/元数据变/缺失状态变)
+    int m_scan_change_count = 0;
+
     std::unique_ptr<Library> m_library;
     std::unique_ptr<LibraryRepo> m_repo;
     LibraryScanner* m_scanner = nullptr; // 移入 worker 线程;线程结束时 deleteLater
