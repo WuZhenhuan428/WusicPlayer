@@ -1,5 +1,6 @@
 # 使用g++20+时可能导致clangd module解析失败
 CompileFlags:
+  CompilationDatabase: "build/debug"
   Add: [
     '-std=c++23'
   ]
