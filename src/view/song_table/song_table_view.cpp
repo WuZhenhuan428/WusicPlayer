@@ -121,8 +121,18 @@ void SongTableView::init_connections()
 {
     connect(m_tree_view, &QTreeView::customContextMenuRequested, this,
             &SongTableView::call_song_context_menu);
-    connect(m_tree_view, &QTreeView::doubleClicked, this,
-            [this](const QModelIndex& index) { emit sgnPlayTrackByModelIndex(index); });
+    connect(m_tree_view, &QTreeView::doubleClicked, this, [this](const QModelIndex& index) {
+        if (!index.isValid()) {
+            return;
+        }
+        auto* model = m_tree_view->model();
+        // 组节点(有子节点)双击 → 展开/折叠, 与 LibraryBrowser 行为一致
+        if (model && model->hasChildren(index)) {
+            m_tree_view->setExpanded(index, !m_tree_view->isExpanded(index));
+            return;
+        }
+        emit sgnPlayTrackByModelIndex(index);
+    });
     connect(m_tree_view, &SongTableDropView::sgnLibraryTracksDropped, this,
             &SongTableView::sgnLibraryTracksDropped);
     connect(m_tree_header, &QHeaderView::customContextMenuRequested, this,

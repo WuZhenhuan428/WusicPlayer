@@ -578,7 +578,11 @@ Qt::ItemFlags PlaylistViewModel::flags(const QModelIndex& index) const
 {
     Qt::ItemFlags f = QAbstractItemModel::flags(index);
     if (index.isValid()) {
-        f |= Qt::ItemIsDragEnabled;
+        // 组节点(id 为空)不参与拖拽: mimeData 只序列化曲目条目
+        auto* node = static_cast<Node*>(index.internalPointer());
+        if (node && !node->id.is_null()) {
+            f |= Qt::ItemIsDragEnabled;
+        }
     }
     return f;
 }
