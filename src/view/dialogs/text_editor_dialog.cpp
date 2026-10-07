@@ -8,6 +8,7 @@ TextEditorDialog::TextEditorDialog(const QString& string, QWidget* parent) : QWi
     this->init_ui();
     this->init_connections();
     this->set_content(string);
+    this->resize(600, 800);
 }
 
 TextEditorDialog::~TextEditorDialog() {}
@@ -126,4 +127,13 @@ bool TextEditorDialog::set_content(const QString& str)
     }
 
     return false;
+}
+
+void TextEditorDialog::keyPressEvent(QKeyEvent* event)
+{
+    switch (event->key()) {
+    case Qt::Key_Escape:
+        this->close();
+        break;
+    }
 }

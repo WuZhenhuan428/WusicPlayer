@@ -27,9 +27,6 @@ private:
     QString url_;
 };
 
-class LicenseDialog : public QWidget
-{};
-
 class AboutInfoDialog : public QWidget
 {
     Q_OBJECT

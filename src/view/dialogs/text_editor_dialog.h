@@ -2,6 +2,7 @@
 
 #include <QFontComboBox>
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QObject>
 #include <QPushButton>
@@ -43,6 +44,9 @@ public:
     void init_connections();
 
     bool set_content(const QString& str);
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
 
 signals:
     void sgnText(const QString& text);

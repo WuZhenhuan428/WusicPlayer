@@ -3,6 +3,7 @@
 #include "core/types.h"
 
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMap>
@@ -24,6 +25,9 @@ public:
      */
     explicit TagEditWidget(TrackMetaData meta, EntryId tid, QWidget* parent = nullptr);
     ~TagEditWidget();
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
 
 private: // methods
     void init_ui();

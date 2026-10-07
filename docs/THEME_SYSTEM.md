@@ -49,7 +49,7 @@ ThemeManager::instance().applySystemTheme("Windows");  // Windows 原生
 编译进程序的 `WusicProxyStyle`, 数据来自 `ThemePalette`. 当前内置: 
 
 | 名称        | 文件                          |
-|-------------|-------------------------------|
+| ----------- | ----------------------------- |
 | Wusic Dark  | `builtin/WusicDarkPalette.h`  |
 | Wusic Light | `builtin/WusicLightPalette.h` |
 
@@ -110,7 +110,7 @@ ThemeManager::instance().applyExternalTheme("My Theme");
 ## WusicProxyStyle 覆写清单
 
 | 虚函数                                | 作用                                       |
-|---------------------------------------|--------------------------------------------|
+| ------------------------------------- | ------------------------------------------ |
 | `standardPalette()`                   | 返回自定义 QPalette                        |
 | `pixelMetric()`                       | 滚动条宽度 / 滑块尺寸等                    |
 | `drawControl(CE_PushButton)`          | 圆角按钮                                   |

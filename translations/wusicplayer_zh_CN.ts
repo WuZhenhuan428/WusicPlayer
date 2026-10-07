@@ -437,49 +437,54 @@
 <context>
     <name>LogViewerDialog</name>
     <message>
-        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="17"/>
+        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="19"/>
         <source>Log Viewer</source>
         <translation>日志查看器</translation>
     </message>
     <message>
-        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="26"/>
+        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="28"/>
         <source>All</source>
         <translation>全部</translation>
     </message>
     <message>
-        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="27"/>
+        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="29"/>
         <source>Debug+</source>
         <translation>调试+</translation>
     </message>
     <message>
-        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="28"/>
+        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="30"/>
         <source>Info+</source>
         <translation>信息+</translation>
     </message>
     <message>
-        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="29"/>
+        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="31"/>
         <source>Warn+</source>
         <translation>警告+</translation>
     </message>
     <message>
-        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="30"/>
+        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="32"/>
         <source>Error+</source>
         <translation>错误+</translation>
     </message>
     <message>
-        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="32"/>
+        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="34"/>
         <source>Clear</source>
         <translation>清除</translation>
     </message>
     <message>
-        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="33"/>
+        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="35"/>
         <source>Follow</source>
         <translation>跟随</translation>
     </message>
     <message>
-        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="38"/>
+        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="44"/>
         <source>Level:</source>
         <translation>级别：</translation>
+    </message>
+    <message>
+        <location filename="../src/view/dialogs/log_viewer_dialog.cpp" line="49"/>
+        <source>Font: </source>
+        <translation>字体：</translation>
     </message>
 </context>
 <context>
@@ -1119,47 +1124,47 @@ Add to library (library reference), or keep as external file?</source>
 <context>
     <name>SongTableView</name>
     <message>
-        <location filename="../src/view/song_table/song_table_view.cpp" line="208"/>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="234"/>
         <source>&amp;Play</source>
         <translation>播放 (&amp;P)</translation>
     </message>
     <message>
-        <location filename="../src/view/song_table/song_table_view.cpp" line="209"/>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="235"/>
         <source>&amp;Remove</source>
         <translation>移除 (&amp;R)</translation>
     </message>
     <message>
-        <location filename="../src/view/song_table/song_table_view.cpp" line="210"/>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="236"/>
         <source>Remove &amp;Missing Tracks</source>
         <translation>移除已丢失的音轨 (&amp;M)</translation>
     </message>
     <message>
-        <location filename="../src/view/song_table/song_table_view.cpp" line="214"/>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="240"/>
         <source>&amp;Open in file explorer</source>
         <translation>在文件管理器中打开 (&amp;O)</translation>
     </message>
     <message>
-        <location filename="../src/view/song_table/song_table_view.cpp" line="215"/>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="241"/>
         <source>Property</source>
         <translation>属性</translation>
     </message>
     <message>
-        <location filename="../src/view/song_table/song_table_view.cpp" line="248"/>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="274"/>
         <source>Add to Playlist...</source>
         <translation>添加到播放列表...</translation>
     </message>
     <message>
-        <location filename="../src/view/song_table/song_table_view.cpp" line="251"/>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="277"/>
         <source>(No playlist)</source>
         <translation>(无播放列表)</translation>
     </message>
     <message>
-        <location filename="../src/view/song_table/song_table_view.cpp" line="293"/>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="319"/>
         <source>Remove column</source>
         <translation>移除列</translation>
     </message>
     <message>
-        <location filename="../src/view/song_table/song_table_view.cpp" line="293"/>
+        <location filename="../src/view/song_table/song_table_view.cpp" line="319"/>
         <source>Input the column index except 0</source>
         <translation>请输入除 0 以外的列索引</translation>
     </message>
@@ -1304,28 +1309,28 @@ Add to library (library reference), or keep as external file?</source>
 <context>
     <name>TextEditorDialog</name>
     <message>
-        <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="19"/>
+        <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="20"/>
         <source>Font: </source>
         <translation>字体：</translation>
     </message>
     <message>
-        <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="21"/>
+        <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="22"/>
         <source>Size: </source>
         <translation>大小：</translation>
     </message>
     <message>
-        <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="59"/>
+        <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="60"/>
         <source>Import lyrics file</source>
         <translation>导入歌词文件</translation>
     </message>
     <message>
-        <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="60"/>
-        <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="75"/>
+        <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="61"/>
+        <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="76"/>
         <source>LRC files (*.lrc);;Text files (*.txt);;All files (*)</source>
         <translation>歌词文件 (*.lrc);;文本文件 (*.txt);;所有文件 (*)</translation>
     </message>
     <message>
-        <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="74"/>
+        <location filename="../src/view/dialogs/text_editor_dialog.cpp" line="75"/>
         <source>Save as</source>
         <translation>另存为</translation>
     </message>
@@ -1447,34 +1452,34 @@ Add to library (library reference), or keep as external file?</source>
 <context>
     <name>WColumnIndexDialog</name>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="213"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="221"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="214"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="222"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="230"/>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="235"/>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="240"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="238"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="243"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="248"/>
         <source>Invalid index</source>
         <translation>无效索引</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="231"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="239"/>
         <source>Index must be a positive integer (not 0).</source>
         <translation>索引必须是正整数 (不能为 0)。</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="235"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="243"/>
         <source>Index is too large.</source>
         <translation>索引过大。</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="241"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="249"/>
         <source>Index is out of range. Clamped to max.</source>
         <translation>索引超出范围，已钳制到最大值。</translation>
     </message>
@@ -1482,49 +1487,49 @@ Add to library (library reference), or keep as external file?</source>
 <context>
     <name>WInsertColumnDialog</name>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="105"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="113"/>
         <source>Index:</source>
         <translation>索引：</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="113"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="121"/>
         <source>Title:</source>
         <translation>标题：</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="120"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="128"/>
         <source>Type:</source>
         <translation>类型：</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="131"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="139"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="132"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="140"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="151"/>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="156"/>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="161"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="159"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="164"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="169"/>
         <source>Invalid index</source>
         <translation>无效索引</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="152"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="160"/>
         <source>Index must be a positive integer (not 0).</source>
         <translation>索引必须是正整数 (不能为 0)。</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="156"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="164"/>
         <source>Index is too large.</source>
         <translation>索引过大。</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="162"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="170"/>
         <source>Index is out of range. Clamped to max.</source>
         <translation>索引超出范围，已钳制到最大值。</translation>
     </message>
@@ -1536,37 +1541,37 @@ Add to library (library reference), or keep as external file?</source>
         <translation type="vanished">输入排序表达式：</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="48"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="51"/>
         <source>Sort / Group Rules (DSL)</source>
         <translation>排序 / 分组规则 (DSL)</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="50"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="53"/>
         <source>Input sorting / grouping expression (DSL):</source>
         <translation>输入排序 / 分组表达式 (DSL)</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="55"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="61"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="56"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="62"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="57"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="63"/>
         <source>Syntax Reference</source>
         <translation>语法参考</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="66"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="73"/>
         <source>DSL Syntax Reference</source>
         <translation>DSL 语法参考</translation>
     </message>
     <message>
-        <location filename="../src/view/playlist/playlist_widgets.cpp" line="71"/>
+        <location filename="../src/view/playlist/playlist_widgets.cpp" line="79"/>
         <source>Close</source>
         <translation>关闭</translation>
     </message>

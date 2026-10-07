@@ -4,6 +4,7 @@
 #include <QFont>
 #include <QFontDatabase>
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
@@ -24,6 +25,9 @@ public:
     ~FontSelectDialog() = default;
 
     QFont select_font();
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
 
 private: // data structure & functions
     void init_UI();

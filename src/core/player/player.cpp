@@ -318,7 +318,8 @@ void Player::refresh_device_cache()
     for (const auto& dev : m_audio_devices) {
         if (dev.description.toStdString() == active_name) {
             m_current_output_id = dev.id;
-            logger->info("active backend device mapped: {}", dev.description);
+            // 避免 log 刷屏, 暂时关闭
+            // logger->info("active backend device mapped: {}", dev.description);
             return;
         }
     }

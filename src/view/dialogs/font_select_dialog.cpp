@@ -176,3 +176,11 @@ void FontSelectDialog::init_UI()
 
     this->setLayout(m_vbl_main);
 }
+void FontSelectDialog::keyPressEvent(QKeyEvent* event)
+{
+    switch (event->key()) {
+    case Qt::Key_Escape:
+        this->close();
+        break;
+    }
+}

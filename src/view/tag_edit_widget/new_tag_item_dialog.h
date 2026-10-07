@@ -2,6 +2,7 @@
 
 #include <QComboBox>
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
 #include <QObject>
@@ -19,6 +20,9 @@ class NewTagItemDialog : public QWidget
 public:
     explicit NewTagItemDialog(QStringList existed_props, QWidget* parent = nullptr);
     ~NewTagItemDialog();
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
 
 signals:
     void sgnResult(const QPair<QString, QString>& result);

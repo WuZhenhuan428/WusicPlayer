@@ -1,6 +1,7 @@
 #include "view/dialogs/log_viewer_dialog.h"
 
 #include "core/logger/log_sink_gui.h"
+#include "core/utils/font.hpp"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -9,6 +10,7 @@
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QSpinBox>
 #include <QTextCursor>
 #include <QVBoxLayout>
 
@@ -33,26 +35,43 @@ void LogViewerDialog::build_ui()
     m_chk_follow = new QCheckBox(tr("Follow"));
     m_chk_follow->setChecked(true);
 
-    auto* toolbar = new QHBoxLayout;
-    toolbar->setContentsMargins(0, 0, 0, 0);
-    toolbar->addWidget(new QLabel(tr("Level:")));
-    toolbar->addWidget(m_cb_level_filter);
-    toolbar->addStretch(1);
-    toolbar->addWidget(m_chk_follow);
-    toolbar->addWidget(m_btn_clear);
+    m_sb_font_size = new QSpinBox(this);
+    m_sb_font_size->setMinimum(5);
+    m_sb_font_size->setMaximum(50);
+
+    m_hbl_toolbar = new QHBoxLayout;
+    m_hbl_toolbar->setContentsMargins(0, 0, 0, 0);
+    m_hbl_toolbar->addWidget(new QLabel(tr("Level:"), this));
+    m_hbl_toolbar->addWidget(m_cb_level_filter);
+    m_hbl_toolbar->addStretch(1);
+    m_hbl_toolbar->addWidget(m_chk_follow);
+    m_hbl_toolbar->addWidget(m_btn_clear);
+    m_hbl_toolbar->addWidget(new QLabel(tr("Font: "), this));
+    m_hbl_toolbar->addWidget(m_sb_font_size);
 
     m_text = new QPlainTextEdit;
     m_text->setReadOnly(true);
     m_text->setMaximumBlockCount(5000);
     m_text->setLineWrapMode(QPlainTextEdit::NoWrap);
+    auto mono_font = utils::font::get_system_mono_font();
+    m_text->setFont(mono_font);
 
-    auto* layout = new QVBoxLayout(this);
-    layout->addLayout(toolbar);
-    layout->addWidget(m_text);
+    m_vbl_main = new QVBoxLayout;
+    m_vbl_main->addLayout(m_hbl_toolbar);
+    m_vbl_main->addWidget(m_text);
+
+    this->setLayout(m_vbl_main);
+
+    m_sb_font_size->setValue(mono_font.pointSize() > 0 ? mono_font.pointSize() : 12);
 
     connect(m_cb_level_filter, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             &LogViewerDialog::on_level_filter_changed);
     connect(m_btn_clear, &QPushButton::clicked, this, &LogViewerDialog::on_clear_clicked);
+    connect(m_sb_font_size, &QSpinBox::valueChanged, this, [this](int new_value) {
+        auto font = utils::font::get_system_mono_font();
+        font.setPointSize(new_value);
+        m_text->setFont(font);
+    });
 }
 
 void LogViewerDialog::set_sink(LogSinkGui* sink)
@@ -114,5 +133,14 @@ void LogViewerDialog::append_line(int level, const QString& module, const QStrin
         QTextCursor cursor = m_text->textCursor();
         cursor.movePosition(QTextCursor::End);
         m_text->setTextCursor(cursor);
+    }
+}
+
+void LogViewerDialog::keyPressEvent(QKeyEvent* event)
+{
+    switch (event->key()) {
+    case Qt::Key_Escape:
+        this->close();
+        break;
     }
 }

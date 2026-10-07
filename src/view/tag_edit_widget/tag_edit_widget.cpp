@@ -348,3 +348,12 @@ QString TagEditWidget::name_to_key(const QString& name)
     }
     return normalized;
 }
+
+void TagEditWidget::keyPressEvent(QKeyEvent* event)
+{
+    switch (event->key()) {
+    case Qt::Key_Escape:
+        this->close();
+        break;
+    }
+}

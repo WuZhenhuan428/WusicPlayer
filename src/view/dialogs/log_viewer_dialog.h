@@ -3,8 +3,12 @@
 #include "core/logger/log_level.h"
 
 #include <QDialog>
+#include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QPointer>
+#include <QVBoxLayout>
 
+class QSpinBox;
 class QCheckBox;
 class QComboBox;
 class QPlainTextEdit;
@@ -28,6 +32,9 @@ public:
     // 把 sink 绑定到本窗口(由外部在创建时注入)
     void set_sink(LogSinkGui* sink);
 
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
+
 private slots:
     void on_record(int level, QString module, QString message);
     void on_level_filter_changed();
@@ -43,5 +50,9 @@ private:
     QComboBox* m_cb_level_filter = nullptr;
     QPushButton* m_btn_clear     = nullptr;
     QCheckBox* m_chk_follow      = nullptr;
+    QSpinBox* m_sb_font_size     = nullptr;
+    QHBoxLayout* m_hbl_toolbar   = nullptr;
+
     QPlainTextEdit* m_text       = nullptr;
+    QVBoxLayout* m_vbl_main      = nullptr;
 };
