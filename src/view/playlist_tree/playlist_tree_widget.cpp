@@ -127,7 +127,7 @@ PlaylistTreeWidget::PlaylistTreeWidget(QWidget* parent) : QWidget(parent)
 void PlaylistTreeWidget::init_ui()
 {
     m_playlist_tree = new PlaylistTreeDropView;
-    m_playlist_tree->setHeaderLabel("Playlist");
+    m_playlist_tree->setHeaderLabel(tr("Playlist"));
     m_playlist_tree->setMinimumWidth(120);
     m_playlist_tree->setContextMenuPolicy(Qt::CustomContextMenu);
     m_playlist_tree->setRootIsDecorated(false);
@@ -219,7 +219,7 @@ QVector<PlaylistId> PlaylistTreeWidget::collect_order() const
 void PlaylistTreeWidget::call_tree_context_menu(const QPoint& pos)
 {
     QMenu menu(this);
-    QAction* actNew       = menu.addAction("New Playlist");
+    QAction* actNew       = menu.addAction(tr("New Playlist"));
 
     QTreeWidgetItem* item = m_playlist_tree->itemAt(pos);
     auto* playlist_item   = dynamic_cast<WPlayListWidgetItem*>(item);
@@ -233,12 +233,12 @@ void PlaylistTreeWidget::call_tree_context_menu(const QPoint& pos)
     const PlaylistId pid = playlist_item->id();
 
     menu.addSeparator();
-    QAction* actAddTrack  = menu.addAction("Add track");
-    QAction* actAddFolder = menu.addAction("Add folder");
-    QAction* actSave      = menu.addAction("Save as");
-    QAction* actRename    = menu.addAction("Rename");
-    QAction* actCopy      = menu.addAction("Copy & Paste");
-    QAction* actRemove    = menu.addAction("Remove");
+    QAction* actAddTrack  = menu.addAction(tr("Add track"));
+    QAction* actAddFolder = menu.addAction(tr("Add folder"));
+    QAction* actSave      = menu.addAction(tr("Save as"));
+    QAction* actRename    = menu.addAction(tr("Rename"));
+    QAction* actCopy      = menu.addAction(tr("Copy & Paste"));
+    QAction* actRemove    = menu.addAction(tr("Remove"));
 
     connect(actNew, &QAction::triggered, this, &PlaylistTreeWidget::sgnCreatePlaylist);
     connect(actAddTrack, &QAction::triggered, this, [this, pid]() { emit sgnImportFiles(pid); });

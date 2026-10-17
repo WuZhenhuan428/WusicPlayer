@@ -8,6 +8,7 @@
 #include <QDropEvent>
 #include <QFileInfo>
 #include <QHeaderView>
+#include <QInputDialog>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -294,15 +295,16 @@ void SongTableView::show_header_context_menu(const QPoint& pos)
 {
     const int logical_index = m_tree_header->logicalIndexAt(pos);
     QMenu menu(this);
-    QAction* actInsert = menu.addAction("Insert Column Here");
-    QAction* actRemove = menu.addAction("Remove This Column");
+    QAction* actInsert  = menu.addAction(tr("Insert Column"));
+    QAction* act_rename = menu.addAction(tr("Rename"));
+    QAction* actRemove  = menu.addAction(tr("Remove"));
 
     connect(actInsert, &QAction::triggered, this, [this, logical_index]() {
         auto* my_model = qobject_cast<PlaylistViewModel*>(m_tree_view->model());
         if (!my_model) {
             return;
         }
-        WInsertColumnDialog dialog;
+        WInsertColumnDialog dialog(tr("Insert Column"), this);
         const int max_index = my_model->get_columns().size();
         dialog.set_max_index(max_index);
         dialog.set_index(logical_index);
@@ -311,12 +313,28 @@ void SongTableView::show_header_context_menu(const QPoint& pos)
             my_model->insert_column(dialog.index(), column);
         }
     });
+
+    connect(act_rename, &QAction::triggered, this, [this, logical_index]() {
+        auto* my_model = qobject_cast<PlaylistViewModel*>(m_tree_view->model());
+        if (!my_model) {
+            return;
+        }
+        const auto& cols = my_model->get_columns();
+        bool ok          = false;
+        QString new_name =
+            QInputDialog::getText(this, tr("Rename column"), tr("Input new name for this column:"),
+                                  QLineEdit::EchoMode::Normal, cols[logical_index].headerName, &ok);
+        if (ok && !new_name.isEmpty()) {
+            my_model->rename_column(logical_index, new_name);
+        }
+    });
+
     connect(actRemove, &QAction::triggered, this, [this, logical_index]() {
         auto* my_model = qobject_cast<PlaylistViewModel*>(m_tree_view->model());
         if (!my_model) {
             return;
         }
-        WColumnIndexDialog dialog(tr("Remove column"), tr("Input the column index except 0"), this);
+        WColumnIndexDialog dialog(tr("Remove column"), tr("The column index will remove"), this);
         const int max_index = my_model->get_columns().size() - 1;
         dialog.set_max_index(max_index);
         dialog.set_index(logical_index);

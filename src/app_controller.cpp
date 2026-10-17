@@ -4,7 +4,7 @@
 #include "controller/playlist_controller.h"
 #include "controller/plugin_controller/plugin_controller.h"
 #include "controller/search_backend/in_memory_search_backend.h"
-#include "controller/shortcuts_controller.h"
+#include "controller/shortcuts_controller.h" // IWYU pragma: keep
 #include "controller/status_bar_controller.h"
 #include "core/config_manager/config_manager.h"
 #include "core/config_manager/i_configurable.h"
@@ -293,10 +293,6 @@ void AppController::initialize_core_connections()
             &PlaylistController::load_playlist);
     connect(main_window_.get(), &MainWindow::sgnSetSortRuleRequested, this,
             &AppController::handle_set_sort_rule_requested);
-    connect(main_window_.get(), &MainWindow::sgnInsertColumnRequested, this,
-            &AppController::handle_insert_column_requested);
-    connect(main_window_.get(), &MainWindow::sgnRemoveColumnRequested, this,
-            &AppController::handle_remove_column_requested);
     connect(main_window_.get(), &MainWindow::sgnShowAboutMessagebox, this,
             &AppController::handle_show_about_messagebox);
     connect(main_window_.get(), &MainWindow::sgnOpenEQWidgetRequested, panel_coordinator_.get(),
@@ -342,34 +338,6 @@ void AppController::handle_set_sort_rule_requested()
         if (!view_model->dsl_error().isEmpty()) {
             QMessageBox::warning(&dialog, tr("Sort Rule Error"), view_model->dsl_error());
         }
-    }
-}
-
-void AppController::handle_insert_column_requested()
-{
-    auto* playlist_controller = playlist_controller_.get();
-    WInsertColumnDialog dialog;
-    int maxIndex = playlist_controller->view_model()->get_columns().size();
-    dialog.set_max_index(maxIndex);
-    dialog.set_index(1);
-    int result = dialog.exec();
-    if (result == QDialog::Accepted) {
-        TableColumn column = dialog.get_rule();
-        int index          = dialog.index();
-        playlist_controller->view_model()->insert_column(index, column);
-    }
-}
-
-void AppController::handle_remove_column_requested()
-{
-    auto* playlist_controller = playlist_controller_.get();
-    WColumnIndexDialog dialog(QObject::tr("Remove column"),
-                              QObject::tr("Input the column index except 0"), main_window_.get());
-    int maxIndex = playlist_controller->view_model()->get_columns().size() - 1;
-    dialog.set_max_index(maxIndex);
-    dialog.set_index(1);
-    if (dialog.exec() == QDialog::Accepted) {
-        playlist_controller->view_model()->remove_column(dialog.index());
     }
 }
 

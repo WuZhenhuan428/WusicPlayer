@@ -740,6 +740,14 @@ void PlaylistViewModel::remove_column(int index)
     endRemoveColumns();
 }
 
+void PlaylistViewModel::rename_column(int index, const QString& new_name)
+{
+    if (index < 0 || index >= m_columns.size()) {
+        return;
+    }
+    m_columns[index].headerName = new_name;
+}
+
 void PlaylistViewModel::set_columns(const QVector<TableColumn>& columns)
 {
     beginResetModel();

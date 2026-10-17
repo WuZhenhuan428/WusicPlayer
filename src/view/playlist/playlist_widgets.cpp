@@ -69,20 +69,22 @@ WSortTypeSetDialog::WSortTypeSetDialog(QWidget* parent) : QDialog(parent)
     connect(btn_enter_, &QPushButton::clicked, this, &QDialog::accept);
     connect(btn_cancel_, &QPushButton::clicked, this, &QDialog::reject);
     connect(btn_help_, &QPushButton::clicked, this, [this, mono]() {
-        QDialog dlg(this);
-        dlg.setWindowTitle(tr("DSL Syntax Reference"));
-        auto* te = new QTextEdit(&dlg);
+        QDialog* dlg = new QDialog(this);
+        dlg->setAttribute(Qt::WA_DeleteOnClose);
+        dlg->setWindowTitle(tr("DSL Syntax Reference"));
+        auto* te = new QTextEdit(dlg);
         te->setPlainText(dsl_help_text());
         te->setReadOnly(true);
         te->setLineWrapMode(QTextEdit::NoWrap);
         te->setFont(mono);
-        auto* closeBtn = new QPushButton(tr("Close"), &dlg);
-        connect(closeBtn, &QPushButton::clicked, &dlg, &QDialog::accept);
-        auto* vbl = new QVBoxLayout(&dlg);
+        auto* closeBtn = new QPushButton(tr("Close"), dlg);
+        connect(closeBtn, &QPushButton::clicked, dlg, &QDialog::accept);
+        auto* vbl = new QVBoxLayout(dlg);
         vbl->addWidget(te);
         vbl->addWidget(closeBtn, 0, Qt::AlignRight);
-        dlg.resize(600, 460);
-        dlg.exec();
+        dlg->resize(600, 800);
+        dlg->show(); // 非模态
+        dlg->raise();
     });
 
     hbl_prompt_->addWidget(lb_prompt_);
@@ -107,11 +109,16 @@ WSortTypeSetDialog::~WSortTypeSetDialog() {};
 
 // ==== WInsertColumnDialog ==== //
 
-WInsertColumnDialog::WInsertColumnDialog()
+WInsertColumnDialog::WInsertColumnDialog(const QString& title, QWidget* parent) : QDialog(parent)
 {
+    this->setWindowTitle(title);
+    QVector<QString> types = {tr("title"),    tr("artist"),   tr("album"),   tr("album artist"),
+                              tr("genre"),    tr("composer"), tr("year"),    tr("date"),
+                              tr("track"),    tr("disc"),     tr("bitrate"), tr("filename"),
+                              tr("directory")};
     // index
-    lb_index_ = new QLabel(tr("Index:"));
-    le_index_ = new QLineEdit(this);
+    lb_index_              = new QLabel(tr("Index:"));
+    le_index_              = new QLineEdit(this);
     le_index_->setText("1");
     hbl_index_ = new QHBoxLayout();
     hbl_index_->addWidget(lb_index_);
@@ -125,11 +132,8 @@ WInsertColumnDialog::WInsertColumnDialog()
     hbl_title_->addWidget(le_title_);
 
     // choose type
-    lb_type_               = new QLabel(tr("Type:"));
-    cb_type_               = new QComboBox();
-    QVector<QString> types = {"title",    "artist",   "album",    "album artist", "genre",
-                              "composer", "year",     "date",     "track",        "disc",
-                              "bitrate",  "filename", "directory"};
+    lb_type_ = new QLabel(tr("Type:"));
+    cb_type_ = new QComboBox();
     cb_type_->addItems(types);
     hbl_type_ = new QHBoxLayout();
     hbl_type_->addWidget(lb_type_);
@@ -143,14 +147,21 @@ WInsertColumnDialog::WInsertColumnDialog()
     hbl_btn_->addWidget(btn_ok_);
     hbl_btn_->addWidget(btn_cancel_);
 
+    // hint
+    lb_hint_  = new QLabel(tr("Do not modify the index manually"));
+
     // main layout
     vbl_main_ = new QVBoxLayout();
     vbl_main_->addLayout(hbl_index_);
     vbl_main_->addLayout(hbl_title_);
     vbl_main_->addLayout(hbl_type_);
     vbl_main_->addStretch();
+    vbl_main_->addWidget(lb_hint_);
     vbl_main_->addLayout(hbl_btn_);
     this->setLayout(vbl_main_);
+
+    connect(cb_type_, &QComboBox::currentTextChanged, this,
+            [this](QString str) { this->le_title_->setText(str); });
 
     connect(btn_ok_, &QPushButton::clicked, this, [this]() {
         bool ok         = false;
@@ -225,10 +236,13 @@ WColumnIndexDialog::WColumnIndexDialog(const QString& title, const QString& prom
     hbl_btn_->addWidget(btn_ok_);
     hbl_btn_->addWidget(btn_cancel_);
 
+    lb_hint_  = new QLabel(tr("Do not modify the index manually"));
+
     vbl_main_ = new QVBoxLayout();
     vbl_main_->addLayout(hbl_index_);
     vbl_main_->addStretch();
     vbl_main_->addLayout(hbl_btn_);
+    vbl_main_->addWidget(lb_hint_);
     setLayout(vbl_main_);
 
     connect(btn_ok_, &QPushButton::clicked, this, [this]() {

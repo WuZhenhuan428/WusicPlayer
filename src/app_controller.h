@@ -47,8 +47,6 @@ private:
     void initialize_core_connections();
     void locate_current_track_in_view();
     void handle_set_sort_rule_requested();
-    void handle_insert_column_requested();
-    void handle_remove_column_requested();
     void handle_show_about_messagebox();
     void handle_show_desktop_lyrics_requested();
 

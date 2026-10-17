@@ -99,8 +99,6 @@ private:
     // menu View
     QMenu* m_menu_view;
     QAction* m_act_set_sort_rule;
-    QAction* m_act_insert_column;
-    QAction* m_act_remove_column;
     QAction* m_act_search_panel;
     QAction* m_act_log_viewer;
     QAction* m_act_show_desktop_lyrics;
@@ -140,8 +138,6 @@ signals:
     void sgnCreatePlaylistRequested();
     void sgnPlayTrackRequested(const QString& filepath);
     void sgnSetSortRuleRequested();
-    void sgnInsertColumnRequested();
-    void sgnRemoveColumnRequested();
     void sgnShowAboutMessagebox();
     void sgnShowDesktopLyricsRequested();
     void sgnOpenEQWidgetRequested();

@@ -43,16 +43,16 @@ public:
     }
 
 private:
-    QHBoxLayout* hbl_prompt_;
-    QLabel* lb_prompt_;
-    QTextEdit* txt_expression_;
+    QHBoxLayout* hbl_prompt_   = nullptr;
+    QLabel* lb_prompt_         = nullptr;
+    QTextEdit* txt_expression_ = nullptr;
 
-    QHBoxLayout* hbl_btn_;
-    QPushButton* btn_enter_;
-    QPushButton* btn_cancel_;
-    QPushButton* btn_help_;
+    QHBoxLayout* hbl_btn_      = nullptr;
+    QPushButton* btn_enter_    = nullptr;
+    QPushButton* btn_cancel_   = nullptr;
+    QPushButton* btn_help_     = nullptr;
 
-    QVBoxLayout* vbl_main_;
+    QVBoxLayout* vbl_main_     = nullptr;
 };
 
 class WPlayListWidgetItem : public QTreeWidgetItem
@@ -78,7 +78,7 @@ class WInsertColumnDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit WInsertColumnDialog();
+    explicit WInsertColumnDialog(const QString& title, QWidget* parent = nullptr);
     ~WInsertColumnDialog();
     TableColumn get_rule();
     void set_index(int index);
@@ -86,24 +86,26 @@ public:
     int index() const;
 
 private:
-    QLabel* lb_index_;
-    QLineEdit* le_index_;
-    QHBoxLayout* hbl_index_;
-    int max_index_ = 0;
+    QLabel* lb_index_        = nullptr;
+    QLineEdit* le_index_     = nullptr;
+    QHBoxLayout* hbl_index_  = nullptr;
+    int max_index_           = 0;
 
-    QLabel* lb_title_;
-    QLineEdit* le_title_;
-    QHBoxLayout* hbl_title_;
+    QLabel* lb_title_        = nullptr;
+    QLineEdit* le_title_     = nullptr;
+    QHBoxLayout* hbl_title_  = nullptr;
 
-    QLabel* lb_type_;
-    QComboBox* cb_type_;
-    QHBoxLayout* hbl_type_;
+    QLabel* lb_type_         = nullptr;
+    QComboBox* cb_type_      = nullptr;
+    QHBoxLayout* hbl_type_   = nullptr;
 
-    QPushButton* btn_ok_;
-    QPushButton* btn_cancel_;
-    QHBoxLayout* hbl_btn_;
+    QPushButton* btn_ok_     = nullptr;
+    QPushButton* btn_cancel_ = nullptr;
+    QHBoxLayout* hbl_btn_    = nullptr;
 
-    QVBoxLayout* vbl_main_;
+    QLabel* lb_hint_         = nullptr;
+
+    QVBoxLayout* vbl_main_   = nullptr;
 };
 
 class WColumnIndexDialog : public QDialog
@@ -118,14 +120,16 @@ public:
     int index() const;
 
 private:
-    QLabel* lb_prompt_;
-    QLineEdit* txt_index_;
-    QHBoxLayout* hbl_index_;
-    int max_index_ = 0;
+    QLabel* lb_prompt_       = nullptr;
+    QLineEdit* txt_index_    = nullptr;
+    QHBoxLayout* hbl_index_  = nullptr;
+    int max_index_           = 0;
 
-    QPushButton* btn_ok_;
-    QPushButton* btn_cancel_;
-    QHBoxLayout* hbl_btn_;
+    QPushButton* btn_ok_     = nullptr;
+    QPushButton* btn_cancel_ = nullptr;
+    QHBoxLayout* hbl_btn_    = nullptr;
 
-    QVBoxLayout* vbl_main_;
+    QLabel* lb_hint_         = nullptr;
+
+    QVBoxLayout* vbl_main_   = nullptr;
 };

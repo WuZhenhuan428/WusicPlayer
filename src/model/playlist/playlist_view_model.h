@@ -98,6 +98,7 @@ public:
     /* ==== Dynamic Column Management ==== */
     void insert_column(int index, const TableColumn& column);
     void remove_column(int index);
+    void rename_column(int index, const QString& new_name);
     void set_columns(const QVector<TableColumn>& columns);
     const QVector<TableColumn>& get_columns() const;
 

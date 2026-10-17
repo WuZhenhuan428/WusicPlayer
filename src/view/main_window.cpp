@@ -94,8 +94,6 @@ void MainWindow::init_menu_connections()
     connect(m_act_exit, &QAction::triggered, this, &MainWindow::quit_application);
     connect(m_act_about, &QAction::triggered, this, &MainWindow::sgnShowAboutMessagebox);
     connect(m_act_set_sort_rule, &QAction::triggered, this, &MainWindow::sgnSetSortRuleRequested);
-    connect(m_act_insert_column, &QAction::triggered, this, &MainWindow::sgnInsertColumnRequested);
-    connect(m_act_remove_column, &QAction::triggered, this, &MainWindow::sgnRemoveColumnRequested);
 
     connect(m_act_open_eq, &QAction::triggered, this, &MainWindow::sgnOpenEQWidgetRequested);
 
@@ -144,13 +142,9 @@ void MainWindow::build_menu_bar()
 
     m_menu_view         = new QMenu(tr("&View"), m_menubar_main);
     m_act_set_sort_rule = new QAction(tr("Set sort rule"), m_menu_view);
-    m_act_insert_column = new QAction(tr("Insert a column (&I)"), m_menu_view);
-    m_act_remove_column = new QAction(tr("Remove a column (&R)"), m_menu_view);
     m_act_search_panel  = new QAction(tr("Open search panel (&S)"), m_menu_view);
     m_act_log_viewer    = new QAction(tr("Open Log (&L)"), m_menu_view);
     m_menu_view->addAction(m_act_set_sort_rule);
-    m_menu_view->addAction(m_act_insert_column);
-    m_menu_view->addAction(m_act_remove_column);
     m_menu_view->addAction(m_act_search_panel);
     m_menu_view->addAction(m_act_log_viewer);
     m_menu_view->addSeparator();
