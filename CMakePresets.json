@@ -24,7 +24,19 @@
       "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "WUSIC_USE_ASAN": "OFF"
+      }
+    },
+    {
+      "name": "sanitize",
+      "displayName": "debug-asan",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/sanitize",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "sanitize",
+        "WUSIC_BUILD_TESTS": "OFF",
+        "WUSIC_USE_ASAN": "ON"
       }
     }
   ],
@@ -36,6 +48,10 @@
     {
       "name": "release",
       "configurePreset": "release"
+    },
+    {
+      "name": "sanitize",
+      "configurePreset": "sanitize"
     }
   ],
   "testPresets": [
@@ -44,6 +60,17 @@
       "configurePreset": "debug",
       "output": {
         "outputOnFailure": true
+      }
+    },
+    {
+      "name": "sanitize",
+      "configurePreset": "sanitize",
+      "output": {
+        "outputOnFailure": true
+      },
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1:symbolize=1",
+        "LSAN_OPTIONS": "suppressions=${sourceDir}/cmake/lsan.supp:print_suppressions=0"
       }
     }
   ]

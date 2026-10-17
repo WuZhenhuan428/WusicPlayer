@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.24)
+
+if (WUSIC_ENABLE_GPROF)
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        add_compile_options(-pg)
+        add_link_options(-pg)
+        message(STATUS "gprof instrumentation enabled (-pg)")
+    else ()
+        message(WARNING "WUSIC_ENABLE_GPROF is ON, but compiler ${CMAKE_CXX_COMPILER_ID} may not support -pg")
+    endif ()
+endif ()

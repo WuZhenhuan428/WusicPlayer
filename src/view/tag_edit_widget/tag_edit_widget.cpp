@@ -270,7 +270,6 @@ void TagEditWidget::handle_add_new_field()
 
 void TagEditWidget::init_table_model(TrackMetaData meta)
 {
-
     m_meta_buffer.clear();
     m_meta_buffer   = utils::audio::parse_meta_to_map(meta.filepath);
 
@@ -285,7 +284,7 @@ void TagEditWidget::init_table_model(TrackMetaData meta)
     };
 
     if (!m_table_model) {
-        m_table_model = new QStandardItemModel();
+        m_table_model = new QStandardItemModel(this);
     }
     m_table_model->clear();
 

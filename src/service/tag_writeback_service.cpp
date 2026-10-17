@@ -33,7 +33,7 @@ void TagWritebackService::request_track_property(EntryId tid, [[maybe_unused]] Q
                                                  TrackMetaData meta)
 {
     if (tag_edit_widget_) {
-        tag_edit_widget_.clear();
+        tag_edit_widget_->close();
     }
     tag_edit_widget_ = new TagEditWidget(meta, tid);
 

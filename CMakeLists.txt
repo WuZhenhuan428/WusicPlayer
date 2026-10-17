@@ -4,12 +4,13 @@ project(WusicPlayer LANGUAGES C CXX)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(WUSIC_BUILD_TESTS "Build unit tests" ON)
 option(WUSIC_ENABLE_GPROF "Enable gprof instrumentation (-pg)" OFF)
+option(WUSIC_USE_ASAN "Enable AddressSanitizer on \'sanitize\' preset" OFF)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Werror -Wall -Wextra)
@@ -17,15 +18,8 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_compile_options(/W4)
 endif ()
 
-if (WUSIC_ENABLE_GPROF)
-    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        add_compile_options(-pg)
-        add_link_options(-pg)
-        message(STATUS "gprof instrumentation enabled (-pg)")
-    else ()
-        message(WARNING "WUSIC_ENABLE_GPROF is ON, but compiler ${CMAKE_CXX_COMPILER_ID} may not support -pg")
-    endif ()
-endif ()
+include (cmake/sanitize.cmake)
+include (cmake/gprof.cmake)
 
 # Custom find modules (cmake/FindFFmpeg.cmake etc.)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -153,3 +147,18 @@ qt_generate_deploy_app_script(
     NO_UNSUPPORTED_PLATFORM_ERROR
 )
 install(SCRIPT ${deploy_script})
+
+# Convenience launcher for the sanitize preset: the binary already links
+# libasan, so only per-process options are needed (never preload it globally).
+if (WUSIC_USE_ASAN)
+    add_custom_target(run_sanitize
+        COMMAND ${CMAKE_COMMAND} -E env
+                "LD_PRELOAD="
+                "ASAN_OPTIONS=detect_leaks=1:abort_on_error=1:symbolize=1"
+                "LSAN_OPTIONS=suppressions=${CMAKE_SOURCE_DIR}/cmake/lsan.supp:print_suppressions=0"
+                $<TARGET_FILE:WusicPlayer>
+        DEPENDS WusicPlayer
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        USES_TERMINAL
+    )
+endif()

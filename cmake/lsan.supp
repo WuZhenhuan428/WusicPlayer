@@ -1,0 +1,11 @@
+# LeakSanitizer suppressions.
+# Only ignore leaks that are known to live in Qt plugins / platform themes and
+# are intentionally kept alive until process exit. Do NOT add application
+# symbols here, otherwise real leaks become invisible.
+
+leak:libqsvgicon.so
+leak:KDEPlasmaPlatformTheme6.so
+leak:breeze6.so
+
+# glibc loader false positive
+leak:tls_get_addr
