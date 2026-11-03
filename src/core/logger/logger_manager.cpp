@@ -62,7 +62,7 @@ std::shared_ptr<Logger> LoggerManager::get(const QString& logger_name,
     }
 
     // 然后创建 Logger, 添加 sink 并返回
-    auto logger = std::make_shared<Logger>(logger_name, std::move(sinks), this->m_global_level);
+    auto logger = std::make_shared<Logger>(logger_name, std::move(sinks), this->global_level_);
     this->loggers_[logger_name] = logger;
     if (wants_gui) {
         this->pending_gui_loggers_.push_back(logger);
@@ -107,13 +107,13 @@ void LoggerManager::clear_sinks()
 void LoggerManager::set_global_level(LogLevel level)
 {
     std::lock_guard lock(mutex_);
-    m_global_level = level;
+    global_level_ = level;
 }
 
 LogLevel LoggerManager::global_level() const
 {
     std::lock_guard lock(mutex_);
-    return m_global_level;
+    return global_level_;
 }
 
 void LoggerManager::qt_bridge(QtMsgType type, const QMessageLogContext& context, const QString& msg)
@@ -124,22 +124,22 @@ void LoggerManager::qt_bridge(QtMsgType type, const QMessageLogContext& context,
     LogLevel level;
     switch (type) {
     case QtDebugMsg:
-        level = LogLevel::debug;
+        level = LogLevel::Debug;
         break;
     case QtInfoMsg:
-        level = LogLevel::info;
+        level = LogLevel::Info;
         break;
     case QtWarningMsg:
-        level = LogLevel::warn;
+        level = LogLevel::Warn;
         break;
     case QtCriticalMsg:
-        level = LogLevel::error;
+        level = LogLevel::Error;
         break;
     case QtFatalMsg:
-        level = LogLevel::fatal;
+        level = LogLevel::Fatal;
         break;
     default:
-        level = LogLevel::debug;
+        level = LogLevel::Debug;
         break;
     }
     rec.level    = level;

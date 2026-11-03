@@ -13,14 +13,13 @@ class WLyricsModel : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    enum UserDefineRole
+    enum UserDefineRole // NOLINT(cppcoreguidelines-use-enum-class)
     {
         CurrentLine = Qt::UserRole + 1,
-        CurrentTime
+        CurrentTime,
     };
 
     explicit WLyricsModel(QObject* parent = nullptr);
-    ~WLyricsModel();
 
     void set_default_info(const TrackMetaData& meta);
     bool set_local_lrc(const QString& filepath);
@@ -37,17 +36,17 @@ public:
     // QAbstractListModel interface
     QModelIndex index(int row, int column,
                       const QModelIndex& parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 
 signals:
-    void currentLineChanged(const QString& curr_text, const QString& next_text);
-    void sgnUseTimelineFollow(bool enable);
+    void current_line_changed(const QString& curr_text, const QString& next_text);
+    void sgn_use_timeline_follow(bool enable);
 
 private:
-    LrcParser m_parser;
-    LrcParser::LrcFile m_lrc_file;
-    QString m_raw_lyrics_text;
-    int m_current_row = -1;
+    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+    LrcParser parser_;
+    LrcParser::LrcFile lrc_file_;
+    QString raw_lyrics_text_;
+    int current_row_ = -1;
 };

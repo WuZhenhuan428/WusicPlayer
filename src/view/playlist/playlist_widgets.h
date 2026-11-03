@@ -29,15 +29,14 @@ class WSortTypeSetDialog : public QDialog
     Q_OBJECT
 public:
     explicit WSortTypeSetDialog(QWidget* parent = nullptr);
-    ~WSortTypeSetDialog();
 
     /// 当前输入的 DSL 文本(多行)。
-    QString getText() const
+    [[nodiscard]] QString get_text() const
     {
         return txt_expression_->toPlainText();
     }
     /// 预填 DSL 文本(编辑既有规则)。
-    void setText(const QString& text)
+    void set_text(const QString& text) const
     {
         txt_expression_->setPlainText(text);
     }
@@ -65,7 +64,7 @@ public:
         setFlags(flags() | Qt::ItemIsEditable);
     }
 
-    PlaylistId id() const
+    [[nodiscard]] PlaylistId id() const
     {
         return pid_;
     }
@@ -79,11 +78,10 @@ class WInsertColumnDialog : public QDialog
     Q_OBJECT
 public:
     explicit WInsertColumnDialog(const QString& title, QWidget* parent = nullptr);
-    ~WInsertColumnDialog();
     TableColumn get_rule();
     void set_index(int index);
     void set_max_index(int index);
-    int index() const;
+    [[nodiscard]] int index() const;
 
 private:
     QLabel* lb_index_        = nullptr;
@@ -114,10 +112,9 @@ class WColumnIndexDialog : public QDialog
 public:
     explicit WColumnIndexDialog(const QString& title, const QString& prompt,
                                 QWidget* parent = nullptr);
-    ~WColumnIndexDialog();
     void set_index(int index);
     void set_max_index(int index);
-    int index() const;
+    [[nodiscard]] int index() const;
 
 private:
     QLabel* lb_prompt_       = nullptr;

@@ -24,23 +24,29 @@ public:
     explicit LibraryManager(QObject* parent = nullptr);
     ~LibraryManager() override;
 
+    LibraryManager(const LibraryManager&)            = delete;
+    LibraryManager& operator=(const LibraryManager&) = delete;
+    LibraryManager(LibraryManager&&)                 = delete;
+    LibraryManager& operator=(LibraryManager&&)      = delete;
+
     // 初始化:打开/创建数据库并载入既有曲目,恢复被监控目录
     bool initialize(const QString& db_path);
 
     // ---- 根目录 ----
     void add_watched_folder(const QString& path);
     void remove_watched_folder(const QString& path);
-    QStringList watched_folders() const;
+    [[nodiscard]] QStringList watched_folders() const;
 
     // ---- 只读查询 ----
     // 返回共享引用(权威副本由库持有, 零拷贝); nullptr 表示不存在
-    std::shared_ptr<const LibraryTrack> track_by_id(TrackId id) const;
-    std::shared_ptr<const LibraryTrack> track_by_path(const QString& normalized_path) const;
+    [[nodiscard]] std::shared_ptr<const LibraryTrack> track_by_id(TrackId id) const;
+    [[nodiscard]] std::shared_ptr<const LibraryTrack>
+    track_by_path(const QString& normalized_path) const;
     // 非拥有:返回内部容器的 const 引用,仅本次调用内有效
-    const QHash<QString, std::shared_ptr<const LibraryTrack>>& index() const;
-    int track_count() const;
+    [[nodiscard]] const QHash<QString, std::shared_ptr<const LibraryTrack>>& index() const;
+    [[nodiscard]] int track_count() const;
     // FTS5 全文搜索(走 SQLite); 结果以共享引用返回, 避免整份复制
-    QVector<std::shared_ptr<const LibraryTrack>>
+    [[nodiscard]] QVector<std::shared_ptr<const LibraryTrack>>
     search(const QString& keyword, SearchQueryMode mode, int limit = 200) const;
 
     // ---- 扫描 ----
@@ -55,14 +61,14 @@ signals:
 private:
     void apply_batch(const QVector<TrackUpdate>& batch);
     void on_scan_finished();
-    LibrarySnapshot make_snapshot() const;
+    [[nodiscard]] LibrarySnapshot make_snapshot() const;
 
     /// 本次扫描中"真实变化"的条目数(新增/元数据变/缺失状态变)
-    int m_scan_change_count = 0;
+    int scan_change_count_ = 0;
 
-    std::unique_ptr<Library> m_library;
-    std::unique_ptr<LibraryRepo> m_repo;
-    LibraryScanner* m_scanner = nullptr; // 移入 worker 线程;线程结束时 deleteLater
-    std::unique_ptr<LibraryFileWatcher> m_watcher;
-    QThread* m_worker = nullptr;
+    std::unique_ptr<Library> library_;
+    std::unique_ptr<LibraryRepo> repo_;
+    LibraryScanner* scanner_ = nullptr; // 移入 worker 线程;线程结束时 deleteLater
+    std::unique_ptr<LibraryFileWatcher> watcher_;
+    QThread* worker_ = nullptr;
 };

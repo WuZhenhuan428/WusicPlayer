@@ -36,23 +36,23 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
 
 private slots:
-    void on_record(int level, QString module, QString message);
+    void on_record(int level, const QString& module, const QString& message);
     void on_level_filter_changed();
     void on_clear_clicked();
 
 private:
     void build_ui();
     void append_line(int level, const QString& module, const QString& message);
-    bool should_display(int level) const;
+    [[nodiscard]] bool should_display(int level) const;
 
-    LogSinkGui* m_sink           = nullptr; // 非拥有
+    LogSinkGui* sink_           = nullptr; // 非拥有
 
-    QComboBox* m_cb_level_filter = nullptr;
-    QPushButton* m_btn_clear     = nullptr;
-    QCheckBox* m_chk_follow      = nullptr;
-    QSpinBox* m_sb_font_size     = nullptr;
-    QHBoxLayout* m_hbl_toolbar   = nullptr;
+    QComboBox* cb_level_filter_ = nullptr;
+    QPushButton* btn_clear_     = nullptr;
+    QCheckBox* chk_follow_      = nullptr;
+    QSpinBox* sb_font_size_     = nullptr;
+    QHBoxLayout* hbl_toolbar_   = nullptr;
 
-    QPlainTextEdit* m_text       = nullptr;
-    QVBoxLayout* m_vbl_main      = nullptr;
+    QPlainTextEdit* text_       = nullptr;
+    QVBoxLayout* vbl_main_      = nullptr;
 };

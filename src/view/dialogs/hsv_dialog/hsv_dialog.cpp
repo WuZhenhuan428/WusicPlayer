@@ -4,65 +4,62 @@
 
 HSVDialog::HSVDialog(rgb_t curr_rgb, QWidget* parent) : QDialog(parent)
 {
-
-    m_current_color  = curr_rgb;
+    current_color_   = curr_rgb;
 
     int outer_radius = 100;
     int label_width  = 200;
-    m_hsv_palette    = new HSVPalette((int)(outer_radius * 0.75), outer_radius, this);
-    m_color_preview  = new ColorPreviewItem(60, outer_radius * 2, this);
-    m_color_layout   = new QVBoxLayout;
-    m_color_layout->addWidget(m_hsv_palette);
-    m_color_layout->addWidget(m_color_preview);
+    hsv_palette_     = new HSVPalette(static_cast<int>(outer_radius * 0.75), outer_radius, this);
+    color_preview_   = new ColorPreviewItem(60, (outer_radius * 2), this);
+    vbl_color_       = new QVBoxLayout;
+    vbl_color_->addWidget(hsv_palette_);
+    vbl_color_->addWidget(color_preview_);
 
-    m_label_matrix   = new LabelMatrix(this);
-    m_palette_layout = new QHBoxLayout;
-    m_palette_layout->addLayout(m_color_layout);
-    m_palette_layout->addStretch();
-    m_palette_layout->addWidget(m_label_matrix);
+    lb_matrix_   = new LabelMatrix(this);
+    hbl_palette_ = new QHBoxLayout;
+    hbl_palette_->addLayout(vbl_color_);
+    hbl_palette_->addStretch();
+    hbl_palette_->addWidget(lb_matrix_);
 
-    m_btn_apply = new QPushButton("Apply", this);
-    m_btn_apply->setIcon((this->style()->standardIcon(QStyle::SP_DialogApplyButton)));
-    m_btn_ok = new QPushButton("OK", this);
-    m_btn_ok->setIcon((this->style()->standardIcon(QStyle::SP_DialogOkButton)));
-    m_btn_cancel = new QPushButton("Cancel", this);
-    m_btn_cancel->setIcon((this->style()->standardIcon(QStyle::SP_DialogCancelButton)));
-    m_bottom_layout = new QHBoxLayout;
-    m_bottom_layout->addStretch();
-    m_bottom_layout->addWidget(m_btn_apply);
-    m_bottom_layout->addWidget(m_btn_ok);
-    m_bottom_layout->addWidget(m_btn_cancel);
+    btn_apply_ = new QPushButton("Apply", this);
+    btn_apply_->setIcon((this->style()->standardIcon(QStyle::SP_DialogApplyButton)));
+    btn_ok_ = new QPushButton("OK", this);
+    btn_ok_->setIcon((this->style()->standardIcon(QStyle::SP_DialogOkButton)));
+    btn_cancel_ = new QPushButton("Cancel", this);
+    btn_cancel_->setIcon((this->style()->standardIcon(QStyle::SP_DialogCancelButton)));
+    bottom_layout_ = new QHBoxLayout;
+    bottom_layout_->addStretch();
+    bottom_layout_->addWidget(btn_apply_);
+    bottom_layout_->addWidget(btn_ok_);
+    bottom_layout_->addWidget(btn_cancel_);
 
-    m_main_layout = new QVBoxLayout;
-    m_main_layout->addLayout(m_palette_layout);
-    m_main_layout->addLayout(m_bottom_layout);
+    main_layout_ = new QVBoxLayout;
+    main_layout_->addLayout(hbl_palette_);
+    main_layout_->addLayout(bottom_layout_);
 
-    this->setLayout(m_main_layout);
-    this->setMinimumSize(outer_radius * 2 + label_width, outer_radius * 2 + 60);
+    this->setLayout(main_layout_);
+    this->setMinimumSize((outer_radius * 2) + label_width, (outer_radius * 2) + 60);
 
-    m_hsv_palette->set_hsv(hsv_t{0.0f, 50.0f, 50.0f});
-    m_hsv_palette->set_rgb(m_current_color);
-    m_color_preview->set_initial_color(m_current_color);
+    hsv_palette_->set_hsv(hsv_t{0.0f, 50.0f, 50.0f});
+    hsv_palette_->set_rgb(current_color_);
+    color_preview_->set_initial_color(current_color_);
 
-    connect(m_hsv_palette, &HSVPalette::sgnHSVChanged, m_label_matrix, &LabelMatrix::set_hsv);
-    connect(m_label_matrix, &LabelMatrix::sgnEditColor, m_hsv_palette, &HSVPalette::set_hsv);
-    connect(m_hsv_palette, &HSVPalette::sgnMouseMovingColor, m_color_preview,
+    connect(hsv_palette_, &HSVPalette::sgn_hsv_changed, lb_matrix_, &LabelMatrix::set_hsv);
+    connect(lb_matrix_, &LabelMatrix::sgn_color_edited, hsv_palette_, &HSVPalette::set_hsv);
+    connect(hsv_palette_, &HSVPalette::sgn_mouse_moving_color, color_preview_,
             &ColorPreviewItem::update_curr_color);
-    connect(m_hsv_palette, &HSVPalette::sgnMouseReleaseColor, m_color_preview,
+    connect(hsv_palette_, &HSVPalette::sgn_mouse_release_color, color_preview_,
             &ColorPreviewItem::update_color);
 
-    connect(m_btn_apply, &QPushButton::clicked, this,
-            [this]() { m_current_color = m_hsv_palette->get_rgb(); });
-    connect(m_btn_ok, &QPushButton::clicked, this, [this]() {
-        m_current_color = m_hsv_palette->get_rgb();
+    connect(btn_apply_, &QPushButton::clicked, this,
+            [this]() { current_color_ = hsv_palette_->get_rgb(); });
+    connect(btn_ok_, &QPushButton::clicked, this, [this]() {
+        current_color_ = hsv_palette_->get_rgb();
         this->accept();
     });
-    connect(m_btn_cancel, &QPushButton::clicked, this, [this]() { this->reject(); });
+    connect(btn_cancel_, &QPushButton::clicked, this, [this]() { this->reject(); });
 }
-
-HSVDialog::~HSVDialog() {}
 
 rgb_t HSVDialog::get_color()
 {
-    return m_current_color;
+    return current_color_;
 }

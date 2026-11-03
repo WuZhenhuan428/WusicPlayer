@@ -2,8 +2,8 @@
 
 WLyricsPanel::WLyricsPanel(QWidget* parent) : QListView(parent)
 {
-    m_lrc_model = new WLyricsModel(this);
-    this->setModel(m_lrc_model);
+    lrc_model_ = new WLyricsModel(this);
+    this->setModel(lrc_model_);
     this->setWordWrap(true);
     this->setSelectionMode(QAbstractItemView::NoSelection);
     this->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -14,13 +14,11 @@ WLyricsPanel::WLyricsPanel(QWidget* parent) : QListView(parent)
     setMinimumWidth(0);
 }
 
-WLyricsPanel::~WLyricsPanel() {}
-
 void WLyricsPanel::scroll_by_position(qint64 position_ms)
 {
-    int row = m_lrc_model->get_row_by_position(position_ms);
-    if (row >= 0 && row < m_lrc_model->rowCount()) {
-        QModelIndex idx = m_lrc_model->index(row, 0);
+    int row = lrc_model_->get_row_by_position(position_ms);
+    if (row >= 0 && row < lrc_model_->rowCount()) {
+        QModelIndex idx = lrc_model_->index(row, 0);
         if (idx.isValid()) {
             this->scrollTo(idx, QAbstractItemView::PositionAtCenter);
         }
@@ -29,7 +27,7 @@ void WLyricsPanel::scroll_by_position(qint64 position_ms)
 
 bool WLyricsPanel::set_raw_lyrics(const QString& raw_data)
 {
-    if (m_lrc_model->set_raw_lyrics(raw_data)) {
+    if (lrc_model_->set_raw_lyrics(raw_data)) {
         return true;
     }
     return false;
@@ -37,7 +35,7 @@ bool WLyricsPanel::set_raw_lyrics(const QString& raw_data)
 
 bool WLyricsPanel::set_local_lrc(const QString& filepath)
 {
-    if (m_lrc_model->set_local_lrc(filepath)) {
+    if (lrc_model_->set_local_lrc(filepath)) {
         return true;
     }
     return false;
@@ -45,7 +43,7 @@ bool WLyricsPanel::set_local_lrc(const QString& filepath)
 
 bool WLyricsPanel::set_lrc_file_path(const QString& lrc_path)
 {
-    if (m_lrc_model->set_lrc_file_path(lrc_path)) {
+    if (lrc_model_->set_lrc_file_path(lrc_path)) {
         return true;
     }
     return false;
@@ -53,12 +51,12 @@ bool WLyricsPanel::set_lrc_file_path(const QString& lrc_path)
 
 QString WLyricsPanel::raw_lyrics_text() const
 {
-    return m_lrc_model->raw_lyrics_text();
+    return lrc_model_->raw_lyrics_text();
 }
 
 void WLyricsPanel::set_default_info(const TrackMetaData& meta)
 {
-    m_lrc_model->set_default_info(meta);
+    lrc_model_->set_default_info(meta);
 }
 
 void WLyricsPanel::wheelEvent(QWheelEvent* event)

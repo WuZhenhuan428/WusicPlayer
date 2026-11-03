@@ -5,7 +5,7 @@
 #include <QObject>
 #include <QWidget>
 
-class AppContext;
+struct AppContext;
 class MainWindow;
 class ControlBar;
 class PlaybackController;
@@ -17,7 +17,6 @@ class PlaybackService : public QObject
 
 public:
     explicit PlaybackService(AppContext& ctx, QObject* parent);
-    ~PlaybackService();
 
     /**
      * general methods
@@ -34,7 +33,7 @@ public:
     bool is_playing();
 
 signals:
-    void sgnLocateCurrentTrack();
+    void sgn_request_locate_current_track();
 
 private:
     void play_track_request(const EntryId& eid);
@@ -44,11 +43,11 @@ private:
     AppContext& ctx_;
 
     // alias from AppContext
-    MainWindow* main_window           = nullptr;
-    ControlBar* control_bar           = nullptr;
-    PlaybackController* playback_ctl  = nullptr;
-    PlaylistController* playlist_ctl  = nullptr;
+    MainWindow* main_window_          = nullptr;
+    ControlBar* control_bar_          = nullptr;
+    PlaybackController* playback_ctl_ = nullptr;
+    PlaylistController* playlist_ctl_ = nullptr;
 
     bool locate_on_next_play_request_ = false;
-    bool m_bound                      = false;
+    bool bound_                       = false;
 };

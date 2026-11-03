@@ -1,5 +1,6 @@
 #include "string.hpp"
 
+#include <algorithm>
 #include <charconv>
 #include <system_error>
 
@@ -8,7 +9,7 @@ namespace utils::string
 
 QString unfold_string(const QStringList& list, char separator)
 {
-    if (list.size() == 0) {
+    if (list.empty()) {
         return {};
     }
     QString str = list[0];
@@ -49,9 +50,8 @@ std::expected<int, size_t> string_to_int(const std::string& str) noexcept
             failed_pos = 0;
         }
     }
-    if (failed_pos > str.size()) {
-        failed_pos = str.size();
-    }
+    failed_pos = std::min(failed_pos, str.size());
+
     return std::unexpected<size_t>(failed_pos);
 }
 } // namespace utils::string

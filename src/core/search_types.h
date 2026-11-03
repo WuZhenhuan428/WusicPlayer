@@ -21,7 +21,7 @@ enum class SearchQueryMode
 {
     Plain,
     Fuzzy,
-    Prefix
+    Prefix,
 };
 
 struct SearchQuery

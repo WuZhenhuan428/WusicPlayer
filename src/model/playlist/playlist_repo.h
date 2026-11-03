@@ -15,7 +15,12 @@ class PlaylistRepo : public QObject
     Q_OBJECT
 public:
     explicit PlaylistRepo(QObject* parent = nullptr);
-    ~PlaylistRepo();
+    ~PlaylistRepo() override                     = default;
+
+    PlaylistRepo(const PlaylistRepo&)            = delete;
+    PlaylistRepo& operator=(const PlaylistRepo&) = delete;
+    PlaylistRepo(PlaylistRepo&&)                 = delete;
+    PlaylistRepo& operator=(PlaylistRepo&&)      = delete;
 
     // Playlist management
 public:
@@ -34,10 +39,10 @@ public:
     void add_tracks_to_playlist(const PlaylistId& pid, const QStringList& filepaths);
     void add_track_object(const PlaylistId& pid, const Track& track);
     void add_track_objects(const PlaylistId& pid, const QVector<Track>& tracks);
-    bool isEmpty();
+    bool empty();
     const QVector<std::shared_ptr<Playlist>>& get_lists();
 
-    void save_list_to_cache(std::shared_ptr<Playlist> playlist);
+    void save_list_to_cache(const std::shared_ptr<Playlist>& playlist);
     void load_cache();
     void load_cache_async();
 
@@ -46,19 +51,21 @@ signals:
     void sgn_cache_load_started();
     void sgn_cache_load_finished(int playlist_count);
     void sgn_playlist_load_started(const PlaylistId& pid, int total_count);
-    void playlistBatchLoaded(const PlaylistId& pid, int loaded_count, int total_count);
+    // playlist_batch_loaded
+    void playlist_batch_loaded(const PlaylistId& pid, int loaded_count, int total_count);
     void sgn_playlist_load_finished(const PlaylistId& pid);
 
 private:
-    QString cache_file_path(const PlaylistId& pid) const;
+    [[nodiscard]] QString cache_file_path(const PlaylistId& pid) const;
     void load_cache_from_disk();
-    QVector<std::pair<std::shared_ptr<Playlist>, bool>> load_cache_from_disk_to_vector() const;
-    bool load_json_playlist(const QByteArray& data, const QString& fallbackName,
-                            std::shared_ptr<Playlist>& out_playlist,
-                            bool* out_legacy_format = nullptr) const;
-    bool write_json_playlist(QIODevice& device, const std::shared_ptr<Playlist>& playlist) const;
+    [[nodiscard]] QVector<std::pair<std::shared_ptr<Playlist>, bool>>
+    load_cache_from_disk_to_vector() const;
+    static bool load_json_playlist(const QByteArray& data, const QString& fallback_name,
+                                   std::shared_ptr<Playlist>& out_playlist,
+                                   bool* out_legacy_format = nullptr);
+    static bool write_json_playlist(QIODevice& device, const std::shared_ptr<Playlist>& playlist);
 
-    QVector<std::shared_ptr<Playlist>> m_list;
-    QString m_cache_dir; // <standard app data dir>/playlists
+    QVector<std::shared_ptr<Playlist>> list_;
+    QString cache_dir_; // <standard app data dir>/playlists
     static constexpr int kSchemaVersion = 1;
 };

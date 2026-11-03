@@ -8,6 +8,7 @@ namespace dsl
 namespace
 {
 /// 表达式叶子位置不允许出现的结构/修饰关键字(primary 处遇到即报错)。
+// NOLINTNEXTLINE
 const QStringList kBlockKeywords = {
     QStringLiteral("sort"),  QStringLiteral("group"), QStringLiteral("bucket"),
     QStringLiteral("if"),    QStringLiteral("elif"),  QStringLiteral("else"),
@@ -32,12 +33,12 @@ QString cmp_op_name(TokenType t)
     case TokenType::Ge:
         return QStringLiteral(">=");
     default:
-        return QString();
+        return {};
     }
 }
 } // namespace
 
-Parser::Parser(const QVector<Token>& tokens) : ts_(tokens) {}
+Parser::Parser(const QVector<Token>& tokens) : ts_(&tokens) {}
 
 bool Parser::accept(TokenType t)
 {
@@ -106,22 +107,25 @@ Program Parser::parse()
                 error(QStringLiteral("duplicate 'sort' section"), cur());
                 break;
             }
-            if (!parse_sort())
+            if (!parse_sort()) {
                 break;
+            }
         } else if (at_ident(QStringLiteral("group"))) {
             if (prog_.has_group) {
                 error(QStringLiteral("duplicate 'group' section"), cur());
                 break;
             }
-            if (!parse_group())
+            if (!parse_group()) {
                 break;
+            }
         } else if (at_ident(QStringLiteral("bucket"))) {
             if (prog_.has_bucket) {
                 error(QStringLiteral("duplicate 'bucket' section"), cur());
                 break;
             }
-            if (!parse_bucket())
+            if (!parse_bucket()) {
                 break;
+            }
         } else {
             error(QStringLiteral("expected 'sort', 'group' or 'bucket', got '%1'").arg(cur().text),
                   cur());
@@ -136,8 +140,9 @@ bool Parser::parse_sort()
 {
     prog_.has_sort = true;
     ++pos_; // 'sort'
-    if (!expect(TokenType::LBrace, QStringLiteral("'{' after 'sort'")))
+    if (!expect(TokenType::LBrace, QStringLiteral("'{' after 'sort'"))) {
         return false;
+    }
     skip_seps();
     while (!at(TokenType::RBrace)) {
         if (at(TokenType::Eof)) {
@@ -187,8 +192,9 @@ bool Parser::parse_group()
     }
     prog_.has_group = true;
     ++pos_; // 'group'
-    if (!expect(TokenType::LBrace, QStringLiteral("'{' after 'group'")))
+    if (!expect(TokenType::LBrace, QStringLiteral("'{' after 'group'"))) {
         return false;
+    }
     skip_seps();
     while (!at(TokenType::RBrace)) {
         if (at(TokenType::Eof)) {
@@ -221,6 +227,7 @@ bool Parser::parse_group()
 
 bool Parser::parse_bucket()
 {
+    // NOLINTBEGIN(readability-braces-around-statements)
     if (prog_.has_group) {
         error(QStringLiteral("'bucket' is mutually exclusive with 'group'"), cur());
         return false;
@@ -305,6 +312,7 @@ bool Parser::parse_bucket()
     }
     ++pos_; // '}'
     return true;
+    // NOLINTEND(readability-braces-around-statements)
 }
 
 Node Parser::parse_key_expr()
@@ -329,17 +337,21 @@ Node Parser::parse_expr()
 Node Parser::parse_ternary()
 {
     Node cond = parse_or();
-    if (!prog_.ok)
+    if (!prog_.ok) {
         return Node{};
+    }
     if (accept(TokenType::Question)) {
         Node then_branch = parse_expr();
-        if (!prog_.ok)
+        if (!prog_.ok) {
             return Node{};
-        if (!expect(TokenType::Colon, QStringLiteral("':' in ternary expression")))
+        }
+        if (!expect(TokenType::Colon, QStringLiteral("':' in ternary expression"))) {
             return Node{};
+        }
         Node else_branch = parse_expr();
-        if (!prog_.ok)
+        if (!prog_.ok) {
             return Node{};
+        }
         return Node::make_primitive(QStringLiteral("ternary"), {cond, then_branch, else_branch},
                                     cond.line, cond.col);
     }
@@ -352,8 +364,9 @@ Node Parser::parse_or()
     while (prog_.ok && (at(TokenType::OrOr) || at_ident(QStringLiteral("or")))) {
         ++pos_;
         Node right = parse_and();
-        if (!prog_.ok)
+        if (!prog_.ok) {
             return Node{};
+        }
         left = Node::make_primitive(QStringLiteral("or"), {left, right}, left.line, left.col);
     }
     return left;
@@ -365,8 +378,9 @@ Node Parser::parse_and()
     while (prog_.ok && (at(TokenType::AndAnd) || at_ident(QStringLiteral("and")))) {
         ++pos_;
         Node right = parse_not();
-        if (!prog_.ok)
+        if (!prog_.ok) {
             return Node{};
+        }
         left = Node::make_primitive(QStringLiteral("and"), {left, right}, left.line, left.col);
     }
     return left;
@@ -378,8 +392,9 @@ Node Parser::parse_not()
         const Token tok = cur();
         ++pos_;
         Node operand = parse_not();
-        if (!prog_.ok)
+        if (!prog_.ok) {
             return Node{};
+        }
         return Node::make_primitive(QStringLiteral("not"), {operand}, tok.line, tok.col);
     }
     return parse_cmp();
@@ -390,13 +405,15 @@ Node Parser::parse_cmp()
     Node left = parse_add();
     while (prog_.ok) {
         const QString op = cmp_op_name(cur().type);
-        if (op.isEmpty())
+        if (op.isEmpty()) {
             break;
+        }
         const Token tok = cur();
         ++pos_;
         Node right = parse_add();
-        if (!prog_.ok)
+        if (!prog_.ok) {
             return Node{};
+        }
         left = Node::make_primitive(op, {left, right}, tok.line, tok.col);
     }
     return left;
@@ -410,8 +427,9 @@ Node Parser::parse_add()
         const Token tok  = cur();
         ++pos_;
         Node right = parse_mul();
-        if (!prog_.ok)
+        if (!prog_.ok) {
             return Node{};
+        }
         left = Node::make_primitive(op, {left, right}, tok.line, tok.col);
     }
     return left;
@@ -422,17 +440,19 @@ Node Parser::parse_mul()
     Node left = parse_unary();
     while (prog_.ok && (at(TokenType::Star) || at(TokenType::Slash) || at(TokenType::Percent))) {
         QString op;
-        if (at(TokenType::Star))
+        if (at(TokenType::Star)) {
             op = QStringLiteral("*");
-        else if (at(TokenType::Slash))
+        } else if (at(TokenType::Slash)) {
             op = QStringLiteral("/");
-        else
+        } else {
             op = QStringLiteral("%");
+        }
         const Token tok = cur();
         ++pos_;
         Node right = parse_unary();
-        if (!prog_.ok)
+        if (!prog_.ok) {
             return Node{};
+        }
         left = Node::make_primitive(op, {left, right}, tok.line, tok.col);
     }
     return left;
@@ -444,8 +464,9 @@ Node Parser::parse_unary()
         const Token tok = cur();
         ++pos_;
         Node operand = parse_unary();
-        if (!prog_.ok)
+        if (!prog_.ok) {
             return Node{};
+        }
         return Node::make_primitive(QStringLiteral("neg"), {operand}, tok.line, tok.col);
     }
     if (at(TokenType::Plus)) {
@@ -471,10 +492,12 @@ Node Parser::parse_primary()
     case TokenType::LParen: {
         ++pos_;
         Node inner = parse_expr();
-        if (!prog_.ok)
+        if (!prog_.ok) {
             return Node{};
-        if (!expect(TokenType::RParen, QStringLiteral("')' to close '('")))
+        }
+        if (!expect(TokenType::RParen, QStringLiteral("')' to close '('"))) {
             return Node{};
+        }
         return inner;
     }
     case TokenType::Ident: {
@@ -504,14 +527,17 @@ Node Parser::parse_primary()
             if (!at(TokenType::RParen)) {
                 while (true) {
                     args.append(parse_expr());
-                    if (!prog_.ok)
+                    if (!prog_.ok) {
                         return Node{};
-                    if (!accept(TokenType::Comma))
+                    }
+                    if (!accept(TokenType::Comma)) {
                         break;
+                    }
                 }
             }
-            if (!expect(TokenType::RParen, QStringLiteral("')' after function arguments")))
+            if (!expect(TokenType::RParen, QStringLiteral("')' after function arguments"))) {
                 return Node{};
+            }
             return Node::make_primitive(name, args, tok.line, tok.col);
         }
         ++pos_;

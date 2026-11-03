@@ -15,28 +15,30 @@
 
 #include <functional>
 #include <random>
+#include <ranges>
 
 #include "core/logger/logger_manager.h"
 namespace
 {
+// NOLINTNEXTLINE
 Logger* logger = LoggerManager::file_logger("playlist_view_model", {"console", "gui"});
-}
+} // namespace
 
 PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo, QObject* parent) :
-    QAbstractItemModel(parent), m_repo(repo)
+    QAbstractItemModel(parent), repo_(repo)
 {
     init_default_columns();
-    m_root                = new Node();
-    m_batch_rebuild_timer = new QTimer(this);
-    m_batch_rebuild_timer->setSingleShot(true);
-    m_batch_rebuild_timer->setInterval(60);
-    connect(m_batch_rebuild_timer, &QTimer::timeout, this, &PlaylistViewModel::rebuild_async);
-    if (m_repo) {
-        connect(m_repo, &PlaylistRepo::sgn_playlist_changed, this,
+    root_                = new Node();
+    batch_rebuild_timer_ = new QTimer(this);
+    batch_rebuild_timer_->setSingleShot(true);
+    batch_rebuild_timer_->setInterval(60);
+    connect(batch_rebuild_timer_, &QTimer::timeout, this, &PlaylistViewModel::rebuild_async);
+    if (repo_) {
+        connect(repo_, &PlaylistRepo::sgn_playlist_changed, this,
                 &PlaylistViewModel::rebuild_async);
-        connect(m_repo, &PlaylistRepo::playlistBatchLoaded, this,
+        connect(repo_, &PlaylistRepo::playlist_batch_loaded, this,
                 [this](const PlaylistId& playlist_id, int, int) {
-                    if (playlist_id == m_pid) {
+                    if (playlist_id == pid_) {
                         schedule_batch_rebuild();
                     }
                 });
@@ -45,24 +47,26 @@ PlaylistViewModel::PlaylistViewModel(PlaylistRepo* repo, QObject* parent) :
 
 void PlaylistViewModel::init_default_columns()
 {
-    m_columns = {{"", SortType::not_sorted},    {"Disc", SortType::disc_number},
-                 {"#", SortType::track_number}, {"Title", SortType::title},
-                 {"Artist", SortType::artist},  {"Duration", SortType::duration},
-                 {"Album", SortType::album}};
+    columns_ = {
+        {"", SortType::NotSorted},    {"Disc", SortType::DiscNumber},
+        {"#", SortType::TrackNumber}, {"Title", SortType::Title},
+        {"Artist", SortType::Artist}, {"Duration", SortType::Duration},
+        {"Album", SortType::Album},
+    };
 }
 
 PlaylistViewModel::~PlaylistViewModel()
 {
-    delete m_root;
+    delete root_;
 }
 
 void PlaylistViewModel::schedule_batch_rebuild()
 {
-    if (!m_batch_rebuild_timer) {
+    if (!batch_rebuild_timer_) {
         return;
     }
-    if (!m_batch_rebuild_timer->isActive()) {
-        m_batch_rebuild_timer->start();
+    if (!batch_rebuild_timer_->isActive()) {
+        batch_rebuild_timer_->start();
     }
 }
 
@@ -70,7 +74,7 @@ const Playlist& PlaylistViewModel::resolve_playlist()
 {
     // Warning: This might crash if playlist is not found!
     // Prefer using find_playlist_by_id directly with check.
-    return *(m_repo->find_playlist_by_id(m_pid));
+    return *(repo_->find_playlist_by_id(pid_));
 }
 
 void PlaylistViewModel::rebuild()
@@ -78,83 +82,83 @@ void PlaylistViewModel::rebuild()
     beginResetModel();
 
     // Clean old data
-    delete m_root;
+    delete root_;
 
-    if (!m_repo) {
-        m_root = new Node();
-        m_playback_queue.clear();
+    if (!repo_) {
+        root_ = new Node();
+        playback_queue_.clear();
         endResetModel();
-        m_active_track_index = QPersistentModelIndex(find_track_index(m_active_track_id));
+        active_track_index_ = QPersistentModelIndex(find_track_index(active_track_id_));
         return;
     }
 
     // Fix: Check pointer validity to avoid Core Dump
-    auto playlist_ptr = m_repo->find_playlist_by_id(m_pid);
+    auto playlist_ptr = repo_->find_playlist_by_id(pid_);
     if (!playlist_ptr) {
-        m_root = new Node();
-        m_playback_queue.clear();
+        root_ = new Node();
+        playback_queue_.clear();
         endResetModel();
-        m_active_track_index = QPersistentModelIndex(find_track_index(m_active_track_id));
+        active_track_index_ = QPersistentModelIndex(find_track_index(active_track_id_));
         return;
     }
 
     const Playlist& pl  = *playlist_ptr;
 
-    LayoutResult layout = m_layout_builder.build(pl);
+    LayoutResult layout = layout_builder_.build(pl);
 
     if (!layout.updated_meta.isEmpty()) {
         for (const auto& entry : layout.updated_meta) {
             playlist_ptr->update_track_meta(entry.id, entry.meta);
         }
-        m_repo->save_list_to_cache(playlist_ptr);
+        repo_->save_list_to_cache(playlist_ptr);
     }
 
-    m_root                 = layout.root;
-    m_playback_queue       = layout.playback_queue;
-    m_single_shuffle_queue = generate_single_shuffle_queue();
-    m_group_shuffle_queue  = generate_group_shuffle_queue();
+    root_                 = layout.root;
+    playback_queue_       = layout.playback_queue;
+    single_shuffle_queue_ = generate_single_shuffle_queue();
+    group_shuffle_queue_  = generate_group_shuffle_queue();
 
     endResetModel();
-    m_active_track_index = QPersistentModelIndex(find_track_index(m_active_track_id));
-    logger->info("rebuild finished. Queue size: {}", m_playback_queue.size());
-    emit changedPlaybackQueue();
+    active_track_index_ = QPersistentModelIndex(find_track_index(active_track_id_));
+    logger->info("rebuild finished. Queue size: {}", playback_queue_.size());
+    emit playback_queue_changed();
 }
 
 void PlaylistViewModel::rebuild_async()
 {
-    const int token = ++m_rebuild_token;
+    const int token = ++rebuild_token_;
 
-    if (!m_repo) {
+    if (!repo_) {
         beginResetModel();
-        delete m_root;
-        m_root = new Node();
-        m_playback_queue.clear();
+        delete root_;
+        root_ = new Node();
+        playback_queue_.clear();
         endResetModel();
-        m_active_track_index = QPersistentModelIndex(find_track_index(m_active_track_id));
+        active_track_index_ = QPersistentModelIndex(find_track_index(active_track_id_));
         return;
     }
 
-    auto playlistPtr = m_repo->find_playlist_by_id(m_pid);
-    if (!playlistPtr) {
+    auto playlist_ptr = repo_->find_playlist_by_id(pid_);
+    if (!playlist_ptr) {
         beginResetModel();
-        delete m_root;
-        m_root = new Node();
-        m_playback_queue.clear();
+        delete root_;
+        root_ = new Node();
+        playback_queue_.clear();
         endResetModel();
-        m_active_track_index = QPersistentModelIndex(find_track_index(m_active_track_id));
+        active_track_index_ = QPersistentModelIndex(find_track_index(active_track_id_));
         return;
     }
 
-    auto playlistSnapshot             = std::make_shared<Playlist>(*playlistPtr);
-    PlaylistLayoutBuilder builderCopy = m_layout_builder;
+    auto playlist_snapshot             = std::make_shared<Playlist>(*playlist_ptr);
+    PlaylistLayoutBuilder builder_copy = layout_builder_;
 
     QPointer<PlaylistViewModel> self(this);
-    QThread* worker = QThread::create([self, token, playlistSnapshot, builderCopy]() mutable {
+    QThread* worker = QThread::create([self, token, playlist_snapshot, builder_copy]() mutable {
         if (!self) {
             return;
         }
 
-        LayoutResult layout = builderCopy.build(*playlistSnapshot);
+        LayoutResult layout = builder_copy.build(*playlist_snapshot);
         if (!self) {
             delete layout.root;
             return;
@@ -167,30 +171,30 @@ void PlaylistViewModel::rebuild_async()
                     delete layout.root;
                     return;
                 }
-                if (token != self->m_rebuild_token) {
+                if (token != self->rebuild_token_) {
                     delete layout.root;
                     return;
                 }
 
                 self->beginResetModel();
-                delete self->m_root;
-                self->m_root                 = layout.root;
-                self->m_playback_queue       = layout.playback_queue;
-                self->m_single_shuffle_queue = self->generate_single_shuffle_queue();
-                self->m_group_shuffle_queue  = self->generate_group_shuffle_queue();
+                delete self->root_;
+                self->root_                 = layout.root;
+                self->playback_queue_       = layout.playback_queue;
+                self->single_shuffle_queue_ = self->generate_single_shuffle_queue();
+                self->group_shuffle_queue_  = self->generate_group_shuffle_queue();
                 self->endResetModel();
-                self->m_active_track_index =
-                    QPersistentModelIndex(self->find_track_index(self->m_active_track_id));
+                self->active_track_index_ =
+                    QPersistentModelIndex(self->find_track_index(self->active_track_id_));
 
-                auto playlistPtr =
-                    self->m_repo ? self->m_repo->find_playlist_by_id(self->m_pid) : nullptr;
-                if (playlistPtr && !layout.updated_meta.isEmpty()) {
+                auto playlist_ptr =
+                    self->repo_ ? self->repo_->find_playlist_by_id(self->pid_) : nullptr;
+                if (playlist_ptr && !layout.updated_meta.isEmpty()) {
                     for (const auto& entry : layout.updated_meta) {
-                        playlistPtr->update_track_meta(entry.id, entry.meta);
+                        playlist_ptr->update_track_meta(entry.id, entry.meta);
                     }
-                    self->m_repo->save_list_to_cache(playlistPtr);
+                    self->repo_->save_list_to_cache(playlist_ptr);
                 }
-                emit self->changedPlaybackQueue();
+                emit self->playback_queue_changed();
             },
             Qt::QueuedConnection);
     });
@@ -201,10 +205,10 @@ void PlaylistViewModel::rebuild_async()
 
 void PlaylistViewModel::apply_missing_changes(const QVector<EntryId>& ids)
 {
-    if (!m_repo || !m_root || ids.isEmpty()) {
+    if (!repo_ || !root_ || ids.isEmpty()) {
         return;
     }
-    auto playlist = m_repo->find_playlist_by_id(m_pid);
+    auto playlist = repo_->find_playlist_by_id(pid_);
     if (!playlist) {
         return;
     }
@@ -243,12 +247,12 @@ void PlaylistViewModel::apply_missing_changes(const QVector<EntryId>& ids)
             emit dataChanged(ix, ix.siblingAtColumn(columnCount() - 1), {Qt::ForegroundRole});
         }
     };
-    walk(m_root, QModelIndex());
+    walk(root_, QModelIndex());
 }
 
 void PlaylistViewModel::remove_tracks_by_ids(const QVector<EntryId>& ids)
 {
-    if (!m_root || ids.isEmpty()) {
+    if (!root_ || ids.isEmpty()) {
         return;
     }
 
@@ -278,13 +282,13 @@ void PlaylistViewModel::remove_tracks_by_ids(const QVector<EntryId>& ids)
             }
         }
     };
-    collect(m_root);
+    collect(root_);
     if (hits.isEmpty()) {
         return;
     }
 
     // 同一父节点内从大行号开始删除, 行号不因删除位移
-    std::sort(hits.begin(), hits.end(), [](const Hit& a, const Hit& b) {
+    std::ranges::sort(hits, [](const Hit& a, const Hit& b) {
         if (a.parent != b.parent) {
             return a.parent > b.parent;
         }
@@ -297,15 +301,15 @@ void PlaylistViewModel::remove_tracks_by_ids(const QVector<EntryId>& ids)
         const QModelIndex parent_idx = index_of_node(hit.parent);
         beginRemoveRows(parent_idx, hit.row, hit.row);
 
-        m_playback_queue.removeAll(hit.node->id);
-        m_single_shuffle_queue.removeAll(hit.node->id);
-        m_group_shuffle_queue.removeAll(hit.node->id);
+        playback_queue_.removeAll(hit.node->id);
+        single_shuffle_queue_.removeAll(hit.node->id);
+        group_shuffle_queue_.removeAll(hit.node->id);
 
         hit.parent->children.removeAt(hit.row);
         delete hit.node;
         endRemoveRows();
 
-        if (hit.parent != m_root && !touched_groups.contains(hit.parent)) {
+        if (hit.parent != root_ && !touched_groups.contains(hit.parent)) {
             touched_groups.append(hit.parent);
         }
     }
@@ -313,12 +317,11 @@ void PlaylistViewModel::remove_tracks_by_ids(const QVector<EntryId>& ids)
     // 3) 空组删除(仅一级分组; 多级分组保留空子组)
     QVector<Hit> empty_groups;
     for (Node* group : touched_groups) {
-        if (group->parent == m_root && group->children.isEmpty()) {
+        if (group->parent == root_ && group->children.isEmpty()) {
             empty_groups.append({group->parent, group->row(), group});
         }
     }
-    std::sort(empty_groups.begin(), empty_groups.end(),
-              [](const Hit& a, const Hit& b) { return a.row > b.row; });
+    std::ranges::sort(empty_groups, [](const Hit& a, const Hit& b) { return a.row > b.row; });
     for (const Hit& hit : empty_groups) {
         beginRemoveRows(QModelIndex(), hit.row, hit.row);
         hit.parent->children.removeAt(hit.row);
@@ -338,127 +341,136 @@ void PlaylistViewModel::remove_tracks_by_ids(const QVector<EntryId>& ids)
     }
 
     logger->info("removed {} tracks from view (no reset)", static_cast<int>(hits.size()));
-    emit changedPlaybackQueue();
+    emit playback_queue_changed();
 }
 
 void PlaylistViewModel::set_playlist(const PlaylistId& pid)
 {
-    if (m_pid == pid) {
+    if (pid_ == pid) {
         return;
     }
-    m_pid = pid;
+    pid_ = pid;
     this->rebuild_async();
 }
 
 void PlaylistViewModel::set_sort_expression(const QString& expression)
 {
     // DSL 路径(排序/分组/分类); 空串 → 清除 DSL, 回退内置规则
-    m_layout_builder.set_dsl(expression);
+    layout_builder_.set_dsl(expression);
     this->rebuild_async();
 }
 
 void PlaylistViewModel::set_single_grouping(SortRule rule)
 {
-    m_layout_builder.update_sort(rule, false);
+    layout_builder_.update_sort(rule, false);
     this->rebuild_async();
 }
 
 void PlaylistViewModel::set_active_track(const EntryId& tid)
 {
     QModelIndex old_index = get_current_track_index();
-    m_active_track_id     = tid;
-    m_active_track_index  = QPersistentModelIndex(find_track_index(tid));
+    active_track_id_      = tid;
+    active_track_index_   = QPersistentModelIndex(find_track_index(tid));
 
     QModelIndex new_index = get_current_track_index();
 
-    auto emitRowChanged   = [this](const QModelIndex& index) {
-        if (!index.isValid())
+    auto emit_row_changed = [this](const QModelIndex& index) {
+        if (!index.isValid()) {
             return;
+        }
         const QModelIndex left  = index.siblingAtColumn(0);
         const QModelIndex right = index.siblingAtColumn(std::max(0, columnCount() - 1));
         emit dataChanged(left, right, {Qt::DisplayRole});
     };
 
-    emitRowChanged(old_index);
-    emitRowChanged(new_index);
+    emit_row_changed(old_index);
+    emit_row_changed(new_index);
 }
 
 void PlaylistViewModel::clear()
 {
     beginResetModel();
-    delete m_root;
-    m_root = new Node();
-    m_playback_queue.clear();
+    delete root_;
+    root_ = new Node();
+    playback_queue_.clear();
     endResetModel();
-    m_active_track_index = QPersistentModelIndex();
+    active_track_index_ = QPersistentModelIndex();
 }
 
 /* ==== QAbstractItemModel Interface ==== */
 
 QModelIndex PlaylistViewModel::index(int row, int column, const QModelIndex& parent) const
 {
-    if (!hasIndex(row, column, parent))
-        return QModelIndex();
+    if (!hasIndex(row, column, parent)) {
+        return {};
+    }
 
-    Node* parentNode;
-    if (!parent.isValid())
-        parentNode = m_root;
-    else
-        parentNode = static_cast<Node*>(parent.internalPointer());
+    Node* parent_node = nullptr;
+    if (!parent.isValid()) {
+        parent_node = root_;
+    } else {
+        parent_node = static_cast<Node*>(parent.internalPointer());
+    }
 
-    if (row < 0 || row >= parentNode->children.size())
-        return QModelIndex();
+    if (row < 0 || row >= parent_node->children.size()) {
+        return {};
+    }
 
-    Node* childNode = parentNode->children.at(row);
-    return createIndex(row, column, childNode);
+    Node* child_node = parent_node->children.at(row);
+    return createIndex(row, column, child_node);
 }
 
 QModelIndex PlaylistViewModel::parent(const QModelIndex& child) const
 {
-    if (!child.isValid())
-        return QModelIndex();
+    if (!child.isValid()) {
+        return {};
+    }
 
-    Node* childNode  = static_cast<Node*>(child.internalPointer());
-    Node* parentNode = childNode->parent;
+    Node* child_node  = static_cast<Node*>(child.internalPointer());
+    Node* parent_node = child_node->parent;
 
-    if (parentNode == m_root || !parentNode)
-        return QModelIndex();
+    if (parent_node == root_ || !parent_node) {
+        return {};
+    }
 
-    return createIndex(parentNode->row(), 0, parentNode);
+    return createIndex(parent_node->row(), 0, parent_node);
 }
 
 int PlaylistViewModel::rowCount(const QModelIndex& parent) const
 {
-    Node* parentNode;
-    if (parent.column() > 0)
+    Node* parent_node = nullptr;
+    if (parent.column() > 0) {
         return 0;
+    }
 
-    if (!parent.isValid())
-        parentNode = m_root;
-    else
-        parentNode = static_cast<Node*>(parent.internalPointer());
+    if (!parent.isValid()) {
+        parent_node = root_;
+    } else {
+        parent_node = static_cast<Node*>(parent.internalPointer());
+    }
 
-    return parentNode->children.size();
+    return static_cast<int>(parent_node->children.size());
 }
 
 int PlaylistViewModel::columnCount([[maybe_unused]] const QModelIndex& parent) const
 {
-    return m_columns.size();
+    return static_cast<int>(columns_.size());
 }
 
 QVariant PlaylistViewModel::data(const QModelIndex& index, int role) const
 {
-    if (!index.isValid())
-        return QVariant();
+    if (!index.isValid()) {
+        return {};
+    }
 
     Node* node    = static_cast<Node*>(index.internalPointer());
     bool is_group = node->id.is_null();
 
     if (role == Qt::TextAlignmentRole && is_group) {
-        return int(Qt::AlignLeft | Qt::AlignVCenter);
+        return static_cast<int>(Qt::AlignLeft | Qt::AlignVCenter);
     }
     if (role == Qt::TextAlignmentRole && index.column() == 0) {
-        return int(Qt::AlignLeft | Qt::AlignVCenter);
+        return static_cast<int>(Qt::AlignLeft | Qt::AlignVCenter);
     }
 
     // 缺失文件置灰
@@ -472,22 +484,23 @@ QVariant PlaylistViewModel::data(const QModelIndex& index, int role) const
             if (index.column() == 0) {
                 return node->group_name + QString(" (%1)").arg(node->children.size());
             }
-            return QVariant();
+            return {};
         }
 
         // Track Logic
         const TrackMetaData& d = node->meta;
-        if (index.column() < 0 || index.column() >= m_columns.size())
-            return QVariant();
+        if (index.column() < 0 || index.column() >= columns_.size()) {
+            return {};
+        }
 
-        const TableColumn& col = m_columns[index.column()];
+        const TableColumn& col = columns_[index.column()];
 
-        if (col.sortType == SortType::not_sorted) {
-            return (node->id == m_active_track_id) ? ">" : "";
+        if (col.sort_type == SortType::NotSorted) {
+            return (node->id == active_track_id_) ? ">" : "";
         }
 
         // Special formatting
-        if (col.sortType == SortType::duration) {
+        if (col.sort_type == SortType::Duration) {
             int time_s = d.duration_s;
             int hours  = time_s / 3600;
             int mins   = (time_s % 3600) / 60;
@@ -502,40 +515,44 @@ QVariant PlaylistViewModel::data(const QModelIndex& index, int role) const
         }
 
         // Default meta data retrieval
-        QVariant val = PlaylistLayoutBuilder::get_metadata_value(d, col.sortType);
-        if (val.isValid())
+        QVariant val = PlaylistLayoutBuilder::get_metadata_value(d, col.sort_type);
+        if (val.isValid()) {
             return val;
-        return QVariant();
+        }
+        return {};
     }
-    return QVariant();
+    return {};
 }
 
 QVariant PlaylistViewModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (role != Qt::DisplayRole)
-        return QVariant();
+    if (role != Qt::DisplayRole) {
+        return {};
+    }
     if (orientation == Qt::Horizontal) {
-        if (section >= 0 && section < m_columns.size()) {
-            return m_columns[section].headerName;
+        if (section >= 0 && section < columns_.size()) {
+            return columns_[section].header_name;
         }
     }
-    return QVariant();
+    return {};
 }
 
 void PlaylistViewModel::sort(int column, Qt::SortOrder order)
 {
-    if (column < 0 || column >= m_columns.size())
+    if (column < 0 || column >= columns_.size()) {
         return;
+    }
 
-    SortType type = m_columns[column].sortType;
-    if (type == SortType::not_sorted)
+    SortType type = columns_[column].sort_type;
+    if (type == SortType::NotSorted) {
         return;
+    }
 
     SortRule rule;
     rule.type  = type;
     rule.order = order;
 
-    m_layout_builder.set_sort_rule({rule});
+    layout_builder_.set_sort_rule({rule});
     rebuild_async();
 }
 
@@ -544,32 +561,34 @@ void PlaylistViewModel::sort(int column, Qt::SortOrder order)
 PlaybackQueueSnapshot PlaylistViewModel::playback_queue_snapshot() const
 {
     static int version = 0;
-    return {m_playback_queue, version++};
+    return {playback_queue_, version++};
 }
 
 PlaybackQueueSnapshot PlaylistViewModel::single_shuffle_queue_snapshot() const
 {
     static int version = 0;
-    return {m_single_shuffle_queue, version++};
+    return {single_shuffle_queue_, version++};
 }
 
 PlaybackQueueSnapshot PlaylistViewModel::group_shuffle_queue_snapshot() const
 {
     static int version = 0;
-    return {m_group_shuffle_queue, version++};
+    return {group_shuffle_queue_, version++};
 }
 
 EntryId PlaylistViewModel::track_at(int index) const
 {
-    if (index >= 0 && index < m_playback_queue.size())
-        return m_playback_queue.at(index);
-    return EntryId();
+    if (index >= 0 && index < playback_queue_.size()) {
+        return playback_queue_.at(index);
+    }
+    return {};
 }
 
 EntryId PlaylistViewModel::track_at(const QModelIndex& index) const
 {
-    if (!index.isValid())
-        return EntryId();
+    if (!index.isValid()) {
+        return {};
+    }
     Node* node = static_cast<Node*>(index.internalPointer());
     return node->id;
 }
@@ -613,7 +632,7 @@ QMimeData* PlaylistViewModel::mimeData(const QModelIndexList& indexes) const
         arr.append(id.to_string_without_brace());
     }
     QJsonObject root;
-    root["src"] = m_pid.to_string_without_brace();
+    root["src"] = pid_.to_string_without_brace();
     root["ids"] = arr;
     auto* mime  = new QMimeData;
     mime->setData(QString::fromLatin1(wusic::kPlaylistEntriesMime),
@@ -623,16 +642,16 @@ QMimeData* PlaylistViewModel::mimeData(const QModelIndexList& indexes) const
 
 QModelIndex PlaylistViewModel::get_current_track_index()
 {
-    if (m_active_track_index.isValid()) {
-        return m_active_track_index;
+    if (active_track_index_.isValid()) {
+        return active_track_index_;
     }
-    return find_track_index(m_active_track_id);
+    return find_track_index(active_track_id_);
 }
 
 QModelIndex PlaylistViewModel::index_of_node(const Node* node) const
 {
-    if (!node || !node->parent || !m_root) {
-        return QModelIndex();
+    if (!node || !node->parent || !root_) {
+        return {};
     }
     // 自顶向下沿链构造, 保证不是 O(depth) 的 parent() 反复上升
     QVector<const Node*> chain;
@@ -641,13 +660,13 @@ QModelIndex PlaylistViewModel::index_of_node(const Node* node) const
     }
     QModelIndex idx;
     for (const Node* n : chain) {
-        const int row = n->parent->children.indexOf(const_cast<Node*>(n));
+        const int row = static_cast<int>(n->parent->children.indexOf(const_cast<Node*>(n)));
         if (row < 0) {
-            return QModelIndex();
+            return {};
         }
         idx = index(row, 0, idx);
         if (!idx.isValid()) {
-            return QModelIndex();
+            return {};
         }
     }
     return idx;
@@ -655,12 +674,11 @@ QModelIndex PlaylistViewModel::index_of_node(const Node* node) const
 
 QModelIndex PlaylistViewModel::find_track_index(const EntryId& tid) const
 {
-    if (tid.is_null() || !m_root) {
-        return QModelIndex();
+    if (tid.is_null() || !root_) {
+        return {};
     }
 
-    for (int group_row = 0; group_row < m_root->children.size(); ++group_row) {
-        Node* group = m_root->children.at(group_row);
+    for (Node* group : root_->children) {
         for (int track_row = 0; track_row < group->children.size(); ++track_row) {
             Node* track_node = group->children.at(track_row);
             if (track_node->id == tid) {
@@ -669,24 +687,24 @@ QModelIndex PlaylistViewModel::find_track_index(const EntryId& tid) const
             }
         }
     }
-    return QModelIndex();
+    return {};
 }
 
 const QVector<EntryId>& PlaylistViewModel::playback_queue() const
 {
-    return m_playback_queue;
+    return playback_queue_;
 }
 
 QVector<EntryId> PlaylistViewModel::generate_group_shuffle_queue()
 {
-    if (!m_root || m_root->children.isEmpty()) {
+    if (!root_ || root_->children.isEmpty()) {
         return {};
     }
     QVector<EntryId> result;
-    result.reserve(m_playback_queue.size());
+    result.reserve(playback_queue_.size());
 
     // Just copy, do not use reference
-    QVector<Node*> groups = m_root->children;
+    QVector<Node*> groups = root_->children;
 
     std::random_device rd;
     std::mt19937 g(rd());
@@ -704,18 +722,18 @@ QVector<EntryId> PlaylistViewModel::generate_group_shuffle_queue()
 
 QVector<EntryId> PlaylistViewModel::generate_single_shuffle_queue()
 {
-    if (!m_root || m_root->children.isEmpty()) {
+    if (!root_ || root_->children.isEmpty()) {
         return {};
     }
     QVector<EntryId> result;
-    result.reserve(m_playback_queue.size());
-    result = m_playback_queue;
+    result.reserve(playback_queue_.size());
+    result = playback_queue_;
 
     std::random_device rd;
     std::mt19937 g(rd());
     std::shuffle(result.begin(), result.end(), g);
-    m_single_shuffle_queue.clear();
-    m_single_shuffle_queue = result;
+    single_shuffle_queue_.clear();
+    single_shuffle_queue_ = result;
     logger->info("(re)build single_shuffle_queue");
     return result;
 }
@@ -724,58 +742,60 @@ QVector<EntryId> PlaylistViewModel::generate_single_shuffle_queue()
 
 void PlaylistViewModel::insert_column(int index, const TableColumn& column)
 {
-    if (index < 0 || index > m_columns.size())
+    if (index < 0 || index > columns_.size()) {
         return;
+    }
     beginInsertColumns(QModelIndex(), index, index);
-    m_columns.insert(index, column);
+    columns_.insert(index, column);
     endInsertColumns();
 }
 
 void PlaylistViewModel::remove_column(int index)
 {
-    if (index < 0 || index >= m_columns.size())
+    if (index < 0 || index >= columns_.size()) {
         return;
+    }
     beginRemoveColumns(QModelIndex(), index, index);
-    m_columns.removeAt(index);
+    columns_.removeAt(index);
     endRemoveColumns();
 }
 
 void PlaylistViewModel::rename_column(int index, const QString& new_name)
 {
-    if (index < 0 || index >= m_columns.size()) {
+    if (index < 0 || index >= columns_.size()) {
         return;
     }
-    m_columns[index].headerName = new_name;
+    columns_[index].header_name = new_name;
 }
 
 void PlaylistViewModel::set_columns(const QVector<TableColumn>& columns)
 {
     beginResetModel();
-    m_columns = columns;
+    columns_ = columns;
     endResetModel();
 }
 
 const QVector<TableColumn>& PlaylistViewModel::get_columns() const
 {
-    return m_columns;
+    return columns_;
 }
 
 void PlaylistViewModel::set_group_rules(const QVector<SortRule>& rules)
 {
-    m_layout_builder.set_group_rule(rules);
+    layout_builder_.set_group_rule(rules);
 }
 
 void PlaylistViewModel::set_sort_rules(const QVector<SortRule>& rules)
 {
-    m_layout_builder.set_sort_rule(rules);
+    layout_builder_.set_sort_rule(rules);
 }
 
-const QVector<SortRule> PlaylistViewModel::group_rules() const
+QVector<SortRule> PlaylistViewModel::group_rules() const
 {
-    return m_layout_builder.group_rules();
+    return layout_builder_.group_rules();
 }
 
-const QVector<SortRule> PlaylistViewModel::sort_rules() const
+QVector<SortRule> PlaylistViewModel::sort_rules() const
 {
-    return m_layout_builder.sort_rules();
+    return layout_builder_.sort_rules();
 }

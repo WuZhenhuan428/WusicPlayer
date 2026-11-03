@@ -7,8 +7,10 @@
 #include <QHBoxLayout>
 #include <QLabel>
 
+#include <utility>
+
 LibrarySettingsPage::LibrarySettingsPage(LibraryManager* lib, QWidget* parent) :
-    QWidget(parent), m_lib(lib)
+    QWidget(parent), lib_(lib)
 {
     init_ui();
     refresh_folders();
@@ -16,10 +18,10 @@ LibrarySettingsPage::LibrarySettingsPage(LibraryManager* lib, QWidget* parent) :
 
 QListWidgetItem* LibrarySettingsPage::get_title_item()
 {
-    if (m_title_item == nullptr) {
-        m_title_item = new QListWidgetItem(tr("Media Library"));
+    if (title_item_ == nullptr) {
+        title_item_ = new QListWidgetItem(tr("Media Library"));
     }
-    return m_title_item;
+    return title_item_;
 }
 
 void LibrarySettingsPage::init_ui()
@@ -27,85 +29,86 @@ void LibrarySettingsPage::init_ui()
     // 添加未入库文件时的解析策略
     auto* policy_row = new QHBoxLayout;
     auto* lbl_policy = new QLabel(tr("Add un-library files:"));
-    m_cb_add_policy  = new QComboBox;
-    m_cb_add_policy->addItem(tr("By operation"), int(AddFilePolicy::by_operation));
-    m_cb_add_policy->addItem(tr("Import to library"), int(AddFilePolicy::import_to_library));
-    m_cb_add_policy->addItem(tr("Keep external"), int(AddFilePolicy::keep_external));
-    m_cb_add_policy->addItem(tr("Ask every time"), int(AddFilePolicy::always_ask));
-    m_cb_add_policy->setToolTip(tr("Folders add to library by default, Single file keeps external; "
-                                   "Default behavior can be overriden here"));
+    cb_add_policy_   = new QComboBox;
+    cb_add_policy_->addItem(tr("By operation"), std::to_underlying(AddFilePolicy::ByOperation));
+    cb_add_policy_->addItem(tr("Import to library"),
+                            std::to_underlying(AddFilePolicy::ImportToLibrary));
+    cb_add_policy_->addItem(tr("Keep external"), std::to_underlying(AddFilePolicy::KeepExternal));
+    cb_add_policy_->addItem(tr("Ask every time"), std::to_underlying(AddFilePolicy::AlwaysAsk));
+    cb_add_policy_->setToolTip(tr("Folders add to library by default, Single file keeps external; "
+                                  "Default behavior can be overriden here"));
     policy_row->addWidget(lbl_policy);
-    policy_row->addWidget(m_cb_add_policy, 1);
+    policy_row->addWidget(cb_add_policy_, 1);
 
-    m_list        = new QListWidget;
-    m_btn_add     = new QPushButton(tr("Add folder"));
-    m_btn_remove  = new QPushButton(tr("Remove"));
+    list_         = new QListWidget;
+    btn_add_      = new QPushButton(tr("Add folder"));
+    btn_remove_   = new QPushButton(tr("Remove"));
 
     auto* btn_row = new QHBoxLayout;
-    btn_row->addWidget(m_btn_add);
-    btn_row->addWidget(m_btn_remove);
+    btn_row->addWidget(btn_add_);
+    btn_row->addWidget(btn_remove_);
     btn_row->addStretch(1);
 
     auto* vbl = new QVBoxLayout(this);
     vbl->addLayout(policy_row);
-    vbl->addWidget(m_list, 1);
+    vbl->addWidget(list_, 1);
     vbl->addLayout(btn_row);
 
-    connect(m_btn_add, &QPushButton::clicked, this, &LibrarySettingsPage::add_folder);
-    connect(m_btn_remove, &QPushButton::clicked, this, &LibrarySettingsPage::remove_selected);
-    connect(m_cb_add_policy, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+    connect(btn_add_, &QPushButton::clicked, this, &LibrarySettingsPage::add_folder);
+    connect(btn_remove_, &QPushButton::clicked, this, &LibrarySettingsPage::remove_selected);
+    connect(cb_add_policy_, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             [this](int index) {
-                const int policy = m_cb_add_policy->itemData(index).toInt();
-                emit sgnAddFilePolicyChanged(policy);
+                const int policy = cb_add_policy_->itemData(index).toInt();
+                emit sgn_add_file_policy_changed(policy);
             });
 }
 
 void LibrarySettingsPage::set_add_file_policy(AddFilePolicy policy)
 {
-    const int idx = m_cb_add_policy->findData(int(policy));
+    const int idx = cb_add_policy_->findData(std::to_underlying(policy));
     if (idx < 0) {
         return;
     }
-    m_cb_add_policy->blockSignals(true);
-    m_cb_add_policy->setCurrentIndex(idx);
-    m_cb_add_policy->blockSignals(false);
+    cb_add_policy_->blockSignals(true);
+    cb_add_policy_->setCurrentIndex(idx);
+    cb_add_policy_->blockSignals(false);
 }
 
 void LibrarySettingsPage::refresh_folders()
 {
-    m_list->clear();
-    if (m_lib == nullptr) {
+    list_->clear();
+    if (lib_ == nullptr) {
         return;
     }
-    const QStringList folders = m_lib->watched_folders();
+    const QStringList folders = lib_->watched_folders();
     for (const QString& folder : folders) {
-        m_list->addItem(folder);
+        list_->addItem(folder);
     }
 }
 
 void LibrarySettingsPage::add_folder()
 {
-    if (m_lib == nullptr) {
+    if (lib_ == nullptr) {
         return;
     }
     const QString dir = QFileDialog::getExistingDirectory(this, tr("Add media folder"));
     if (dir.isEmpty()) {
         return;
     }
-    m_lib->add_watched_folder(dir); // 去重 + 触发异步扫描
+    lib_->add_watched_folder(dir); // 去重 + 触发异步扫描
     refresh_folders();
 }
 
 void LibrarySettingsPage::remove_selected()
 {
-    if (m_lib == nullptr) {
+    if (lib_ == nullptr) {
         return;
     }
-    const int row = m_list->currentRow();
+    const int row = list_->currentRow();
     if (row < 0) {
         return;
     }
-    const QString path = m_list->item(row)->text();
-    m_lib->remove_watched_folder(path);
+    const QString path = list_->item(row)->text();
+    lib_->remove_watched_folder(path);
     refresh_folders();
 }

@@ -79,7 +79,7 @@ thirdparty/
 ## 3. 关键机制
 
 ### 3.1 播放请求链路
-所有播放最终汇入 `MainWindow::sgnPlayTrackRequested`:
+所有播放最终汇入 `MainWindow::sgn_play_track_requested`:
 
 ```
 来源(双击/搜索/上下一首/打开文件)
@@ -120,7 +120,7 @@ thirdparty/
 | 命名空间 / 函数 / 方法 / 变量 | snake_case               | `add_library_tracks`, `m_lib`             |
 | 信号                          | `sgn_` 前缀 + snake_case | `sgn_playlist_changed`                    |
 | 常量                          | `k` + PascalCase         | `kLeafBase`                               |
-| 枚举值                        | 全小写 snake             | `SearchQueryMode::prefix`                 |
+| 枚举值                        | PascalCase               | `SearchQueryMode::Prefix`                 |
 | Qt 虚函数覆写                 | 保留原名                 | `data()`, `paintEvent()`                  |
 | 文件 / 路径                   | snake_case               | `playlist_manager.cpp`, `settings_panel/` |
 

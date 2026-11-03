@@ -20,9 +20,9 @@ using LibrarySnapshot = QHash<QString, FileStamp>;
 // 扫描结果:单个文件的变化分类
 enum class TrackChange
 {
-    added,    // 新增(快照无此路径)
-    modified, // 已修改(大小或 mtime 变化,保留原 track_id)
-    missing   // 快照有但磁盘消失(标记 missing,不删除)
+    Added,    // 新增(快照无此路径)
+    Modified, // 已修改(大小或 mtime 变化,保留原 track_id)
+    Missing,  // 快照有但磁盘消失(标记 missing,不删除)
 };
 
 struct TrackUpdate

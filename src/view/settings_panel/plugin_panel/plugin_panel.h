@@ -21,10 +21,10 @@ class PluginPanel : public QWidget
     Q_OBJECT
 
 public:
-    explicit PluginPanel(const QVector<PluginDescriptor> descriptors, QWidget* parent = nullptr);
+    explicit PluginPanel(QVector<PluginDescriptor> descriptors, QWidget* parent = nullptr);
 
     void refresh();
-    void refresh(const QVector<PluginDescriptor> descriptors);
+    void refresh(QVector<PluginDescriptor> descriptors);
 
     QListWidgetItem* get_title_item();
 
@@ -39,12 +39,12 @@ private:
 
     enum class PluginTableType : int
     {
-        id = QTableWidgetItem::UserType + 1,
-        name,
-        version,
-        description,
-        author,
-        categories,
+        Id = QTableWidgetItem::UserType + 1,
+        Name,
+        Version,
+        Description,
+        Author,
+        Categories,
     };
 
     QVBoxLayout* vbl_main_        = nullptr;

@@ -50,12 +50,12 @@ void TagEditWidget::init_ui()
     m_hbl_buttons->addWidget(m_btn_ok);
     m_hbl_buttons->addWidget(m_btn_cancel);
 
-    m_vbl_main = new QVBoxLayout();
-    m_vbl_main->addLayout((m_hbl_filepath));
-    m_vbl_main->addWidget(m_table_metadata);
-    m_vbl_main->addLayout(m_hbl_buttons);
+    vbl_main_ = new QVBoxLayout();
+    vbl_main_->addLayout((m_hbl_filepath));
+    vbl_main_->addWidget(m_table_metadata);
+    vbl_main_->addLayout(m_hbl_buttons);
 
-    this->setLayout(m_vbl_main);
+    this->setLayout(vbl_main_);
 
     this->setMinimumSize(800, 600);
 }
@@ -191,7 +191,7 @@ void TagEditWidget::handle_edit_item(QModelIndex index)
         dialog->setWindowTitle(tr("Edit Lyrics"));
         dialog->setAttribute(Qt::WA_DeleteOnClose);
 
-        connect(dialog, &TextEditorDialog::sgnText, this,
+        connect(dialog, &TextEditorDialog::sgn_text, this,
                 [this, value_index](const QString& new_text) {
                     m_table_model->setData(value_index, new_text, Qt::DisplayRole);
                 });
@@ -228,7 +228,7 @@ void TagEditWidget::handle_add_new_field()
     widget->setWindowTitle(tr("Add New Tag Item"));
     widget->setAttribute(Qt::WA_DeleteOnClose);
 
-    connect(widget, &NewTagItemDialog::sgnResult, this,
+    connect(widget, &NewTagItemDialog::sgn_result, this,
             [this](const QPair<QString, QString>& result) {
                 if (!m_table_model) {
                     return;

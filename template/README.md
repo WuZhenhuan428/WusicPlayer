@@ -72,11 +72,11 @@ Q_PLUGIN_METADATA(IID "com.wusicplayer.IThemePlugin/1.0" FILE "my_theme_plugin.j
 
 ## 接口速览
 
-| 接口 | 头文件 | 必须实现 |
-|------|--------|----------|
-| `IBasicPlugin` | `plugin/i_basic_plugin.h` | `id/name/version/description/author/categories` |
-| `IThemePlugin` | `plugin/i_theme_plugin.h` | `createPalette()` 返回完整 `ThemePalette` |
-| `IEqPlugin` | `plugin/i_eq_plugin.h` | `create_eq_widget/eq_config/apply_current/revert/reset/restore_from_config` + 信号 `sgn_config_changed` |
+| 接口           | 头文件                    | 必须实现                                                                                                |
+| -------------- | ------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `IBasicPlugin` | `plugin/i_basic_plugin.h` | `id/name/version/description/author/categories`                                                         |
+| `IThemePlugin` | `plugin/i_theme_plugin.h` | `create_palette()` 返回完整 `ThemePalette`                                                              |
+| `IEqPlugin`    | `plugin/i_eq_plugin.h`    | `create_eq_widget/eq_config/apply_current/revert/reset/restore_from_config` + 信号 `sgn_config_changed` |
 
 > `ThemePalette` 结构见 `src/core/theme/theme_palette.h`(QPalette 角色 + 语义颜色 + 尺寸)。
 > 参考调色板:`src/core/theme/builtin/wusic_dark_palette.h`。

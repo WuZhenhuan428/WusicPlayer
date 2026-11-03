@@ -4,7 +4,7 @@
 #include "model/theme_settings_model.h"
 
 ThemeService::ThemeService(QObject* parent) :
-    QObject(parent), m_model(std::make_unique<ThemeSettingsModel>(this))
+    QObject(parent), model_(std::make_unique<ThemeSettingsModel>(this))
 {
     // 监听外部主题变更（如其他地方调用了 applyXxxTheme）
     connect(&ThemeManager::instance(), &ThemeManager::sgn_theme_changed, this, [this]() {
@@ -20,41 +20,42 @@ void ThemeService::scan_themes()
     // 系统主题（无法可靠检测明暗，统一标为 false）
     for (const auto& key : tm.system_themes()) {
         ThemeEntry e;
-        e.name   = key;
-        e.source = QStringLiteral("System");
-        e.author = QStringLiteral("Qt");
-        e.isDark = false;
+        e.name    = key;
+        e.source  = QStringLiteral("System");
+        e.author  = QStringLiteral("Qt");
+        e.is_dark = false;
         entries.append(e);
     }
 
     // 内置主题——内建主题插件(元信息来自插件描述)
     for (const auto& name : tm.builtin_themes()) {
         ThemeEntry e;
-        e.name   = name;
-        e.source = QStringLiteral("Builtin");
-        e.author = tm.theme_author(name);
-        e.isDark = tm.theme_is_dark(name);
+        e.name    = name;
+        e.source  = QStringLiteral("Builtin");
+        e.author  = tm.theme_author(name);
+        e.is_dark = tm.theme_is_dark(name);
         entries.append(e);
     }
 
     // 外部主题——外部插件(元信息来自插件描述)
     for (const auto& name : tm.external_themes()) {
         ThemeEntry e;
-        e.name   = name;
-        e.source = QStringLiteral("External");
-        e.author = tm.theme_author(name);
-        e.isDark = tm.theme_is_dark(name);
+        e.name    = name;
+        e.source  = QStringLiteral("External");
+        e.author  = tm.theme_author(name);
+        e.is_dark = tm.theme_is_dark(name);
         entries.append(e);
     }
 
-    m_model->set_entries(entries);
+    model_->set_entries(entries);
 }
 
 void ThemeService::apply_theme(int row)
 {
-    const auto& entries = m_model->entries();
-    if (row < 0 || row >= entries.size())
+    const auto& entries = model_->entries();
+    if (row < 0 || row >= entries.size()) {
         return;
+    }
 
     const auto& e = entries.at(row);
     auto& tm      = ThemeManager::instance();
@@ -72,10 +73,10 @@ void ThemeService::apply_theme(int row)
 
 ThemeSettingsModel* ThemeService::model() const
 {
-    return m_model.get();
+    return model_.get();
 }
 
-QString ThemeService::current_theme_name() const
+QString ThemeService::current_theme_name()
 {
     return ThemeManager::instance().current_theme_name();
 }

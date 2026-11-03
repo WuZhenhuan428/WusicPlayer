@@ -3,8 +3,9 @@
 #include "core/logger/logger_manager.h"
 namespace
 {
-Logger* logger = LoggerManager::file_logger("config", {"console", "gui"});
-}
+static QString kFileName = "WusicPlayer.json";                                       // NOLINT
+Logger* logger           = LoggerManager::file_logger("config", {"console", "gui"}); // NOLINT
+} // namespace
 
 #include <QDir>
 #include <QFile>
@@ -19,7 +20,7 @@ Logger* logger = LoggerManager::file_logger("config", {"console", "gui"});
 
 namespace
 {
-QJsonObject readRootFromFile(const QString& filepath)
+QJsonObject read_root_from_file(const QString& filepath)
 {
     QFile file(filepath);
     if (!file.exists()) {
@@ -40,7 +41,7 @@ QJsonObject readRootFromFile(const QString& filepath)
     return doc.object();
 }
 
-void writeRootToFile(const QString& filepath, const QJsonObject& root)
+void write_root_to_file(const QString& filepath, const QJsonObject& root)
 {
     QSaveFile file(filepath);
     if (!file.open(QIODevice::WriteOnly)) {
@@ -56,20 +57,18 @@ void writeRootToFile(const QString& filepath, const QJsonObject& root)
 }
 } // namespace
 
-ConfigManager::ConfigManager() {}
-
 ConfigManager& ConfigManager::get_instance()
 {
     static ConfigManager instance;
     return instance;
 }
 
-QString ConfigManager::get_config_path() const
+QString ConfigManager::get_config_path()
 {
     return QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
 }
 
-QString ConfigManager::get_config_filepath() const
+QString ConfigManager::get_config_filepath()
 {
     QDir dir(get_config_path());
     return dir.filePath(kFileName);
@@ -77,7 +76,7 @@ QString ConfigManager::get_config_filepath() const
 
 void ConfigManager::register_module(IConfigurable* module)
 {
-    m_modules.push_back(module);
+    modules_.push_back(module);
 }
 
 void ConfigManager::load_all()
@@ -108,9 +107,9 @@ void ConfigManager::load_all()
 
     const QJsonObject root = doc.object();
 
-    this->m_version        = root.value("version").toInt(kConfigVersion);
+    this->version_         = root.value("version").toInt(kConfigVersion);
 
-    for (const auto& module : m_modules) {
+    for (const auto& module : modules_) {
         if (module) {
             module->load_from_json(root);
         }
@@ -125,26 +124,26 @@ QJsonObject ConfigManager::save_all() const
         dir.mkpath(".");
     }
 
-    QJsonObject root = readRootFromFile(get_config_filepath());
+    QJsonObject root = read_root_from_file(get_config_filepath());
     root.insert("filename", kFileName);
     root.insert("version", kConfigVersion);
 
-    for (const auto& module : m_modules) {
+    for (const auto& module : modules_) {
         if (module) {
             root.insert(module->config_sub_key(), module->save_to_json());
         }
     }
 
-    writeRootToFile(get_config_filepath(), root);
+    write_root_to_file(get_config_filepath(), root);
     return root;
 }
 
-QJsonObject ConfigManager::read_sub_config(const QString& key) const
+QJsonObject ConfigManager::read_sub_config(const QString& key)
 {
     if (key.isEmpty()) {
         return {};
     }
-    const QJsonObject root = readRootFromFile(get_config_filepath());
+    const QJsonObject root = read_root_from_file(get_config_filepath());
     return root.value(key).toObject();
 }
 
@@ -160,16 +159,16 @@ void ConfigManager::write_sub_config(const QString& key, const QJsonObject& sub_
         dir.mkpath(".");
     }
 
-    QJsonObject root = readRootFromFile(get_config_filepath());
+    QJsonObject root = read_root_from_file(get_config_filepath());
     root.insert("filename", kFileName);
     root.insert("version", kConfigVersion);
 
-    for (const auto& module : m_modules) {
+    for (const auto& module : modules_) {
         if (module) {
             root.insert(module->config_sub_key(), module->save_to_json());
         }
     }
 
     root.insert(key, sub_obj);
-    writeRootToFile(get_config_filepath(), root);
+    write_root_to_file(get_config_filepath(), root);
 }

@@ -17,7 +17,7 @@ class ShortcutsPanel;
 class ThemeSettingsPage;
 class PluginPanel;
 
-class AppContext;
+struct AppContext;
 class InMemorySearchBackend;
 class ThemeService;
 class PlaybackController;
@@ -36,7 +36,6 @@ class PanelCoordinator : public QObject
     Q_OBJECT
 public:
     PanelCoordinator(AppContext& ctx, QObject* parent = nullptr);
-    ~PanelCoordinator() override;
 
     // 懒创建并返回快捷键控制器(供配置注册)
     ShortcutsController* shortcuts_controller();
@@ -51,7 +50,6 @@ public slots:
     void open_eq_widget();
     void open_log_viewer();
 
-protected:
     bool eventFilter(QObject* obj, QEvent* event) override;
 
 private:

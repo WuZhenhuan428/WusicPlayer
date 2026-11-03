@@ -3,12 +3,12 @@
 namespace utils::icon
 {
 
-QString colored_icon_path(QString name, bool is_dark)
+QString colored_icon_path(const QString& name, bool is_dark)
 {
     return QString(":/icons/%1/%2.svg").arg(is_dark ? "dark" : "light", name);
 }
 
-QString general_icon_path(QString name)
+QString general_icon_path(const QString& name)
 {
     return QString(":/icons/%1.svg").arg(name);
 }

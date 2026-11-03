@@ -11,29 +11,28 @@ enum class ShortcutScope
     MainWindow,
     PlaylistView,
     SearchPanel,
-    DesktopLyrics
+    DesktopLyrics,
 };
 
 enum class ShortcutActionId
 {
-    play_pause,
-    stop,
-    open_search,
-    show_hide_desktop_lyrics,
-    save_playlist,
-    open_file,
-    open_playlist,
-    open_settings,
-    open_hsv_test
+    PlayPause,
+    Stop,
+    OpenSearch,
+    ShowHideDesktopLyrics,
+    SavePlaylist,
+    OpenFile,
+    OpenPlaylist,
+    OpenSettings,
     // ...
 };
 
-inline QString shortcutActionIdToString(ShortcutActionId actionId)
+inline QString shortcut_action_id_to_string(ShortcutActionId action_id)
 {
-    return QString::fromStdString(std::string(magic_enum::enum_name(actionId)));
+    return QString::fromStdString(std::string(magic_enum::enum_name(action_id)));
 }
 
-inline bool shortcutActionIdFromString(const QString& value, ShortcutActionId& out)
+inline bool shortcut_action_id_from_string(const QString& value, ShortcutActionId& out)
 {
     const auto parsed = magic_enum::enum_cast<ShortcutActionId>(value.toStdString());
     if (!parsed.has_value()) {
@@ -43,6 +42,7 @@ inline bool shortcutActionIdFromString(const QString& value, ShortcutActionId& o
     return true;
 }
 
+// NOLINTNEXTLINE(readability-identifier-naming)
 inline size_t qHash(ShortcutActionId key, size_t seed = 0)
 {
     return qHash(static_cast<int>(key), seed);

@@ -10,8 +10,9 @@
 #include "core/logger/logger_manager.h"
 namespace
 {
+// NOLINTNEXTLINE
 Logger* logger = LoggerManager::file_logger("main_window", {"console", "gui"});
-}
+} // namespace
 
 MainWindow::MainWindow(PlaybackController* playback_controller,
                        PlaylistController* playlist_controller, QWidget* parent) :
@@ -22,8 +23,6 @@ MainWindow::MainWindow(PlaybackController* playback_controller,
     this->init_ui();
     this->init_connection();
 }
-
-MainWindow::~MainWindow() {}
 
 PlaylistController* MainWindow::playlist_controller() const
 {
@@ -37,46 +36,46 @@ PlaybackController* MainWindow::playback_controller() const
 
 PlaylistTreeWidget* MainWindow::playlist_tree_widget() const
 {
-    return m_playlist_tree_widget;
+    return playlist_tree_widget_;
 }
 
 LibraryBrowserWidget* MainWindow::library_browser() const
 {
-    return m_library_browser;
+    return library_browser_;
 }
 
 SongTableView* MainWindow::song_table_view() const
 {
-    return m_song_table_view;
+    return song_table_view_;
 }
 
 SidePanel* MainWindow::side_panel() const
 {
-    return m_side_panel;
+    return side_panel_;
 }
 
 ControlBar* MainWindow::control_bar_widget() const
 {
-    return m_control_bar;
+    return control_bar_;
 }
 
 DesktopLyricsWidget* MainWindow::desktop_lyrics_widget() const
 {
-    return m_desktop_lyrics_widget;
+    return desktop_lyrics_widget_;
 }
 
 void MainWindow::play_track_in_ui(const QString& filepath)
 {
-    emit sgnPlayTrackRequested(filepath);
+    emit sgn_play_track_requested(filepath);
 }
 
 void MainWindow::showEvent(QShowEvent* event)
 {
     QMainWindow::showEvent(event);
-    if (m_cache_load_scheduled) {
+    if (cache_load_scheduled_) {
         return;
     }
-    m_cache_load_scheduled = true;
+    cache_load_scheduled_ = true;
     QTimer::singleShot(0, playlist_controller_, &PlaylistController::load_cache_after_shown);
 }
 
@@ -87,28 +86,33 @@ void MainWindow::init_connection()
 
 void MainWindow::init_menu_connections()
 {
-    connect(m_act_open_file, &QAction::triggered, this, &MainWindow::on_open_file);
-    connect(m_act_new_playlist, &QAction::triggered, this, &MainWindow::sgnCreatePlaylistRequested);
-    connect(m_act_load_playlist, &QAction::triggered, this, &MainWindow::sgnLoadPlaylist);
+    connect(act_open_file_, &QAction::triggered, this, &MainWindow::on_open_file);
+    connect(act_new_playlist_, &QAction::triggered, this,
+            &MainWindow::sgn_create_playlist_requested);
+    connect(act_load_playlist_, &QAction::triggered, this, &MainWindow::sgn_load_playlist);
 
-    connect(m_act_exit, &QAction::triggered, this, &MainWindow::quit_application);
-    connect(m_act_about, &QAction::triggered, this, &MainWindow::sgnShowAboutMessagebox);
-    connect(m_act_set_sort_rule, &QAction::triggered, this, &MainWindow::sgnSetSortRuleRequested);
+    connect(act_exit_, &QAction::triggered, this, &MainWindow::quit_application);
+    connect(act_about_, &QAction::triggered, this,
+            &MainWindow::sgn_show_about_messagebox_requested);
+    connect(act_set_sort_rule_, &QAction::triggered, this,
+            &MainWindow::sgn_set_sort_rule_requested);
 
-    connect(m_act_open_eq, &QAction::triggered, this, &MainWindow::sgnOpenEQWidgetRequested);
+    connect(act_open_eq_, &QAction::triggered, this, &MainWindow::sgn_open_eq_widget_requested);
 
-    connect(m_act_settings, &QAction::triggered, this, &MainWindow::sgnOpenSettingsPanelRequested);
+    connect(act_settings_, &QAction::triggered, this,
+            &MainWindow::sgn_open_settings_panel_requested);
 
-    connect(m_act_search_panel, &QAction::triggered, this,
-            &MainWindow::sgnOpenSearchPanelRequested);
-    connect(m_act_log_viewer, &QAction::triggered, this, &MainWindow::sgnOpenLogViewerRequested);
-    connect(m_act_show_desktop_lyrics, &QAction::toggled, this, [this](bool checked) {
-        if (m_desktop_lyrics_widget)
-            m_desktop_lyrics_widget->setVisible(checked);
+    connect(act_search_panel_, &QAction::triggered, this,
+            &MainWindow::sgn_oepn_search_panel_requested);
+    connect(act_log_viewer_, &QAction::triggered, this, &MainWindow::sgn_open_log_viewer_requested);
+    connect(act_show_desktop_lyrics_, &QAction::toggled, this, [this](bool checked) {
+        if (desktop_lyrics_widget_) {
+            desktop_lyrics_widget_->setVisible(checked);
+        }
     });
-    connect(m_act_lock_desktop_lyrics, &QAction::triggered, this, [this]() {
-        if (m_desktop_lyrics_widget) {
-            m_desktop_lyrics_widget->set_locked(!m_desktop_lyrics_widget->isLocked());
+    connect(act_lock_desktop_lyrics_, &QAction::triggered, this, [this]() {
+        if (desktop_lyrics_widget_) {
+            desktop_lyrics_widget_->set_locked(!desktop_lyrics_widget_->is_locked());
         }
     });
 }
@@ -125,121 +129,123 @@ void MainWindow::init_ui()
 
 void MainWindow::build_menu_bar()
 {
-    m_menubar_main      = new QMenuBar;
+    menubar_main_      = new QMenuBar;
 
-    m_menu_file         = new QMenu(tr("&File"), m_menubar_main);
-    m_act_open_file     = new QAction(tr("&Open"), m_menu_file);
-    m_act_new_playlist  = new QAction(tr("&New playlist"), m_menu_file);
-    m_act_load_playlist = new QAction(tr("&Load playlist"), m_menu_file);
-    m_act_exit          = new QAction(tr("&Exit"), m_menu_file);
-    m_menu_file->addAction(m_act_open_file);
-    m_menu_file->addSeparator();
-    m_menu_file->addAction(m_act_new_playlist);
-    m_menu_file->addAction(m_act_load_playlist);
-    m_menu_file->addSeparator();
-    m_menu_file->addAction(m_act_exit);
-    m_menubar_main->addMenu(m_menu_file);
+    menu_file_         = new QMenu(tr("&File"), menubar_main_);
+    act_open_file_     = new QAction(tr("&Open"), menu_file_);
+    act_new_playlist_  = new QAction(tr("&New playlist"), menu_file_);
+    act_load_playlist_ = new QAction(tr("&Load playlist"), menu_file_);
+    act_exit_          = new QAction(tr("&Exit"), menu_file_);
+    menu_file_->addAction(act_open_file_);
+    menu_file_->addSeparator();
+    menu_file_->addAction(act_new_playlist_);
+    menu_file_->addAction(act_load_playlist_);
+    menu_file_->addSeparator();
+    menu_file_->addAction(act_exit_);
+    menubar_main_->addMenu(menu_file_);
 
-    m_menu_view         = new QMenu(tr("&View"), m_menubar_main);
-    m_act_set_sort_rule = new QAction(tr("Set sort rule"), m_menu_view);
-    m_act_search_panel  = new QAction(tr("Open search panel (&S)"), m_menu_view);
-    m_act_log_viewer    = new QAction(tr("Open Log (&L)"), m_menu_view);
-    m_menu_view->addAction(m_act_set_sort_rule);
-    m_menu_view->addAction(m_act_search_panel);
-    m_menu_view->addAction(m_act_log_viewer);
-    m_menu_view->addSeparator();
-    m_act_show_desktop_lyrics = new QAction(tr("Show Desktop Lyrics (&D)"), m_menu_view);
-    m_act_show_desktop_lyrics->setCheckable(true);
-    m_act_lock_desktop_lyrics = new QAction(tr("Lock Desktop Lyrics"), m_menu_view);
-    m_act_lock_desktop_lyrics->setCheckable(true);
-    m_menu_view->addAction(m_act_show_desktop_lyrics);
-    m_menu_view->addAction(m_act_lock_desktop_lyrics);
-    m_menubar_main->addMenu(m_menu_view);
+    menu_view_         = new QMenu(tr("&View"), menubar_main_);
+    act_set_sort_rule_ = new QAction(tr("Set sort rule"), menu_view_);
+    act_search_panel_  = new QAction(tr("Open search panel (&S)"), menu_view_);
+    act_log_viewer_    = new QAction(tr("Open Log (&L)"), menu_view_);
+    menu_view_->addAction(act_set_sort_rule_);
+    menu_view_->addAction(act_search_panel_);
+    menu_view_->addAction(act_log_viewer_);
+    menu_view_->addSeparator();
+    act_show_desktop_lyrics_ = new QAction(tr("Show Desktop Lyrics (&D)"), menu_view_);
+    act_show_desktop_lyrics_->setCheckable(true);
+    act_lock_desktop_lyrics_ = new QAction(tr("Lock Desktop Lyrics"), menu_view_);
+    act_lock_desktop_lyrics_->setCheckable(true);
+    menu_view_->addAction(act_show_desktop_lyrics_);
+    menu_view_->addAction(act_lock_desktop_lyrics_);
+    menubar_main_->addMenu(menu_view_);
 
-    m_menu_playback = new QMenu(tr("&Playback"), m_menubar_main);
-    m_act_open_eq   = new QAction(tr("&Open EQ"), m_menu_playback);
-    m_menu_playback->addAction(m_act_open_eq);
-    m_menubar_main->addMenu(m_menu_playback);
+    menu_playback_ = new QMenu(tr("&Playback"), menubar_main_);
+    act_open_eq_   = new QAction(tr("&Open EQ"), menu_playback_);
+    menu_playback_->addAction(act_open_eq_);
+    menubar_main_->addMenu(menu_playback_);
 
-    m_menu_settings = new QMenu(tr("&Settings"), m_menubar_main);
-    m_act_settings  = new QAction(tr("&Settings"), m_menu_settings);
-    m_menu_settings->addAction(m_act_settings);
-    m_menubar_main->addMenu(m_menu_settings);
+    menu_settings_ = new QMenu(tr("&Settings"), menubar_main_);
+    act_settings_  = new QAction(tr("&Settings"), menu_settings_);
+    menu_settings_->addAction(act_settings_);
+    menubar_main_->addMenu(menu_settings_);
 
-    m_menu_help = new QMenu(tr("&Help"), m_menubar_main);
-    m_act_about = new QAction(tr("&About"), m_menu_help);
-    m_menu_help->addAction(m_act_about);
-    m_menubar_main->addMenu(m_menu_help);
+    menu_help_ = new QMenu(tr("&Help"), menubar_main_);
+    act_about_ = new QAction(tr("&About"), menu_help_);
+    menu_help_->addAction(act_about_);
+    menubar_main_->addMenu(menu_help_);
 
-    setMenuBar(m_menubar_main);
+    setMenuBar(menubar_main_);
 }
 
 void MainWindow::build_bottom_tool_bar()
 {
     // Bottom toolbar, btn & progress bar
     // PushButton instant -> BottomToolBarArea
-    m_bottom_toolbar = new QToolBar(this);
-    m_bottom_toolbar->setObjectName("BottomToolBar");
-    m_bottom_toolbar->setMovable(false);
-    m_bottom_toolbar->setFloatable(false);
-    m_control_bar = new ControlBar(m_bottom_toolbar);
-    m_bottom_toolbar->addWidget(m_control_bar);
-    addToolBar(Qt::BottomToolBarArea, m_bottom_toolbar);
-    m_control_bar->set_device(playback_controller_->available_devices(),
-                              playback_controller_->current_device_id());
+    bottom_toolbar_ = new QToolBar(this);
+    bottom_toolbar_->setObjectName("BottomToolBar");
+    bottom_toolbar_->setMovable(false);
+    bottom_toolbar_->setFloatable(false);
+    control_bar_ = new ControlBar(bottom_toolbar_);
+    bottom_toolbar_->addWidget(control_bar_);
+    addToolBar(Qt::BottomToolBarArea, bottom_toolbar_);
+    control_bar_->set_device(playback_controller_->available_devices(),
+                             playback_controller_->current_device_id());
 }
 
 void MainWindow::build_central_area()
 {
     // center window
     // 内容区:左侧(播放列表导航 + 媒体库浏览,垂直)、右侧当前播放列表歌曲表
-    m_center_widget        = new QWidget(this);
-    m_playlist_tree_widget = new PlaylistTreeWidget(m_center_widget);
-    m_library_browser      = new LibraryBrowserWidget(m_center_widget);
-    m_left_splitter        = new QSplitter(Qt::Vertical, m_center_widget);
-    m_left_splitter->addWidget(m_playlist_tree_widget);
-    m_left_splitter->addWidget(m_library_browser);
-    m_left_splitter->setStretchFactor(0, 3);
-    m_left_splitter->setStretchFactor(1, 2);
-    m_left_splitter->setChildrenCollapsible(true);
+    center_widget_        = new QWidget(this);
+    playlist_tree_widget_ = new PlaylistTreeWidget(center_widget_);
+    library_browser_      = new LibraryBrowserWidget(center_widget_);
+    left_splitter_        = new QSplitter(Qt::Vertical, center_widget_);
+    left_splitter_->addWidget(playlist_tree_widget_);
+    left_splitter_->addWidget(library_browser_);
+    left_splitter_->setStretchFactor(0, 3);
+    left_splitter_->setStretchFactor(1, 2);
+    left_splitter_->setChildrenCollapsible(true);
 
-    m_song_table_view = new SongTableView(m_center_widget);
-    m_song_table_view->setModel(playlist_controller_->view_model());
-    m_main_splitter = new QSplitter(Qt::Horizontal, m_center_widget);
-    m_main_splitter->addWidget(m_left_splitter);
-    m_main_splitter->addWidget(m_song_table_view);
-    m_main_splitter->setStretchFactor(0, 1);
-    m_main_splitter->setStretchFactor(1, 3);
-    m_main_splitter->setChildrenCollapsible(false);
-    m_main_splitter->setContentsMargins(0, 0, 0, 0);
+    song_table_view_ = new SongTableView(center_widget_);
+    song_table_view_->set_model(playlist_controller_->view_model());
+    main_splitter_ = new QSplitter(Qt::Horizontal, center_widget_);
+    main_splitter_->addWidget(left_splitter_);
+    main_splitter_->addWidget(song_table_view_);
+    main_splitter_->setStretchFactor(0, 1);
+    main_splitter_->setStretchFactor(1, 3);
+    main_splitter_->setChildrenCollapsible(false);
+    main_splitter_->setContentsMargins(0, 0, 0, 0);
 
-    m_side_panel = new SidePanel(m_center_widget);
-    connect(m_side_panel, &SidePanel::sgnToggleDesktopLyrics, this, [this]() {
-        if (m_desktop_lyrics_widget)
-            m_desktop_lyrics_widget->setVisible(!m_desktop_lyrics_widget->isVisible());
+    side_panel_ = new SidePanel(center_widget_);
+    connect(side_panel_, &SidePanel::sgn_toggle_desktop_lyrics, this, [this]() {
+        if (desktop_lyrics_widget_) {
+            desktop_lyrics_widget_->setVisible(!desktop_lyrics_widget_->isVisible());
+        }
     });
-    connect(m_side_panel, &SidePanel::sgnToggleDesktopLyricsLock, this, [this]() {
-        if (m_desktop_lyrics_widget)
-            m_desktop_lyrics_widget->set_locked(!m_desktop_lyrics_widget->isLocked());
+    connect(side_panel_, &SidePanel::sgn_toggle_desktop_lyricsLock, this, [this]() {
+        if (desktop_lyrics_widget_) {
+            desktop_lyrics_widget_->set_locked(!desktop_lyrics_widget_->is_locked());
+        }
     });
-    m_hbl_centre = new QHBoxLayout(m_center_widget);
-    m_hbl_centre->setContentsMargins(0, 0, 0, 0);
-    m_hbl_centre->setSpacing(0);
-    m_hbl_centre->addWidget(m_main_splitter, 7);
-    m_hbl_centre->addWidget(m_side_panel, 2);
-    m_hbl_centre->setContentsMargins(0, 0, 0, 0);
-    setCentralWidget(m_center_widget);
+    hbl_centre_ = new QHBoxLayout(center_widget_);
+    hbl_centre_->setContentsMargins(0, 0, 0, 0);
+    hbl_centre_->setSpacing(0);
+    hbl_centre_->addWidget(main_splitter_, 7);
+    hbl_centre_->addWidget(side_panel_, 2);
+    hbl_centre_->setContentsMargins(0, 0, 0, 0);
+    setCentralWidget(center_widget_);
 
     // desktop lrc panel
     /**
      * WARN: to use on wayland, here can not set parent object, but may cause memory leak
      */
-    m_desktop_lyrics_widget = new DesktopLyricsWidget();
+    desktop_lyrics_widget_ = new DesktopLyricsWidget();
     // Keep View menu check state in sync with widget
-    connect(m_desktop_lyrics_widget, &DesktopLyricsWidget::sgnVisibilityChanged,
-            m_act_show_desktop_lyrics, &QAction::setChecked);
-    connect(m_desktop_lyrics_widget, &DesktopLyricsWidget::sgnLockChanged,
-            m_act_lock_desktop_lyrics, &QAction::setChecked);
+    connect(desktop_lyrics_widget_, &DesktopLyricsWidget::sgn_visibility_changed,
+            act_show_desktop_lyrics_, &QAction::setChecked);
+    connect(desktop_lyrics_widget_, &DesktopLyricsWidget::sgn_lock_changed,
+            act_lock_desktop_lyrics_, &QAction::setChecked);
 }
 
 void MainWindow::load_from_json(const QJsonObject& json)
@@ -256,14 +262,14 @@ void MainWindow::load_from_json(const QJsonObject& json)
     // 内容区 splitter 布局:主(左 + 歌曲表)、左垂直(播放列表树 + 库控件)
     // 注意:Qt::Orientation 枚举值 Horizontal=1、Vertical=2;配置缺失时 toInt() 返回 0,
     // 直接强转会把方向设为无效值(按垂直处理 → 布局变成上中下),故先校验。
-    m_main_splitter->restoreState(
+    main_splitter_->restoreState(
         QByteArray::fromBase64(obj.value("splitter_state").toString().toUtf8()));
     const int orientation =
         obj.value("splitter_orientation").toInt(static_cast<int>(Qt::Horizontal));
     if (orientation == Qt::Horizontal || orientation == Qt::Vertical) {
-        m_main_splitter->setOrientation(static_cast<Qt::Orientation>(orientation));
+        main_splitter_->setOrientation(static_cast<Qt::Orientation>(orientation));
     }
-    m_left_splitter->restoreState(
+    left_splitter_->restoreState(
         QByteArray::fromBase64(obj.value("left_splitter_state").toString().toUtf8()));
 }
 
@@ -272,9 +278,9 @@ QJsonObject MainWindow::save_to_json()
     QJsonObject obj;
     obj["geometry"]             = QString::fromUtf8(saveGeometry().toBase64());
     obj["state"]                = QString::fromUtf8(saveState().toBase64());
-    obj["splitter_state"]       = QString::fromUtf8(m_main_splitter->saveState().toBase64());
-    obj["splitter_orientation"] = static_cast<int>(m_main_splitter->orientation());
-    obj["left_splitter_state"]  = QString::fromUtf8(m_left_splitter->saveState().toBase64());
+    obj["splitter_state"]       = QString::fromUtf8(main_splitter_->saveState().toBase64());
+    obj["splitter_orientation"] = static_cast<int>(main_splitter_->orientation());
+    obj["left_splitter_state"]  = QString::fromUtf8(left_splitter_->saveState().toBase64());
     return obj;
 }
 
@@ -289,7 +295,7 @@ void MainWindow::on_open_file()
                                                     tr("*.mp3 *.wav *.flac"));
 
     if (!filepath.isEmpty()) {
-        emit sgnPlayTrackRequested(filepath);
+        emit sgn_play_track_requested(filepath);
     } else {
         logger->info("filepath is empty!");
     }
@@ -302,11 +308,11 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    if (this->m_is_quit) {
+    if (this->is_quit_) {
         logger->debug("MainWindow close event called, close branch");
-        emit sgnAboutToClose();
-        if (m_desktop_lyrics_widget) {
-            m_desktop_lyrics_widget->close();
+        emit sgn_about_to_close();
+        if (desktop_lyrics_widget_) {
+            desktop_lyrics_widget_->close();
         }
         event->accept();
         // 托盘图标无法实际退出, 能重复进入此分支, 但是不重复保存配置
@@ -318,7 +324,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 void MainWindow::quit_application()
 {
-    this->m_is_quit = true;
+    this->is_quit_ = true;
     this->close();
     // 窗口可能已通过 closeEvent 的 hide 分支隐藏到托盘:此时 close() 不会触发
     // lastWindowClosed(), quitOnLastWindowClosed 不生效, 必须显式退出事件循环。

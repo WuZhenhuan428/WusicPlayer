@@ -1,6 +1,7 @@
 #include "core/dsl/registry.h"
 
 #include <QStringList>
+#include <ranges>
 
 namespace dsl
 {
@@ -8,6 +9,7 @@ namespace dsl
 namespace
 {
 /// 属性名不得与之冲突的保留字(结构/逻辑关键字)。
+// NOLINTNEXTLINE
 const QStringList kReservedWords = {
     QStringLiteral("sort"),  QStringLiteral("group"), QStringLiteral("bucket"),
     QStringLiteral("if"),    QStringLiteral("elif"),  QStringLiteral("else"),
@@ -88,17 +90,17 @@ Registry::Registry()
 
     // ---- 原语表(对齐 docs/DSL.md §6) ----
     auto prim = [this](const QString& name, QVector<NodeType> params, NodeType ret,
-                       PrimitiveSig extra = {}) {
+                       const PrimitiveSig& extra = {}) {
         PrimitiveSig s;
-        s.name                = name;
-        s.params              = std::move(params);
-        s.ret                 = ret;
-        s.variadic            = extra.variadic;
-        s.minArgs             = extra.minArgs;
-        s.sameTypeFirst       = extra.sameTypeFirst;
-        s.sameTypeLast        = extra.sameTypeLast;
-        s.intOrStringOnly     = extra.intOrStringOnly;
-        s.variadicSameAsFirst = extra.variadicSameAsFirst;
+        s.name                   = name;
+        s.params                 = std::move(params);
+        s.ret                    = ret;
+        s.variadic               = extra.variadic;
+        s.min_args               = extra.min_args;
+        s.same_type_first        = extra.same_type_first;
+        s.same_type_last         = extra.same_type_last;
+        s.int_or_string_only     = extra.int_or_string_only;
+        s.variadic_same_as_first = extra.variadic_same_as_first;
         primitives_.push_back(s);
     };
 
@@ -108,12 +110,12 @@ Registry::Registry()
     prim(QStringLiteral("not"), {NodeType::Bool}, NodeType::Bool);
     // 比较
     PrimitiveSig eq;
-    eq.sameTypeFirst = true;
+    eq.same_type_first = true;
     prim(QStringLiteral("=="), {NodeType::Any, NodeType::Any}, NodeType::Bool, eq);
     prim(QStringLiteral("!="), {NodeType::Any, NodeType::Any}, NodeType::Bool, eq);
     PrimitiveSig ord;
-    ord.sameTypeFirst   = true;
-    ord.intOrStringOnly = true;
+    ord.same_type_first    = true;
+    ord.int_or_string_only = true;
     prim(QStringLiteral("<"), {NodeType::Any, NodeType::Any}, NodeType::Bool, ord);
     prim(QStringLiteral("<="), {NodeType::Any, NodeType::Any}, NodeType::Bool, ord);
     prim(QStringLiteral(">"), {NodeType::Any, NodeType::Any}, NodeType::Bool, ord);
@@ -127,7 +129,7 @@ Registry::Registry()
     prim(QStringLiteral("neg"), {NodeType::Int}, NodeType::Int);
     // 三元
     PrimitiveSig ter;
-    ter.sameTypeLast = true;
+    ter.same_type_last = true;
     prim(QStringLiteral("ternary"), {NodeType::Bool, NodeType::Any, NodeType::Any}, NodeType::Any,
          ter);
     // 字符串函数
@@ -139,40 +141,40 @@ Registry::Registry()
     prim(QStringLiteral("upper"), {NodeType::String}, NodeType::String);
     prim(QStringLiteral("lower"), {NodeType::String}, NodeType::String);
     PrimitiveSig in_sig;
-    in_sig.variadic            = true;
-    in_sig.minArgs             = 2;
-    in_sig.variadicSameAsFirst = true;
+    in_sig.variadic               = true;
+    in_sig.min_args               = 2;
+    in_sig.variadic_same_as_first = true;
     prim(QStringLiteral("in"), {NodeType::Any}, NodeType::Bool, in_sig);
 
     // ---- 保留字冲突检查(构建期断言) ----
     for (const auto& p : properties_) {
         Q_ASSERT(!kReservedWords.contains(p.name));
-        for (const auto& alias : p.aliases)
+        for (const auto& alias : p.aliases) {
             Q_ASSERT(!kReservedWords.contains(alias));
-        for (const auto& s : primitives_)
+        }
+        for (const auto& s : primitives_) {
             Q_ASSERT(p.name != s.name && !p.aliases.contains(s.name));
+        }
     }
 }
 
 const PropertyDecl* Registry::find_property(const QString& name) const
 {
     for (const auto& p : properties_) {
-        if (p.name == name || p.aliases.contains(name))
+        if (p.name == name || p.aliases.contains(name)) {
             return &p;
+        }
     }
     return nullptr;
 }
 
 bool Registry::is_primitive(const QString& name) const
 {
-    for (const auto& s : primitives_) {
-        if (s.name == name)
-            return true;
-    }
-    return false;
+    return std::ranges::any_of(primitives_,
+                               [&name](const PrimitiveSig& sig) { return sig.name == name; });
 }
 
-void Registry::set_error(Program& prog, int line, int col, const QString& msg) const
+void Registry::set_error(Program& prog, int line, int col, const QString& msg)
 {
     if (prog.ok) {
         prog.ok         = false;
@@ -195,8 +197,9 @@ NodeType Registry::node_type(const Node& n) const
         return NodeType::Null;
     case NodeKind::Property: {
         const PropertyDecl* d = find_property(n.name);
-        if (!d)
+        if (!d) {
             return NodeType::Any;
+        }
         switch (d->type) {
         case ValueType::String:
             return NodeType::String;
@@ -209,8 +212,9 @@ NodeType Registry::node_type(const Node& n) const
     }
     case NodeKind::Primitive:
         for (const auto& s : primitives_) {
-            if (s.name == n.name)
+            if (s.name == n.name) {
                 return s.ret;
+            }
         }
         return NodeType::Any;
     }
@@ -249,11 +253,11 @@ bool Registry::check_node(Node& n, Program& prog) const
 
         // 参数个数
         if (sig->variadic) {
-            if (n.args.size() < sig->minArgs) {
+            if (n.args.size() < sig->min_args) {
                 set_error(prog, n.line, n.col,
                           QStringLiteral("function '%1' expects at least %2 argument(s), got %3")
                               .arg(n.name)
-                              .arg(sig->minArgs)
+                              .arg(sig->min_args)
                               .arg(n.args.size()));
                 return false;
             }
@@ -270,16 +274,22 @@ bool Registry::check_node(Node& n, Program& prog) const
         QVector<NodeType> types;
         types.reserve(n.args.size());
         for (auto& arg : n.args) {
-            if (!check_node(arg, prog))
+            if (!check_node(arg, prog)) {
                 return false;
+            }
             types.append(node_type(arg));
         }
 
         // 参数类型匹配
         for (int i = 0; i < n.args.size(); ++i) {
-            const NodeType required = (sig->variadic && i >= sig->params.size())
-                                          ? (sig->variadicSameAsFirst ? types[0] : NodeType::Any)
-                                          : sig->params[i];
+            NodeType required = NodeType::Any;
+            if (sig->variadic && i >= sig->params.size()) {
+                if (sig->variadic_same_as_first) {
+                    required = types[0];
+                }
+            } else {
+                required = sig->params[i];
+            }
             if (!compatible(required, types[i])) {
                 set_error(prog, n.line, n.col,
                           QStringLiteral("type mismatch in '%1': expected %2, got %3")
@@ -289,7 +299,7 @@ bool Registry::check_node(Node& n, Program& prog) const
         }
 
         // 前两参数同类型(== != < <= > >=)
-        if (sig->sameTypeFirst && n.args.size() >= 2) {
+        if (sig->same_type_first && n.args.size() >= 2) {
             const NodeType a = types[0];
             const NodeType b = types[1];
             if (concrete(a) && concrete(b) && a != b) {
@@ -300,7 +310,7 @@ bool Registry::check_node(Node& n, Program& prog) const
             }
         }
         // 后两参数同类型(ternary then/else)
-        if (sig->sameTypeLast && n.args.size() >= 3) {
+        if (sig->same_type_last && n.args.size() >= 3) {
             const NodeType a = types[1];
             const NodeType b = types[2];
             if (concrete(a) && concrete(b) && a != b) {
@@ -311,7 +321,7 @@ bool Registry::check_node(Node& n, Program& prog) const
             }
         }
         // < <= > >=: 仅 Int/String
-        if (sig->intOrStringOnly) {
+        if (sig->int_or_string_only) {
             for (int i = 0; i < n.args.size() && i < 2; ++i) {
                 const NodeType t = types[i];
                 if (concrete(t) && t != NodeType::Int && t != NodeType::String) {
@@ -348,8 +358,9 @@ bool Registry::validate(Program& prog) const
     }
     for (auto& b : prog.bucket) {
         if (b.kind != BucketBranch::Kind::Else) {
-            if (!check_node(b.cond, prog))
+            if (!check_node(b.cond, prog)) {
                 return false;
+            }
             // if/elif 条件必须是 bool
             const NodeType ct = node_type(b.cond);
             if (concrete(ct) && ct != NodeType::Bool) {
@@ -359,8 +370,9 @@ bool Registry::validate(Program& prog) const
                 return false;
             }
         }
-        if (!check_node(b.key, prog))
+        if (!check_node(b.key, prog)) {
             return false;
+        }
     }
     return true;
 }

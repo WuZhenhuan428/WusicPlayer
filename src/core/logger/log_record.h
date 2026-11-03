@@ -16,7 +16,7 @@ struct LogLocation
 
 struct LogRecord
 {
-    LogLevel level = LogLevel::info;
+    LogLevel level = LogLevel::Info;
     QString name;    // logger's name
     QString message; // 消息正文(已按 pattern 之外的内容)
     LogLocation location;

@@ -34,11 +34,14 @@ class QSystemTrayIcon;
 
 #include "app_context.h"
 
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions) 非可拷贝类型, 且析构必须留在 .cpp
 class AppController : public QObject
 {
     Q_OBJECT
 public:
     explicit AppController(PlaybackController* playback_controller, QObject* parent = nullptr);
+    // 不可删/不可移入头文件: 成员含 unique_ptr<不完整类型>, 析构函数必须定义在 .cpp 中,
+    // 否则任何仅包含本头文件的 TU(如 mocs_compilation.cpp、main.cpp)都会因类型不完整而编译失败。
     ~AppController() override;
 
     void show_main_window();
@@ -59,7 +62,7 @@ private:
     void initialize_sys_tray();
 
 private:
-    PlaybackController* playback_controller_ = nullptr;
+    PlaybackController* playback_controller_ = nullptr; // main 函数注入并统一管理, 约等于持有
     std::unique_ptr<PlaylistManager> playlist_manager_;
     std::unique_ptr<PlaylistController> playlist_controller_;
     std::unique_ptr<LibraryManager> library_manager_;
@@ -67,8 +70,7 @@ private:
     std::unique_ptr<MainWindow> main_window_;
     std::unique_ptr<StatusBarController> status_bar_controller_;
     std::unique_ptr<PluginController> plugin_controller_;
-    std::unique_ptr<BuiltinThemePlugin>
-        builtin_dark_plugin_; // 内建主题插件(替代 register_builtin_palette)
+    std::unique_ptr<BuiltinThemePlugin> builtin_dark_plugin_; // 内建主题插件(替代内置固定主题)
     std::unique_ptr<BuiltinThemePlugin> builtin_light_plugin_;
     std::unique_ptr<BuiltinEqPlugin> builtin_eq_plugin_; // 内建 EQ 插件(十段 ±12dB)
 
@@ -83,7 +85,7 @@ private:
 
     std::unique_ptr<EventBus> event_bus_;
 
-    QSystemTrayIcon* sys_tray_;
+    QSystemTrayIcon* sys_tray_ = nullptr;
 
     AppContext app_context_;
 

@@ -99,7 +99,7 @@
          2. 切换：
             1. 系统主题：通过内置函数`QStyle* QStyleFactory::create(const QString&)`查找主题
             2. 内置主题：通过内置主题头文件创建对应的`QStyle`
-            3. 外部主题：通过工厂函数`ThemePalette createPalette() const`获取调色板，进而创建`QStyle`
+            3. 外部主题：通过工厂函数`ThemePalette create_palette() const`获取调色板，进而创建`QStyle`
             4. 应用：获取`QStyle`后，通过内置函数`qApp->setStyle()`与`qApp->setPalette()`应用主题，同时发送信号，手动刷新部分自定义控件
       4. 内置主题 vs 外部插件主题的加载机制
          1. 自定义主题调色板类（`ThemePalette`）,内置主要控件的颜色与外观描述信息，通过函数`QPalette toQPalette() const`生成`QPalette`文件
@@ -107,7 +107,7 @@
          3. 外部：实现对应接口后。在 GUI 使用中手动添加路径并手动刷新，通过函数`ThemeManager::scanExternalPlugins(const QString&)`注册
       5. IThemePlugin 接口规范
          1. 元数据：插件名称，作者，版本，描述；均为`QString`字符串
-         2. 实现工厂方法`ThemePalette createPalette() const`，返回完整的`ThemePalette`结构
+         2. 实现工厂方法`ThemePalette create_palette() const`，返回完整的`ThemePalette`结构
       6. 用户选项
          1. 考虑到系统兼容性、插件规范性、主题颜色的实际情况，暗色/亮色模式下默认图标颜色可能出现相反、对比度不足等问题，因此允许用户自由组合
    3. 配置管理（core/ConfigManager/）

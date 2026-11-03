@@ -58,7 +58,7 @@
 
 - [x] 抽取 `PanelCoordinator`(UI 面板开关、创建、生命周期):见 [`6-appcontroller-split.md`](6-appcontroller-split.md);设置/搜索/EQ/快捷键面板与子页(歌词/主题/媒体库/快捷键)全部移交,懒创建 + QPointer 复用;依赖 view 组件,置于顶层可执行目标(不可入 wusic_controller 库,避免 view→controller 循环依赖)
 - [x] `AppController` 降级为纯组合根(只负责 `new` + `connect`):683 → 388 行;保留核心接线/菜单处理/配置/状态栏
-- [x] 清理 proxy signal 转发链:移除 `LibraryInteractionService::sgnTrackPropertyRequested` 死转发(无消费方,TagWriteback 已由 AppController 直连 SongTableView);删除 `AppController::tag_edit_widget_` 死成员;面板打开信号(MainWindow/LibraryBrowserWidget/SidePanel)直连 PanelCoordinator
+- [x] 清理 proxy signal 转发链:移除 `LibraryInteractionService::sgn_track_property_requested` 死转发(无消费方,TagWriteback 已由 AppController 直连 SongTableView);删除 `AppController::tag_edit_widget_` 死成员;面板打开信号(MainWindow/LibraryBrowserWidget/SidePanel)直连 PanelCoordinator
 - [x] API 改造:`PlaylistManager::nextTrack/prevTrack` 与 `PlaylistController::nextTrack/prevTrack` 返回条目身份 `EntryId`(不再返回 filepath;导航+`setPlayTrack` 逻辑保留);新增 `PlaylistController::trackFilePath(EntryId)` 由播放层解析路径(为空则忽略);`PlaybackService` 上/下曲与自然结束 3 处改为「身份 → 解析 → 播放」。说明:返回 `EntryId` 而非库级 `TrackId`(播放列表上下文,外部条目无库级身份)。测试:`tb_playlist` 补 nextTrack/prevTrack 身份与导航断言;`tb_search_backend` 补 trackFilePath 解析
 
 ## 阶段 7+: 媒体库交互体系(设计见 `3-interaction-design.md`)
@@ -75,7 +75,7 @@
 ## 媒体库控件补充:持久化 + 搜索面板职责切分
 
 - [x] 媒体库控件持久化:`LibraryBrowserWidget` 实现 `IConfigurable`(分类/关键字/树表头);`LibraryWidget` 持久化左侧 splitter 状态;`AppController` 注册 libraryBrowser 模块
-- [x] Ctrl-F 搜索面板改回搜索当前播放列表:`AppController::search_backend_` 恢复 `InMemorySearchBackend`;`SearchHint` 增 `filepath`;`rebuildIndex` 适配阶段 5 `TrackId` 语义(库引用条目填 `library_track_id`,外部条目留空 + `filepath` 播放);双击优先 `sgnRequestPlayFile`。数据库 FTS5 仅媒体库控件使用。测试:`tb_search_backend` 17 项断言(库引用/外部条目/invalidate 重建)
+- [x] Ctrl-F 搜索面板改回搜索当前播放列表:`AppController::search_backend_` 恢复 `InMemorySearchBackend`;`SearchHint` 增 `filepath`;`rebuildIndex` 适配阶段 5 `TrackId` 语义(库引用条目填 `library_track_id`,外部条目留空 + `filepath` 播放);双击优先 `sgn_request_play_file`。数据库 FTS5 仅媒体库控件使用。测试:`tb_search_backend` 17 项断言(库引用/外部条目/invalidate 重建)
 
 ## 跨阶段
 

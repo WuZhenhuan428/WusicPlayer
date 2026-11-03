@@ -38,7 +38,6 @@ class TextEditorDialog : public QWidget
 
 public:
     explicit TextEditorDialog(const QString& string, QWidget* parent = nullptr);
-    ~TextEditorDialog();
 
     void init_ui();
     void init_connections();
@@ -49,22 +48,22 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
 
 signals:
-    void sgnText(const QString& text);
+    void sgn_text(const QString& text);
 
 private:
-    QLabel* m_lb_font;
-    QFontComboBox* m_cb_font;
-    QLabel* m_lb_font_size;
-    QSpinBox* m_sb_font_size;
-    QHBoxLayout* m_hbl_settings;
+    QLabel* lb_font_              = nullptr;
+    QFontComboBox* cb_font_       = nullptr;
+    QLabel* lb_font_size_         = nullptr;
+    QSpinBox* sb_font_size_       = nullptr;
+    QHBoxLayout* hbl_settings_    = nullptr;
 
-    QTextEdit* m_text_editor;
+    QTextEdit* text_editor_       = nullptr;
 
-    QPushButton* m_btn_import_file;
-    QPushButton* m_btn_save_as;
-    QPushButton* m_btn_apply;
-    QPushButton* m_btn_cancel;
-    QHBoxLayout* m_hbl_btn;
+    QPushButton* btn_import_file_ = nullptr;
+    QPushButton* btn_save_as_     = nullptr;
+    QPushButton* btn_apply_       = nullptr;
+    QPushButton* btn_cancel_      = nullptr;
+    QHBoxLayout* hbl_btn_         = nullptr;
 
-    QVBoxLayout* m_vbl_main;
+    QVBoxLayout* vbl_main_        = nullptr;
 };

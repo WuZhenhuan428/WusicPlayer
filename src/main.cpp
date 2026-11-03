@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     qInstallMessageHandler(LoggerManager::qt_bridge); // Qt 日志转发到统一管道
 
     QCoreApplication::setApplicationName("WusicPlayer");
-    a.setWindowIcon(QIcon(":icons/main.ico"));
+    QApplication::setWindowIcon(QIcon(":icons/main.ico"));
 
     // ---- 主题系统初始化 ----
     // 内建主题(Wusic Dark/Light)现由 AppController 以 BuiltinThemePlugin 注册,
@@ -53,15 +53,15 @@ int main(int argc, char* argv[])
     const QString qm_path = QCoreApplication::applicationDirPath() +
                             QStringLiteral("/translations/wusicplayer_") +
                             language_settings.locale() + QStringLiteral(".qm");
-    Logger* i18n_logger = LoggerManager::file_logger("i18n", {"console", "gui"});
+    Logger* i18n_logger   = LoggerManager::file_logger("i18n", {"console", "gui"});
     if (translator.load(qm_path)) {
-        a.installTranslator(&translator);
+        QApplication::installTranslator(&translator);
         i18n_logger->info("translation loaded: {}", qm_path.toStdString());
     } else {
         i18n_logger->warn("translation NOT found: {}", qm_path.toStdString());
     }
 
-    AppController appController(&playback_controller);
-    appController.show_main_window();
-    return a.exec();
+    AppController app_controller(&playback_controller);
+    app_controller.show_main_window();
+    return QApplication::exec();
 }

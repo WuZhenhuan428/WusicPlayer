@@ -23,23 +23,22 @@ class SearchPanel : public QWidget
     Q_OBJECT
 public:
     explicit SearchPanel(ConfigManager* cfg_mgr, QWidget* parent = nullptr);
-    ~SearchPanel();
 
     void set_search_backend(class ISearchBackend* backend);
-    QTreeView* get_view() const;
+    [[nodiscard]] QTreeView* get_view() const;
     void apply_header_state_deferred(const QByteArray& state);
 
     // config S/L, temporary
     void load_from_json(const QJsonObject& json);
     QJsonObject save_to_json();
-    QString config_sub_key() const;
+    [[nodiscard]] static QString config_sub_key();
 
 signals:
     // 双击结果:优先携带 filepath(播放列表条目/外部条目直接播放)
-    void sgnRequestPlayFile(const QString& filepath);
+    void sgn_request_play_file(const QString& filepath);
     // 库级曲目身份(库引用条目,经库解析播放)
-    void sgnRequestPlayTrack(const TrackId& track_id);
-    void sgnStateSnapshot(const QByteArray& geometry, const QByteArray& header);
+    void sgn_request_play_track(const TrackId& track_id);
+    void sgn_state_snapshot(const QByteArray& geometry, const QByteArray& header);
 
 protected:
     void closeEvent(QCloseEvent* event) override;
@@ -48,18 +47,18 @@ protected:
 
 private:
     void show_header_context_menu(const QPoint& pos);
-    bool has_other_visible_columns(int column_to_hide) const;
+    [[nodiscard]] bool has_other_visible_columns(int column_to_hide) const;
 
 private:
-    QLineEdit* m_le_keyword;
-    QComboBox* m_cb_mode;
-    QTreeView* m_search_result_tree_view;
-    QHBoxLayout* m_hbl_query;
-    QVBoxLayout* m_vbl_main;
+    QLineEdit* le_keyword_              = nullptr;
+    QComboBox* cb_mode_                 = nullptr;
+    QTreeView* search_result_tree_view_ = nullptr;
+    QHBoxLayout* hbl_query_             = nullptr;
+    QVBoxLayout* vbl_main_              = nullptr;
 
-    class SearchModel* m_search_model;
+    class SearchModel* search_model_    = nullptr;
 
-    QTimer* m_tim_input = nullptr;
+    QTimer* tim_input_                  = nullptr;
 
-    ConfigManager* m_cfg_mgr;
+    ConfigManager* cfg_mgr_;
 };

@@ -35,6 +35,6 @@ signals:
     void sgn_record(int level, QString module, QString message);
 
 private:
-    mutable QMutex m_mutex;
-    QVector<LogRecord> m_buffer;
+    mutable QMutex mutex_;
+    QVector<LogRecord> buffer_;
 };

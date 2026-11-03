@@ -19,10 +19,9 @@ class FontSelectDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit FontSelectDialog(
-        QFont default_font = QFontDatabase::systemFont(QFontDatabase::SystemFont::GeneralFont),
-        QWidget* parent    = nullptr);
-    ~FontSelectDialog() = default;
+    explicit FontSelectDialog(const QFont& default_font =
+                                  QFontDatabase::systemFont(QFontDatabase::SystemFont::GeneralFont),
+                              QWidget* parent = nullptr);
 
     QFont select_font();
 
@@ -30,12 +29,12 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
 
 private: // data structure & functions
-    void init_UI();
+    void init_ui();
 
-    QStringList m_fonts;
-    QString m_family;
-    QString m_style;
-    int m_size;
+    QStringList fonts_;
+    QString family_;
+    QString style_;
+    int size_;
     void init_fonts();
     void init_connections();
     void update_styles(const QString& family);
@@ -43,26 +42,26 @@ private: // data structure & functions
     void update_preview();
 
 private: // widgets
-    QLabel* m_lb_font;
-    QListWidget* m_list_font;
-    QVBoxLayout* m_vbl_font;
+    QLabel* lb_font_           = nullptr;
+    QListWidget* list_font_    = nullptr;
+    QVBoxLayout* vbl_font_     = nullptr;
 
-    QLabel* m_lb_style;
-    QListWidget* m_list_style;
-    QVBoxLayout* m_vbl_style;
+    QLabel* lb_style_          = nullptr;
+    QListWidget* list_style_   = nullptr;
+    QVBoxLayout* vbl_style_    = nullptr;
 
-    QLabel* m_lb_size;
-    QSpinBox* m_spin_box_size;
-    QListWidget* m_list_size;
-    QVBoxLayout* m_vbl_size;
+    QLabel* lb_size_           = nullptr;
+    QSpinBox* sb_size_         = nullptr;
+    QListWidget* list_size_    = nullptr;
+    QVBoxLayout* vbl_size_     = nullptr;
 
-    QHBoxLayout* m_hbl_font_all;
+    QHBoxLayout* hbl_font_all_ = nullptr;
 
-    QTextEdit* m_te_preview;
+    QTextEdit* te_preview_     = nullptr;
 
-    QPushButton* m_btn_ok;
-    QPushButton* m_btn_cancel;
-    QHBoxLayout* m_hbl_btn;
+    QPushButton* btn_ok_       = nullptr;
+    QPushButton* btn_cancel_   = nullptr;
+    QHBoxLayout* hbl_btn_      = nullptr;
 
-    QVBoxLayout* m_vbl_main;
+    QVBoxLayout* vbl_main_     = nullptr;
 };

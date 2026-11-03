@@ -8,8 +8,9 @@
 #include "core/logger/logger_manager.h"
 namespace
 {
+// NOLINTNEXTLINE
 Logger* logger = LoggerManager::file_logger("library_repo", {"console", "gui"});
-}
+} // namespace
 
 namespace
 {
@@ -77,70 +78,67 @@ constexpr const char* kTriggerAu =
 LibraryRepo::LibraryRepo(QObject* parent) : QObject(parent)
 {
     static int s_conn_counter = 0;
-    m_conn_name               = QStringLiteral("wusic_library_%1").arg(++s_conn_counter);
-}
-
-LibraryRepo::~LibraryRepo()
-{
-    close();
+    conn_name_                = QStringLiteral("wusic_library_%1").arg(++s_conn_counter);
 }
 
 bool LibraryRepo::open(const QString& db_path)
 {
-    if (m_open) {
+    if (open_) {
         return true;
     }
-    m_db = QSqlDatabase::addDatabase("QSQLITE", m_conn_name);
-    m_db.setDatabaseName(db_path);
-    if (!m_db.open()) {
-        m_last_error = m_db.lastError().text();
-        logger->warn("[LIBRARY] cannot open database: {} {}", db_path, m_last_error);
+    db_ = QSqlDatabase::addDatabase("QSQLITE", conn_name_);
+    db_.setDatabaseName(db_path);
+    if (!db_.open()) {
+        last_error_ = db_.lastError().text();
+        logger->warn("[LIBRARY] cannot open database: {} {}", db_path, last_error_);
         return false;
     }
-    m_open = true;
+    open_ = true;
     return exec_schema();
 }
 
 void LibraryRepo::close()
 {
-    if (!m_open) {
+    if (!open_) {
         return;
     }
-    m_db.close();
-    m_db = QSqlDatabase(); // 释放连接引用后再移除
-    QSqlDatabase::removeDatabase(m_conn_name);
-    m_open = false;
+    db_.close();
+    db_ = QSqlDatabase(); // 释放连接引用后再移除
+    QSqlDatabase::removeDatabase(conn_name_);
+    open_ = false;
 }
 
 bool LibraryRepo::is_open() const
 {
-    return m_open;
+    return open_;
 }
 
 QString LibraryRepo::last_error() const
 {
-    return m_last_error;
+    return last_error_;
 }
 
 bool LibraryRepo::exec_schema()
 {
-    const QStringList base = {kCreateWatchedFolders, kCreateTracks,     kCreateIndexArtist,
-                              kCreateIndexTitle,     kCreateIndexAlbum, kCreateIndexMissing};
+    const QStringList base = {
+        kCreateWatchedFolders, kCreateTracks,     kCreateIndexArtist,
+        kCreateIndexTitle,     kCreateIndexAlbum, kCreateIndexMissing,
+    };
     for (const auto& sql : base) {
-        QSqlQuery q(m_db);
+        QSqlQuery q(db_);
         if (!q.exec(sql)) {
-            m_last_error = q.lastError().text();
-            logger->warn("[LIBRARY] schema exec failed: {}", m_last_error);
+            last_error_ = q.lastError().text();
+            logger->warn("[LIBRARY] schema exec failed: {}", last_error_);
             return false;
         }
     }
     if (has_fts5()) {
         const QStringList fts = {kCreateFts, kTriggerAi, kTriggerAd, kTriggerAu};
         for (const auto& sql : fts) {
-            QSqlQuery q(m_db);
+            QSqlQuery q(db_);
             if (!q.exec(sql)) {
-                m_last_error = q.lastError().text();
-                logger->warn("[LIBRARY] FTS5 setup failed: {}", m_last_error);
+                last_error_ = q.lastError().text();
+                logger->warn("[LIBRARY] FTS5 setup failed: {}", last_error_);
                 return false;
             }
         }
@@ -152,7 +150,7 @@ bool LibraryRepo::exec_schema()
 
 bool LibraryRepo::has_fts5() const
 {
-    QSqlQuery q(m_db);
+    QSqlQuery q(db_);
     if (!q.exec("SELECT sqlite_compileoption_used('ENABLE_FTS5')")) {
         return false;
     }
@@ -161,7 +159,7 @@ bool LibraryRepo::has_fts5() const
 
 bool LibraryRepo::add_watched_folder(const QString& path)
 {
-    QSqlQuery q(m_db);
+    QSqlQuery q(db_);
     q.prepare("INSERT OR IGNORE INTO watched_folders(path) VALUES (?)");
     q.addBindValue(path);
     return q.exec();
@@ -169,7 +167,7 @@ bool LibraryRepo::add_watched_folder(const QString& path)
 
 bool LibraryRepo::remove_watched_folder(const QString& path)
 {
-    QSqlQuery q(m_db);
+    QSqlQuery q(db_);
     q.prepare("DELETE FROM watched_folders WHERE path=?");
     q.addBindValue(path);
     return q.exec();
@@ -178,7 +176,7 @@ bool LibraryRepo::remove_watched_folder(const QString& path)
 QStringList LibraryRepo::watched_folders() const
 {
     QStringList result;
-    QSqlQuery q(m_db);
+    QSqlQuery q(db_);
     if (q.exec("SELECT path FROM watched_folders ORDER BY path")) {
         while (q.next()) {
             result << q.value(0).toString();
@@ -189,10 +187,10 @@ QStringList LibraryRepo::watched_folders() const
 
 bool LibraryRepo::upsert_track(const LibraryTrack& track)
 {
-    if (!m_open) {
+    if (!open_) {
         return false;
     }
-    QSqlQuery q(m_db);
+    QSqlQuery q(db_);
     q.prepare(
         "INSERT INTO tracks (track_id, path, file_size, mtime, duration_ms, missing,"
         "  artist, title, album, album_artist, genre, composer, year, track_number,"
@@ -230,8 +228,8 @@ bool LibraryRepo::upsert_track(const LibraryTrack& track)
     q.addBindValue(m.encoder);
     q.addBindValue(m.date);
     if (!q.exec()) {
-        m_last_error = q.lastError().text();
-        logger->warn("[LIBRARY] upsert_track failed: {}", m_last_error);
+        last_error_ = q.lastError().text();
+        logger->warn("[LIBRARY] upsert_track failed: {}", last_error_);
         return false;
     }
     return true;
@@ -239,7 +237,7 @@ bool LibraryRepo::upsert_track(const LibraryTrack& track)
 
 bool LibraryRepo::mark_missing(const QString& normalized_path, bool missing)
 {
-    QSqlQuery q(m_db);
+    QSqlQuery q(db_);
     q.prepare("UPDATE tracks SET missing=? WHERE path=?");
     q.addBindValue(missing ? 1 : 0);
     q.addBindValue(normalized_path);
@@ -248,7 +246,7 @@ bool LibraryRepo::mark_missing(const QString& normalized_path, bool missing)
 
 bool LibraryRepo::remove_track(const QString& normalized_path)
 {
-    QSqlQuery q(m_db);
+    QSqlQuery q(db_);
     q.prepare("DELETE FROM tracks WHERE path=?");
     q.addBindValue(normalized_path);
     return q.exec();
@@ -257,7 +255,7 @@ bool LibraryRepo::remove_track(const QString& normalized_path)
 QVector<LibraryTrack> LibraryRepo::load_all_tracks() const
 {
     QVector<LibraryTrack> result;
-    QSqlQuery q(m_db);
+    QSqlQuery q(db_);
     if (!q.exec("SELECT * FROM tracks")) {
         return result;
     }
@@ -269,7 +267,7 @@ QVector<LibraryTrack> LibraryRepo::load_all_tracks() const
 
 int LibraryRepo::track_count() const
 {
-    QSqlQuery q(m_db);
+    QSqlQuery q(db_);
     if (!q.exec("SELECT COUNT(*) FROM tracks")) {
         return 0;
     }
@@ -320,7 +318,7 @@ QVector<LibraryTrack> LibraryRepo::search(const QString& keyword,
         e.replace('"', "\"\"");
         prefix_terms.push_back(QStringLiteral("\"%1\"*").arg(e));
     }
-    QSqlQuery q(m_db);
+    QSqlQuery q(db_);
     q.prepare("SELECT t.* FROM tracks_fts f JOIN tracks t ON t.id = f.rowid"
               " WHERE tracks_fts MATCH ? ORDER BY bm25(tracks_fts) LIMIT ?");
     q.addBindValue(prefix_terms.join(QLatin1Char(' ')));
@@ -349,7 +347,7 @@ QVector<LibraryTrack> LibraryRepo::search(const QString& keyword,
         }
         where_clauses.push_back(QStringLiteral("(%1)").arg(col_clauses.join(" OR ")));
     }
-    QSqlQuery q2(m_db);
+    QSqlQuery q2(db_);
     q2.prepare(QStringLiteral("SELECT t.* FROM tracks t WHERE %1 ORDER BY t.title LIMIT ?")
                    .arg(where_clauses.join(" AND ")));
     for (const QString& pattern : like_binds) {
@@ -364,7 +362,7 @@ QVector<LibraryTrack> LibraryRepo::search(const QString& keyword,
     return result;
 }
 
-LibraryTrack LibraryRepo::row_to_track(const QSqlQuery& q) const
+LibraryTrack LibraryRepo::row_to_track(const QSqlQuery& q)
 {
     LibraryTrack t;
     t.track_id          = TrackId(q.value("track_id").toString());
@@ -392,6 +390,6 @@ LibraryTrack LibraryRepo::row_to_track(const QSqlQuery& q) const
     t.meta.filename     = QFileInfo(t.filepath).fileName();
     t.meta.duration_s   = t.duration_ms / 1000;
     t.meta.start_at     = 0;
-    t.meta.isValid      = true;
+    t.meta.is_valid     = true;
     return t;
 }

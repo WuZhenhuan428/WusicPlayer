@@ -2,26 +2,27 @@
 
 #include <QJsonArray>
 #include <QJsonObject>
+#include <numbers>
 
 PlaybackController::PlaybackController(Player* player, QObject* parent) :
-    QObject(parent), m_player(player), m_is_muted(false)
+    QObject(parent), player_(player), is_muted_(false)
 {
     if (!player) {
         return;
     }
     // broadcast Player signals
-    connect(m_player, &Player::sgn_position_changed, this,
+    connect(player_, &Player::sgn_position_changed, this,
             [this](qint64 pos_ms) { emit sgn_position_changed(pos_ms); });
-    connect(m_player, &Player::sgn_duration_changed, this,
+    connect(player_, &Player::sgn_duration_changed, this,
             [this](qint64 dur_ms) { emit sgn_duration_changed(dur_ms); });
-    connect(m_player, &Player::sgn_state_changed, this,
+    connect(player_, &Player::sgn_state_changed, this,
             [this](PlayingState state) { emit sgn_playback_state_changed(state); });
-    connect(m_player, &Player::sgn_playback_natural_end, this,
+    connect(player_, &Player::sgn_playback_natural_end, this,
             [this]() { emit sgn_playback_natural_end(); });
-    connect(m_player, &Player::sgn_device_changed, this, [this](AudioDeviceInfo device) {
+    connect(player_, &Player::sgn_device_changed, this, [this](const AudioDeviceInfo& device) {
         emit sgn_devices_changed(this->available_devices(), device.id);
     });
-    connect(m_player, &Player::sgn_follow_system_changed, this,
+    connect(player_, &Player::sgn_follow_system_changed, this,
             &PlaybackController::sgn_follow_system_changed);
 
     emit sgn_devices_changed(this->available_devices(), this->current_device_id());
@@ -29,93 +30,91 @@ PlaybackController::PlaybackController(Player* player, QObject* parent) :
 
 bool PlaybackController::follow_system_device() const
 {
-    return m_follow_system_device;
+    return follow_system_device_;
 }
 
 void PlaybackController::set_follow_system_device(bool on)
 {
-    m_follow_system_device = on;
-    if (m_player) {
-        m_player->set_follow_system_device(on);
+    follow_system_device_ = on;
+    if (player_) {
+        player_->set_follow_system_device(on);
     }
 }
 
-PlaybackController::~PlaybackController() {}
-
 void PlaybackController::play()
 {
-    if (!m_player) {
+    if (!player_) {
         return;
     }
-    m_player->play();
+    player_->play();
 }
 
 void PlaybackController::pause()
 {
-    if (!m_player) {
+    if (!player_) {
         return;
     }
-    m_player->pause();
+    player_->pause();
 }
 
 void PlaybackController::stop()
 {
-    if (!m_player) {
+    if (!player_) {
         return;
     }
-    m_player->stop();
+    player_->stop();
 }
 
 PlayingState PlaybackController::state()
 {
-    if (!m_player) {
-        return PlayingState::STOP;
+    if (!player_) {
+        return PlayingState::Stop;
     }
-    return m_player->state();
+    return player_->state();
 }
 
 void PlaybackController::set_position(qint64 pos_ms)
 {
-    if (!m_player) {
+    if (!player_) {
         return;
     }
-    m_player->seek(pos_ms);
+    player_->seek(pos_ms);
 }
 
 qint64 PlaybackController::position()
 {
-    if (!m_player) {
+    if (!player_) {
         return 0;
     }
-    return m_player->position();
+    return player_->position();
 }
 
 void PlaybackController::set_volume(int percent)
 {
-    if (!m_player) {
+    if (!player_) {
         return;
     }
-    m_player->set_volume(percent);
+    player_->set_volume(static_cast<float>(percent));
     emit sgn_volume_changed(percent);
 }
 
 void PlaybackController::set_eq_config(EqConfig cfg)
 {
-    if (!m_player) {
+    if (!player_) {
         return;
     }
-    m_eq_config_cache = std::make_shared<const EqConfig>(std::move(cfg));
-    m_player->set_eq_config(m_eq_config_cache);
+    eq_config_cache_ = std::make_shared<const EqConfig>(std::move(cfg));
+    player_->set_eq_config(eq_config_cache_);
 }
 
 EqConfig PlaybackController::eq_config() const
 {
-    if (m_eq_config_cache) {
-        return *m_eq_config_cache;
+    if (eq_config_cache_) {
+        return *eq_config_cache_;
     }
     // 回退: 从播放链路取当前生效配置(如首次打开 EQ 窗口时)
-    if (m_player) {
-        auto cur = m_player->eq_config();
+    if (player_) {
+        auto cur = player_->eq_config();
         if (cur) {
             return *cur;
         }
@@ -125,76 +124,76 @@ EqConfig PlaybackController::eq_config() const
 
 QString PlaybackController::eq_plugin_id() const
 {
-    return m_eq_plugin_id;
+    return eq_plugin_id_;
 }
 
 void PlaybackController::set_eq_plugin_id(const QString& id)
 {
-    m_eq_plugin_id = id;
+    eq_plugin_id_ = id;
 }
 
-void PlaybackController::read(QString filepath)
+void PlaybackController::read(const QString& filepath)
 {
-    if (!m_player) {
+    if (!player_) {
         return;
     }
-    m_player->read(filepath);
+    player_->read(filepath);
 }
 
 void PlaybackController::set_mute(bool mute_on)
 {
-    if (m_player) {
-        m_player->set_mute(mute_on);
-        m_is_muted = mute_on;
+    if (player_) {
+        player_->set_mute(mute_on);
+        is_muted_ = mute_on;
         emit sgn_mute_changed(mute_on);
     }
 }
 
 bool PlaybackController::is_mute()
 {
-    if (m_player) {
-        return m_player->is_muted();
+    if (player_) {
+        return player_->is_muted();
     }
     return false;
 }
 
 void PlaybackController::flip_mute()
 {
-    this->set_mute(!m_is_muted);
+    this->set_mute(!is_muted_);
 }
 
 void PlaybackController::set_device(const AudioDeviceInfo& dev)
 {
-    if (!m_player) {
+    if (!player_) {
         return;
     }
-    m_player->set_output_device(dev);
+    player_->set_output_device(dev);
     emit sgn_devices_changed(this->available_devices(), this->current_device_id());
 }
 
-void PlaybackController::set_device_by_id(QByteArray id)
+void PlaybackController::set_device_by_id(const QByteArray& id)
 {
-    if (!m_player) {
+    if (!player_) {
         return;
     }
-    m_player->set_output_device_by_id(id);
+    player_->set_output_device_by_id(id);
     emit sgn_devices_changed(this->available_devices(), this->current_device_id());
 }
 
 QVector<AudioDeviceInfo> PlaybackController::available_devices()
 {
-    if (!m_player) {
+    if (!player_) {
         return {};
     }
-    return m_player->devices();
+    return player_->devices();
 }
 
 QByteArray PlaybackController::current_device_id()
 {
-    if (!m_player) {
+    if (!player_) {
         return {};
     }
-    return m_player->current_output_device().id;
+    return player_->current_output_device().id;
 }
 
 void PlaybackController::load_from_json(const QJsonObject& json)
@@ -212,13 +211,13 @@ void PlaybackController::load_from_json(const QJsonObject& json)
             QByteArray::fromBase64(obj.value("last_device").toString().toUtf8()));
     }
 
-    m_last_position_ms       = obj.value("last_position_ms").toInt();
-    m_last_was_playing       = obj.value("last_was_playing").toBool(false);
+    last_position_ms_        = obj.value("last_position_ms").toInt();
+    last_was_playing_        = obj.value("last_was_playing").toBool(false);
 
     // Restore EQ state (EqConfig 驱动)
     const QJsonObject eq_obj = obj.value("eq").toObject();
-    m_eq_plugin_id           = eq_obj.value("plugin_id").toString();
-    if (m_player && eq_obj.contains("enabled")) {
+    eq_plugin_id_            = eq_obj.value("plugin_id").toString();
+    if (player_ && eq_obj.contains("enabled")) {
         auto cfg               = std::make_shared<EqConfig>();
         cfg->enabled           = eq_obj.value("enabled").toBool(false);
         const QJsonArray bands = eq_obj.value("bands").toArray();
@@ -227,17 +226,17 @@ void PlaybackController::load_from_json(const QJsonObject& json)
             EqBand band;
             band.type    = static_cast<EqFilterType>(bo.value("type").toInt(0));
             band.freq    = bo.value("freq").toDouble(1000.0);
-            band.q       = bo.value("q").toDouble(1.414);
+            band.q       = bo.value("q").toDouble(std::numbers::sqrt2);
             band.gain_db = static_cast<float>(bo.value("gain_db").toDouble(0.0));
             cfg->bands.push_back(band);
         }
-        m_eq_config_cache = cfg;
-        m_player->set_eq_config(cfg);
+        eq_config_cache_ = cfg;
+        player_->set_eq_config(cfg);
     }
 
     // TODO: consider about time sequence
-    if (m_player) {
-        m_player->seek(m_last_position_ms);
+    if (player_) {
+        player_->seek(last_position_ms_);
     }
 }
 
@@ -245,23 +244,24 @@ QJsonObject PlaybackController::save_to_json()
 {
     QJsonObject obj;
 
-    m_last_was_playing          = this->state() == PlayingState::PLAYING;
-    m_last_position_ms          = this->state() != PlayingState::STOP ? m_player->position() : 0;
+    last_was_playing_ = this->state() == PlayingState::Playing;
+    last_position_ms_ =
+        this->state() != PlayingState::Stop ? static_cast<int>(player_->position()) : 0;
 
-    obj["volume"]               = m_player->volume();
-    obj["muted"]                = m_is_muted;
+    obj["volume"]               = player_->volume();
+    obj["muted"]                = is_muted_;
     obj["last_device"]          = QString::fromUtf8(this->current_device_id().toBase64());
-    obj["follow_system_device"] = m_follow_system_device;
-    obj["last_was_playing"]     = m_last_was_playing;
-    obj["last_position_ms"]     = m_last_position_ms;
+    obj["follow_system_device"] = follow_system_device_;
+    obj["last_was_playing"]     = last_was_playing_;
+    obj["last_position_ms"]     = last_position_ms_;
 
     // EQ 配置(插件路径)
     QJsonObject eq_obj;
-    eq_obj["plugin_id"] = m_eq_plugin_id;
-    if (m_eq_config_cache) {
-        eq_obj["enabled"] = m_eq_config_cache->enabled;
+    eq_obj["plugin_id"] = eq_plugin_id_;
+    if (eq_config_cache_) {
+        eq_obj["enabled"] = eq_config_cache_->enabled;
         QJsonArray bands;
-        for (const EqBand& band : m_eq_config_cache->bands) {
+        for (const EqBand& band : eq_config_cache_->bands) {
             QJsonObject bo;
             bo["type"]    = static_cast<int>(band.type);
             bo["freq"]    = band.freq;
@@ -286,10 +286,10 @@ QString PlaybackController::config_sub_key() const
 
 int PlaybackController::last_position_ms() const
 {
-    return m_last_position_ms;
+    return last_position_ms_;
 }
 
 bool PlaybackController::last_was_playing() const
 {
-    return m_last_was_playing;
+    return last_was_playing_;
 }

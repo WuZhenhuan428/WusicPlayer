@@ -17,25 +17,24 @@ class HSVDialog : public QDialog
 
 public:
     explicit HSVDialog(rgb_t curr_rgb, QWidget* parent = nullptr);
-    ~HSVDialog();
 
     rgb_t get_color();
 
 private:
-    rgb_t m_current_color;
+    rgb_t current_color_ = {};
 
-    HSVPalette* m_hsv_palette;
-    ColorPreviewItem* m_color_preview;
-    LabelMatrix* m_label_matrix;
-    QVBoxLayout* m_color_layout;
-    QHBoxLayout* m_palette_layout;
+    HSVPalette* hsv_palette_;
+    ColorPreviewItem* color_preview_;
+    LabelMatrix* lb_matrix_;
+    QVBoxLayout* vbl_color_;
+    QHBoxLayout* hbl_palette_;
 
-    QPushButton* m_btn_apply;
-    QPushButton* m_btn_ok;
-    QPushButton* m_btn_cancel;
-    QHBoxLayout* m_bottom_layout;
-    QVBoxLayout* m_main_layout;
+    QPushButton* btn_apply_;
+    QPushButton* btn_ok_;
+    QPushButton* btn_cancel_;
+    QHBoxLayout* bottom_layout_;
+    QVBoxLayout* main_layout_;
 
 signals:
-    void sgnSelectColor(rgb_t rgb);
+    void sgn_select_color(rgb_t rgb);
 };

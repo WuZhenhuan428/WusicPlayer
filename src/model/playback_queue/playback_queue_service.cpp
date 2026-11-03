@@ -39,7 +39,7 @@ QJsonObject meta_to_json(const TrackMetaData& meta)
     o["title"]        = meta.title;
     o["track_number"] = meta.track_number;
     o["year"]         = meta.year;
-    o["isValid"]      = meta.isValid;
+    o["isValid"]      = meta.is_valid;
     return o;
 }
 
@@ -64,7 +64,7 @@ void apply_meta_from_json(const QJsonObject& o, TrackMetaData* meta)
     meta->title        = o["title"].toString();
     meta->track_number = o["track_number"].toInt();
     meta->year         = o["year"].toInt();
-    meta->isValid      = o["isValid"].toBool();
+    meta->is_valid     = o["isValid"].toBool();
 }
 
 QJsonObject item_to_json(const QueueItem& item)
@@ -96,8 +96,8 @@ QueueItem item_from_json(const QJsonObject& o)
 PlaybackQueueService::PlaybackQueueService(AppContext& ctx, QObject* parent) :
     QObject(parent), ctx_(ctx)
 {
-    this->playlist_mgr_ = ctx_.playlist_manager_;
-    this->library_      = this->ctx_.library_manager_;
+    this->playlist_mgr_ = ctx_.playlist_manager;
+    this->library_      = this->ctx_.library_manager;
     assert(playlist_mgr_ && library_);
     connect(&queue_, &PlaybackQueue::sgn_queue_changed, this,
             &PlaybackQueueService::sgn_queue_changed);
@@ -225,7 +225,7 @@ bool PlaybackQueueService::load_from(const QString& path)
     QVector<QueueItem> items;
     const QJsonArray arr = root["items"].toArray();
     items.reserve(arr.size());
-    for (const QJsonValue& v : arr) {
+    for (const auto& v : arr) {
         items.append(item_from_json(v.toObject()));
     }
     queue_.clear();

@@ -18,12 +18,12 @@ class LibraryManager;
  */
 enum class LibraryGrouping
 {
-    none = 0, // 平铺(单组)
-    artist,
-    album,
-    genre,
-    folder,
-    year
+    None = 0, // 平铺(单组)
+    Artist,
+    Album,
+    Genre,
+    Folder,
+    Year,
 };
 
 /**
@@ -42,9 +42,9 @@ public:
 
     // 切换分类 / 关键字(空 = 全量浏览),触发重建
     void set_grouping(LibraryGrouping grouping);
-    LibraryGrouping grouping() const
+    [[nodiscard]] LibraryGrouping grouping() const
     {
-        return m_grouping;
+        return grouping_;
     }
     /**
      * @brief DSL 自定义分类(与预设 set_grouping 互斥; 设置成功后优先)。
@@ -53,23 +53,23 @@ public:
      */
     bool set_dsl_grouping(const QString& expression);
     void clear_dsl_grouping();
-    const QString& dsl_error() const
+    [[nodiscard]] const QString& dsl_error() const
     {
-        return m_dsl_error;
+        return dsl_error_;
     }
-    bool has_dsl() const
+    [[nodiscard]] bool has_dsl() const
     {
-        return m_dsl != nullptr;
+        return dsl_ != nullptr;
     }
     /// 当前生效的 DSL 源文本(空 = 未启用 DSL)。
-    const QString& dsl_source() const
+    [[nodiscard]] const QString& dsl_source() const
     {
-        return m_dsl_source;
+        return dsl_source_;
     }
     void set_keyword(const QString& keyword);
-    QString keyword() const
+    [[nodiscard]] QString keyword() const
     {
-        return m_keyword;
+        return keyword_;
     }
     // 重新拉取库数据(库变更后调用)
     void refresh();
@@ -78,29 +78,31 @@ public:
     void set_library(LibraryManager* lib);
 
     // 非拥有:返回内部容器引用,仅本次调用内有效
-    LibraryManager* library() const
+    [[nodiscard]] LibraryManager* library() const
     {
-        return m_lib;
+        return lib_;
     }
 
     // 叶节点 → 库级曲目身份;分组节点 / 无效索引返回 nullopt
-    std::optional<TrackId> track_id_at(const QModelIndex& index) const;
+    [[nodiscard]] std::optional<TrackId> track_id_at(const QModelIndex& index) const;
     // 收集索引集合对应的库曲目身份:曲目行直接取;分组行展开为该组全部曲目
-    QVector<TrackId> collect_track_ids(const QModelIndexList& indexes) const;
+    [[nodiscard]] QVector<TrackId> collect_track_ids(const QModelIndexList& indexes) const;
 
     // QAbstractItemModel 接口
-    QModelIndex index(int row, int column,
-                      const QModelIndex& parent = QModelIndex()) const override;
-    QModelIndex parent(const QModelIndex& child) const override;
-    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+    [[nodiscard]] QModelIndex index(int row, int column,
+                                    const QModelIndex& parent = QModelIndex()) const override;
+    [[nodiscard]] QModelIndex parent(const QModelIndex& child) const override;
+    [[nodiscard]] int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    [[nodiscard]] int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+    [[nodiscard]] QVariant data(const QModelIndex& index,
+                                int role = Qt::DisplayRole) const override;
 
     // 拖拽源:对外提供库曲目 TrackId 列表(JSON 序列化)
-    Qt::ItemFlags flags(const QModelIndex& index) const override;
-    QStringList mimeTypes() const override;
-    QMimeData* mimeData(const QModelIndexList& indexes) const override;
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    [[nodiscard]] Qt::ItemFlags flags(const QModelIndex& index) const override;
+    [[nodiscard]] QStringList mimeTypes() const override;
+    [[nodiscard]] QMimeData* mimeData(const QModelIndexList& indexes) const override;
+    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation,
+                                      int role) const override;
 
 private:
     struct Group
@@ -111,17 +113,17 @@ private:
     };
 
     void rebuild();
-    QString group_key(const LibraryTrack& lt) const;
+    [[nodiscard]] QString group_key(const LibraryTrack& lt) const;
     void sort_tracks(QVector<std::shared_ptr<const LibraryTrack>>& tracks);
     void sort_groups();
 
-    LibraryManager* m_lib      = nullptr; // 非拥有
-    LibraryGrouping m_grouping = LibraryGrouping::artist;
-    QString m_keyword;
-    QVector<Group> m_groups;
+    LibraryManager* lib_      = nullptr; // 非拥有
+    LibraryGrouping grouping_ = LibraryGrouping::Artist;
+    QString keyword_;
+    QVector<Group> groups_;
 
     // DSL 自定义分类(非空时优先于 m_grouping)
-    std::unique_ptr<dsl::Evaluator> m_dsl;
-    QString m_dsl_error;
-    QString m_dsl_source; // 当前生效的 DSL 源文本
+    std::unique_ptr<dsl::Evaluator> dsl_;
+    QString dsl_error_;
+    QString dsl_source_; // 当前生效的 DSL 源文本
 };

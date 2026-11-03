@@ -107,8 +107,9 @@ inline QString node_to_string(const Node& n)
         return n.name;
     case NodeKind::Primitive: {
         QStringList parts;
-        for (const auto& a : n.args)
+        for (const auto& a : n.args) {
             parts << node_to_string(a);
+        }
         return QStringLiteral("(%1 %2)").arg(n.name, parts.join(QLatin1Char(' ')));
     }
     }
@@ -124,7 +125,7 @@ struct SortItem
     {
         Default,
         First,
-        Last
+        Last,
     };
     Nulls nulls = Nulls::Default;
     int line = 1, col = 1;
@@ -145,7 +146,7 @@ struct BucketBranch
     {
         If,
         Elif,
-        Else
+        Else,
     };
     Kind kind = Kind::If;
     Node cond; // If/Elif 的条件表达式

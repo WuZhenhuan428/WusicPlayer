@@ -25,16 +25,16 @@ class MyEqPlugin : public IEqPlugin
 
 public:
     // ---- IBasicPlugin ----
-    QString id() const override;
-    QString name() const override;
-    QString version() const override;
-    QString description() const override;
-    QString author() const override;
-    QVector<QString> categories() const override;
+    [[nodiscard]] QString id() const override;
+    [[nodiscard]] QString name() const override;
+    [[nodiscard]] QString version() const override;
+    [[nodiscard]] QString description() const override;
+    [[nodiscard]] QString author() const override;
+    [[nodiscard]] QVector<QString> categories() const override;
 
     // ---- IEqPlugin ----
     QWidget* create_eq_widget(QWidget* parent = nullptr) override;
-    EqConfig eq_config() const override;
+    [[nodiscard]] EqConfig eq_config() const override;
     void apply_current() override;
     void revert() override;
     void reset() override;
@@ -46,8 +46,8 @@ private:
     static constexpr int kBandCount            = 3;
     static constexpr double kFreqs[kBandCount] = {250, 1000, 4000};
 
-    std::array<float, kBandCount> m_gains{};         // 当前编辑态
-    std::array<float, kBandCount> m_gains_applied{}; // 上次 apply 的快照(供 revert)
-    std::array<QSlider*, kBandCount> m_sliders{};
-    std::array<QLabel*, kBandCount> m_lb_values{};
+    std::array<float, kBandCount> gains_{};         // 当前编辑态
+    std::array<float, kBandCount> gains_applied_{}; // 上次 apply 的快照(供 revert)
+    std::array<QSlider*, kBandCount> sliders_{};
+    std::array<QLabel*, kBandCount> lb_values_{};
 };

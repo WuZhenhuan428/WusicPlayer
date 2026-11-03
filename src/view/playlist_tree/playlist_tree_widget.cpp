@@ -26,7 +26,7 @@ QVector<TrackId> decode_library_tracks(const QMimeData* mime)
     }
     QVector<TrackId> tids;
     const QJsonArray arr = QJsonDocument::fromJson(raw).array();
-    for (const QJsonValue& v : arr) {
+    for (const auto& v : arr) {
         const TrackId tid = TrackId::from_string(v.toString());
         if (!tid.is_null()) {
             tids.push_back(tid);
@@ -53,7 +53,7 @@ bool decode_playlist_entries(const QMimeData* mime, PlaylistId* src_pid,
     }
     entry_ids->clear();
     const QJsonArray arr = root.value("ids").toArray();
-    for (const QJsonValue& v : arr) {
+    for (const auto& v : arr) {
         const EntryId id = EntryId::from_string(v.toString());
         if (!id.is_null()) {
             entry_ids->push_back(id);
@@ -99,7 +99,7 @@ void PlaylistTreeDropView::dropEvent(QDropEvent* event)
     const QVector<TrackId> tids = decode_library_tracks(event->mimeData());
     if (!tids.isEmpty()) {
         if (playlist_item) {
-            emit sgnLibraryTracksDropped(playlist_item->id(), tids);
+            emit sgn_library_tracks_dropped(playlist_item->id(), tids);
         }
         event->acceptProposedAction();
         return;
@@ -109,7 +109,7 @@ void PlaylistTreeDropView::dropEvent(QDropEvent* event)
     QVector<EntryId> entry_ids;
     if (decode_playlist_entries(event->mimeData(), &src_pid, &entry_ids)) {
         if (playlist_item) {
-            emit sgnPlaylistEntriesDropped(src_pid, playlist_item->id(), entry_ids);
+            emit sgn_playlist_entries_dropped(src_pid, playlist_item->id(), entry_ids);
         }
         event->acceptProposedAction();
         return;
@@ -126,50 +126,50 @@ PlaylistTreeWidget::PlaylistTreeWidget(QWidget* parent) : QWidget(parent)
 
 void PlaylistTreeWidget::init_ui()
 {
-    m_playlist_tree = new PlaylistTreeDropView;
-    m_playlist_tree->setHeaderLabel(tr("Playlist"));
-    m_playlist_tree->setMinimumWidth(120);
-    m_playlist_tree->setContextMenuPolicy(Qt::CustomContextMenu);
-    m_playlist_tree->setRootIsDecorated(false);
-    m_playlist_tree->setIndentation(0);
+    playlist_tree_ = new PlaylistTreeDropView;
+    playlist_tree_->setHeaderLabel(tr("Playlist"));
+    playlist_tree_->setMinimumWidth(120);
+    playlist_tree_->setContextMenuPolicy(Qt::CustomContextMenu);
+    playlist_tree_->setRootIsDecorated(false);
+    playlist_tree_->setIndentation(0);
     // 选中后单击 → 内联重命名(KDE Dolphin 同款);双击不误触编辑(第二次点击在双击时间窗内触发
     // doubleClicked)
-    m_playlist_tree->setEditTriggers(QAbstractItemView::SelectedClicked);
+    playlist_tree_->setEditTriggers(QAbstractItemView::SelectedClicked);
     // 内部拖动排序 + 接受外部媒体库拖入(dropEvent 分别处理)
-    m_playlist_tree->setDragDropMode(QAbstractItemView::InternalMove);
-    m_playlist_tree->setDefaultDropAction(Qt::MoveAction);
+    playlist_tree_->setDragDropMode(QAbstractItemView::InternalMove);
+    playlist_tree_->setDefaultDropAction(Qt::MoveAction);
 
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
-    layout->addWidget(m_playlist_tree);
+    layout->addWidget(playlist_tree_);
 }
 
 void PlaylistTreeWidget::init_connections()
 {
-    connect(m_playlist_tree, &QTreeWidget::customContextMenuRequested, this,
+    connect(playlist_tree_, &QTreeWidget::customContextMenuRequested, this,
             &PlaylistTreeWidget::call_tree_context_menu);
-    connect(m_playlist_tree, &QTreeWidget::itemDoubleClicked, this,
+    connect(playlist_tree_, &QTreeWidget::itemDoubleClicked, this,
             &PlaylistTreeWidget::on_item_double_clicked);
-    connect(m_playlist_tree, &QTreeWidget::itemChanged, this, &PlaylistTreeWidget::on_item_changed);
+    connect(playlist_tree_, &QTreeWidget::itemChanged, this, &PlaylistTreeWidget::on_item_changed);
     // 拖动排序:rowsMoved 后收集新顺序提交
-    connect(m_playlist_tree->model(), &QAbstractItemModel::rowsMoved, this,
+    connect(playlist_tree_->model(), &QAbstractItemModel::rowsMoved, this,
             &PlaylistTreeWidget::on_rows_moved);
     // 媒体库曲目拖入某列表项
-    connect(m_playlist_tree, &PlaylistTreeDropView::sgnLibraryTracksDropped, this,
-            &PlaylistTreeWidget::sgnLibraryTracksDropped);
+    connect(playlist_tree_, &PlaylistTreeDropView::sgn_library_tracks_dropped, this,
+            &PlaylistTreeWidget::sgn_library_tracks_dropped);
     // 播放列表条目拖入某列表项(列表→列表)
-    connect(m_playlist_tree, &PlaylistTreeDropView::sgnPlaylistEntriesDropped, this,
-            &PlaylistTreeWidget::sgnPlaylistEntriesDropped);
+    connect(playlist_tree_, &PlaylistTreeDropView::sgn_playlist_entries_dropped, this,
+            &PlaylistTreeWidget::sgn_playlist_entries_dropped);
 }
 
 void PlaylistTreeWidget::set_playlists(const QVector<QPair<PlaylistId, QString>>& playlists)
 {
-    m_playlist_tree->blockSignals(true);
-    m_playlist_tree->clear();
+    playlist_tree_->blockSignals(true);
+    playlist_tree_->clear();
     for (const auto& list : playlists) {
-        new WPlayListWidgetItem(m_playlist_tree, list.second, list.first);
+        new WPlayListWidgetItem(playlist_tree_, list.second, list.first);
     }
-    m_playlist_tree->blockSignals(false);
+    playlist_tree_->blockSignals(false);
 }
 
 void PlaylistTreeWidget::on_item_double_clicked(QTreeWidgetItem* item)
@@ -177,7 +177,7 @@ void PlaylistTreeWidget::on_item_double_clicked(QTreeWidgetItem* item)
     // 双击切换列表(SelectedClicked 编辑触发器下,双击不会误触内联编辑)
     auto* playlist_item = dynamic_cast<WPlayListWidgetItem*>(item);
     if (playlist_item) {
-        emit sgnSwitchPlaylist(playlist_item->id());
+        emit sgn_switch_playlist(playlist_item->id());
     }
 }
 
@@ -186,8 +186,8 @@ void PlaylistTreeWidget::begin_rename(QTreeWidgetItem* item)
     if (!item) {
         return;
     }
-    m_playlist_tree->setCurrentItem(item);
-    m_playlist_tree->editItem(item, 0);
+    playlist_tree_->setCurrentItem(item);
+    playlist_tree_->editItem(item, 0);
 }
 
 void PlaylistTreeWidget::on_item_changed(QTreeWidgetItem* item)
@@ -196,19 +196,19 @@ void PlaylistTreeWidget::on_item_changed(QTreeWidgetItem* item)
     if (!playlist_item) {
         return;
     }
-    emit sgnRenamePlaylist(playlist_item->id(), item->text(0));
+    emit sgn_rename_playlist(playlist_item->id(), item->text(0));
 }
 
 void PlaylistTreeWidget::on_rows_moved()
 {
-    emit sgnReorderPlaylists(collect_order());
+    emit sgn_reorder_playlists(collect_order());
 }
 
 QVector<PlaylistId> PlaylistTreeWidget::collect_order() const
 {
     QVector<PlaylistId> order;
-    for (int i = 0; i < m_playlist_tree->topLevelItemCount(); ++i) {
-        auto* item = dynamic_cast<WPlayListWidgetItem*>(m_playlist_tree->topLevelItem(i));
+    for (int i = 0; i < playlist_tree_->topLevelItemCount(); ++i) {
+        auto* item = dynamic_cast<WPlayListWidgetItem*>(playlist_tree_->topLevelItem(i));
         if (item) {
             order.push_back(item->id());
         }
@@ -219,34 +219,36 @@ QVector<PlaylistId> PlaylistTreeWidget::collect_order() const
 void PlaylistTreeWidget::call_tree_context_menu(const QPoint& pos)
 {
     QMenu menu(this);
-    QAction* actNew       = menu.addAction(tr("New Playlist"));
+    QAction* act_new      = menu.addAction(tr("New Playlist"));
 
-    QTreeWidgetItem* item = m_playlist_tree->itemAt(pos);
+    QTreeWidgetItem* item = playlist_tree_->itemAt(pos);
     auto* playlist_item   = dynamic_cast<WPlayListWidgetItem*>(item);
 
     // 背景右键:仅"New Playlist"
     if (!playlist_item) {
-        connect(actNew, &QAction::triggered, this, &PlaylistTreeWidget::sgnCreatePlaylist);
-        menu.exec(m_playlist_tree->mapToGlobal(pos));
+        connect(act_new, &QAction::triggered, this, &PlaylistTreeWidget::sgn_create_playlist);
+        menu.exec(playlist_tree_->mapToGlobal(pos));
         return;
     }
     const PlaylistId pid = playlist_item->id();
 
     menu.addSeparator();
-    QAction* actAddTrack  = menu.addAction(tr("Add track"));
-    QAction* actAddFolder = menu.addAction(tr("Add folder"));
-    QAction* actSave      = menu.addAction(tr("Save as"));
-    QAction* actRename    = menu.addAction(tr("Rename"));
-    QAction* actCopy      = menu.addAction(tr("Copy & Paste"));
-    QAction* actRemove    = menu.addAction(tr("Remove"));
+    QAction* act_add_track  = menu.addAction(tr("Add track"));
+    QAction* act_add_folder = menu.addAction(tr("Add folder"));
+    QAction* act_save       = menu.addAction(tr("Save as"));
+    QAction* act_rename     = menu.addAction(tr("Rename"));
+    QAction* act_copy       = menu.addAction(tr("Copy & Paste"));
+    QAction* act_remove     = menu.addAction(tr("Remove"));
 
-    connect(actNew, &QAction::triggered, this, &PlaylistTreeWidget::sgnCreatePlaylist);
-    connect(actAddTrack, &QAction::triggered, this, [this, pid]() { emit sgnImportFiles(pid); });
-    connect(actAddFolder, &QAction::triggered, this, [this, pid]() { emit sgnImportDir(pid); });
-    connect(actSave, &QAction::triggered, this, [this, pid]() { emit sgnSavePlaylist(pid); });
-    connect(actRename, &QAction::triggered, this, [this, item]() { begin_rename(item); });
-    connect(actCopy, &QAction::triggered, this, [this, pid]() { emit sgnCopyPlaylist(pid); });
-    connect(actRemove, &QAction::triggered, this, [this, pid]() { emit sgnRemovePlaylist(pid); });
+    connect(act_new, &QAction::triggered, this, &PlaylistTreeWidget::sgn_create_playlist);
+    connect(act_add_track, &QAction::triggered, this,
+            [this, pid]() { emit sgn_import_files(pid); });
+    connect(act_add_folder, &QAction::triggered, this, [this, pid]() { emit sgn_import_dir(pid); });
+    connect(act_save, &QAction::triggered, this, [this, pid]() { emit sgn_save_playlist(pid); });
+    connect(act_rename, &QAction::triggered, this, [this, item]() { begin_rename(item); });
+    connect(act_copy, &QAction::triggered, this, [this, pid]() { emit sgn_copy_playlist(pid); });
+    connect(act_remove, &QAction::triggered, this,
+            [this, pid]() { emit sgn_remove_playlist(pid); });
 
-    menu.exec(m_playlist_tree->mapToGlobal(pos));
+    menu.exec(playlist_tree_->mapToGlobal(pos));
 }

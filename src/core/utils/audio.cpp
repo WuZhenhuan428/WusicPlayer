@@ -2,12 +2,14 @@
 
 #include "core/utils/string.hpp"
 #include <algorithm>
+#include <ranges>
 
 #include "core/logger/logger_manager.h"
 namespace
 {
+// NOLINTNEXTLINE
 Logger* audio_utils_logger = LoggerManager::file_logger("audio_utils", {"console", "gui"});
-}
+} // namespace
 
 namespace utils::audio
 {
@@ -19,9 +21,9 @@ namespace fs = std::filesystem;
 fs::path to_fs_path(const QString& s)
 {
 #ifdef Q_OS_WIN
-    return fs::path(s.toStdWString());
+    return {s.toStdWString()};
 #else
-    return fs::path(s.toStdString());
+    return {s.toStdString()};
 #endif
 }
 
@@ -36,54 +38,50 @@ QString from_fs_path(const fs::path& p)
 
 bool is_audio_file(const fs::path& path)
 {
-    if (!fs::is_regular_file(path))
+    if (!fs::is_regular_file(path)) {
         return false;
-
-    static const std::vector<std::string> audioExts = {".mp3", ".wav", ".flac", ".aac",  ".m4a",
-                                                       ".ogg", ".wma", ".opus", ".alac", ".aiff"};
-
-    std::string ext                                 = path.extension().string();
-    for (char& c : ext)
-        c = std::tolower(c);
-
-    for (const auto& audioExt : audioExts) {
-        if (ext == audioExt)
-            return true;
     }
 
-    return false;
+    static const std::vector<std::string> audio_exts = {
+        ".mp3", ".wav", ".flac", ".aac", ".m4a", ".ogg", ".wma", ".opus", ".alac", ".aiff",
+    };
+
+    std::string ext = path.extension().string();
+    for (char& c : ext) {
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+
+    return std::ranges::any_of(audio_exts,
+                               [&ext](const auto& audio_ext) { return ext == audio_ext; });
 }
 
 bool is_playlist(const fs::path& path)
 {
-    if (!fs::is_regular_file(path))
+    if (!fs::is_regular_file(path)) {
         return false;
-
-    static const std::vector<std::string> playlistExts = {".m3u", ".m3u8", ".pls", ".xspf"};
-
-    std::string ext                                    = path.extension().string();
-    for (char& c : ext)
-        c = std::tolower(c);
-
-    for (const auto& playlistExt : playlistExts) {
-        if (ext == playlistExt)
-            return true;
     }
 
-    return false;
+    static const std::vector<std::string> playlist_exts = {".m3u", ".m3u8", ".pls", ".xspf"};
+
+    std::string ext                                     = path.extension().string();
+    for (char& c : ext) {
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+
+    return std::ranges::any_of(playlist_exts, [&ext](const auto& pl_ext) { return ext == pl_ext; });
 }
 
 std::vector<fs::path> find_all(const QString& root_dir)
 {
     std::vector<fs::path> results;
-    const fs::path rootPath = to_fs_path(root_dir);
+    const fs::path root_path = to_fs_path(root_dir);
 
-    auto scanDir            = [](const fs::path& dir, std::vector<fs::path>& results) {
+    auto scan_dir            = [](const fs::path& dir, std::vector<fs::path>& results) {
         std::error_code ec;
         for (const auto& entry : fs::recursive_directory_iterator(dir, ec)) {
             if (ec) {
                 audio_utils_logger->warn("find_all: failed to visit: {}, error_code message: {}",
-                                                    entry.path().string(), ec.message());
+                                         entry.path().string(), ec.message());
                 continue; // 忽略访问错误
             }
             if (entry.is_regular_file()) {
@@ -93,7 +91,7 @@ std::vector<fs::path> find_all(const QString& root_dir)
             }
         }
     };
-    scanDir(rootPath, results);
+    scan_dir(root_path, results);
     return results;
 }
 
@@ -103,24 +101,22 @@ std::pair<int, int> parse_disc_number(const std::string& str)
         return {0, 0};
     }
 
-    size_t slash = str.find("/");
+    size_t slash = str.find('/');
 
     if (slash == std::string::npos) {
         auto value = utils::string::string_to_int(str);
         if (value.has_value()) {
             return {*value, 0};
-        } else {
-            return {0, 0};
         }
+        return {0, 0};
     }
 
     auto num = utils::string::string_to_int(str.substr(0, slash));
     auto den = utils::string::string_to_int(str.substr(slash + 1));
     if (!num.has_value() || !den.has_value()) {
         return {0, 0};
-    } else {
-        return {*num, *den};
     }
+    return {*num, *den};
 }
 
 QPixmap find_cover_at_folder(const QString& audio_path)
@@ -128,13 +124,13 @@ QPixmap find_cover_at_folder(const QString& audio_path)
     QFileInfo audio_file(audio_path);
     if (!audio_file.exists()) {
         audio_utils_logger->warn("audio file does not exist: {}", audio_file.fileName());
-        return QPixmap();
+        return {};
     }
 
     QDir audio_dir = audio_file.absoluteDir();
     if (!audio_dir.exists()) {
         audio_utils_logger->warn("audio path does not exist: {}", audio_dir.dirName());
-        return QPixmap();
+        return {};
     }
 
     QVector<QString> support_formats;
@@ -144,7 +140,7 @@ QPixmap find_cover_at_folder(const QString& audio_path)
 
     QVector<QString> name_patterns = {
         "cover*",   "folder*",   "album*",  "front*",
-        "artwork*", "albumart*", "*cover*", "*folder*" // <- files which contains keyword
+        "artwork*", "albumart*", "*cover*", "*folder*", // <- files which contains keyword
     };
 
     // build search pattern
@@ -162,10 +158,10 @@ QPixmap find_cover_at_folder(const QString& audio_path)
     QVector<QString> files = audio_dir.entryList();
     if (files.isEmpty()) {
         audio_utils_logger->info("can not find any cover image");
-        return QPixmap();
+        return {};
     }
 
-    std::sort(files.begin(), files.end(), [](const QString& a, const QString& b) {
+    std::ranges::sort(files, [](const QString& a, const QString& b) {
         QString a_lower                              = a.toLower();
         QString b_lower                              = b.toLower();
 
@@ -177,7 +173,7 @@ QPixmap find_cover_at_folder(const QString& audio_path)
                     return i;
                 }
             }
-            return priority_order.size();
+            return static_cast<int>(priority_order.size());
         };
         return get_priority(a_lower) < get_priority(b_lower);
     });
@@ -194,18 +190,17 @@ QPixmap parse_cover_to_qpixmap(const QString& filepath)
     TagLibFileNameHolder fname(filepath);
     fs::path path   = to_fs_path(filepath);
     std::string ext = path.extension().string();
-    std::transform(ext.begin(), ext.end(), ext.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
+    std::ranges::transform(ext, ext.begin(), [](unsigned char c) { return std::tolower(c); });
 
-    auto loadFromPicture = [](const TagLib::ByteVector& data) -> QPixmap {
+    auto load_from_picture = [](const TagLib::ByteVector& data) -> QPixmap {
         QPixmap pixmap;
         pixmap.loadFromData(reinterpret_cast<const uchar*>(data.data()), data.size());
         return pixmap;
     };
 
-    auto pickId3v2Cover = [](TagLib::ID3v2::Tag* tag) -> QPixmap {
+    auto pick_id3v2_cover = [](TagLib::ID3v2::Tag* tag) -> QPixmap {
         if (!tag) {
-            return QPixmap();
+            return {};
         }
 
         TagLib::ID3v2::FrameList frames = tag->frameList("APIC");
@@ -213,22 +208,22 @@ QPixmap parse_cover_to_qpixmap(const QString& filepath)
             frames = tag->frameList("PIC");
         }
         if (frames.isEmpty()) {
-            return QPixmap();
+            return {};
         }
 
         TagLib::ID3v2::AttachedPictureFrame* selected = nullptr;
         for (auto* frame : frames) {
-            auto* picFrame = static_cast<TagLib::ID3v2::AttachedPictureFrame*>(frame);
-            if (picFrame->type() == TagLib::ID3v2::AttachedPictureFrame::FrontCover) {
-                selected = picFrame;
+            auto* pic_frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame*>(frame);
+            if (pic_frame->type() == TagLib::ID3v2::AttachedPictureFrame::FrontCover) {
+                selected = pic_frame;
                 break;
             }
         }
         if (!selected) {
-            selected = static_cast<TagLib::ID3v2::AttachedPictureFrame*>(frames.front());
+            selected = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame*>(frames.front());
         }
         if (!selected) {
-            return QPixmap();
+            return {};
         }
 
         QPixmap pixmap;
@@ -242,20 +237,20 @@ QPixmap parse_cover_to_qpixmap(const QString& filepath)
     if (ext == ".mp3") {
         TagLib::MPEG::File file(fname);
         if (file.isValid() && file.hasID3v2Tag()) {
-            extracted_pixmap = pickId3v2Cover(file.ID3v2Tag());
+            extracted_pixmap = pick_id3v2_cover(file.ID3v2Tag());
         }
     } else if (ext == ".flac") {
         TagLib::FLAC::File file(fname);
         const auto& pictures = file.pictureList();
         if (!pictures.isEmpty()) {
-            extracted_pixmap = loadFromPicture(pictures.front()->data());
+            extracted_pixmap = load_from_picture(pictures.front()->data());
         }
     } else if (ext == ".ogg" || ext == ".oga") {
         TagLib::Ogg::Vorbis::File file(fname);
         if (file.isValid() && file.tag()) {
             const auto& pictures = file.tag()->pictureList();
             if (!pictures.isEmpty()) {
-                extracted_pixmap = loadFromPicture(pictures.front()->data());
+                extracted_pixmap = load_from_picture(pictures.front()->data());
             }
         }
     } else if (ext == ".opus") {
@@ -263,7 +258,7 @@ QPixmap parse_cover_to_qpixmap(const QString& filepath)
         if (file.isValid() && file.tag()) {
             const auto& pictures = file.tag()->pictureList();
             if (!pictures.isEmpty()) {
-                extracted_pixmap = loadFromPicture(pictures.front()->data());
+                extracted_pixmap = load_from_picture(pictures.front()->data());
             }
         }
     } else if (ext == ".oga" || ext == ".ogx") {
@@ -271,7 +266,7 @@ QPixmap parse_cover_to_qpixmap(const QString& filepath)
         if (file.isValid() && file.tag()) {
             const auto& pictures = file.tag()->pictureList();
             if (!pictures.isEmpty()) {
-                extracted_pixmap = loadFromPicture(pictures.front()->data());
+                extracted_pixmap = load_from_picture(pictures.front()->data());
             }
         }
     } else if (ext == ".m4a" || ext == ".mp4" || ext == ".aac") {
@@ -281,7 +276,7 @@ QPixmap parse_cover_to_qpixmap(const QString& filepath)
             if (items.contains("covr")) {
                 TagLib::MP4::CoverArtList covers = items["covr"].toCoverArtList();
                 if (!covers.isEmpty()) {
-                    extracted_pixmap = loadFromPicture(covers.front().data());
+                    extracted_pixmap = load_from_picture(covers.front().data());
                 }
             }
         }
@@ -291,7 +286,7 @@ QPixmap parse_cover_to_qpixmap(const QString& filepath)
             const auto& attrs = file.tag()->attributeListMap()["WM/Picture"];
             if (!attrs.isEmpty()) {
                 TagLib::ASF::Picture pic = attrs.front().toPicture();
-                extracted_pixmap         = loadFromPicture(pic.picture());
+                extracted_pixmap         = load_from_picture(pic.picture());
             }
         }
     }
@@ -315,7 +310,7 @@ bool taglib_writeback(const QString& filepath, const QMap<QString, QStringList>&
         return false;
     }
 
-    auto normalizeKey = [](QString key) -> QString {
+    auto normalize_key = [](QString key) -> QString {
         key = key.trimmed();
         if (key.startsWith('<') && key.endsWith('>') && key.size() > 2) {
             key = key.mid(1, key.size() - 2);
@@ -334,13 +329,13 @@ bool taglib_writeback(const QString& filepath, const QMap<QString, QStringList>&
 
     TagLib::PropertyMap props = f.file()->properties();
     for (auto it = tags.constBegin(); it != tags.constEnd(); ++it) {
-        const QString normalizedKey = normalizeKey(it.key());
-        if (normalizedKey.isEmpty()) {
+        const QString normalized_key = normalize_key(it.key());
+        if (normalized_key.isEmpty()) {
             continue;
         }
 
-        const TagLib::String tagKey(normalizedKey.toUtf8().constData(), TagLib::String::Latin1);
-        const auto values = it.value();
+        const TagLib::String tag_key(normalized_key.toUtf8().constData(), TagLib::String::Latin1);
+        const auto& values = it.value();
         TagLib::StringList list;
 
         for (const QString& value : values) {
@@ -350,9 +345,9 @@ bool taglib_writeback(const QString& filepath, const QMap<QString, QStringList>&
             }
         }
 
-        props.erase(tagKey);
+        props.erase(tag_key);
         if (!list.isEmpty()) {
-            props.insert(tagKey, list);
+            props.insert(tag_key, list);
         }
     }
 
@@ -364,7 +359,7 @@ QMap<QString, QStringList> parse_meta_to_map(const QString& filepath)
 {
     QMap<QString, QStringList> result;
 
-    auto normalizeKey = [](const QString& key) -> QString {
+    auto normalize_key = [](const QString& key) -> QString {
         QString normalized;
         normalized.reserve(key.size());
 
@@ -385,20 +380,20 @@ QMap<QString, QStringList> parse_meta_to_map(const QString& filepath)
 
     TagLib::PropertyMap props = f.file()->properties();
 
-    for (auto it = props.begin(); it != props.end(); ++it) {
+    for (const auto& [raw, attrs] : props) {
         // toCString(true) returns a null-terminated UTF-8 string.
         // QString::fromUtf8() decodes correctly on all platforms
         // (unlike fromStdString, which uses the local ANSI code page on Windows).
-        QString key = QString::fromUtf8(it->first.toCString(true));
+        QString key = QString::fromUtf8(raw.toCString(true));
         QStringList values;
 
-        for (const auto& v : it->second) {
-            values << QString::fromUtf8(v.toCString(true));
+        for (const auto& a : attrs) {
+            values << QString::fromUtf8(a.toCString(true));
         }
 
         // Keep both original key and normalized key for compatibility.
         result.insert(key, values);
-        result.insert(normalizeKey(key), values);
+        result.insert(normalize_key(key), values);
     }
     return result;
 }
@@ -410,10 +405,10 @@ TrackMetaData parse_to_local_meta(const QString& filepath)
 
     const auto map = parse_meta_to_map(filepath);
     QFileInfo ff(filepath);
-    meta.filepath            = filepath;
-    meta.filename            = ff.fileName();
+    meta.filepath              = filepath;
+    meta.filename              = ff.fileName();
 
-    auto normalizeMultiProps = [&](QString key) -> QString {
+    auto normalize_multi_props = [&](const QString& key) -> QString {
         const QStringList values = map.value(key);
         if (!values.isEmpty()) {
             QString temp;
@@ -428,14 +423,14 @@ TrackMetaData parse_to_local_meta(const QString& filepath)
         return QString{};
     };
 
-    auto parseLeadingInt = [](QString value) -> int {
+    auto parse_leading_int = [](QString value) -> int {
         value = value.trimmed();
         if (value.isEmpty()) {
             return 0;
         }
 
         // Handle values like "3/12".
-        const int slash = value.indexOf('/');
+        const ssize_t slash = static_cast<ssize_t>(value.indexOf('/'));
         if (slash > 0) {
             value = value.left(slash).trimmed();
         }
@@ -455,18 +450,18 @@ TrackMetaData parse_to_local_meta(const QString& filepath)
     };
 
     // basic properties
-    meta.album           = normalizeMultiProps("ALBUM");
-    meta.title           = normalizeMultiProps("TITLE");
-    meta.artist          = normalizeMultiProps("ARTIST");
-    meta.comment         = normalizeMultiProps("COMMENT");
-    meta.genre           = normalizeMultiProps("GENRE");
-    meta.track_number    = parseLeadingInt(normalizeMultiProps("TRACKNUMBER"));
-    meta.year            = parseLeadingInt(normalizeMultiProps("DATE"));
-    meta.duration_s      = parseLeadingInt(normalizeMultiProps("LENGTH")) / 1000.0;
-    meta.album_artist    = normalizeMultiProps("ALBUMARTIST");
-    meta.lyrics          = normalizeMultiProps("LYRICS");
+    meta.album        = normalize_multi_props("ALBUM");
+    meta.title        = normalize_multi_props("TITLE");
+    meta.artist       = normalize_multi_props("ARTIST");
+    meta.comment      = normalize_multi_props("COMMENT");
+    meta.genre        = normalize_multi_props("GENRE");
+    meta.track_number = parse_leading_int(normalize_multi_props("TRACKNUMBER"));
+    meta.year         = parse_leading_int(normalize_multi_props("DATE"));
+    meta.duration_s = static_cast<int>(parse_leading_int(normalize_multi_props("LENGTH")) / 1000.0);
+    meta.album_artist    = normalize_multi_props("ALBUMARTIST");
+    meta.lyrics          = normalize_multi_props("LYRICS");
 
-    std::string disc_str = normalizeMultiProps("DISCNUMBER").toStdString();
+    std::string disc_str = normalize_multi_props("DISCNUMBER").toStdString();
     auto [num, total]    = parse_disc_number(disc_str);
     meta.disc_number     = num;
     meta.disc_total      = total;
@@ -479,13 +474,13 @@ TrackMetaData parse_to_local_meta(const QString& filepath)
         }
     }
 
-    meta.isValid = ff.exists();
+    meta.is_valid = ff.exists();
     return meta;
 }
 
 TrackMetaData format(TrackMetaData meta)
 {
-    TrackMetaData temp = meta;
+    TrackMetaData temp = std::move(meta);
     if (temp.album.isEmpty()) {
         temp.album = "Unknown Album";
     }

@@ -9,12 +9,17 @@ class ConsoleSink : public LogSink
 {
 public:
     explicit ConsoleSink(bool use_color = true);
-    ~ConsoleSink() override = default;
+    ~ConsoleSink() override                    = default;
+
+    ConsoleSink(const ConsoleSink&)            = delete;
+    ConsoleSink& operator=(const ConsoleSink&) = delete;
+    ConsoleSink(ConsoleSink&&)                 = delete;
+    ConsoleSink& operator=(ConsoleSink&&)      = delete;
 
     void write(const LogRecord& record) override;
     void flush() override;
-    QString name() const override;
+    [[nodiscard]] QString name() const override;
 
 private:
-    bool m_use_color = true;
+    bool use_color_ = true;
 };

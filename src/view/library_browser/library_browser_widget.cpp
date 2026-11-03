@@ -17,6 +17,8 @@
 #include <QTreeView>
 #include <QVBoxLayout>
 
+#include <utility>
+
 namespace
 {
 // 分类下拉框 "Custom (DSL)" 项的 data 标记(与 LibraryGrouping 枚举不冲突)
@@ -31,123 +33,123 @@ LibraryBrowserWidget::LibraryBrowserWidget(QWidget* parent) : QWidget(parent)
 
 void LibraryBrowserWidget::init_ui()
 {
-    m_cb_grouping = new QComboBox;
-    m_cb_grouping->addItem(tr("Artist"), int(LibraryGrouping::artist));
-    m_cb_grouping->addItem(tr("Album"), int(LibraryGrouping::album));
-    m_cb_grouping->addItem(tr("Genre"), int(LibraryGrouping::genre));
-    m_cb_grouping->addItem(tr("Folder"), int(LibraryGrouping::folder));
-    m_cb_grouping->addItem(tr("Year"), int(LibraryGrouping::year));
-    m_cb_grouping->addItem(tr("None"), int(LibraryGrouping::none));
-    m_cb_grouping->addItem(tr("Custom (DSL)..."), kCustomGroupingData);
+    cb_grouping_ = new QComboBox;
+    cb_grouping_->addItem(tr("Artist"), std::to_underlying(LibraryGrouping::Artist));
+    cb_grouping_->addItem(tr("Album"), std::to_underlying(LibraryGrouping::Album));
+    cb_grouping_->addItem(tr("Genre"), std::to_underlying(LibraryGrouping::Genre));
+    cb_grouping_->addItem(tr("Folder"), std::to_underlying(LibraryGrouping::Folder));
+    cb_grouping_->addItem(tr("Year"), std::to_underlying(LibraryGrouping::Year));
+    cb_grouping_->addItem(tr("None"), std::to_underlying(LibraryGrouping::None));
+    cb_grouping_->addItem(tr("Custom (DSL)..."), kCustomGroupingData);
 
-    m_btn_settings = new QPushButton(tr("Settings"));
-    m_btn_settings->setToolTip(tr("Custom grouping rules (DSL)"));
+    btn_settings_ = new QPushButton(tr("Settings"));
+    btn_settings_->setToolTip(tr("Custom grouping rules (DSL)"));
 
-    m_btn_config = new QPushButton(tr("Configure"));
-    m_btn_config->setToolTip(
+    btn_config_ = new QPushButton(tr("Configure"));
+    btn_config_->setToolTip(
         tr("Goto Settings->Library (the only entrance of setting library paths)"));
 
     auto* top = new QHBoxLayout;
     top->setContentsMargins(0, 0, 0, 0);
     top->setSpacing(2);
-    top->addWidget(m_cb_grouping, 1);
-    top->addWidget(m_btn_settings);
-    top->addWidget(m_btn_config);
+    top->addWidget(cb_grouping_, 1);
+    top->addWidget(btn_settings_);
+    top->addWidget(btn_config_);
 
-    m_le_keyword = new QLineEdit;
-    m_le_keyword->setPlaceholderText(tr("Search in library (FTS5)..."));
+    le_keyword_ = new QLineEdit;
+    le_keyword_->setPlaceholderText(tr("Search in library (FTS5)..."));
 
-    m_tree = new QTreeView;
-    m_tree->setAlternatingRowColors(true);
-    m_tree->setUniformRowHeights(true);
-    m_tree->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    m_tree->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    tree_ = new QTreeView;
+    tree_->setAlternatingRowColors(true);
+    tree_->setUniformRowHeights(true);
+    tree_->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    tree_->setEditTriggers(QAbstractItemView::NoEditTriggers);
     // 拖拽源(拖到播放列表树 / 歌曲表)
-    m_tree->setDragEnabled(true);
-    m_tree->setDragDropMode(QAbstractItemView::DragOnly);
-    m_tree->setContextMenuPolicy(Qt::CustomContextMenu);
-    m_tree->header()->setStretchLastSection(true);
-    m_tree->header()->setSectionResizeMode(0, QHeaderView::Stretch);
-    m_tree->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-    m_tree->header()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
-    m_tree->header()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    tree_->setDragEnabled(true);
+    tree_->setDragDropMode(QAbstractItemView::DragOnly);
+    tree_->setContextMenuPolicy(Qt::CustomContextMenu);
+    tree_->header()->setStretchLastSection(true);
+    tree_->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+    tree_->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    tree_->header()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    tree_->header()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
 
     auto* vbl = new QVBoxLayout(this);
     vbl->setContentsMargins(2, 2, 2, 2);
     vbl->setSpacing(2);
     vbl->addLayout(top);
-    vbl->addWidget(m_le_keyword);
-    vbl->addWidget(m_tree, 1);
+    vbl->addWidget(le_keyword_);
+    vbl->addWidget(tree_, 1);
 
-    m_model = new LibraryBrowseModel(nullptr, this);
-    m_tree->setModel(m_model);
+    model_ = new LibraryBrowseModel(nullptr, this);
+    tree_->setModel(model_);
 
-    m_tim_input = new QTimer(this);
-    m_tim_input->setSingleShot(true);
-    m_tim_input->setInterval(200);
+    tim_input_ = new QTimer(this);
+    tim_input_->setSingleShot(true);
+    tim_input_->setInterval(200);
 }
 
 void LibraryBrowserWidget::init_connections()
 {
-    connect(m_cb_grouping, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+    connect(cb_grouping_, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             &LibraryBrowserWidget::on_grouping_changed);
-    connect(m_le_keyword, &QLineEdit::textChanged, this, &LibraryBrowserWidget::on_keyword_changed);
-    connect(m_tim_input, &QTimer::timeout, this, [this]() {
-        if (m_model != nullptr) {
-            m_model->set_keyword(m_le_keyword->text());
+    connect(le_keyword_, &QLineEdit::textChanged, this, &LibraryBrowserWidget::on_keyword_changed);
+    connect(tim_input_, &QTimer::timeout, this, [this]() {
+        if (model_ != nullptr) {
+            model_->set_keyword(le_keyword_->text());
         }
     });
-    connect(m_btn_config, &QPushButton::clicked, this,
-            &LibraryBrowserWidget::sgnOpenLibrarySettingsRequested);
-    connect(m_btn_settings, &QPushButton::clicked, this, &LibraryBrowserWidget::open_dsl_dialog);
-    connect(m_tree, &QTreeView::doubleClicked, this, &LibraryBrowserWidget::on_double_clicked);
-    connect(m_tree, &QTreeView::customContextMenuRequested, this,
+    connect(btn_config_, &QPushButton::clicked, this,
+            &LibraryBrowserWidget::sgn_open_library_settings_requested);
+    connect(btn_settings_, &QPushButton::clicked, this, &LibraryBrowserWidget::open_dsl_dialog);
+    connect(tree_, &QTreeView::doubleClicked, this, &LibraryBrowserWidget::on_double_clicked);
+    connect(tree_, &QTreeView::customContextMenuRequested, this,
             &LibraryBrowserWidget::call_tree_context_menu);
 }
 
 void LibraryBrowserWidget::set_playlist_list_provider(PlaylistListProvider provider)
 {
-    m_playlist_provider = std::move(provider);
+    playlist_provider_ = std::move(provider);
 }
 
 void LibraryBrowserWidget::set_library_manager(LibraryManager* lib)
 {
-    m_lib = lib;
-    if (m_model != nullptr) {
-        m_model->set_library(lib);
+    lib_ = lib;
+    if (model_ != nullptr) {
+        model_->set_library(lib);
     }
 }
 
 void LibraryBrowserWidget::set_playback_queue_service(PlaybackQueueService* svc)
 {
-    m_queue_svc = svc;
+    queue_svc_ = svc;
 }
 
 void LibraryBrowserWidget::on_grouping_changed(int index)
 {
-    if (m_model == nullptr) {
+    if (model_ == nullptr) {
         return;
     }
-    const int g = m_cb_grouping->itemData(index).toInt();
+    const int g = cb_grouping_->itemData(index).toInt();
     if (g == kCustomGroupingData) {
         open_dsl_dialog(); // 选中 "Custom (DSL)" → 弹出编辑对话框
         return;
     }
     // 预设: set_grouping 内部会清除 DSL
-    m_model->set_grouping(static_cast<LibraryGrouping>(g));
+    model_->set_grouping(static_cast<LibraryGrouping>(g));
 }
 
 void LibraryBrowserWidget::open_dsl_dialog()
 {
-    if (m_model == nullptr) {
+    if (model_ == nullptr) {
         return;
     }
     WSortTypeSetDialog dlg(this);
-    dlg.setText(m_model->dsl_source()); // 预填当前 DSL(若有)
+    dlg.set_text(model_->dsl_source()); // 预填当前 DSL(若有)
     if (dlg.exec() == QDialog::Accepted) {
-        m_model->set_dsl_grouping(dlg.getText()); // 空文本 → 清除 DSL
-        if (!m_model->dsl_error().isEmpty()) {
-            QMessageBox::warning(this, tr("DSL Error"), m_model->dsl_error());
+        model_->set_dsl_grouping(dlg.get_text()); // 空文本 → 清除 DSL
+        if (!model_->dsl_error().isEmpty()) {
+            QMessageBox::warning(this, tr("DSL Error"), model_->dsl_error());
         }
     }
     sync_grouping_combo();
@@ -155,19 +157,19 @@ void LibraryBrowserWidget::open_dsl_dialog()
 
 void LibraryBrowserWidget::sync_grouping_combo()
 {
-    if (m_model == nullptr || m_cb_grouping == nullptr) {
+    if (model_ == nullptr || cb_grouping_ == nullptr) {
         return;
     }
-    QSignalBlocker block(m_cb_grouping);
-    if (m_model->has_dsl()) {
-        const int idx = m_cb_grouping->findData(kCustomGroupingData);
+    QSignalBlocker block(cb_grouping_);
+    if (model_->has_dsl()) {
+        const int idx = cb_grouping_->findData(kCustomGroupingData);
         if (idx >= 0) {
-            m_cb_grouping->setCurrentIndex(idx);
+            cb_grouping_->setCurrentIndex(idx);
         }
     } else {
-        const int idx = m_cb_grouping->findData(int(m_model->grouping()));
+        const int idx = cb_grouping_->findData(static_cast<int>(model_->grouping()));
         if (idx >= 0) {
-            m_cb_grouping->setCurrentIndex(idx);
+            cb_grouping_->setCurrentIndex(idx);
         }
     }
 }
@@ -177,18 +179,18 @@ void LibraryBrowserWidget::load_from_json(const QJsonObject& json)
     const QJsonObject obj = json.value(this->config_sub_key()).toObject();
 
     // 分类(先恢复模型分组,再同步下拉框,避免触发多余重建)
-    if (m_model != nullptr) {
-        const int g = obj.value("grouping").toInt(int(LibraryGrouping::artist));
-        m_model->set_grouping(static_cast<LibraryGrouping>(g));
+    if (model_ != nullptr) {
+        const int g = obj.value("grouping").toInt(std::to_underlying(LibraryGrouping::Artist));
+        model_->set_grouping(static_cast<LibraryGrouping>(g));
     }
 
     // DSL 自定义分类(存在则优先于预设)
-    if (m_model != nullptr) {
+    if (model_ != nullptr) {
         const QString dsl = obj.value("dsl_grouping").toString();
         if (!dsl.trimmed().isEmpty()) {
-            m_model->set_dsl_grouping(dsl);
-            if (!m_model->dsl_error().isEmpty()) {
-                m_model->clear_dsl_grouping(); // 历史规则失效则回退预设
+            model_->set_dsl_grouping(dsl);
+            if (!model_->dsl_error().isEmpty()) {
+                model_->clear_dsl_grouping(); // 历史规则失效则回退预设
             }
         }
     }
@@ -196,26 +198,27 @@ void LibraryBrowserWidget::load_from_json(const QJsonObject& json)
 
     // 关键字(直接设置模型;QLineEdit 仅展示)
     const QString keyword = obj.value("keyword").toString();
-    m_le_keyword->setText(keyword);
-    if (m_model != nullptr) {
-        m_model->set_keyword(keyword);
+    le_keyword_->setText(keyword);
+    if (model_ != nullptr) {
+        model_->set_keyword(keyword);
     }
 
     // 树表头状态(列宽/顺序/可见性)
     const QByteArray state =
         QByteArray::fromBase64(obj.value("tree_header_state").toString().toUtf8());
     if (!state.isEmpty()) {
-        m_tree->header()->restoreState(state);
+        tree_->header()->restoreState(state);
     }
 }
 
 QJsonObject LibraryBrowserWidget::save_to_json()
 {
     QJsonObject obj;
-    obj["grouping"]     = int(m_model != nullptr ? m_model->grouping() : LibraryGrouping::artist);
-    obj["keyword"]      = m_le_keyword->text();
-    obj["dsl_grouping"] = (m_model != nullptr) ? m_model->dsl_source() : QString();
-    obj["tree_header_state"] = QString::fromUtf8(m_tree->header()->saveState().toBase64());
+    obj["grouping"] =
+        static_cast<int>(model_ != nullptr ? model_->grouping() : LibraryGrouping::Artist);
+    obj["keyword"]           = le_keyword_->text();
+    obj["dsl_grouping"]      = (model_ != nullptr) ? model_->dsl_source() : QString();
+    obj["tree_header_state"] = QString::fromUtf8(tree_->header()->saveState().toBase64());
     return obj;
 }
 
@@ -226,89 +229,89 @@ QString LibraryBrowserWidget::config_sub_key() const
 
 void LibraryBrowserWidget::on_keyword_changed([[maybe_unused]] const QString& keyword)
 {
-    m_tim_input->start(); // 防抖
+    tim_input_->start(); // 防抖
 }
 
 void LibraryBrowserWidget::on_double_clicked(const QModelIndex& index)
 {
-    if (m_model == nullptr || !index.isValid()) {
+    if (model_ == nullptr || !index.isValid()) {
         return;
     }
     if (index.parent().isValid()) {
         // 曲目行 → 入队即播
-        const std::optional<TrackId> tid = m_model->track_id_at(index);
+        const std::optional<TrackId> tid = model_->track_id_at(index);
         if (!tid.has_value()) {
             return;
         }
-        if (m_queue_svc != nullptr) {
-            m_queue_svc->play_library_track(*tid);
+        if (queue_svc_ != nullptr) {
+            queue_svc_->play_library_track(*tid);
         } else {
-            emit sgnPlayRequested(*tid);
+            emit sgn_play_requested(*tid);
         }
         return;
     }
     // 分组节点 → 展开/折叠
-    const bool expanded = m_tree->isExpanded(index);
-    m_tree->setExpanded(index, !expanded);
+    const bool expanded = tree_->isExpanded(index);
+    tree_->setExpanded(index, !expanded);
 }
 
 void LibraryBrowserWidget::call_tree_context_menu(const QPoint& pos)
 {
-    if (m_model == nullptr) {
+    if (model_ == nullptr) {
         return;
     }
-    const QModelIndex index = m_tree->indexAt(pos);
+    const QModelIndex index = tree_->indexAt(pos);
     if (!index.isValid()) {
         return; // 不提供背景右键
     }
     // 收集右键行(或多选集合)对应的库曲目;组节点展开为该组全部
     QModelIndexList rows;
-    if (m_tree->selectionModel()) {
-        rows = m_tree->selectionModel()->selectedRows(0);
+    if (tree_->selectionModel()) {
+        rows = tree_->selectionModel()->selectedRows(0);
     }
     if (!rows.contains(index)) {
         rows = {index};
     }
-    const QVector<TrackId> tids = m_model->collect_track_ids(rows);
+    const QVector<TrackId> tids = model_->collect_track_ids(rows);
     if (tids.isEmpty()) {
         return;
     }
 
     QMenu menu(this);
-    QAction* actPlay   = menu.addAction(tr("&Play"));
-    QAction* actAddSub = menu.addAction(tr("Add to Playlist...")); // 占位,下转为子菜单
+    QAction* act_play    = menu.addAction(tr("&Play"));
+    QAction* act_add_sub = menu.addAction(tr("Add to Playlist...")); // 占位,下转为子菜单
     menu.addSeparator();
-    QAction* actRefresh = menu.addAction(tr("&Refresh Library"));
+    QAction* act_refresh = menu.addAction(tr("&Refresh Library"));
 
-    connect(actPlay, &QAction::triggered, this, [this, tids]() {
-        if (m_queue_svc != nullptr) {
+    connect(act_play, &QAction::triggered, this, [this, tids]() {
+        if (queue_svc_ != nullptr) {
             for (const TrackId& tid : tids) {
-                m_queue_svc->play_library_track(tid);
+                queue_svc_->play_library_track(tid);
             }
         } else if (tids.size() == 1) {
-            emit sgnPlayRequested(tids.first());
+            emit sgn_play_requested(tids.first());
         }
     });
-    connect(actRefresh, &QAction::triggered, this,
-            &LibraryBrowserWidget::sgnRefreshLibraryRequested);
+    connect(act_refresh, &QAction::triggered, this,
+            &LibraryBrowserWidget::sdn_refresh_library_requested);
 
     // Add to Playlist 子菜单(替换占位项)
-    if (m_playlist_provider) {
-        const auto lists = m_playlist_provider();
+    if (playlist_provider_) {
+        const auto lists = playlist_provider_();
         if (!lists.isEmpty()) {
-            menu.removeAction(actAddSub);
+            menu.removeAction(act_add_sub);
             auto* sub = menu.addMenu(tr("Add to Playlist..."));
             for (const auto& [pid, name] : lists) {
                 QAction* act = sub->addAction(name);
                 connect(act, &QAction::triggered, this,
-                        [this, pid, tids]() { emit sgnAddTracksToPlaylist(pid, tids); });
+                        [this, pid, tids]() { emit sgn_add_tracks_to_playlist(pid, tids); });
             }
         } else {
-            actAddSub->setEnabled(false);
+            act_add_sub->setEnabled(false);
         }
     } else {
-        actAddSub->setEnabled(false);
+        act_add_sub->setEnabled(false);
     }
 
-    menu.exec(m_tree->viewport()->mapToGlobal(pos));
+    menu.exec(tree_->viewport()->mapToGlobal(pos));
 }

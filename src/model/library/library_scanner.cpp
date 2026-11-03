@@ -7,6 +7,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <ranges>
 
 namespace fs = std::filesystem;
 
@@ -70,12 +71,9 @@ QStringList normalize_roots(const QStringList& roots)
 // 判断 path 是否位于某个根目录之下(路径边界匹配)
 bool under_root(const QString& path, const QStringList& roots)
 {
-    for (const auto& root : roots) {
-        if (path == root || (path.startsWith(root) && path.at(root.size()) == QLatin1Char('/'))) {
-            return true;
-        }
-    }
-    return false;
+    return std::ranges::any_of(roots, [&path](const auto& root) {
+        return path == root || (path.startsWith(root) && path.at(root.size()) == QLatin1Char('/'));
+    });
 }
 } // namespace
 
@@ -89,12 +87,12 @@ void LibraryScanner::start_scan(const QStringList& roots, const LibrarySnapshot&
     for (const auto& root : roots_norm) {
         collect_audio_files(utils::audio::to_fs_path(root), files);
     }
-    const int total = files.size();
+    const int total = static_cast<int>(files.size());
 
     // ---- 阶段 2:分类与标签解析 ----
     QVector<TrackUpdate> batch;
     batch.reserve(512);
-    constexpr int kBatchSize = 512;
+    constexpr int batch_size = 512;
     int processed            = 0;
 
     for (const auto& file : files) {
@@ -113,7 +111,7 @@ void LibraryScanner::start_scan(const QStringList& roots, const LibrarySnapshot&
         }
 
         TrackUpdate update;
-        update.change  = (it == snapshot.constEnd()) ? TrackChange::added : TrackChange::modified;
+        update.change  = (it == snapshot.constEnd()) ? TrackChange::Added : TrackChange::Modified;
         update.path    = norm;
 
         LibraryTrack t = LibraryTrack::from_path(norm);
@@ -123,7 +121,7 @@ void LibraryScanner::start_scan(const QStringList& roots, const LibrarySnapshot&
         t.file_size        = size;
         t.mtime            = mtime;
         TrackMetaData meta = utils::audio::parse_to_local_meta(filepath);
-        if (!meta.isValid) {
+        if (!meta.is_valid) {
             meta.title = QFileInfo(filepath).fileName();
         }
         meta          = utils::audio::format(meta);
@@ -132,7 +130,7 @@ void LibraryScanner::start_scan(const QStringList& roots, const LibrarySnapshot&
         update.track  = t;
 
         batch.append(update);
-        if (batch.size() >= kBatchSize) {
+        if (batch.size() >= batch_size) {
             emit sgn_batch_ready(batch);
             batch.clear();
         }
@@ -150,10 +148,10 @@ void LibraryScanner::start_scan(const QStringList& roots, const LibrarySnapshot&
         }
         if (!QFileInfo::exists(path)) {
             TrackUpdate update;
-            update.change = TrackChange::missing;
+            update.change = TrackChange::Missing;
             update.path   = path;
             batch.append(update);
-            if (batch.size() >= kBatchSize) {
+            if (batch.size() >= batch_size) {
                 emit sgn_batch_ready(batch);
                 batch.clear();
             }

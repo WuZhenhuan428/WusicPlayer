@@ -28,14 +28,14 @@ public:
     void register_builtin(IBasicPlugin* plugin);
 
     /// 暴露底层 PluginManager(供组合根注入 ThemeManager 等)
-    PluginManager* plugin_manager() const;
+    [[nodiscard]] PluginManager* plugin_manager() const;
 
-    const QVector<PluginDescriptor> descriptors();
+    QVector<PluginDescriptor> descriptors();
 
     // ---- IConfigurable: 持久化外部插件路径, 启动时恢复 ----
     void load_from_json(const QJsonObject& json) override;
     QJsonObject save_to_json() override;
-    QString config_sub_key() const override;
+    [[nodiscard]] QString config_sub_key() const override;
 
 signals:
     void sgn_data_updated();

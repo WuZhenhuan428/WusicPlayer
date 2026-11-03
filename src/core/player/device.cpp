@@ -6,6 +6,7 @@
 #include "core/logger/logger_manager.h"
 namespace
 {
+// NOLINTNEXTLINE
 Logger* logger = LoggerManager::file_logger("player_device", {"console", "gui"});
 
 std::vector<std::string> enum_playback_names()
@@ -61,76 +62,78 @@ bool find_device_id_by_name(const std::string& name, ma_device_id* out_id)
 }
 } // namespace
 
-Device::Device(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer)
+// 二段构造
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
+Device::Device(SPSCRingBuffer<F32StereoFrame, kRingBufferCapacity>* buffer)
 {
     this->init(buffer);
-    m_vis_buffer.resize(8192);
+    vis_buffer_.resize(8192);
 }
 
 Device::~Device()
 {
-    if (m_initialized) {
-        ma_device_uninit(&m_device);
+    if (initialized_) {
+        ma_device_uninit(&device_);
     }
 }
 
-bool Device::init(SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer)
+bool Device::init(SPSCRingBuffer<F32StereoFrame, kRingBufferCapacity>* buffer)
 {
-    m_buffer = buffer; // Store the original buffer pointer in our class
-    logger->info("init requested. selected={}", m_selected_device_name);
+    buffer_ = buffer; // Store the original buffer pointer in our class
+    logger->info("init requested. selected={}", selected_device_name_);
 
-    m_device_config                   = ma_device_config_init(ma_device_type_playback);
-    m_device_config.playback.format   = ma_format_f32;
-    m_device_config.playback.channels = 2;
-    m_device_config.sampleRate        = 44100;
-    m_device_config.dataCallback      = data_callback;
-    m_device_config.pUserData         = this; // Pass 'this' instead of 'buffer'
+    device_config_                   = ma_device_config_init(ma_device_type_playback);
+    device_config_.playback.format   = ma_format_f32;
+    device_config_.playback.channels = 2;
+    device_config_.sampleRate        = 44100;
+    device_config_.dataCallback      = data_callback;
+    device_config_.pUserData         = this; // Pass 'this' instead of 'buffer'
 
     ma_device_id selected_id;
-    if (find_device_id_by_name(m_selected_device_name, &selected_id)) {
-        m_device_config.playback.pDeviceID = &selected_id;
-        logger->info("using explicit playback device: {}", m_selected_device_name);
+    if (find_device_id_by_name(selected_device_name_, &selected_id)) {
+        device_config_.playback.pDeviceID = &selected_id;
+        logger->info("using explicit playback device: {}", selected_device_name_);
     }
 
-    if (ma_device_init(nullptr, &m_device_config, &m_device) != MA_SUCCESS) {
+    if (ma_device_init(nullptr, &device_config_, &device_) != MA_SUCCESS) {
         logger->info("failed to init ma_device");
         return false;
     }
 
-    m_active_device_name = m_device.playback.name;
-    logger->info("init success. active='{}'", m_active_device_name);
-    m_initialized = true;
+    active_device_name_ = device_.playback.name;
+    logger->info("init success. active='{}'", active_device_name_);
+    initialized_ = true;
     return true;
 }
 
 bool Device::start()
 {
-    if (!m_initialized) {
+    if (!initialized_) {
         logger->error("ma_device not initialized");
         return false;
     }
 
-    if (ma_device_start(&m_device) != MA_SUCCESS) {
+    if (ma_device_start(&device_) != MA_SUCCESS) {
         logger->error("ma_device_start failed");
         return false;
     }
-    logger->info("started, active='{}'", m_active_device_name);
-    m_started = true;
+    logger->info("started, active='{}'", active_device_name_);
+    started_ = true;
     return true;
 }
 
 bool Device::pause()
 {
-    if (!m_initialized) {
+    if (!initialized_) {
         logger->error("ma_device not initialized");
         return false;
     }
-    if (ma_device_stop(&m_device) != MA_SUCCESS) {
+    if (ma_device_stop(&device_) != MA_SUCCESS) {
         logger->error("failed to stop ma_device");
         return false;
     }
-    logger->info("paused/stopped. active='{}'", m_active_device_name);
-    m_started = false;
+    logger->info("paused/stopped. active='{}'", active_device_name_);
+    started_ = false;
     return true;
 }
 
@@ -141,10 +144,10 @@ bool Device::resume()
 
 bool Device::set_volume(float volume)
 {
-    if (!m_initialized) {
+    if (!initialized_) {
         return false;
     }
-    if (ma_device_set_master_volume(&m_device, volume) != MA_SUCCESS) {
+    if (ma_device_set_master_volume(&device_, volume) != MA_SUCCESS) {
         return false;
     }
     return true;
@@ -152,21 +155,22 @@ bool Device::set_volume(float volume)
 
 float Device::get_volume()
 {
-    if (!m_initialized) {
+    if (!initialized_) {
         return -1.0f;
     }
-    float vol;
-    if (ma_device_get_master_volume(&m_device, &vol) != MA_SUCCESS) {
+    float vol = -1.0f;
+    if (ma_device_get_master_volume(&device_, &vol) != MA_SUCCESS) {
         return -1.0f;
     }
     return vol;
 }
-
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 std::vector<std::string> Device::list_playback_devices() const
 {
     return enum_playback_names();
 }
 
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 std::string Device::default_playback_device_name() const
 {
     ma_context context;
@@ -191,29 +195,29 @@ std::string Device::default_playback_device_name() const
 
 std::string Device::current_playback_device_name() const
 {
-    return m_active_device_name;
+    return active_device_name_;
 }
 
 bool Device::switch_playback_device_by_name(const std::string& device_name, bool start_after_switch)
 {
-    if (!m_buffer) {
+    if (!buffer_) {
         logger->error("switch ignored: null buffer");
         return false;
     }
 
-    logger->info("switch request from '{}' to '{}', start_after_switch={}", m_active_device_name,
+    logger->info("switch request from '{}' to '{}', start_after_switch={}", active_device_name_,
                  device_name, start_after_switch ? 1 : 0);
 
     const float old_volume = get_volume();
-    if (m_initialized) {
-        ma_device_uninit(&m_device);
-        m_initialized = false;
-        m_started     = false;
+    if (initialized_) {
+        ma_device_uninit(&device_);
+        initialized_ = false;
+        started_     = false;
         logger->info("old device uninitialized");
     }
 
-    m_selected_device_name = device_name;
-    if (!init(m_buffer)) {
+    selected_device_name_ = device_name;
+    if (!init(buffer_)) {
         logger->error("switch failed during init");
         return false;
     }
@@ -225,34 +229,34 @@ bool Device::switch_playback_device_by_name(const std::string& device_name, bool
 
     if (start_after_switch) {
         const bool started = start();
-        logger->info("switch result started={} active='{}'", started ? 1 : 0, m_active_device_name);
+        logger->info("switch result started={} active='{}'", started ? 1 : 0, active_device_name_);
         return started;
     }
 
-    logger->info("switch result active='{}' (not started)", m_active_device_name);
+    logger->info("switch result active='{}' (not started)", active_device_name_);
 
     return true;
 }
 
 size_t Device::get_recent_audio_frames(F32StereoFrame* out_buffer, size_t count)
 {
-    if (m_vis_buffer.empty() || count == 0)
+    if (vis_buffer_.empty() || count == 0) {
         return 0;
+    }
 
-    if (count > m_vis_buffer.size())
-        count = m_vis_buffer.size();
+    count              = std::min(count, vis_buffer_.size());
 
-    size_t current_pos = m_vis_wrote_pos.load(std::memory_order_acquire);
-    size_t vis_size    = m_vis_buffer.size();
+    size_t current_pos = vis_wrote_pos_.load(std::memory_order_acquire);
+    size_t vis_size    = vis_buffer_.size();
 
     size_t read_start  = (current_pos + vis_size - count) % vis_size;
 
     size_t first_part  = vis_size - read_start;
     if (first_part >= count) {
-        std::memcpy(out_buffer, &m_vis_buffer[read_start], count * sizeof(F32StereoFrame));
+        std::memcpy(out_buffer, &vis_buffer_[read_start], count * sizeof(F32StereoFrame));
     } else {
-        std::memcpy(out_buffer, &m_vis_buffer[read_start], first_part * sizeof(F32StereoFrame));
-        std::memcpy(out_buffer + first_part, &m_vis_buffer[0],
+        std::memcpy(out_buffer, &vis_buffer_[read_start], first_part * sizeof(F32StereoFrame));
+        std::memcpy(out_buffer + first_part, vis_buffer_.data(),
                     (count - first_part) * sizeof(F32StereoFrame));
     }
 
@@ -263,7 +267,7 @@ void Device::data_callback(ma_device* device, void* output, [[maybe_unused]] con
                            ma_uint32 frame_count)
 {
     Device* self = static_cast<Device*>(device->pUserData);
-    SPSCRingBuffer<F32StereoFrame, RING_BUFFER_CAPACITY>* buffer = self->m_buffer;
+    SPSCRingBuffer<F32StereoFrame, kRingBufferCapacity>* buffer = self->buffer_;
 
     F32StereoFrame* out_ptr = static_cast<F32StereoFrame*>(output);
     size_t copied           = 0;
@@ -275,15 +279,15 @@ void Device::data_callback(ma_device* device, void* output, [[maybe_unused]] con
 
     // Copy the exact data we are sending to the speakers directly over to the visualizer ring
     // buffer
-    size_t vis_size = self->m_vis_buffer.size();
+    size_t vis_size = self->vis_buffer_.size();
     if (vis_size > 0 && copied > 0) {
-        size_t current_pos = self->m_vis_wrote_pos.load(std::memory_order_relaxed);
+        size_t current_pos = self->vis_wrote_pos_.load(std::memory_order_relaxed);
 
         for (size_t i = 0; i < frame_count; ++i) {
-            self->m_vis_buffer[current_pos] = out_ptr[i];
-            current_pos                     = (current_pos + 1) % vis_size;
+            self->vis_buffer_[current_pos] = out_ptr[i];
+            current_pos                    = (current_pos + 1) % vis_size;
         }
 
-        self->m_vis_wrote_pos.store(current_pos, std::memory_order_release);
+        self->vis_wrote_pos_.store(current_pos, std::memory_order_release);
     }
 }

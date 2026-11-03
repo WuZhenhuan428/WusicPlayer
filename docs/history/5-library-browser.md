@@ -52,7 +52,7 @@ enum class LibraryGrouping
 ### 4.2 数据流
 
 | 状态     | 数据源                                              |
-|----------|-----------------------------------------------------|
+| -------- | --------------------------------------------------- |
 | 无关键字 | `LibraryManager::index()`(全量,内存索引)            |
 | 有关键字 | `LibraryManager::search(keyword, Plain, 500)`(FTS5) |
 
@@ -84,9 +84,9 @@ public:
 - 顶栏:分类 ComboBox(切换 `set_grouping`)、设置按钮(禁用占位,DSL 后续)、配置按钮。
 - 搜索:`QTimer` 防抖(200ms)→ `set_keyword`,实时 FTS5。
 - 双击:
-  - 曲目行 → `emit sgnPlayRequested(track_id)`(由 AppController 走队列入队即播)
+  - 曲目行 → `emit sgn_play_requested(track_id)`(由 AppController 走队列入队即播)
   - 分组节点 → 展开/折叠
-- 信号:`sgnPlayRequested(TrackId)`、`sgnOpenLibrarySettingsRequested()`。
+- 信号:`sgn_play_requested(TrackId)`、`sgn_open_library_settings_requested()`。
 
 ## 6. LibraryWidget 集成
 
@@ -101,7 +101,7 @@ QSplitter(Horizontal)
 ```
 
 新增方法(转发给媒体库控件):`setLibraryManager(LibraryManager*)`、`setPlaybackQueueService(PlaybackQueueService*)`。
-新增转发信号:`sgnLibraryPlayRequested(TrackId)`、`sgnOpenLibrarySettingsRequested()`。
+新增转发信号:`sgnLibraryPlayRequested(TrackId)`、`sgn_open_library_settings_requested()`。
 
 ## 7. PlaybackQueueService 播放入口(积累期)
 
@@ -139,7 +139,7 @@ signals:
 
 - Ctrl-F 搜索面板改回**搜索当前播放列表**:`AppController::search_backend_` 恢复为 `InMemorySearchBackend`(按列表建索引,Plain/Prefix/Fuzzy 打分)。
 - `SearchHint` 增加 `filepath`(播放依据);`InMemorySearchBackend::rebuildIndex` 适配阶段 5 语义:`track_id` = 库引用条目的 `library_track_id`(外部条目为空)、`filepath` = 条目路径。
-- 双击:优先 `sgnRequestPlayFile(filepath)`(直接 `requestPlay` 定位回列表),库身份兜底 `sgnRequestPlayTrack`。
+- 双击:优先 `sgn_request_play_file(filepath)`(直接 `requestPlay` 定位回列表),库身份兜底 `sgnRequestPlayTrack`。
 - 数据库(FTS5)搜索仅媒体库控件使用(直接走 `LibraryManager::search`)。
 
 ## 12. 后续(不在本阶段)

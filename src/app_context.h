@@ -14,17 +14,16 @@ class EventBus;
 /**
  * @brief 用于聚合 PanelCoordinator 中非持有的资源, 在组合根 (AppCpntroller) 中一次性构建
  */
-class AppContext
+struct AppContext
 {
-public:
-    MainWindow* main_window_                         = nullptr;
-    PlaybackController* playback_controller_         = nullptr;
-    PlaylistController* playlist_controller_         = nullptr;
-    PlaylistManager* playlist_manager_               = nullptr;
-    ThemeService* theme_service_                     = nullptr;
-    InMemorySearchBackend* in_memory_search_backend_ = nullptr;
-    LogSinkGui* log_sink_gui_                        = nullptr;
-    LibraryManager* library_manager_                 = nullptr;
-    PluginController* plugin_controller_             = nullptr;
-    EventBus* event_bus_                             = nullptr;
+    MainWindow* main_window                         = nullptr;
+    PlaybackController* playback_controller         = nullptr;
+    PlaylistController* playlist_controller         = nullptr;
+    PlaylistManager* playlist_manager               = nullptr;
+    ThemeService* theme_service                     = nullptr;
+    InMemorySearchBackend* in_memory_search_backend = nullptr;
+    LogSinkGui* log_sink_gui                        = nullptr;
+    LibraryManager* library_manager                 = nullptr;
+    PluginController* plugin_controller             = nullptr;
+    EventBus* event_bus                             = nullptr;
 };

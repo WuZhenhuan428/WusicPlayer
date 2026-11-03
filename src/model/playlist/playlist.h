@@ -15,10 +15,14 @@ class Playlist
 {
 public:
     explicit Playlist(const QString& name = "default");
+    Playlist(const Playlist&)            = default;
+    Playlist& operator=(const Playlist&) = default;
+    Playlist(Playlist&&)                 = default;
+    Playlist& operator=(Playlist&&)      = default;
     ~Playlist();
 
     // Playlist metadata
-    PlaylistId id() const;
+    [[nodiscard]] PlaylistId id() const;
     QString name();
     void set_playlist_name(QString setname);
     void new_uuid();
@@ -47,20 +51,20 @@ public:
     void remove_track(const EntryId& eid);
 
     // 非拥有:返回指针生命周期由所属 Playlist 管理,Playlist 未被修改/析构前有效;调用方不得 delete
-    const Track* find_track_by_id(const EntryId& eid) const;
+    [[nodiscard]] const Track* find_track_by_id(const EntryId& eid) const;
     // 按规范化路径查找条目;找不到返回 nullptr
-    const Track* find_track_by_filepath(const QString& filepath) const;
+    [[nodiscard]] const Track* find_track_by_filepath(const QString& filepath) const;
 
-    const QVector<Track>& get_tracks() const;
+    [[nodiscard]] const QVector<Track>& get_tracks() const;
 
     // status
-    bool isEmpty();
+    bool empty();
 
 private:
     void rebuild_index();
 
-    QVector<Track> m_tracks;
-    QHash<EntryId, qsizetype> m_track_index;
-    QString m_name;
-    PlaylistId m_pid;
+    QVector<Track> tracks_;
+    QHash<EntryId, qsizetype> track_index_;
+    QString name_;
+    PlaylistId pid_;
 };

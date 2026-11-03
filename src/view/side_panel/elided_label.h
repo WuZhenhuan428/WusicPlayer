@@ -9,7 +9,7 @@
 class ElidedLabel : public QLabel
 {
     Q_OBJECT
-    Q_PROPERTY(QString fullText READ fullText WRITE setFullText)
+    Q_PROPERTY(QString full_text READ full_text WRITE set_full_text)
 public:
     explicit ElidedLabel(QWidget* parent = nullptr) : QLabel(parent)
     {
@@ -18,20 +18,20 @@ public:
     explicit ElidedLabel(const QString& text, QWidget* parent = nullptr) : QLabel(parent)
     {
         this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-        this->setFullText(text);
+        this->set_full_text(text);
     }
 
-    QString fullText() const
+    [[nodiscard]] QString full_text() const
     {
-        return m_full_text;
+        return full_text_;
     }
 
 public slots:
-    void setFullText(const QString& text)
+    void set_full_text(const QString& text)
     {
-        if (m_full_text != text) {
-            m_full_text = text;
-            updateElidedText();
+        if (full_text_ != text) {
+            full_text_ = text;
+            update_elided_text();
         }
     }
 
@@ -39,20 +39,20 @@ protected:
     void resizeEvent(QResizeEvent* event) override
     {
         QLabel::resizeEvent(event);
-        updateElidedText();
+        update_elided_text();
     }
 
 private:
-    void updateElidedText()
+    void update_elided_text()
     {
         QFontMetrics metrics(font());
         const int avaliable_width = qMax(0, this->contentsRect().width());
-        QString elided_text = metrics.elidedText(m_full_text, Qt::ElideRight, avaliable_width);
+        QString elided_text       = metrics.elidedText(full_text_, Qt::ElideRight, avaliable_width);
         if (elided_text != text()) {
             QLabel::setText(elided_text);
-            setToolTip(m_full_text != elided_text ? m_full_text : "");
+            setToolTip(full_text_ != elided_text ? full_text_ : "");
         }
     }
 
-    QString m_full_text;
+    QString full_text_;
 };

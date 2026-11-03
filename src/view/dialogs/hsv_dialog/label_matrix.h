@@ -14,35 +14,34 @@ class LabelMatrix : public QWidget
     Q_OBJECT
 public:
     explicit LabelMatrix(QWidget* parent);
-    ~LabelMatrix() = default;
 
     void set_hsv(hsv_t hsv);
 
 private:
-    QLabel* m_lbR;
-    QLabel* m_lbG;
-    QLabel* m_lbB;
-    QLabel* m_lbH;
-    QLabel* m_lbS;
-    QLabel* m_lbV;
-    QLineEdit* m_leR;
-    QLineEdit* m_leG;
-    QLineEdit* m_leB;
-    QLineEdit* m_leH;
-    QLineEdit* m_leS;
-    QLineEdit* m_leV;
-    QHBoxLayout* m_blHR;
-    QHBoxLayout* m_blSG;
-    QHBoxLayout* m_blVB;
-    QVBoxLayout* m_blMain;
+    QLabel* lb_r_;
+    QLabel* lb_g_;
+    QLabel* lb_b_;
+    QLabel* lb_h_;
+    QLabel* lb_s_;
+    QLabel* lb_v_;
+    QLineEdit* le_r_;
+    QLineEdit* le_g_;
+    QLineEdit* le_b_;
+    QLineEdit* le_h_;
+    QLineEdit* le_s_;
+    QLineEdit* le_v_;
+    QHBoxLayout* hbl_hr_;
+    QHBoxLayout* hbl_sg_;
+    QHBoxLayout* hbl_vb_;
+    QVBoxLayout* vbl_main_;
 
-    rgb_t m_rgb;
-    hsv_t m_hsv;
+    rgb_t rgb_ = {};
+    hsv_t hsv_ = {};
 
 private:
     void update_rgb(); // when hsv changed
     void update_hsv(); // when rgb changed
 
 signals:
-    void sgnEditColor(hsv_t hsv);
+    void sgn_color_edited(hsv_t hsv);
 };

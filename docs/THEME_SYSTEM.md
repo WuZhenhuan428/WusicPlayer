@@ -78,7 +78,7 @@ class MyTheme : public QObject, public IThemePlugin {
     Q_INTERFACES(IThemePlugin)
 public:
     QString name() const override { return "My Theme"; }
-    ThemePalette createPalette() const override {
+    ThemePalette create_palette() const override {
         // 填充 ThemePalette 并返回
     }
 };
@@ -105,7 +105,7 @@ ThemeManager::instance().applyExternalTheme("My Theme");
 
 ### 尺寸参数（QStyle::pixelMetric）
 
-`buttonRadius`, `panelRadius`, `menuRadius`, `scrollbarWidth`, `sliderGrooveH`, `sliderHandleW`, `separatorW`
+`button_radius`, `panelRadius`, `menuRadius`, `scrollbarWidth`, `slider_groove_h`, `slider_handle_w`, `separator_w`
 
 ## WusicProxyStyle 覆写清单
 

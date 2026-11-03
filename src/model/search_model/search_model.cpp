@@ -6,7 +6,7 @@
 namespace
 {
 
-QString formatDuration(int total_seconds)
+QString format_duration(int total_seconds)
 {
     if (total_seconds < 0) {
         return QStringLiteral("00:00");
@@ -23,72 +23,70 @@ QString formatDuration(int total_seconds)
 } // namespace
 
 SearchModel::SearchModel(ISearchBackend* backend, QObject* parent) :
-    QAbstractTableModel(parent), m_backend(backend)
+    QAbstractTableModel(parent), backend_(backend)
 {}
-
-SearchModel::~SearchModel() {}
 
 void SearchModel::search_request(SearchQuery query)
 {
-    m_last_query = std::move(query);
+    last_query_ = std::move(query);
 
-    if (m_last_query.keyword.trimmed().isEmpty()) {
+    if (last_query_.keyword.trimmed().isEmpty()) {
         clear_results();
         return;
     }
 
-    if (!m_backend) {
+    if (!backend_) {
         clear_results();
         return;
     }
 
-    const QVector<SearchHint> results = m_backend->search(m_last_query);
+    const QVector<SearchHint> results = backend_->search(last_query_);
     set_results(results);
 }
 
 void SearchModel::set_results(const QVector<SearchHint>& results)
 {
     beginResetModel();
-    m_search_hint = results;
+    search_hint_ = results;
     endResetModel();
 }
 
 void SearchModel::set_backend(ISearchBackend* backend)
 {
-    m_backend = backend;
+    backend_ = backend;
 }
 
 void SearchModel::clear_results()
 {
     beginResetModel();
-    m_search_hint.clear();
+    search_hint_.clear();
     endResetModel();
 }
 
 TrackId SearchModel::track_id_at(int row) const
 {
-    if (row < 0 || row >= m_search_hint.size()) {
+    if (row < 0 || row >= search_hint_.size()) {
         return TrackId{};
     }
-    return m_search_hint[row].track_id;
+    return search_hint_[row].track_id;
 }
 
 SearchHint SearchModel::hint_at(int row) const
 {
-    if (row < 0 || row >= m_search_hint.size()) {
+    if (row < 0 || row >= search_hint_.size()) {
         return SearchHint{};
     }
-    return m_search_hint[row];
+    return search_hint_[row];
 }
 
 int SearchModel::total_hits() const
 {
-    return m_search_hint.size();
+    return static_cast<int>(search_hint_.size());
 }
 
 const SearchQuery& SearchModel::last_query() const
 {
-    return m_last_query;
+    return last_query_;
 }
 
 QModelIndex SearchModel::index(int row, int column, const QModelIndex& parent) const
@@ -112,7 +110,7 @@ int SearchModel::rowCount(const QModelIndex& parent) const
     if (parent.isValid()) {
         return 0;
     }
-    return m_search_hint.size();
+    return static_cast<int>(search_hint_.size());
 }
 
 int SearchModel::columnCount(const QModelIndex& parent) const
@@ -128,21 +126,21 @@ QVariant SearchModel::data(const QModelIndex& index, int role) const
     if (!index.isValid()) {
         return QVariant{};
     }
-    if (index.row() < 0 || index.row() >= m_search_hint.size()) {
+    if (index.row() < 0 || index.row() >= search_hint_.size()) {
         return QVariant{};
     }
     if (index.column() < 0 || index.column() >= static_cast<int>(Column::Count)) {
         return QVariant{};
     }
 
-    const SearchHint& hint = m_search_hint[index.row()];
+    const SearchHint& hint = search_hint_[index.row()];
 
     if (role == Qt::TextAlignmentRole) {
         if (index.column() == static_cast<int>(Column::Duration) ||
             index.column() == static_cast<int>(Column::Score)) {
-            return int(Qt::AlignRight | Qt::AlignVCenter);
+            return static_cast<int>(Qt::AlignRight | Qt::AlignVCenter);
         }
-        return int(Qt::AlignLeft | Qt::AlignVCenter);
+        return static_cast<int>(Qt::AlignLeft | Qt::AlignVCenter);
     }
 
     if (role == Qt::DisplayRole) {
@@ -156,9 +154,9 @@ QVariant SearchModel::data(const QModelIndex& index, int role) const
         case Column::Album:
             return hint.album;
         case Column::Duration:
-            return formatDuration(hint.duration_s);
+            return format_duration(hint.duration_s);
         case Column::Score:
-            return int(hint.score);
+            return static_cast<int>(hint.score);
         case Column::Count:
             break;
         }

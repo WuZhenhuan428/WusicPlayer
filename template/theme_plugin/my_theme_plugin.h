@@ -20,13 +20,13 @@ class MyThemePlugin : public IThemePlugin
 
 public:
     // ---- IBasicPlugin ----
-    QString id() const override;
-    QString name() const override;
-    QString version() const override;
-    QString description() const override;
-    QString author() const override;
-    QVector<QString> categories() const override;
+    [[nodiscard]] QString id() const override;
+    [[nodiscard]] QString name() const override;
+    [[nodiscard]] QString version() const override;
+    [[nodiscard]] QString description() const override;
+    [[nodiscard]] QString author() const override;
+    [[nodiscard]] QVector<QString> categories() const override;
 
     // ---- IThemePlugin ----
-    ThemePalette createPalette() const override;
+    [[nodiscard]] ThemePalette create_palette() const override;
 };

@@ -10,7 +10,14 @@
 class LogSink
 {
 public:
+    LogSink()                                   = default;
     virtual ~LogSink()                          = default;
+
+    // 多态接口:禁止拷贝/移动(避免切片)
+    LogSink(const LogSink&)                     = delete;
+    LogSink& operator=(const LogSink&)          = delete;
+    LogSink(LogSink&&)                          = delete;
+    LogSink& operator=(LogSink&&)               = delete;
 
     // 写一条记录(已通过级别过滤)
     virtual void write(const LogRecord& record) = 0;
@@ -19,5 +26,5 @@ public:
     virtual void flush()                        = 0;
 
     // sink id, 用于通过 QString 字符串查找 sink 实例
-    virtual QString name() const                = 0;
+    [[nodiscard]] virtual QString name() const  = 0;
 };

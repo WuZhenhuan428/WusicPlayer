@@ -8,8 +8,8 @@
 
 #include <utility>
 
-PluginPanel::PluginPanel(const QVector<PluginDescriptor> descriptors, QWidget* parent) :
-    QWidget(parent), descriptors_(descriptors)
+PluginPanel::PluginPanel(QVector<PluginDescriptor> descriptors, QWidget* parent) :
+    QWidget(parent), descriptors_(std::move(descriptors))
 {
     this->init_ui();
     this->init_connections();
@@ -71,18 +71,18 @@ void PluginPanel::refresh()
     tw_plugin_list_->setRowCount(static_cast<int>(descriptors_.size()));
     for (int row = 0; row < static_cast<int>(descriptors_.size()); ++row) {
         auto* id =
-            new QTableWidgetItem(descriptors_[row].id, std::to_underlying(PluginTableType::id));
+            new QTableWidgetItem(descriptors_[row].id, std::to_underlying(PluginTableType::Id));
         auto* name =
-            new QTableWidgetItem(descriptors_[row].name, std::to_underlying(PluginTableType::name));
+            new QTableWidgetItem(descriptors_[row].name, std::to_underlying(PluginTableType::Name));
         auto* version = new QTableWidgetItem(descriptors_[row].version,
-                                             std::to_underlying(PluginTableType::version));
+                                             std::to_underlying(PluginTableType::Version));
         auto* desc    = new QTableWidgetItem(descriptors_[row].description,
-                                             std::to_underlying(PluginTableType::description));
+                                             std::to_underlying(PluginTableType::Description));
         auto* author  = new QTableWidgetItem(descriptors_[row].author,
-                                             std::to_underlying(PluginTableType::author));
+                                             std::to_underlying(PluginTableType::Author));
         auto* categories =
             new QTableWidgetItem(utils::string::unfold_string(descriptors_[row].categories, ';'),
-                                 std::to_underlying(PluginTableType::categories));
+                                 std::to_underlying(PluginTableType::Categories));
 
         tw_plugin_list_->setItem(row, 0, id);
         tw_plugin_list_->setItem(row, 1, name);
@@ -93,10 +93,10 @@ void PluginPanel::refresh()
     }
 }
 
-void PluginPanel::refresh(const QVector<PluginDescriptor> descriptors)
+void PluginPanel::refresh(QVector<PluginDescriptor> descriptors)
 {
     descriptors_.clear();
-    descriptors_ = descriptors;
+    descriptors_ = std::move(descriptors);
     descriptors_.shrink_to_fit();
 
     this->refresh();

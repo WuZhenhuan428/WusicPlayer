@@ -37,26 +37,26 @@ public:
     // 越界或未变化时返回 false 且不改动
     bool set_current(int index);
     void clear_current();
-    int current_index() const
+    [[nodiscard]] int current_index() const
     {
-        return m_current;
+        return current_;
     }
-    std::optional<QueueItem> current() const;
-    std::optional<QueueItem> item_at(int index) const;
+    [[nodiscard]] std::optional<QueueItem> current() const;
+    [[nodiscard]] std::optional<QueueItem> item_at(int index) const;
 
     // ---- 只读 ----
-    int size() const
+    [[nodiscard]] int size() const
     {
-        return m_items.size();
+        return static_cast<int>(items_.size());
     }
-    bool is_empty() const
+    [[nodiscard]] bool is_empty() const
     {
-        return m_items.isEmpty();
+        return items_.isEmpty();
     }
     // 非拥有:引用内部容器,仅本次调用内有效
-    const QVector<QueueItem>& items() const
+    [[nodiscard]] const QVector<QueueItem>& items() const
     {
-        return m_items;
+        return items_;
     }
 
     // ---- 导航 ----
@@ -70,6 +70,6 @@ signals:
     void sgn_current_changed(int index);
 
 private:
-    QVector<QueueItem> m_items;
-    int m_current = -1; // -1 = 无当前项
+    QVector<QueueItem> items_;
+    int current_ = -1; // -1 = 无当前项
 };

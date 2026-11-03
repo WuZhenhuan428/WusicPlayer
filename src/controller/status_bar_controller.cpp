@@ -17,11 +17,11 @@ StatusBarController::StatusBarController(QStatusBar* status_bar, QObject* parent
     this->show_temp_message(tr("Loading"), 5000);
 }
 
-void StatusBarController::register_item(const QString& id, const QString& default_message)
+void StatusBarController::register_item(const QString& id, const QString& defalt_text)
 {
     int total      = this->status_bar_->children().count();
     int insert_pos = total - this->permanent_widget_cnt_;
-    QLabel* lb     = new QLabel(default_message, this->status_bar_);
+    QLabel* lb     = new QLabel(defalt_text, this->status_bar_);
     lb->setObjectName("status_" + id);
     this->status_bar_->insertWidget(insert_pos, lb);
 }
@@ -35,11 +35,11 @@ QLabel* StatusBarController::find_label(const QString& id)
     return nullptr;
 }
 
-bool StatusBarController::update_item_by_id(const QString& id, const QString& message)
+bool StatusBarController::update_item_by_id(const QString& id, const QString& text)
 {
     QLabel* lb = this->find_label(id);
     if (lb) {
-        lb->setText(message);
+        lb->setText(text);
         return true;
     }
     return false;

@@ -10,24 +10,24 @@ namespace
 const char* level_color(LogLevel level)
 {
     switch (level) {
-    case LogLevel::trace:
+    case LogLevel::Trace:
         return "\x1b[90m"; // 亮灰
-    case LogLevel::debug:
+    case LogLevel::Debug:
         return "\x1b[36m"; // 青
-    case LogLevel::info:
+    case LogLevel::Info:
         return "\x1b[32m"; // 绿
-    case LogLevel::warn:
+    case LogLevel::Warn:
         return "\x1b[33m"; // 黄
-    case LogLevel::error:
+    case LogLevel::Error:
         return "\x1b[31m"; // 红
-    case LogLevel::fatal:
+    case LogLevel::Fatal:
         return "\x1b[1;31m"; // 亮红
     }
     return "\x1b[0m";
 }
 } // namespace
 
-ConsoleSink::ConsoleSink(bool use_color) : m_use_color(use_color) {}
+ConsoleSink::ConsoleSink(bool use_color) : use_color_(use_color) {}
 
 void ConsoleSink::write(const LogRecord& record)
 {
@@ -35,7 +35,7 @@ void ConsoleSink::write(const LogRecord& record)
                            .toString(QStringLiteral("yyyy-MM-dd HH:mm:ss.zzz"));
 
     QString line;
-    if (m_use_color) {
+    if (use_color_) {
         line = QStringLiteral("\x1b[90m[%1]\x1b[0m %2[%3]\x1b[0m \x1b[1m[%4]\x1b[0m %5")
                    .arg(ts, level_color(record.level), level_name(record.level), record.name,
                         record.message);

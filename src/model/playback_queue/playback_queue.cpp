@@ -6,15 +6,15 @@ PlaybackQueue::PlaybackQueue(QObject* parent) : QObject(parent) {}
 
 int PlaybackQueue::enqueue(const QueueItem& item)
 {
-    m_items.append(item);
+    items_.append(item);
     emit sgn_queue_changed();
-    return m_items.size() - 1;
+    return static_cast<int>(items_.size()) - 1;
 }
 
 int PlaybackQueue::enqueue_next(const QueueItem& item)
 {
-    const int insert_at = (m_current < 0) ? 0 : m_current + 1;
-    m_items.insert(insert_at, item);
+    const int insert_at = (current_ < 0) ? 0 : current_ + 1;
+    items_.insert(insert_at, item);
     emit sgn_queue_changed();
     return insert_at;
 }
@@ -24,32 +24,32 @@ void PlaybackQueue::enqueue_many(const QVector<QueueItem>& items)
     if (items.isEmpty()) {
         return;
     }
-    m_items += items;
+    items_ += items;
     emit sgn_queue_changed();
 }
 
 void PlaybackQueue::remove_at(int index)
 {
-    if (index < 0 || index >= m_items.size()) {
+    if (index < 0 || index >= items_.size()) {
         return;
     }
-    m_items.removeAt(index);
-    if (index < m_current) {
-        --m_current;
-    } else if (index == m_current) {
-        m_current = -1;
+    items_.removeAt(index);
+    if (index < current_) {
+        --current_;
+    } else if (index == current_) {
+        current_ = -1;
     }
     emit sgn_queue_changed();
 }
 
 void PlaybackQueue::clear()
 {
-    if (m_items.isEmpty()) {
+    if (items_.isEmpty()) {
         return;
     }
-    m_items.clear();
-    const bool had_current = m_current >= 0;
-    m_current              = -1;
+    items_.clear();
+    const bool had_current = current_ >= 0;
+    current_               = -1;
     emit sgn_queue_changed();
     if (had_current) {
         emit sgn_current_changed(-1);
@@ -58,54 +58,54 @@ void PlaybackQueue::clear()
 
 void PlaybackQueue::move(int from, int to)
 {
-    if (from == to || from < 0 || from >= m_items.size() || to < 0 || to >= m_items.size()) {
+    if (from == to || from < 0 || from >= items_.size() || to < 0 || to >= items_.size()) {
         return;
     }
-    m_items.move(from, to);
+    items_.move(from, to);
     // 修正当前下标:当前项本身移动;其余情况下标随元素整体移动而偏移
-    if (m_current == from) {
-        m_current = to;
-    } else if (from < m_current && to >= m_current) {
-        --m_current;
-    } else if (from > m_current && to <= m_current) {
-        ++m_current;
+    if (current_ == from) {
+        current_ = to;
+    } else if (from < current_ && to >= current_) {
+        --current_;
+    } else if (from > current_ && to <= current_) {
+        ++current_;
     }
     emit sgn_queue_changed();
 }
 
 bool PlaybackQueue::set_current(int index)
 {
-    if (index < 0 || index >= m_items.size() || index == m_current) {
+    if (index < 0 || index >= items_.size() || index == current_) {
         return false;
     }
-    m_current = index;
-    emit sgn_current_changed(m_current);
+    current_ = index;
+    emit sgn_current_changed(current_);
     return true;
 }
 
 void PlaybackQueue::clear_current()
 {
-    if (m_current < 0) {
+    if (current_ < 0) {
         return;
     }
-    m_current = -1;
+    current_ = -1;
     emit sgn_current_changed(-1);
 }
 
 std::optional<QueueItem> PlaybackQueue::current() const
 {
-    if (m_current < 0 || m_current >= m_items.size()) {
+    if (current_ < 0 || current_ >= items_.size()) {
         return std::nullopt;
     }
-    return m_items.at(m_current);
+    return items_.at(current_);
 }
 
 std::optional<QueueItem> PlaybackQueue::item_at(int index) const
 {
-    if (index < 0 || index >= m_items.size()) {
+    if (index < 0 || index >= items_.size()) {
         return std::nullopt;
     }
-    return m_items.at(index);
+    return items_.at(index);
 }
 
 namespace
@@ -113,51 +113,51 @@ namespace
 // shuffle / out_of_order_* 走随机;in_order / loop 走线性
 bool is_random_mode(PlayMode mode)
 {
-    return mode == PlayMode::shuffle || mode == PlayMode::out_of_order_track ||
-           mode == PlayMode::out_of_order_group;
+    return mode == PlayMode::Shuffle || mode == PlayMode::OutOfOrderByTrack ||
+           mode == PlayMode::OutOfOrderByGroup;
 }
 } // namespace
 
 std::optional<QueueItem> PlaybackQueue::next(PlayMode mode)
 {
-    if (m_items.isEmpty()) {
+    if (items_.isEmpty()) {
         return std::nullopt;
     }
     int target = -1;
     if (is_random_mode(mode)) {
-        target = QRandomGenerator::global()->bounded(m_items.size());
-    } else if (mode == PlayMode::loop) {
-        const int base = (m_current < 0) ? 0 : m_current;
-        target         = (base + 1) % m_items.size();
+        target = static_cast<int>(QRandomGenerator::global()->bounded(items_.size()));
+    } else if (mode == PlayMode::Loop) {
+        const int base = (current_ < 0) ? 0 : current_;
+        target         = static_cast<int>((base + 1) % items_.size());
     } else { // in_order:不自动回绕
-        target = (m_current < 0) ? 0 : m_current + 1;
+        target = (current_ < 0) ? 0 : current_ + 1;
     }
-    if (target < 0 || target >= m_items.size()) {
+    if (target < 0 || target >= items_.size()) {
         return std::nullopt;
     }
-    m_current = target;
-    emit sgn_current_changed(m_current);
-    return m_items.at(m_current);
+    current_ = target;
+    emit sgn_current_changed(current_);
+    return items_.at(current_);
 }
 
 std::optional<QueueItem> PlaybackQueue::prev(PlayMode mode)
 {
-    if (m_items.isEmpty()) {
+    if (items_.isEmpty()) {
         return std::nullopt;
     }
     int target = -1;
     if (is_random_mode(mode)) {
-        target = QRandomGenerator::global()->bounded(m_items.size());
-    } else if (mode == PlayMode::loop) {
-        const int base = (m_current < 0) ? 0 : m_current;
-        target         = (base - 1 + m_items.size()) % m_items.size();
+        target = static_cast<int>(QRandomGenerator::global()->bounded(items_.size()));
+    } else if (mode == PlayMode::Loop) {
+        const int base = (current_ < 0) ? 0 : current_;
+        target         = static_cast<int>((base - 1 + items_.size()) % items_.size());
     } else { // in_order:不自动回绕
-        target = (m_current < 0) ? m_items.size() - 1 : m_current - 1;
+        target = (current_ < 0) ? static_cast<int>(items_.size() - 1) : current_ - 1;
     }
-    if (target < 0 || target >= m_items.size()) {
+    if (target < 0 || target >= items_.size()) {
         return std::nullopt;
     }
-    m_current = target;
-    emit sgn_current_changed(m_current);
-    return m_items.at(m_current);
+    current_ = target;
+    emit sgn_current_changed(current_);
+    return items_.at(current_);
 }

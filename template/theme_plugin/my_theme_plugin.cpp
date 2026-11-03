@@ -30,50 +30,50 @@ QVector<QString> MyThemePlugin::categories() const
     return {QStringLiteral("theme")};
 }
 
-ThemePalette MyThemePlugin::createPalette() const
+ThemePalette MyThemePlugin::create_palette() const
 {
     ThemePalette p;
-    p.name             = this->name();
-    p.author           = this->author();
-    p.isDark           = true;
+    p.name               = this->name();
+    p.author             = this->author();
+    p.is_dark            = true;
 
     // ---- QPalette 角色 ----
-    p.window           = QColor("#1a1a2e");
-    p.windowText       = QColor("#e0e0e0");
-    p.base             = QColor("#16213e");
-    p.alternateBase    = QColor("#1e2a4a");
-    p.text             = QColor("#e0e0e0");
-    p.button           = QColor("#0f3460");
-    p.buttonText       = QColor("#e0e0e0");
-    p.brightText       = QColor("#ffffff");
-    p.highlight        = QColor("#e94560");
-    p.highlightedText  = QColor("#ffffff");
-    p.toolTipBase      = QColor("#2a2a3e");
-    p.toolTipText      = QColor("#e0e0e0");
+    p.window             = QColor("#1a1a2e");
+    p.window_text        = QColor("#e0e0e0");
+    p.base               = QColor("#16213e");
+    p.alternate_base     = QColor("#1e2a4a");
+    p.text               = QColor("#e0e0e0");
+    p.button             = QColor("#0f3460");
+    p.button_text        = QColor("#e0e0e0");
+    p.bright_text        = QColor("#ffffff");
+    p.highlight          = QColor("#e94560");
+    p.highlighted_text   = QColor("#ffffff");
+    p.tool_tip_base      = QColor("#2a2a3e");
+    p.tool_tip_text      = QColor("#e0e0e0");
 
     // ---- 语义颜色(供 WusicProxyStyle 绘制特定区域) ----
-    p.sidebarBg        = QColor("#16213e");
-    p.controlBarBg     = QColor("#0f3460");
-    p.controlBarBorder = QColor("#533483");
-    p.menuBarBg        = QColor("#1a1a2e");
-    p.splitterHandle   = QColor("#0f3460");
-    p.scrollbarBg      = QColor("#1a1a2e");
-    p.scrollbarHandle  = QColor("#533483");
-    p.progressBarBg    = QColor("#16213e");
-    p.progressBarFill  = QColor("#e94560");
-    p.itemHover        = QColor("#533483");
-    p.itemSelected     = QColor("#e94560");
-    p.frameBorder      = QColor("#3a3a5a");
+    p.sidebar_bg         = QColor("#16213e");
+    p.control_bar_bg     = QColor("#0f3460");
+    p.control_bar_border = QColor("#533483");
+    p.menu_bar_bg        = QColor("#1a1a2e");
+    p.splitter_handle    = QColor("#0f3460");
+    p.scroll_bar_bg      = QColor("#1a1a2e");
+    p.scroll_bar_handle  = QColor("#533483");
+    p.progress_bar_bg    = QColor("#16213e");
+    p.progress_bar_fill  = QColor("#e94560");
+    p.item_hover         = QColor("#533483");
+    p.item_selected      = QColor("#e94560");
+    p.frame_border       = QColor("#3a3a5a");
 
     // ---- 尺寸参数 ----
-    p.buttonRadius     = 6;
-    p.panelRadius      = 8;
-    p.menuRadius       = 4;
-    p.scrollbarWidth   = 16;
-    p.sliderGrooveH    = 4;
-    p.sliderHandleW    = 12;
-    p.separatorW       = 1;
-    p.tabBarHeight     = 36;
+    p.button_radius      = 6;
+    p.panel_radius       = 8;
+    p.menu_radius        = 4;
+    p.scroll_bar_width   = 16;
+    p.slider_groove_h    = 4;
+    p.slider_handle_w    = 12;
+    p.separator_w        = 1;
+    p.tab_bar_height     = 36;
 
     return p;
 }

@@ -4,46 +4,44 @@
 #include <QJsonObject>
 
 SettingsPanel::SettingsPanel(ConfigManager* cfg_mgr, QWidget* parent) :
-    QWidget(parent), m_cfg_mgr(cfg_mgr)
+    QWidget(parent), cfg_mgr_(cfg_mgr)
 {
-    m_list_widget    = new QListWidget(this);
-    m_stacked_widget = new QStackedWidget(this);
+    list_widget_    = new QListWidget(this);
+    stacked_widget_ = new QStackedWidget(this);
 
-    m_hbl_settings   = new QHBoxLayout();
+    hbl_settings_   = new QHBoxLayout();
 
-    m_hbl_settings->addWidget(m_list_widget);
-    m_hbl_settings->addWidget(m_stacked_widget);
+    hbl_settings_->addWidget(list_widget_);
+    hbl_settings_->addWidget(stacked_widget_);
 
-    m_btn_close  = new QPushButton(tr("Close"), this);
-    m_hbl_bottom = new QHBoxLayout();
-    m_hbl_bottom->addStretch();
-    m_hbl_bottom->addWidget(m_btn_close);
+    btn_close_  = new QPushButton(tr("Close"), this);
+    hbl_bottom_ = new QHBoxLayout();
+    hbl_bottom_->addStretch();
+    hbl_bottom_->addWidget(btn_close_);
 
-    m_vbl_main = new QVBoxLayout();
-    m_vbl_main->addLayout(m_hbl_settings);
-    m_vbl_main->addLayout(m_hbl_bottom);
+    vbl_main_ = new QVBoxLayout();
+    vbl_main_->addLayout(hbl_settings_);
+    vbl_main_->addLayout(hbl_bottom_);
 
     this->setWindowTitle(tr("Settings"));
 
-    this->setLayout(m_vbl_main);
+    this->setLayout(vbl_main_);
 
-    m_list_widget->setMinimumWidth(120);
-    m_list_widget->setMaximumWidth(120);
+    list_widget_->setMinimumWidth(120);
+    list_widget_->setMaximumWidth(120);
 
-    QJsonObject config_obj = m_cfg_mgr->read_sub_config(this->config_sub_key());
+    QJsonObject config_obj = ConfigManager::read_sub_config(SettingsPanel::config_sub_key());
     this->load_from_json(config_obj);
 
-    connect(m_list_widget, &QListWidget::doubleClicked, this,
-            [this](const QModelIndex& index) { m_stacked_widget->setCurrentIndex(index.row()); });
-    connect(m_btn_close, &QPushButton::clicked, this, &QWidget::close);
+    connect(list_widget_, &QListWidget::doubleClicked, this,
+            [this](const QModelIndex& index) { stacked_widget_->setCurrentIndex(index.row()); });
+    connect(btn_close_, &QPushButton::clicked, this, &QWidget::close);
 }
-
-SettingsPanel::~SettingsPanel() {}
 
 void SettingsPanel::register_widget(QListWidgetItem* title, QWidget* widget)
 {
-    m_list_widget->addItem(title);
-    m_stacked_widget->addWidget(widget);
+    list_widget_->addItem(title);
+    stacked_widget_->addWidget(widget);
 }
 
 void SettingsPanel::switch_to_page_by_title(const QString& title)
@@ -52,11 +50,11 @@ void SettingsPanel::switch_to_page_by_title(const QString& title)
         return;
     }
 
-    for (int i = 0; i < m_list_widget->count(); ++i) {
-        QListWidgetItem* item = m_list_widget->item(i);
+    for (int i = 0; i < list_widget_->count(); ++i) {
+        QListWidgetItem* item = list_widget_->item(i);
         if (item && item->text() == title) {
-            m_list_widget->setCurrentRow(i);
-            m_stacked_widget->setCurrentIndex(i);
+            list_widget_->setCurrentRow(i);
+            stacked_widget_->setCurrentIndex(i);
             return;
         }
     }
@@ -64,7 +62,7 @@ void SettingsPanel::switch_to_page_by_title(const QString& title)
 
 void SettingsPanel::closeEvent(QCloseEvent* event)
 {
-    m_cfg_mgr->write_sub_config(this->config_sub_key(), this->save_to_json());
+    cfg_mgr_->write_sub_config(config_sub_key(), this->save_to_json());
     QWidget::closeEvent(event);
 }
 
@@ -78,6 +76,8 @@ void SettingsPanel::keyPressEvent(QKeyEvent* event)
     switch (event->key()) {
     case Qt::Key_Escape:
         this->close();
+        break;
+    default:
         break;
     }
 }
@@ -97,7 +97,7 @@ QJsonObject SettingsPanel::save_to_json()
     return obj;
 }
 
-QString SettingsPanel::config_sub_key() const
+QString SettingsPanel::config_sub_key()
 {
     return "settings_panel";
 }

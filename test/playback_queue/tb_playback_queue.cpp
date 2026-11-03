@@ -42,7 +42,7 @@ QueueItem make_item(const QString& path, const QString& title = QString())
     it.meta.filepath = it.filepath;
     it.meta.filename = QFileInfo(it.filepath).fileName();
     it.meta.title    = title;
-    it.meta.isValid  = true;
+    it.meta.is_valid = true;
     return it;
 }
 
@@ -63,8 +63,8 @@ QString make_audio_file(const QString& dir, const QString& name)
 AppContext make_ctx(PlaylistManager* pm, LibraryManager* lib)
 {
     AppContext ctx;
-    ctx.playlist_manager_ = pm;
-    ctx.library_manager_  = lib;
+    ctx.playlist_manager = pm;
+    ctx.library_manager  = lib;
     return ctx;
 }
 } // namespace
@@ -200,25 +200,25 @@ static void test_nav_in_order()
     q.enqueue(make_item("/a/3.mp3"));
 
     // 无当前项:next→0,prev→末尾
-    auto n0 = q.next(PlayMode::in_order);
+    auto n0 = q.next(PlayMode::InOrder);
     CHECK(n0.has_value());
     CHECK(n0->filepath == norm("/a/1.mp3"));
     CHECK(q.current_index() == 0);
 
-    auto n1 = q.next(PlayMode::in_order);
+    auto n1 = q.next(PlayMode::InOrder);
     CHECK(n1->filepath == norm("/a/2.mp3"));
-    auto n2 = q.next(PlayMode::in_order);
+    auto n2 = q.next(PlayMode::InOrder);
     CHECK(n2->filepath == norm("/a/3.mp3"));
     // 末尾:不回绕
-    CHECK(!q.next(PlayMode::in_order).has_value());
+    CHECK(!q.next(PlayMode::InOrder).has_value());
     CHECK(q.current_index() == 2);
 
-    auto p1 = q.prev(PlayMode::in_order);
+    auto p1 = q.prev(PlayMode::InOrder);
     CHECK(p1->filepath == norm("/a/2.mp3"));
-    auto p0 = q.prev(PlayMode::in_order);
+    auto p0 = q.prev(PlayMode::InOrder);
     CHECK(p0->filepath == norm("/a/1.mp3"));
     // 首:不回绕
-    CHECK(!q.prev(PlayMode::in_order).has_value());
+    CHECK(!q.prev(PlayMode::InOrder).has_value());
     CHECK(q.current_index() == 0);
 }
 
@@ -229,11 +229,11 @@ static void test_nav_loop()
     q.enqueue(make_item("/a/1.mp3"));
     q.enqueue(make_item("/a/2.mp3"));
     q.set_current(1);
-    auto n = q.next(PlayMode::loop);
+    auto n = q.next(PlayMode::Loop);
     CHECK(n.has_value());
     CHECK(n->filepath == norm("/a/1.mp3")); // 回绕到首
     CHECK(q.current_index() == 0);
-    auto p = q.prev(PlayMode::loop);
+    auto p = q.prev(PlayMode::Loop);
     CHECK(p.has_value());
     CHECK(p->filepath == norm("/a/2.mp3")); // 回绕到尾
     CHECK(q.current_index() == 1);
@@ -247,7 +247,7 @@ static void test_nav_shuffle()
     q.enqueue(make_item("/a/2.mp3"));
     q.enqueue(make_item("/a/3.mp3"));
     for (int i = 0; i < 20; ++i) {
-        auto n = q.next(PlayMode::shuffle);
+        auto n = q.next(PlayMode::Shuffle);
         CHECK(n.has_value());
 #if defined(Q_OS_WIN) // windows 下标准路径会默认添加 "c:" 前缀
         CHECK(n->filepath.startsWith("c:/a/"));
@@ -256,7 +256,7 @@ static void test_nav_shuffle()
 #endif
         CHECK(q.current_index() >= 0 && q.current_index() < 3);
         // out_of_order_* 同样走随机
-        auto g = q.prev(PlayMode::out_of_order_track);
+        auto g = q.prev(PlayMode::OutOfOrderByTrack);
         CHECK(g.has_value());
         CHECK(q.current_index() >= 0 && q.current_index() < 3);
     }
@@ -266,10 +266,10 @@ static void test_nav_shuffle()
 static void test_nav_empty()
 {
     PlaybackQueue q;
-    CHECK(!q.next(PlayMode::in_order).has_value());
-    CHECK(!q.next(PlayMode::loop).has_value());
-    CHECK(!q.next(PlayMode::shuffle).has_value());
-    CHECK(!q.prev(PlayMode::in_order).has_value());
+    CHECK(!q.next(PlayMode::InOrder).has_value());
+    CHECK(!q.next(PlayMode::Loop).has_value());
+    CHECK(!q.next(PlayMode::Shuffle).has_value());
+    CHECK(!q.prev(PlayMode::InOrder).has_value());
 }
 
 /* ---- 信号 ---- */
@@ -292,7 +292,7 @@ static void test_signals()
     CHECK(queue_changes == 3); // 批量只发一次
     q.set_current(1);
     CHECK(current_changes == 1 && last_current == 1);
-    q.next(PlayMode::in_order);
+    q.next(PlayMode::InOrder);
     CHECK(current_changes == 2 && last_current == 2);
     q.clear();
     CHECK(queue_changes == 4);
@@ -323,12 +323,12 @@ static void test_persistence()
     it.meta.title         = "One";
     it.meta.artist        = "Artist";
     it.meta.duration_s    = 123;
-    it.meta.isValid       = true;
+    it.meta.is_valid      = true;
     s1.queue()->enqueue(it);
     QueueItem it2;
     it2.filepath      = norm("/mnt/music/two.flac");
     it2.meta.filename = "two.flac";
-    it2.meta.isValid  = true;
+    it2.meta.is_valid = true;
     s1.queue()->enqueue(it2);
     CHECK(s1.queue()->set_current(1));
     CHECK(s1.save_to(path));
@@ -371,7 +371,7 @@ static void test_service_play()
 
     TrackMetaData meta;
     meta.title    = "T";
-    meta.isValid  = true;
+    meta.is_valid = true;
     const int idx = s.play_external("rel/foo.mp3", meta);
     CHECK(idx == 0);
     CHECK(play_signals == 1); // 播放触发一次信号
@@ -403,8 +403,8 @@ static void test_service_external()
 
     // 提供合法 meta 时保留字段,缺失时回填路径/文件名
     TrackMetaData meta;
-    meta.title   = "T";
-    meta.isValid = true;
+    meta.title    = "T";
+    meta.is_valid = true;
     s.enqueue_external("/abs/x.flac", meta);
     auto it2 = s.queue()->item_at(1);
     CHECK(it2->meta.title == "T");

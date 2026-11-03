@@ -13,7 +13,6 @@ class StatusBarController : public QObject, public INotificationDisplay
 {
 public:
     explicit StatusBarController(QStatusBar* status_bar, QObject* parent = nullptr);
-    ~StatusBarController() = default;
 
     void register_item(const QString& id, const QString& defalt_text = "");
     bool update_item_by_id(const QString& id, const QString& text);

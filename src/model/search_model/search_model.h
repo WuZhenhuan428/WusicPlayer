@@ -43,32 +43,33 @@ public:
         Album,
         Duration,
         Score,
-        Count
+        Count,
     };
 
     explicit SearchModel(ISearchBackend* backend = nullptr, QObject* parent = nullptr);
-    ~SearchModel();
 
     void search_request(SearchQuery query);
     void set_results(const QVector<SearchHint>& results);
     void set_backend(ISearchBackend* backend);
     void clear_results();
 
-    TrackId track_id_at(int row) const;
-    SearchHint hint_at(int row) const;
-    int total_hits() const;
-    const SearchQuery& last_query() const;
+    [[nodiscard]] TrackId track_id_at(int row) const;
+    [[nodiscard]] SearchHint hint_at(int row) const;
+    [[nodiscard]] int total_hits() const;
+    [[nodiscard]] const SearchQuery& last_query() const;
 
-    QModelIndex index(int row, int column,
-                      const QModelIndex& parent = QModelIndex()) const override;
-    QModelIndex parent(const QModelIndex& child) const override;
-    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    [[nodiscard]] QModelIndex index(int row, int column,
+                                    const QModelIndex& parent = QModelIndex()) const override;
+    [[nodiscard]] int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    [[nodiscard]] int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+    [[nodiscard]] QVariant data(const QModelIndex& index,
+                                int role = Qt::DisplayRole) const override;
+    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation,
+                                      int role) const override;
 
 private:
-    ISearchBackend* m_backend = nullptr;
-    QVector<SearchHint> m_search_hint;
-    SearchQuery m_last_query;
+    [[nodiscard]] QModelIndex parent(const QModelIndex& child) const override;
+    ISearchBackend* backend_ = nullptr;
+    QVector<SearchHint> search_hint_;
+    SearchQuery last_query_;
 };

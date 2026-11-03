@@ -25,25 +25,25 @@ public:
     Program parse();
 
 private:
-    const QVector<Token>& ts_;
+    const QVector<Token>* ts_;
     int pos_ = 0;
     Program prog_;
 
     // ---- token 辅助 ----
-    const Token& cur() const
+    [[nodiscard]] const Token& cur() const
     {
-        return ts_[pos_];
+        return (*ts_)[pos_];
     }
-    const Token& peek(int ahead) const
+    [[nodiscard]] const Token& peek(int ahead) const
     {
         const int i = pos_ + ahead;
-        return ts_[qMin(i, ts_.size() - 1)];
+        return (*ts_)[qMin(i, ts_->size() - 1)];
     }
-    bool at(TokenType t) const
+    [[nodiscard]] bool at(TokenType t) const
     {
         return cur().type == t;
     }
-    bool at_ident(const QString& name) const
+    [[nodiscard]] bool at_ident(const QString& name) const
     {
         return at(TokenType::Ident) && cur().text == name;
     }

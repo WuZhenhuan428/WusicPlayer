@@ -4,6 +4,8 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include <numbers>
+
 namespace
 {
 constexpr int kRange100 = 1200; // ±12dB, 单位 0.01dB
@@ -53,19 +55,19 @@ QWidget* MyEqPlugin::create_eq_widget(QWidget* parent)
         lb_val->setAlignment(Qt::AlignHCenter);
         auto* slider = new QSlider(Qt::Vertical, w);
         slider->setRange(-kRange100, kRange100);
-        slider->setValue(static_cast<int>(m_gains[i] * 100.0f));
+        slider->setValue(static_cast<int>(gains_[i] * 100.0f));
 
         vbl->addWidget(lb_val);
         vbl->addWidget(slider, 1);
         vbl->addWidget(lb_freq);
         hbl->addLayout(vbl);
 
-        m_sliders[i]   = slider;
-        m_lb_values[i] = lb_val;
+        sliders_[i]   = slider;
+        lb_values_[i] = lb_val;
 
         connect(slider, &QSlider::valueChanged, this, [this, i](int v) {
-            m_gains[i] = static_cast<float>(v) / 100.0f;
-            m_lb_values[i]->setText(QStringLiteral("%1 dB").arg(v / 100.0));
+            gains_[i] = static_cast<float>(v) / 100.0f;
+            lb_values_[i]->setText(QStringLiteral("%1 dB").arg(v / 100.0));
             emit sgn_config_changed(); // 即时模式下固定窗口据此推送后端
         });
     }
@@ -78,44 +80,45 @@ EqConfig MyEqPlugin::eq_config() const
     cfg.enabled = true;
     for (int i = 0; i < kBandCount; ++i) {
         // 示例: 三段 Parametric, Q≈1.414(1 octave)
-        cfg.bands.push_back(EqBand{EqFilterType::Parametric, kFreqs[i], 1.414, m_gains[i]});
+        cfg.bands.push_back(
+            EqBand{EqFilterType::Parametric, kFreqs[i], std::numbers::sqrt2, gains_[i]});
     }
     return cfg;
 }
 
 void MyEqPlugin::apply_current()
 {
-    m_gains_applied = m_gains;
+    gains_applied_ = gains_;
 }
 
 void MyEqPlugin::revert()
 {
-    m_gains = m_gains_applied;
+    gains_ = gains_applied_;
     this->sync_sliders();
 }
 
 void MyEqPlugin::reset()
 {
-    m_gains.fill(0.0f);
-    m_gains_applied.fill(0.0f);
+    gains_.fill(0.0f);
+    gains_applied_.fill(0.0f);
     this->sync_sliders();
 }
 
 void MyEqPlugin::restore_from_config(const EqConfig& cfg)
 {
-    m_gains.fill(0.0f);
+    gains_.fill(0.0f);
     for (int i = 0; i < kBandCount && i < cfg.bands.size(); ++i) {
-        m_gains[i] = static_cast<float>(cfg.bands[i].gain_db);
+        gains_[i] = static_cast<float>(cfg.bands[i].gain_db);
     }
-    m_gains_applied = m_gains; // 恢复值视为已应用, Cancel 不回退到全 0
+    gains_applied_ = gains_; // 恢复值视为已应用, Cancel 不回退到全 0
     this->sync_sliders();
 }
 
 void MyEqPlugin::sync_sliders()
 {
     for (int i = 0; i < kBandCount; ++i) {
-        if (m_sliders[i]) {
-            m_sliders[i]->setValue(static_cast<int>(m_gains[i] * 100.0f));
+        if (sliders_[i]) {
+            sliders_[i]->setValue(static_cast<int>(gains_[i] * 100.0f));
         }
     }
 }

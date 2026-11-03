@@ -9,31 +9,31 @@
 #include <QVBoxLayout>
 
 LanguageSettingsPage::LanguageSettingsPage(LanguageSettings* settings, QWidget* parent) :
-    QWidget(parent), m_settings(settings)
+    QWidget(parent), settings_(settings)
 {
-    m_cb_language = new QComboBox(this);
-    m_cb_language->addItem(QStringLiteral("English"), QStringLiteral("en_US"));
-    m_cb_language->addItem(QStringLiteral("简体中文"), QStringLiteral("zh_CN"));
-    const int idx = m_cb_language->findData(m_settings->locale());
+    cb_language_ = new QComboBox(this);
+    cb_language_->addItem(QStringLiteral("English"), QStringLiteral("en_US"));
+    cb_language_->addItem(QStringLiteral("简体中文"), QStringLiteral("zh_CN"));
+    const int idx = cb_language_->findData(settings_->locale());
     if (idx >= 0) {
-        m_cb_language->setCurrentIndex(idx);
+        cb_language_->setCurrentIndex(idx);
     }
 
-    m_lb_hint = new QLabel(tr("Language change takes effect after restart."), this);
-    m_lb_hint->setWordWrap(true);
+    lb_hint_ = new QLabel(tr("Language change takes effect after restart."), this);
+    lb_hint_->setWordWrap(true);
 
     auto* hbl = new QHBoxLayout;
     hbl->addWidget(new QLabel(tr("Language:"), this));
-    hbl->addWidget(m_cb_language);
+    hbl->addWidget(cb_language_);
     hbl->addStretch();
 
     auto* vbl = new QVBoxLayout(this);
     vbl->addLayout(hbl);
-    vbl->addWidget(m_lb_hint);
+    vbl->addWidget(lb_hint_);
     vbl->addStretch();
 
-    connect(m_cb_language, &QComboBox::currentIndexChanged, this, [this](int) {
-        m_settings->set_locale(m_cb_language->currentData().toString());
+    connect(cb_language_, &QComboBox::currentIndexChanged, this, [this](int) {
+        settings_->set_locale(cb_language_->currentData().toString());
         QMessageBox::information(this, tr("Language"),
                                  tr("Language change takes effect after restart."));
     });
@@ -41,8 +41,8 @@ LanguageSettingsPage::LanguageSettingsPage(LanguageSettings* settings, QWidget* 
 
 QListWidgetItem* LanguageSettingsPage::get_title_item()
 {
-    if (!m_title) {
-        m_title = new QListWidgetItem(tr("Language"));
+    if (!list_title_) {
+        list_title_ = new QListWidgetItem(tr("Language"));
     }
-    return m_title;
+    return list_title_;
 }

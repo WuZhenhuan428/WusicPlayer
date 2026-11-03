@@ -16,7 +16,6 @@ class LibrarySearchBackend : public ISearchBackend
 {
 public:
     explicit LibrarySearchBackend(LibraryManager* library);
-    ~LibrarySearchBackend() override = default;
 
     void warmup(const PlaylistId& pid) override;
     void invalidate(const PlaylistId& pid) override;

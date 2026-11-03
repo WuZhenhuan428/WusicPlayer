@@ -2,12 +2,12 @@
 
 #include <utility>
 
-BuiltinThemePlugin::BuiltinThemePlugin(const QString& id, const QString& name,
-                                       const QString& version, const QString& description,
-                                       const QString& author, const QVector<QString>& categories,
-                                       ThemePalette palette) :
-    id_(id), name_(name), version_(version), description_(description), author_(author),
-    categories_(categories), palette_(std::move(palette))
+BuiltinThemePlugin::BuiltinThemePlugin(QString id, QString name, QString version,
+                                       QString description, QString author,
+                                       const QVector<QString>& categories, ThemePalette palette) :
+    id_(std::move(id)), name_(std::move(name)), version_(std::move(version)),
+    description_(std::move(description)), author_(std::move(author)), categories_(categories),
+    palette_(std::move(palette))
 {}
 
 QString BuiltinThemePlugin::id() const
@@ -40,7 +40,7 @@ QVector<QString> BuiltinThemePlugin::categories() const
     return categories_;
 }
 
-ThemePalette BuiltinThemePlugin::createPalette() const
+ThemePalette BuiltinThemePlugin::create_palette() const
 {
     return palette_;
 }

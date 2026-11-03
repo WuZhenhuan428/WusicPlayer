@@ -19,7 +19,7 @@ public:
     /// 插件自己的 UI(如十段滑杆), 父对象由固定窗口提供
     virtual QWidget* create_eq_widget(QWidget* parent = nullptr) = 0;
     /// 当前编辑中的配置
-    virtual EqConfig eq_config() const                           = 0;
+    [[nodiscard]] virtual EqConfig eq_config() const             = 0;
     /// 应用: 把当前编辑态标记为"已应用"(供取消回退)
     virtual void apply_current()                                 = 0;
     /// 取消: 回退到上次 apply 的状态

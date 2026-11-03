@@ -35,10 +35,10 @@ static void test_track_identity()
     Track t1 = pl.add_track("relative/dir/foo.mp3"); // 相对路径 → 规范化
     CHECK(!t1.entry_id.is_null());
     CHECK(t1.filepath == utils::path::normalize_path("relative/dir/foo.mp3"));
-    CHECK(t1.source == TrackSource::external);
+    CHECK(t1.source == TrackSource::External);
     CHECK(t1.meta.filepath == t1.filepath); // 不变量:meta.filepath 与 filepath 一致
     CHECK(t1.meta.filename == "foo.mp3");
-    CHECK(!t1.meta.isValid); // 未解析标签时无效
+    CHECK(!t1.meta.is_valid); // 未解析标签时无效
 
     Track t2 = pl.add_track("/abs/path/bar.flac");
     CHECK(!t2.entry_id.is_null());
@@ -50,12 +50,12 @@ static void test_track_identity()
     Track t3    = Track::from_entry(eid, "/abs/path/baz.ogg");
     CHECK(t3.entry_id == eid);
     CHECK(t3.filepath == utils::path::normalize_path("/abs/path/baz.ogg"));
-    CHECK(t3.source == TrackSource::external);
+    CHECK(t3.source == TrackSource::External);
 
     // 库条目字段
     Track t4;
     t4.library_track_id = TrackId::create_uuid();
-    t4.source           = TrackSource::library;
+    t4.source           = TrackSource::Library;
     t4.missing          = true;
     pl.add_track_object(t4);
     CHECK(pl.track_count() == 3u);
@@ -98,7 +98,7 @@ static void test_find_and_remove()
     pl.remove_track(t.entry_id);
     CHECK(pl.track_count() == 0u);
     CHECK(pl.find_track_by_id(t.entry_id) == nullptr);
-    CHECK(pl.isEmpty());
+    CHECK(pl.empty());
 }
 
 /* ---- 元数据更新 ---- */
@@ -108,9 +108,9 @@ static void test_update_meta()
     Track t = pl.add_track("/abs/path/a.mp3");
 
     TrackMetaData meta;
-    meta.title   = "Title";
-    meta.artist  = "Artist";
-    meta.isValid = true;
+    meta.title    = "Title";
+    meta.artist   = "Artist";
+    meta.is_valid = true;
     CHECK(pl.update_track_meta(t.entry_id, meta));
 
     const Track* found = pl.find_track_by_id(t.entry_id);
@@ -144,10 +144,10 @@ static void test_repo_roundtrip()
 
     Track t1 = pl->add_track("/music/album/01.mp3");
     TrackMetaData meta;
-    meta.title   = "Song One";
-    meta.artist  = "Artist";
-    meta.album   = "Album";
-    meta.isValid = true;
+    meta.title    = "Song One";
+    meta.artist   = "Artist";
+    meta.album    = "Album";
+    meta.is_valid = true;
     pl->update_track_meta(t1.entry_id, meta);
 
     pl->add_track("/music/album/02.flac");
@@ -155,7 +155,7 @@ static void test_repo_roundtrip()
     // 一个库条目
     Track lib;
     lib.library_track_id = TrackId::create_uuid();
-    lib.source           = TrackSource::library;
+    lib.source           = TrackSource::Library;
     lib.filepath         = "/music/album/03.ogg";
     lib.missing          = true;
     pl->add_track_object(lib);
@@ -178,15 +178,15 @@ static void test_repo_roundtrip()
     // 身份保持
     CHECK(tracks[0].entry_id == t1.entry_id);
     CHECK(tracks[0].filepath == utils::path::normalize_path("/music/album/01.mp3"));
-    CHECK(tracks[0].source == TrackSource::external);
-    CHECK(tracks[0].meta.isValid);
+    CHECK(tracks[0].source == TrackSource::External);
+    CHECK(tracks[0].meta.is_valid);
     CHECK(tracks[0].meta.title == "Song One");
     CHECK(tracks[0].meta.album == "Album");
     CHECK(tracks[0].meta.filepath == tracks[0].filepath);
 
     // 库条目 round-trip
     CHECK(tracks[2].library_track_id == lib.library_track_id);
-    CHECK(tracks[2].source == TrackSource::library);
+    CHECK(tracks[2].source == TrackSource::Library);
     CHECK(tracks[2].missing);
     CHECK(tracks[2].filepath == utils::path::normalize_path("/music/album/03.ogg"));
 }
@@ -278,7 +278,7 @@ static void test_legacy_format_degrades()
     // 旧格式 "id" 语义即条目身份:复用而非重新分配,保证恢复播放等引用不失效
     CHECK(tr[0].entry_id == EntryId("11111111-2222-3333-4444-555555555555"));
     CHECK(tr[0].filepath == utils::path::normalize_path("/music/legacy.mp3"));
-    CHECK(tr[0].source == TrackSource::external);
+    CHECK(tr[0].source == TrackSource::External);
 }
 
 /* ---- 外部条目升级为库引用条目 ---- */
@@ -286,17 +286,17 @@ static void test_upgrade_external()
 {
     Playlist pl("upgrade");
     Track ext = pl.add_track("/lib/now_in_lib.mp3");
-    CHECK(ext.source == TrackSource::external);
+    CHECK(ext.source == TrackSource::External);
 
     const TrackId lib_id = TrackId::create_uuid();
     const int upgraded =
         pl.upgrade_external_tracks([&](const QString& path) -> std::shared_ptr<const LibraryTrack> {
             if (path == utils::path::normalize_path("/lib/now_in_lib.mp3")) {
                 LibraryTrack lt;
-                lt.track_id     = lib_id;
-                lt.filepath     = path;
-                lt.meta.title   = "In Library";
-                lt.meta.isValid = true;
+                lt.track_id      = lib_id;
+                lt.filepath      = path;
+                lt.meta.title    = "In Library";
+                lt.meta.is_valid = true;
                 return std::make_shared<const LibraryTrack>(std::move(lt));
             }
             return nullptr;
@@ -305,7 +305,7 @@ static void test_upgrade_external()
     const Track* t = pl.find_track_by_id(ext.entry_id);
     CHECK(t != nullptr);
     if (t) {
-        CHECK(t->source == TrackSource::library);
+        CHECK(t->source == TrackSource::Library);
         CHECK(t->library_track_id == lib_id);
         CHECK(t->meta.title == "In Library");
     }
@@ -314,7 +314,7 @@ static void test_upgrade_external()
     const int upgraded2 = pl.upgrade_external_tracks(
         [](const QString&) -> std::shared_ptr<const LibraryTrack> { return nullptr; });
     CHECK(upgraded2 == 0);
-    CHECK(pl.find_track_by_id(ext.entry_id)->source == TrackSource::library); // 已升级,保持
+    CHECK(pl.find_track_by_id(ext.entry_id)->source == TrackSource::Library); // 已升级,保持
 }
 
 /* ---- 库引用条目:刷新与缺失处理 ---- */
@@ -324,11 +324,11 @@ static void test_library_ref_and_missing()
 
     // 库引用条目
     Track lib_track;
-    lib_track.source           = TrackSource::library;
+    lib_track.source           = TrackSource::Library;
     lib_track.library_track_id = TrackId::create_uuid();
     lib_track.filepath         = "/lib/1.mp3";
     lib_track.meta.title       = "Old";
-    lib_track.meta.isValid     = true;
+    lib_track.meta.is_valid    = true;
     pl.add_track_object(lib_track);
 
     // 外部条目(标记缺失)
@@ -340,11 +340,11 @@ static void test_library_ref_and_missing()
     auto resolver = [&](const TrackId& id) -> std::shared_ptr<const LibraryTrack> {
         if (id == lib_track.library_track_id) {
             LibraryTrack lt;
-            lt.track_id     = id;
-            lt.filepath     = "/lib/1.mp3";
-            lt.missing      = true; // 库中标记缺失
-            lt.meta.title   = "New";
-            lt.meta.isValid = true;
+            lt.track_id      = id;
+            lt.filepath      = "/lib/1.mp3";
+            lt.missing       = true; // 库中标记缺失
+            lt.meta.title    = "New";
+            lt.meta.is_valid = true;
             return std::make_shared<const LibraryTrack>(std::move(lt));
         }
         return nullptr;
@@ -368,11 +368,11 @@ static void test_library_ref_and_missing()
     auto resolver_restored = [&](const TrackId& id) -> std::shared_ptr<const LibraryTrack> {
         if (id == lib_track.library_track_id) {
             LibraryTrack lt;
-            lt.track_id     = id;
-            lt.filepath     = "/lib/1.mp3";
-            lt.missing      = false; // 文件恢复
-            lt.meta.title   = "New";
-            lt.meta.isValid = true;
+            lt.track_id      = id;
+            lt.filepath      = "/lib/1.mp3";
+            lt.missing       = false; // 文件恢复
+            lt.meta.title    = "New";
+            lt.meta.is_valid = true;
             return std::make_shared<const LibraryTrack>(std::move(lt));
         }
         return nullptr;
@@ -385,7 +385,7 @@ static void test_library_ref_and_missing()
     int removed = pl.remove_missing_tracks();
     CHECK(removed == 2);
     CHECK(pl.track_count() == 0);
-    CHECK(pl.isEmpty());
+    CHECK(pl.empty());
 }
 
 /* ---- 删除最后一个播放列表(回归:曾因空指针解引用崩溃) ---- */
@@ -404,7 +404,7 @@ static void test_remove_last_playlist()
     CHECK(pm.get_current_playlist_name().isEmpty()); // 空列表名
     CHECK(pm.get_playlist_by_id(pid).isEmpty());     // 不存在的列表
     CHECK(pm.get_current_track().isEmpty());
-    CHECK(!pm.get_current_metadata().isValid); // 空元数据
+    CHECK(!pm.get_current_metadata().is_valid); // 空元数据
 }
 
 /* ---- next_track/prev_track 返回条目身份(阶段6:身份而非 filepath) ---- */
@@ -425,22 +425,22 @@ static void test_next_prev_track_id()
 
     const auto& tracks = pls.first()->get_tracks();
     CHECK(tracks.size() == 2);
-    pm.m_context->set_play_track(tracks[0].entry_id);
+    pm.context_->set_play_track(tracks[0].entry_id);
 
     // in_order:第一首 → 第二首
-    const EntryId next = pm.next_track(PlayMode::in_order);
+    const EntryId next = pm.next_track(PlayMode::InOrder);
     CHECK(next == tracks[1].entry_id);
 
     // 第二首 → 第一首
-    const EntryId prev = pm.prev_track(PlayMode::in_order);
+    const EntryId prev = pm.prev_track(PlayMode::InOrder);
     CHECK(prev == tracks[0].entry_id);
 
     // 首部不回绕:返回空
-    const EntryId none = pm.prev_track(PlayMode::in_order);
+    const EntryId none = pm.prev_track(PlayMode::InOrder);
     CHECK(none.is_null());
 
     // 当前项已被更新(m_context 副作用)
-    CHECK(pm.m_context->get_play_track_id() == tracks[0].entry_id);
+    CHECK(pm.context_->get_play_track_id() == tracks[0].entry_id);
 }
 
 int main(int argc, char* argv[])

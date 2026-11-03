@@ -15,7 +15,6 @@ class PlaybackController : public QObject, public IConfigurable
     Q_OBJECT
 public:
     explicit PlaybackController(Player* player, QObject* parent = nullptr);
-    ~PlaybackController();
 
     void play();
     void pause();
@@ -26,30 +25,30 @@ public:
     void set_volume(int percent);
     /// 插件路径: 应用任意 band 的 EQ 配置(enabled 取自 cfg.enabled)
     void set_eq_config(EqConfig cfg);
-    EqConfig eq_config() const;
+    [[nodiscard]] EqConfig eq_config() const;
     /// 当前选中的 EQ 插件 id(持久化)
-    QString eq_plugin_id() const;
+    [[nodiscard]] QString eq_plugin_id() const;
     void set_eq_plugin_id(const QString& id);
     void set_mute(bool mute_on);
     bool is_mute();
     void flip_mute();
-    void read(QString filepath);
+    void read(const QString& filepath);
 
     void set_device(const AudioDeviceInfo& dev);
-    void set_device_by_id(QByteArray id);
+    void set_device_by_id(const QByteArray& id);
     QVector<AudioDeviceInfo> available_devices();
     QByteArray current_device_id();
     /// 是否跟随系统默认播放设备(持久化)
-    bool follow_system_device() const;
+    [[nodiscard]] bool follow_system_device() const;
     void set_follow_system_device(bool on);
 
-    int last_position_ms() const;
-    bool last_was_playing() const;
+    [[nodiscard]] int last_position_ms() const;
+    [[nodiscard]] bool last_was_playing() const;
 
     // config S/L interface implement
     void load_from_json(const QJsonObject& json) override;
     QJsonObject save_to_json() override;
-    QString config_sub_key() const override;
+    [[nodiscard]] QString config_sub_key() const override;
 
 signals:
     void sgn_position_changed(qint64 pos_ms);
@@ -62,13 +61,13 @@ signals:
     void sgn_mute_changed(bool muted);
 
 private:
-    Player* m_player;
+    Player* player_;
 
-    bool m_is_muted;
-    int m_last_position_ms      = 0;
-    bool m_last_was_playing     = false;
-    bool m_follow_system_device = true; // 跟随系统默认设备(持久化)
+    bool is_muted_;
+    int last_position_ms_      = 0;
+    bool last_was_playing_     = false;
+    bool follow_system_device_ = true; // 跟随系统默认设备(持久化)
 
-    QString m_eq_plugin_id; // 选中的 EQ 插件 id(持久化)
-    std::shared_ptr<const EqConfig> m_eq_config_cache;
+    QString eq_plugin_id_; // 选中的 EQ 插件 id(持久化)
+    std::shared_ptr<const EqConfig> eq_config_cache_;
 };

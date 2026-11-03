@@ -77,11 +77,11 @@ WSortTypeSetDialog::WSortTypeSetDialog(QWidget* parent) : QDialog(parent)
         te->setReadOnly(true);
         te->setLineWrapMode(QTextEdit::NoWrap);
         te->setFont(mono);
-        auto* closeBtn = new QPushButton(tr("Close"), dlg);
-        connect(closeBtn, &QPushButton::clicked, dlg, &QDialog::accept);
+        auto* btn_close = new QPushButton(tr("Close"), dlg);
+        connect(btn_close, &QPushButton::clicked, dlg, &QDialog::accept);
         auto* vbl = new QVBoxLayout(dlg);
         vbl->addWidget(te);
-        vbl->addWidget(closeBtn, 0, Qt::AlignRight);
+        vbl->addWidget(btn_close, 0, Qt::AlignRight);
         dlg->resize(600, 800);
         dlg->show(); // 非模态
         dlg->raise();
@@ -105,20 +105,19 @@ WSortTypeSetDialog::WSortTypeSetDialog(QWidget* parent) : QDialog(parent)
     this->resize(560, 280);
 }
 
-WSortTypeSetDialog::~WSortTypeSetDialog() {};
-
 // ==== WInsertColumnDialog ==== //
 
 WInsertColumnDialog::WInsertColumnDialog(const QString& title, QWidget* parent) : QDialog(parent)
 {
     this->setWindowTitle(title);
-    QVector<QString> types = {tr("title"),    tr("artist"),   tr("album"),   tr("album artist"),
-                              tr("genre"),    tr("composer"), tr("year"),    tr("date"),
-                              tr("track"),    tr("disc"),     tr("bitrate"), tr("filename"),
-                              tr("directory")};
+    QVector<QString> types = {
+        tr("title"),    tr("artist"),   tr("album"),     tr("album artist"), tr("genre"),
+        tr("composer"), tr("year"),     tr("date"),      tr("track"),        tr("disc"),
+        tr("bitrate"),  tr("filename"), tr("directory"),
+    };
     // index
-    lb_index_              = new QLabel(tr("Index:"));
-    le_index_              = new QLineEdit(this);
+    lb_index_ = new QLabel(tr("Index:"));
+    le_index_ = new QLineEdit(this);
     le_index_->setText("1");
     hbl_index_ = new QHBoxLayout();
     hbl_index_->addWidget(lb_index_);
@@ -161,7 +160,7 @@ WInsertColumnDialog::WInsertColumnDialog(const QString& title, QWidget* parent) 
     this->setLayout(vbl_main_);
 
     connect(cb_type_, &QComboBox::currentTextChanged, this,
-            [this](QString str) { this->le_title_->setText(str); });
+            [this](const QString& str) { this->le_title_->setText(str); });
 
     connect(btn_ok_, &QPushButton::clicked, this, [this]() {
         bool ok         = false;
@@ -175,8 +174,8 @@ WInsertColumnDialog::WInsertColumnDialog(const QString& title, QWidget* parent) 
             QMessageBox::warning(this, tr("Invalid index"), tr("Index is too large."));
             return;
         }
-        int intValue = static_cast<int>(value);
-        if (max_index_ > 0 && intValue > max_index_) {
+        int int_value = static_cast<int>(value);
+        if (max_index_ > 0 && int_value > max_index_) {
             QMessageBox::warning(this, tr("Invalid index"),
                                  tr("Index is out of range. Clamped to max."));
             le_index_->setText(QString::number(max_index_));
@@ -187,8 +186,6 @@ WInsertColumnDialog::WInsertColumnDialog(const QString& title, QWidget* parent) 
     });
     connect(btn_cancel_, &QPushButton::clicked, this, &QDialog::reject);
 }
-
-WInsertColumnDialog::~WInsertColumnDialog() {}
 
 void WInsertColumnDialog::set_index(int index)
 {
@@ -212,8 +209,8 @@ int WInsertColumnDialog::index() const
 TableColumn WInsertColumnDialog::get_rule()
 {
     TableColumn retval;
-    retval.headerName = le_title_->text();
-    retval.sortType   = mapStrToSorttype.value(cb_type_->currentText(), SortType::not_sorted);
+    retval.header_name = le_title_->text();
+    retval.sort_type   = gMapStrToSorttype.value(cb_type_->currentText(), SortType::NotSorted);
     return retval;
 }
 
@@ -257,8 +254,8 @@ WColumnIndexDialog::WColumnIndexDialog(const QString& title, const QString& prom
             QMessageBox::warning(this, tr("Invalid index"), tr("Index is too large."));
             return;
         }
-        int intValue = static_cast<int>(value);
-        if (max_index_ > 0 && intValue > max_index_) {
+        int int_value = static_cast<int>(value);
+        if (max_index_ > 0 && int_value > max_index_) {
             QMessageBox::warning(this, tr("Invalid index"),
                                  tr("Index is out of range. Clamped to max."));
             txt_index_->setText(QString::number(max_index_));
@@ -269,8 +266,6 @@ WColumnIndexDialog::WColumnIndexDialog(const QString& title, const QString& prom
     });
     connect(btn_cancel_, &QPushButton::clicked, this, &QDialog::reject);
 }
-
-WColumnIndexDialog::~WColumnIndexDialog() {}
 
 void WColumnIndexDialog::set_index(int index)
 {

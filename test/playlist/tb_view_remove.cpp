@@ -68,18 +68,18 @@ int main(int argc, char* argv[])
     // a(G1) / b(G2) / c(G1)
     // 注意: meta.isValid=false 时 layout 会重新解析真实文件(dummy 文件无标签),
     // 因此内联元数据必须标记为有效才会被使用
-    Track ta        = Track::from_filepath(pathA);
-    ta.meta.album   = QStringLiteral("G1");
-    ta.meta.title   = QStringLiteral("A");
-    ta.meta.isValid = true;
-    Track tb        = Track::from_filepath(pathB);
-    tb.meta.album   = QStringLiteral("G2");
-    tb.meta.title   = QStringLiteral("B");
-    tb.meta.isValid = true;
-    Track tc        = Track::from_filepath(pathC);
-    tc.meta.album   = QStringLiteral("G1");
-    tc.meta.title   = QStringLiteral("C");
-    tc.meta.isValid = true;
+    Track ta         = Track::from_filepath(pathA);
+    ta.meta.album    = QStringLiteral("G1");
+    ta.meta.title    = QStringLiteral("A");
+    ta.meta.is_valid = true;
+    Track tb         = Track::from_filepath(pathB);
+    tb.meta.album    = QStringLiteral("G2");
+    tb.meta.title    = QStringLiteral("B");
+    tb.meta.is_valid = true;
+    Track tc         = Track::from_filepath(pathC);
+    tc.meta.album    = QStringLiteral("G1");
+    tc.meta.title    = QStringLiteral("C");
+    tc.meta.is_valid = true;
     pl->add_track_object(ta);
     pl->add_track_object(tb);
     pl->add_track_object(tc);

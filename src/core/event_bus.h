@@ -17,7 +17,7 @@ public:
         NotificationDismissed, // 手动关闭临时通知 (假设设置为持续存在)
     };
 
-    void publish(Topic t, AppNotification d)
+    void publish(Topic t, const AppNotification& d)
     {
         emit sgn_event(std::to_underlying(t), QVariant::fromValue(d));
     }

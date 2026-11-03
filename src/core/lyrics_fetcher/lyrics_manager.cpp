@@ -17,22 +17,22 @@ public:
 
     void add_lyric(const LyricMeta& meta) override
     {
-        m_items.push_back(meta);
+        items_.push_back(meta);
     }
 
     QVector<LyricMeta> take()
     {
-        return std::move(m_items);
+        return std::move(items_);
     }
 
 private:
-    QVector<LyricMeta> m_items;
+    QVector<LyricMeta> items_;
 };
 } // namespace
 
 LyricsManager::LyricsManager()
 {
-    m_entries.push_back({Platform::Netease, &netease_qt6::getLyrics});
+    entries_.push_back({Platform::Netease, &netease_qt6::get_lyrics});
 }
 
 QVector<LyricMeta> LyricsManager::fetch(const TrackMeta& meta, QNetworkAccessManager* nam,
@@ -44,11 +44,11 @@ QVector<LyricMeta> LyricsManager::fetch(const TrackMeta& meta, QNetworkAccessMan
     }
 
     CollectSink sink;
-    for (const auto& entry : m_entries) {
+    for (const auto& entry : entries_) {
         if (!platforms.isEmpty() && !platforms.contains(entry.platform)) {
             continue;
         }
-        entry.fetchFn(meta, sink, nam);
+        entry.fetch_fn(meta, sink, nam);
     }
 
     all = sink.take();

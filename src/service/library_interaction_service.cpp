@@ -12,39 +12,38 @@
 LibraryInteractionService::LibraryInteractionService(AppContext& ctx, QObject* parent) :
     QObject(parent), ctx_(ctx)
 {
-    this->playlist_tree_widget_ = ctx_.main_window_->playlist_tree_widget();
-    this->song_table_view_      = ctx_.main_window_->song_table_view();
-    this->playback_ctl_         = ctx_.playback_controller_;
-    this->playlist_ctl_         = ctx_.playlist_controller_;
+    this->playlist_tree_widget_ = ctx_.main_window->playlist_tree_widget();
+    this->song_table_view_      = ctx_.main_window->song_table_view();
+    this->playback_ctl_         = ctx_.playback_controller;
+    this->playlist_ctl_         = ctx_.playlist_controller;
     assert(playlist_tree_widget_ && song_table_view_ && playback_ctl_ && playlist_ctl_);
 }
 
-LibraryInteractionService::~LibraryInteractionService() {}
-
 void LibraryInteractionService::bind()
 {
-    if (m_bound == true)
+    if (bound_ == true) {
         return;
+    }
 
     // 播放列表导航(播放列表树)
-    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgnImportFiles, playlist_ctl_,
+    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgn_import_files, playlist_ctl_,
             &PlaylistController::import_files);
-    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgnImportDir, playlist_ctl_,
+    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgn_import_dir, playlist_ctl_,
             &PlaylistController::import_dir);
-    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgnSwitchPlaylist, playlist_ctl_,
+    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgn_switch_playlist, playlist_ctl_,
             &PlaylistController::switch_to_playlist);
-    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgnCreatePlaylist, playlist_ctl_,
+    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgn_create_playlist, playlist_ctl_,
             &PlaylistController::create_new_playlist);
-    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgnRenamePlaylist, playlist_ctl_,
+    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgn_rename_playlist, playlist_ctl_,
             static_cast<void (PlaylistController::*)(const PlaylistId&, const QString&)>(
                 &PlaylistController::rename_playlist));
-    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgnRemovePlaylist, playlist_ctl_,
+    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgn_remove_playlist, playlist_ctl_,
             &PlaylistController::remove_playlist);
-    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgnSavePlaylist, playlist_ctl_,
+    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgn_save_playlist, playlist_ctl_,
             &PlaylistController::save_playlist);
-    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgnCopyPlaylist, playlist_ctl_,
+    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgn_copy_playlist, playlist_ctl_,
             &PlaylistController::copy_playlist);
-    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgnReorderPlaylists, playlist_ctl_,
+    connect(playlist_tree_widget_, &PlaylistTreeWidget::sgn_reorder_playlists, playlist_ctl_,
             &PlaylistController::reorder_playlists);
 
     // 歌曲表(当前播放列表)
@@ -61,7 +60,7 @@ void LibraryInteractionService::bind()
         return lists;
     });
 
-    connect(song_table_view_, &SongTableView::sgnRemoveTrackRequested, this,
+    connect(song_table_view_, &SongTableView::sgn_remove_track_requested, this,
             [this](const EntryId& eid) {
                 if (eid.is_null()) {
                     return;
@@ -71,10 +70,10 @@ void LibraryInteractionService::bind()
                 }
                 playlist_ctl_->remove_track(eid);
             });
-    connect(song_table_view_, &SongTableView::sgnRemoveMissingTracksRequested, playlist_ctl_,
+    connect(song_table_view_, &SongTableView::sgn_remove_missing_tracks_requested, playlist_ctl_,
             &PlaylistController::remove_missing_tracks);
     // 批量移除(多选):停播当前曲目后批量删除
-    connect(song_table_view_, &SongTableView::sgnRemoveTracksRequested, this,
+    connect(song_table_view_, &SongTableView::sgn_remove_tracks_requested, this,
             [this](const QVector<EntryId>& ids) {
                 if (ids.isEmpty()) {
                     return;
@@ -85,7 +84,7 @@ void LibraryInteractionService::bind()
                 playlist_ctl_->remove_tracks(ids);
             });
     // 复制选中曲目到目标列表(Add to Playlist)
-    connect(song_table_view_, &SongTableView::sgnCopyTracksToPlaylist, this,
+    connect(song_table_view_, &SongTableView::sgn_copy_tracks_to_playlist, this,
             [this](const PlaylistId& dst_pid, const QVector<EntryId>& track_ids) {
                 if (dst_pid.is_null() || track_ids.isEmpty()) {
                     return;
@@ -93,23 +92,25 @@ void LibraryInteractionService::bind()
                 playlist_ctl_->copy_tracks_to_playlist(playlist_ctl_->current_playlist_id(),
                                                        track_ids, dst_pid);
             });
-    connect(song_table_view_, &SongTableView::sgnPlayTrackByModelIndex, this,
+    connect(song_table_view_, &SongTableView::sgn_play_track_by_model_index, this,
             [this](const QModelIndex& index) {
                 auto* model = playlist_ctl_->view_model();
-                if (!model)
+                if (!model) {
                     return;
+                }
                 const EntryId id = model->track_at(index);
-                if (id.is_null())
+                if (id.is_null()) {
                     return;
-                const int queueIndex = model->playback_queue().indexOf(id);
-                if (queueIndex >= 0) {
-                    playlist_ctl_->play(queueIndex);
+                }
+                const int queue_index = static_cast<int>(model->playback_queue().indexOf(id));
+                if (queue_index >= 0) {
+                    playlist_ctl_->play(queue_index);
                 }
             });
     connect(playlist_ctl_, &PlaylistController::sgn_playlist_changed, this,
             &LibraryInteractionService::refresh_playlist_view);
 
-    m_bound = true;
+    bound_ = true;
 }
 
 void LibraryInteractionService::refresh_playlist_view()

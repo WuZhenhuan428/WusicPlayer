@@ -31,34 +31,34 @@ private:
     void init_ui();
     void init_connections();
 
-    ThemeService* m_service;
+    ThemeService* service_       = nullptr;
 
     // 来源过滤
-    QRadioButton* m_rb_all;
-    QRadioButton* m_rb_system;
-    QRadioButton* m_rb_builtin;
-    QRadioButton* m_rb_external;
-    QButtonGroup* m_source_group;
+    QRadioButton* rb_all_        = nullptr;
+    QRadioButton* rb_system_     = nullptr;
+    QRadioButton* rb_builtin_    = nullptr;
+    QRadioButton* rb_external_   = nullptr;
+    QButtonGroup* source_group_  = nullptr;
 
     // 图标模式
-    QRadioButton* m_rb_icon_auto;
-    QRadioButton* m_rb_icon_light;
-    QRadioButton* m_rb_icon_dark;
-    QButtonGroup* m_icon_group;
+    QRadioButton* rb_icon_auto_  = nullptr;
+    QRadioButton* rb_icon_light_ = nullptr;
+    QRadioButton* rb_icon_dark_  = nullptr;
+    QButtonGroup* icon_group_    = nullptr;
 
     // 表格 + 标签
-    QTableView* m_table_view;
-    QLabel* m_lb_current;
-    QLabel* m_lb_hint;
+    QTableView* table_view_      = nullptr;
+    QLabel* lb_current_          = nullptr;
+    QLabel* lb_hint_             = nullptr;
 
     // 操作按钮
-    QPushButton* m_btn_apply;
-    QPushButton* m_btn_rescan;
+    QPushButton* btn_apply_      = nullptr;
+    QPushButton* btn_rescan_     = nullptr;
 
     // 布局
-    QHBoxLayout* m_hbl_filter;
-    QHBoxLayout* m_hbl_actions;
-    QVBoxLayout* m_vbl_main;
+    QHBoxLayout* hbl_filter_     = nullptr;
+    QHBoxLayout* hbl_actions_    = nullptr;
+    QVBoxLayout* vbl_main_       = nullptr;
 
-    QListWidgetItem* m_title_item = nullptr;
+    QListWidgetItem* title_item_ = nullptr;
 };

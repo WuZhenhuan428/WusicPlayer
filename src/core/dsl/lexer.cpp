@@ -78,8 +78,9 @@ QChar Lexer::peek(int ahead) const
 
 QChar Lexer::advance()
 {
-    if (pos_ >= src_.size())
-        return QChar();
+    if (pos_ >= src_.size()) {
+        return {};
+    }
     const QChar c = src_.at(pos_++);
     if (c == QLatin1Char('\n')) {
         ++line_;
@@ -101,8 +102,9 @@ void Lexer::add_token(TokenType type, int line, int col)
 
 void Lexer::set_error(const QString& msg)
 {
-    if (error_.isEmpty())
+    if (error_.isEmpty()) {
         error_ = QStringLiteral("%1:%2: %3").arg(line_).arg(col_).arg(msg);
+    }
 }
 
 QVector<Token> Lexer::tokenize()
@@ -117,22 +119,25 @@ QVector<Token> Lexer::tokenize()
         }
         // 换行 → Newline(与 ';' 等价的分隔符)
         if (c == QLatin1Char('\n')) {
-            const int line = line_, col = col_;
+            const int line = line_;
+            const int col  = col_;
             advance();
             add_token(TokenType::Newline, line, col);
             continue;
         }
         // 注释: '#' 到行尾
         if (c == QLatin1Char('#')) {
-            while (pos_ < src_.size() && peek() != QLatin1Char('\n'))
+            while (pos_ < src_.size() && peek() != QLatin1Char('\n')) {
                 advance();
+            }
             continue;
         }
 
-        const int line = line_, col = col_;
+        const int line = line_;
+        const int col  = col_;
 
         // 双字符运算符
-        const QChar n = peek(1);
+        const QChar n  = peek(1);
         if (c == QLatin1Char('=') && n == QLatin1Char('=')) {
             advance();
             advance();
@@ -253,8 +258,9 @@ QVector<Token> Lexer::tokenize()
                     break;
                 }
                 if (ch == QLatin1Char('\\')) {
-                    if (pos_ >= src_.size())
+                    if (pos_ >= src_.size()) {
                         break;
+                    }
                     const QChar esc = advance();
                     switch (esc.toLatin1()) {
                     case '"':
@@ -302,7 +308,7 @@ QVector<Token> Lexer::tokenize()
         if (c.isDigit()) {
             qulonglong v = 0;
             while (pos_ < src_.size() && peek().isDigit()) {
-                v = v * 10 + static_cast<qulonglong>(advance().digitValue());
+                v = (v * 10) + static_cast<qulonglong>(advance().digitValue());
             }
             Token t;
             t.type  = TokenType::Number;
@@ -318,8 +324,9 @@ QVector<Token> Lexer::tokenize()
             QString name;
             while (pos_ < src_.size()) {
                 const QChar ch = peek();
-                if (!(ch.isLetterOrNumber() || ch == QLatin1Char('_')))
+                if (!(ch.isLetterOrNumber() || ch == QLatin1Char('_'))) {
                     break;
+                }
                 name += advance();
             }
             Token t;

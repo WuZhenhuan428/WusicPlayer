@@ -2,13 +2,10 @@
 
 #include <QString>
 
-namespace utils
-{
-namespace icon
+namespace utils::icon
 {
 
-QString colored_icon_path(QString name, bool is_dark);
-QString general_icon_path(QString name);
+QString colored_icon_path(const QString& name, bool is_dark);
+QString general_icon_path(const QString& name);
 
-} // namespace icon
-} // namespace utils
+} // namespace utils::icon

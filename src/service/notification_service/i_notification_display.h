@@ -2,6 +2,7 @@
 
 #include "core/notification_types.h"
 
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions)
 class INotificationDisplay
 {
 public:

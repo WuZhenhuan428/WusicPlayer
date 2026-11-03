@@ -18,10 +18,10 @@ public:
     void apply_theme(int row);
 
     /// 获取模型（供 QTableView 绑定）
-    ThemeSettingsModel* model() const;
+    [[nodiscard]] ThemeSettingsModel* model() const;
 
     /// 当前主题名称
-    QString current_theme_name() const;
+    [[nodiscard]] static QString current_theme_name();
 
     /// 扫描外部插件目录
     void rescan_external_plugins(const QString& dir);
@@ -31,5 +31,5 @@ signals:
     void sgn_current_theme_changed(const QString& name);
 
 private:
-    std::unique_ptr<ThemeSettingsModel> m_model;
+    std::unique_ptr<ThemeSettingsModel> model_;
 };

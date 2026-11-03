@@ -17,10 +17,10 @@ public:
 
 signals:
     // 媒体库曲目拖放到某播放列表项上(背景不发送)
-    void sgnLibraryTracksDropped(PlaylistId pid, QVector<TrackId> track_ids);
+    void sgn_library_tracks_dropped(PlaylistId pid, QVector<TrackId> track_ids);
     // 播放列表条目(列表→列表)拖放到某播放列表项上(背景不发送)
-    void sgnPlaylistEntriesDropped(PlaylistId src_pid, PlaylistId dst_pid,
-                                   QVector<EntryId> entry_ids);
+    void sgn_playlist_entries_dropped(PlaylistId src_pid, PlaylistId dst_pid,
+                                      QVector<EntryId> entry_ids);
 
 protected:
     void dragEnterEvent(QDragEnterEvent* event) override;
@@ -46,22 +46,22 @@ public:
     void set_playlists(const QVector<QPair<PlaylistId, QString>>& playlists);
 
 signals:
-    void sgnSwitchPlaylist(const PlaylistId& id);
-    void sgnCreatePlaylist();
-    void sgnImportFiles(const PlaylistId& pid = PlaylistId());
-    void sgnImportDir(const PlaylistId& pid = PlaylistId());
-    void sgnSavePlaylist(const PlaylistId& id);
+    void sgn_switch_playlist(const PlaylistId& id);
+    void sgn_create_playlist();
+    void sgn_import_files(const PlaylistId& pid = PlaylistId());
+    void sgn_import_dir(const PlaylistId& pid = PlaylistId());
+    void sgn_save_playlist(const PlaylistId& id);
     // 内联重命名提交(编辑完成时带新名字)
-    void sgnRenamePlaylist(const PlaylistId& id, const QString& new_name);
-    void sgnCopyPlaylist(const PlaylistId& id);
-    void sgnRemovePlaylist(const PlaylistId& id);
+    void sgn_rename_playlist(const PlaylistId& id, const QString& new_name);
+    void sgn_copy_playlist(const PlaylistId& id);
+    void sgn_remove_playlist(const PlaylistId& id);
     // 拖动排序完成后,按新顺序提交
-    void sgnReorderPlaylists(const QVector<PlaylistId>& ordered_ids);
+    void sgn_reorder_playlists(const QVector<PlaylistId>& ordered_ids);
     // 媒体库曲目拖入某播放列表项(背景不发送)
-    void sgnLibraryTracksDropped(PlaylistId pid, QVector<TrackId> track_ids);
+    void sgn_library_tracks_dropped(PlaylistId pid, QVector<TrackId> track_ids);
     // 播放列表条目拖入某播放列表项(列表→列表;背景不发送)
-    void sgnPlaylistEntriesDropped(PlaylistId src_pid, PlaylistId dst_pid,
-                                   QVector<EntryId> entry_ids);
+    void sgn_playlist_entries_dropped(PlaylistId src_pid, PlaylistId dst_pid,
+                                      QVector<EntryId> entry_ids);
 
 private:
     void init_ui();
@@ -71,7 +71,7 @@ private:
     void on_item_changed(QTreeWidgetItem* item);
     void begin_rename(QTreeWidgetItem* item);
     void on_rows_moved();
-    QVector<PlaylistId> collect_order() const;
+    [[nodiscard]] QVector<PlaylistId> collect_order() const;
 
-    PlaylistTreeDropView* m_playlist_tree = nullptr;
+    PlaylistTreeDropView* playlist_tree_ = nullptr;
 };

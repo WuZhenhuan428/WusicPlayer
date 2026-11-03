@@ -4,6 +4,7 @@
 #include "model/playlist/playlist.h"
 
 #include <algorithm>
+#include <ranges>
 
 namespace
 {
@@ -59,10 +60,10 @@ void InMemorySearchBackend::warmup(const PlaylistId& pid)
 void InMemorySearchBackend::invalidate(const PlaylistId& pid)
 {
     if (pid.is_null()) {
-        m_index_by_playlist.clear();
+        index_by_playlist_.clear();
         return;
     }
-    m_index_by_playlist.remove(pid);
+    index_by_playlist_.remove(pid);
 }
 
 QVector<SearchHint> InMemorySearchBackend::search(const SearchQuery& query)
@@ -87,7 +88,7 @@ QVector<SearchHint> InMemorySearchBackend::search(const SearchQuery& query)
     }
 
     const QString keyword_norm         = normalize(keyword);
-    const QVector<IndexedTrack>& index = m_index_by_playlist.value(pid);
+    const QVector<IndexedTrack>& index = index_by_playlist_.value(pid);
 
     QVector<RankedHit> ranked_hits;
     ranked_hits.reserve(index.size());
@@ -105,7 +106,7 @@ QVector<SearchHint> InMemorySearchBackend::search(const SearchQuery& query)
         ranked_hits.push_back(std::move(ranked));
     }
 
-    std::sort(ranked_hits.begin(), ranked_hits.end(), by_score_desc);
+    std::ranges::sort(ranked_hits, by_score_desc);
 
     hits.reserve(ranked_hits.size());
     for (const RankedHit& ranked_hit : ranked_hits) {
@@ -134,7 +135,7 @@ void InMemorySearchBackend::rebuild_index(const PlaylistId& pid)
 
     std::shared_ptr<Playlist> playlist = playlist_controller_->find_playlist_by_id(pid);
     if (!playlist) {
-        m_index_by_playlist.remove(pid);
+        index_by_playlist_.remove(pid);
         return;
     }
 
@@ -163,17 +164,17 @@ void InMemorySearchBackend::rebuild_index(const PlaylistId& pid)
         indexed_tracks.push_back(std::move(indexed));
     }
 
-    m_index_by_playlist.insert(pid, std::move(indexed_tracks));
+    index_by_playlist_.insert(pid, std::move(indexed_tracks));
 }
 
 bool InMemorySearchBackend::ensure_index_ready(const PlaylistId& pid)
 {
-    if (m_index_by_playlist.contains(pid)) {
+    if (index_by_playlist_.contains(pid)) {
         return true;
     }
 
     rebuild_index(pid);
-    return m_index_by_playlist.contains(pid);
+    return index_by_playlist_.contains(pid);
 }
 
 QString InMemorySearchBackend::normalize(const QString& text)
@@ -201,7 +202,7 @@ bool InMemorySearchBackend::fuzzy_match(const QString& text, const QString& patt
 }
 
 int InMemorySearchBackend::score_track(const IndexedTrack& track, const SearchQuery& query,
-                                       const QString& keyword_norm) const
+                                       const QString& keyword_norm)
 {
     const bool case_sensitive  = query.case_sensitive;
     const QString keyword      = case_sensitive ? query.keyword.trimmed() : keyword_norm;
@@ -237,14 +238,18 @@ int InMemorySearchBackend::score_track(const IndexedTrack& track, const SearchQu
 
     case SearchQueryMode::Fuzzy: {
         int score = -1;
-        if (fuzzy_match(title, keyword))
+        if (fuzzy_match(title, keyword)) {
             score = std::max(score, 85);
-        if (fuzzy_match(artist, keyword))
+        }
+        if (fuzzy_match(artist, keyword)) {
             score = std::max(score, 70);
-        if (fuzzy_match(album_artist, keyword))
+        }
+        if (fuzzy_match(album_artist, keyword)) {
             score = std::max(score, 65);
-        if (fuzzy_match(album, keyword))
+        }
+        if (fuzzy_match(album, keyword)) {
             score = std::max(score, 60);
+        }
         return score;
     }
 

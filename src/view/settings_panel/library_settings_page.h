@@ -25,12 +25,12 @@ public:
 
     QListWidgetItem* get_title_item();
 
-    // 同步下拉框到当前策略(不触发 sgnAddFilePolicyChanged)
+    // 同步下拉框到当前策略(不触发 sgn_add_file_policy_changed)
     void set_add_file_policy(AddFilePolicy policy);
 
 signals:
     // 用户切换策略;参数为 AddFilePolicy 的 int 值
-    void sgnAddFilePolicyChanged(int policy);
+    void sgn_add_file_policy_changed(int policy);
 
 private:
     void init_ui();
@@ -38,10 +38,10 @@ private:
     void add_folder();
     void remove_selected();
 
-    LibraryManager* m_lib         = nullptr; // 非拥有
-    QListWidget* m_list           = nullptr;
-    QComboBox* m_cb_add_policy    = nullptr;
-    QPushButton* m_btn_add        = nullptr;
-    QPushButton* m_btn_remove     = nullptr;
-    QListWidgetItem* m_title_item = nullptr;
+    LibraryManager* lib_         = nullptr; // 非拥有
+    QListWidget* list_           = nullptr;
+    QComboBox* cb_add_policy_    = nullptr;
+    QPushButton* btn_add_        = nullptr;
+    QPushButton* btn_remove_     = nullptr;
+    QListWidgetItem* title_item_ = nullptr;
 };

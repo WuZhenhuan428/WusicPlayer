@@ -17,12 +17,11 @@ class PlaylistContext : public QObject
     Q_OBJECT
 public:
     explicit PlaylistContext(QObject* parent = nullptr);
-    ~PlaylistContext();
 
 public:
     void set_play_mode(PlayMode mode);
     void set_playlist(const PlaylistId& pid);
-    void set_play_track(const EntryId& tid);
+    void set_play_track(const EntryId& eid);
 
     const PlaylistId& get_playlist_id();
     const EntryId& get_play_track_id();
@@ -34,12 +33,12 @@ signals:
     void sgn_current_play_mode_changed(const PlayMode& mode);
 
 private:
-    PlaylistId m_current_playlist_id;
-    EntryId m_current_track_id;
-    PlayMode m_mode;
+    PlaylistId current_playlist_id_;
+    EntryId current_track_id_;
+    PlayMode mode_;
 };
 
-namespace PlaylistNavigator
+namespace playlist_navigator
 {
 EntryId next_of_in_order(const QVector<EntryId>& queue, EntryId current);
 EntryId next_of_loop(const QVector<EntryId>& queue, EntryId current);
@@ -52,5 +51,5 @@ EntryId previous_of_loop(const QVector<EntryId>& queue, EntryId current);
 EntryId previous_of_out_of_order_track(const QVector<EntryId>& queue, EntryId current);
 EntryId previous_of_shuffle(const QVector<EntryId>& queue);
 EntryId previous_of_out_of_order_group(const QVector<EntryId>& queue, EntryId current);
-size_t generate_random_index(size_t max_index);
-}; // namespace PlaylistNavigator
+qsizetype generate_random_index(qsizetype max_index);
+}; // namespace playlist_navigator

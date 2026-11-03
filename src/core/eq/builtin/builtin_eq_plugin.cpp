@@ -1,6 +1,6 @@
 #include "core/eq/builtin/builtin_eq_plugin.h"
 
-#include "core/player/config.h" // EQ_UPPER_LIMIT_DB / EQ_LOWER_LIMIT_DB
+#include "core/player/config.h" // kEqUpperLimitDB / kEqLowerLimitDB
 
 #include <QHBoxLayout>
 #include <QLabel>
@@ -8,13 +8,13 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include <numbers>
+
 namespace
 {
 constexpr double kEqFreqs[10]  = {31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000};
 const char* kEqFreqStrings[10] = {"31", "63", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"};
 } // namespace
-
-BuiltinEqPlugin::BuiltinEqPlugin() = default;
 
 QString BuiltinEqPlugin::id() const
 {
@@ -52,7 +52,7 @@ QWidget* BuiltinEqPlugin::create_eq_widget(QWidget* parent)
     auto* hbl = new QHBoxLayout(w);
     hbl->setContentsMargins(4, 4, 4, 4);
 
-    const int range = static_cast<int>(EQ_UPPER_LIMIT_DB * 100.0); // ±120 单位 = ±12dB
+    const int range = static_cast<int>(kEqUpperLimitDB * 100.0); // ±120 单位 = ±12dB
 
     for (int i = 0; i < 10; ++i) {
         auto* vbl     = new QVBoxLayout;
@@ -62,19 +62,19 @@ QWidget* BuiltinEqPlugin::create_eq_widget(QWidget* parent)
         lb_val->setAlignment(Qt::AlignHCenter);
         auto* slider = new QSlider(Qt::Vertical, w);
         slider->setRange(-range, range);
-        slider->setValue(static_cast<int>(m_gains[i] * 100.0f));
+        slider->setValue(static_cast<int>(gains_[i] * 100.0f));
 
         vbl->addWidget(lb_val, 0, Qt::AlignHCenter);
         vbl->addWidget(slider, 1, Qt::AlignHCenter);
         vbl->addWidget(lb_freq, 0, Qt::AlignHCenter);
         hbl->addLayout(vbl);
 
-        m_sliders[i]   = slider;
-        m_lb_values[i] = lb_val;
+        sliders_[i]   = slider;
+        lb_values_[i] = lb_val;
 
         connect(slider, &QSlider::valueChanged, this, [this, i](int v) {
-            m_gains[i] = static_cast<float>(v) / 100.0f;
-            m_lb_values[i]->setText(QStringLiteral("%1 dB").arg(v / 100.0));
+            gains_[i] = static_cast<float>(v) / 100.0f;
+            lb_values_[i]->setText(QStringLiteral("%1 dB").arg(v / 100.0));
             emit sgn_config_changed();
         });
     }
@@ -87,44 +87,45 @@ EqConfig BuiltinEqPlugin::eq_config() const
     cfg.enabled = true;
     for (int i = 0; i < 10; ++i) {
         // q≈1.414 对应 1 octave(与原 width_type=o:width=1 听感一致)
-        cfg.bands.push_back(EqBand{EqFilterType::Parametric, kEqFreqs[i], 1.414, m_gains[i]});
+        cfg.bands.push_back(
+            EqBand{EqFilterType::Parametric, kEqFreqs[i], std::numbers::sqrt2, gains_[i]});
     }
     return cfg;
 }
 
 void BuiltinEqPlugin::apply_current()
 {
-    m_gains_applied = m_gains;
+    gains_applied_ = gains_;
 }
 
 void BuiltinEqPlugin::revert()
 {
-    m_gains = m_gains_applied;
+    gains_ = gains_applied_;
     this->sync_sliders();
 }
 
 void BuiltinEqPlugin::reset()
 {
-    m_gains.fill(0.0f);
-    m_gains_applied.fill(0.0f);
+    gains_.fill(0.0f);
+    gains_applied_.fill(0.0f);
     this->sync_sliders();
 }
 
 void BuiltinEqPlugin::restore_from_config(const EqConfig& cfg)
 {
-    m_gains.fill(0.0f);
+    gains_.fill(0.0f);
     for (int i = 0; i < 10 && i < cfg.bands.size(); ++i) {
-        m_gains[i] = static_cast<float>(cfg.bands[i].gain_db);
+        gains_[i] = static_cast<float>(cfg.bands[i].gain_db);
     }
-    m_gains_applied = m_gains; // 恢复值视为已应用, Cancel 不回退到全 0
+    gains_applied_ = gains_; // 恢复值视为已应用, Cancel 不回退到全 0
     this->sync_sliders();
 }
 
 void BuiltinEqPlugin::sync_sliders()
 {
     for (int i = 0; i < 10; ++i) {
-        if (m_sliders[i]) {
-            m_sliders[i]->setValue(static_cast<int>(m_gains[i] * 100.0f));
+        if (sliders_[i]) {
+            sliders_[i]->setValue(static_cast<int>(gains_[i] * 100.0f));
         }
     }
 }

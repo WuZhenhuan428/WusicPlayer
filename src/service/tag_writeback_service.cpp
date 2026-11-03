@@ -14,39 +14,39 @@
 #include "core/logger/logger_manager.h"
 namespace
 {
+// NOLINTNEXTLINE
 Logger* logger = LoggerManager::file_logger("tag_writeback", {"console", "gui"});
-}
+} // namespace
 
 TagWritebackService::TagWritebackService(AppContext& ctx, QObject* parent) :
     QObject(parent), ctx_(ctx)
 {
-    this->playlist_ctl_     = this->ctx_.playlist_controller_;
-    this->playback_ctl_     = this->ctx_.playback_controller_;
-    this->playlist_manager_ = this->ctx_.playlist_manager_;
-    this->main_window_      = this->ctx_.main_window_;
+    this->playlist_ctl_     = this->ctx_.playlist_controller;
+    this->playback_ctl_     = this->ctx_.playback_controller;
+    this->playlist_manager_ = this->ctx_.playlist_manager;
+    this->main_window_      = this->ctx_.main_window;
     assert(playlist_ctl_ && playback_ctl_ && playlist_manager_ && main_window_);
 }
 
-TagWritebackService::~TagWritebackService() {}
-
-void TagWritebackService::request_track_property(EntryId tid, [[maybe_unused]] QString filepath,
+void TagWritebackService::request_track_property(EntryId tid,
+                                                 [[maybe_unused]] const QString& filepath,
                                                  TrackMetaData meta)
 {
     if (tag_edit_widget_) {
         tag_edit_widget_->close();
     }
-    tag_edit_widget_ = new TagEditWidget(meta, tid);
+    tag_edit_widget_ = new TagEditWidget(std::move(meta), tid);
 
     connect(
         tag_edit_widget_, &TagEditWidget::sgnSaveTags, this,
-        [this](QMap<QString, QStringList> tags, EntryId changedTid) {
+        [this](const QMap<QString, QStringList>& tags, EntryId changed_tid) {
             // create snapshot
             auto curr_id           = playlist_ctl_->current_track_id();
             qint64 curr_pos_ms     = playback_ctl_->position();
             PlayingState old_state = playback_ctl_->state();
 
-            if (curr_id == changedTid) {
-                if (old_state == PlayingState::PLAYING || old_state == PlayingState::PAUSE) {
+            if (curr_id == changed_tid) {
+                if (old_state == PlayingState::Playing || old_state == PlayingState::Pause) {
                     playback_ctl_->stop();
                 }
             }
@@ -56,7 +56,7 @@ void TagWritebackService::request_track_property(EntryId tid, [[maybe_unused]] Q
             auto playlist =
                 playlist_ctl_->find_playlist_by_id(playlist_ctl_->current_playlist_id());
             if (playlist) {
-                const Track* track = playlist->find_track_by_id(changedTid);
+                const Track* track = playlist->find_track_by_id(changed_tid);
                 if (track) {
                     target_filepath = track->filepath;
                 }
@@ -68,7 +68,7 @@ void TagWritebackService::request_track_property(EntryId tid, [[maybe_unused]] Q
 
             // work:
             QPointer<TagWritebackService> self(this);
-            QThread* worker = QThread::create([self, tags, changedTid, curr_id, curr_pos_ms,
+            QThread* worker = QThread::create([self, tags, changed_tid, curr_id, curr_pos_ms,
                                                old_state, target_filepath]() {
                 const bool write_ok = utils::audio::taglib_writeback(target_filepath, tags);
                 TrackMetaData refreshed;
@@ -79,7 +79,7 @@ void TagWritebackService::request_track_property(EntryId tid, [[maybe_unused]] Q
 
                 QMetaObject::invokeMethod(
                     self,
-                    [self, write_ok, refreshed, target_filepath, changedTid, curr_id, curr_pos_ms,
+                    [self, write_ok, refreshed, target_filepath, changed_tid, curr_id, curr_pos_ms,
                      old_state]() {
                         if (!self) {
                             return;
@@ -116,8 +116,8 @@ void TagWritebackService::request_track_property(EntryId tid, [[maybe_unused]] Q
                                 }
 
                                 if (playlist_changed && self->playlist_manager_ &&
-                                    self->playlist_manager_->m_repo) {
-                                    self->playlist_manager_->m_repo->save_list_to_cache(playlist);
+                                    self->playlist_manager_->repo_) {
+                                    self->playlist_manager_->repo_->save_list_to_cache(playlist);
                                 }
                             }
 
@@ -126,7 +126,7 @@ void TagWritebackService::request_track_property(EntryId tid, [[maybe_unused]] Q
                                 model->rebuild_async();
                             }
 
-                            if (curr_id == changedTid) {
+                            if (curr_id == changed_tid) {
                                 auto* side_panel =
                                     self->main_window_ ? self->main_window_->side_panel() : nullptr;
                                 if (side_panel) {
@@ -136,17 +136,18 @@ void TagWritebackService::request_track_property(EntryId tid, [[maybe_unused]] Q
                             }
                         }
 
-                        if (curr_id == changedTid) {
+                        if (curr_id == changed_tid) {
                             auto* model = self->playlist_ctl_->view_model();
                             if (!model) {
                                 return;
                             }
 
-                            int queue_index = model->playback_queue().indexOf(changedTid);
+                            int queue_index =
+                                static_cast<int>(model->playback_queue().indexOf(changed_tid));
                             if (queue_index >= 0) {
                                 self->playlist_ctl_->play(queue_index);
                             }
-                            if (old_state != PlayingState::PLAYING) {
+                            if (old_state != PlayingState::Playing) {
                                 self->playback_ctl_->pause();
                             }
 

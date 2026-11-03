@@ -17,8 +17,8 @@ public:
     QListWidgetItem* get_title_item();
 
 private:
-    LanguageSettings* m_settings = nullptr;
-    QComboBox* m_cb_language     = nullptr;
-    QLabel* m_lb_hint            = nullptr;
-    QListWidgetItem* m_title     = nullptr;
+    LanguageSettings* settings_  = nullptr;
+    QComboBox* cb_language_      = nullptr;
+    QLabel* lb_hint_             = nullptr;
+    QListWidgetItem* list_title_ = nullptr;
 };

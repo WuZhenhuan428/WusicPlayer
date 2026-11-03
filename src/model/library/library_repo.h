@@ -19,36 +19,44 @@ class LibraryRepo : public QObject
     Q_OBJECT
 public:
     explicit LibraryRepo(QObject* parent = nullptr);
-    ~LibraryRepo() override;
+    ~LibraryRepo() override
+    {
+        this->close();
+    };
+
+    LibraryRepo(const LibraryRepo&)            = delete;
+    LibraryRepo& operator=(const LibraryRepo&) = delete;
+    LibraryRepo(LibraryRepo&&)                 = delete;
+    LibraryRepo& operator=(LibraryRepo&&)      = delete;
 
     bool open(const QString& db_path);
     void close();
-    bool is_open() const;
-    QString last_error() const;
+    [[nodiscard]] bool is_open() const;
+    [[nodiscard]] QString last_error() const;
 
     // ---- watched folders ----
     bool add_watched_folder(const QString& path);
     bool remove_watched_folder(const QString& path);
-    QStringList watched_folders() const;
+    [[nodiscard]] QStringList watched_folders() const;
 
     // ---- tracks ----
     bool upsert_track(const LibraryTrack& track);
     bool mark_missing(const QString& normalized_path, bool missing);
     bool remove_track(const QString& normalized_path);
-    QVector<LibraryTrack> load_all_tracks() const;
-    int track_count() const;
+    [[nodiscard]] QVector<LibraryTrack> load_all_tracks() const;
+    [[nodiscard]] int track_count() const;
 
     // FTS5 全文搜索(阶段 5 搜索后端;FTS5 不可用时返回空)
-    QVector<LibraryTrack> search(const QString& keyword, SearchQueryMode mode,
-                                 int limit = 200) const;
+    [[nodiscard]] QVector<LibraryTrack> search(const QString& keyword, SearchQueryMode mode,
+                                               int limit = 200) const;
 
 private:
     bool exec_schema();
-    bool has_fts5() const;
-    LibraryTrack row_to_track(const QSqlQuery& q) const;
+    [[nodiscard]] bool has_fts5() const;
+    [[nodiscard]] static LibraryTrack row_to_track(const QSqlQuery& q);
 
-    QSqlDatabase m_db;
-    QString m_conn_name;
-    QString m_last_error;
-    bool m_open = false;
+    QSqlDatabase db_;
+    QString conn_name_;
+    QString last_error_;
+    bool open_ = false;
 };

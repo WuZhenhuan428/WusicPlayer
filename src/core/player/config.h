@@ -1,6 +1,7 @@
 #pragma once
 
-#define RING_BUFFER_CAPACITY 16384
+#include <cstddef>
 
-#define EQ_UPPER_LIMIT_DB    12.0f
-#define EQ_LOWER_LIMIT_DB    -12.0f
+static constexpr std::size_t kRingBufferCapacity = 16384;
+static constexpr float kEqUpperLimitDB           = 12.0f;
+static constexpr float kEqLowerLimitDB           = -12.0f;

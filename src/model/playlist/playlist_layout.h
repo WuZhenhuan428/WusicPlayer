@@ -19,10 +19,10 @@ struct Node
     Node* parent = nullptr;
     QVector<Node*> children;
 
-    int row() const
+    [[nodiscard]] int row() const
     {
         if (parent) {
-            return parent->children.indexOf(const_cast<Node*>(this));
+            return static_cast<int>(parent->children.indexOf(const_cast<Node*>(this)));
         }
         return 0;
     }
@@ -32,6 +32,13 @@ struct Node
     {
         qDeleteAll(children);
     }
+
+    // Node owns its children (raw pointers, freed in destructor):
+    // copying would double-free, so copy operations are deleted.
+    Node(const Node&)            = delete;
+    Node& operator=(const Node&) = delete;
+    Node(Node&&)                 = delete;
+    Node& operator=(Node&&)      = delete;
 };
 
 struct TrackEntry
@@ -53,7 +60,7 @@ struct PlaylistLayout
 
 struct LayoutResult
 {
-    Node* root;
+    Node* root = nullptr;
     QVector<EntryId> playback_queue;
     QVector<TrackEntry> updated_meta;
 };
@@ -65,8 +72,8 @@ public:
 
     void set_group_rule(const QVector<SortRule>& group_rule);
     void set_sort_rule(const QVector<SortRule>& sort_rule);
-    const QVector<SortRule> sort_rules() const;
-    const QVector<SortRule> group_rules() const;
+    [[nodiscard]] QVector<SortRule> sort_rules() const;
+    [[nodiscard]] QVector<SortRule> group_rules() const;
 
     /**
      * @brief DSL 路径(与 SortRule 二选一; 设置成功后 build 优先使用 DSL)。
@@ -75,36 +82,36 @@ public:
      */
     bool set_dsl(const QString& expression);
     void clear_dsl();
-    bool has_dsl() const
+    [[nodiscard]] bool has_dsl() const
     {
-        return m_dsl != nullptr;
+        return dsl_ != nullptr;
     }
-    const QString& dsl_error() const
+    [[nodiscard]] const QString& dsl_error() const
     {
-        return m_dsl_error;
+        return dsl_error_;
     }
     /// 最近一次成功设置的 DSL 源文本(空 = 未启用 DSL)。
-    const QString& dsl_source() const
+    [[nodiscard]] const QString& dsl_source() const
     {
-        return m_dsl_source;
+        return dsl_source_;
     }
 
     /**
      * @brief Auxiliary: used to handle event such as table header was clicked
-     * @param overrideExisting true=override, false=append
+     * @param override_existing true=override, false=append
      * @note only one SortRule for group is supported
      */
-    void update_sort(SortRule rule, bool overrideExisting = false);
+    void update_sort(SortRule rule, bool override_existing = false);
 
-    static QVariant get_metadata_value(const TrackMetaData& mata, SortType type);
+    static QVariant get_metadata_value(const TrackMetaData& meta, SortType type);
 
 private:
-    QVector<SortRule> m_group_rules;
-    QVector<SortRule> m_sort_rules;
+    QVector<SortRule> group_rules_;
+    QVector<SortRule> sort_rules_;
 
     // DSL 路径(非空时优先于 m_group_rules/m_sort_rules);
     // 用 shared_ptr: builder 会被拷贝进 worker 线程, evaluator 只读共享
-    std::shared_ptr<dsl::Evaluator> m_dsl;
-    QString m_dsl_error;
-    QString m_dsl_source; // 最近一次成功设置的 DSL 源文本
+    std::shared_ptr<dsl::Evaluator> dsl_;
+    QString dsl_error_;
+    QString dsl_source_; // 最近一次成功设置的 DSL 源文本
 };

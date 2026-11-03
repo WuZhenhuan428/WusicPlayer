@@ -43,21 +43,20 @@ class MainWindow : public QMainWindow, public IConfigurable
 public:
     MainWindow(PlaybackController* playback_controller, PlaylistController* playlist_controller,
                QWidget* parent = nullptr);
-    ~MainWindow();
     // widget getter
-    PlaylistController* playlist_controller() const;
-    PlaybackController* playback_controller() const;
-    PlaylistTreeWidget* playlist_tree_widget() const;
-    LibraryBrowserWidget* library_browser() const;
-    SongTableView* song_table_view() const;
-    SidePanel* side_panel() const;
-    ControlBar* control_bar_widget() const;
-    DesktopLyricsWidget* desktop_lyrics_widget() const;
+    [[nodiscard]] PlaylistController* playlist_controller() const;
+    [[nodiscard]] PlaybackController* playback_controller() const;
+    [[nodiscard]] PlaylistTreeWidget* playlist_tree_widget() const;
+    [[nodiscard]] LibraryBrowserWidget* library_browser() const;
+    [[nodiscard]] SongTableView* song_table_view() const;
+    [[nodiscard]] SidePanel* side_panel() const;
+    [[nodiscard]] ControlBar* control_bar_widget() const;
+    [[nodiscard]] DesktopLyricsWidget* desktop_lyrics_widget() const;
     void play_track_in_ui(const QString& filepath);
 
     void load_from_json(const QJsonObject& json) override;
     QJsonObject save_to_json() override;
-    QString config_sub_key() const override;
+    [[nodiscard]] QString config_sub_key() const override;
 
     void quit_application();
 
@@ -70,8 +69,8 @@ private:
     PlaybackController* playback_controller_;
     PlaylistController* playlist_controller_;
 
-    bool m_cache_load_scheduled = false;
-    bool m_is_quit              = false; // 关联任务栏托盘行为
+    bool cache_load_scheduled_ = false;
+    bool is_quit_              = false; // 关联任务栏托盘行为
 
     void init_ui();
     void build_menu_bar();
@@ -85,60 +84,60 @@ private:
 
     // UI Widgets declaraion
     /// Menu widgets
-    QMenuBar* m_menubar_main;
-    QToolBar* m_bottom_toolbar;
-    ControlBar* m_control_bar = nullptr;
+    QMenuBar* menubar_main_                     = nullptr;
+    QToolBar* bottom_toolbar_                   = nullptr;
+    ControlBar* control_bar_                    = nullptr;
 
     // menu File
-    QMenu* m_menu_file;
-    QAction* m_act_open_file;
-    QAction* m_act_new_playlist;
-    QAction* m_act_load_playlist;
-    QAction* m_act_exit;
+    QMenu* menu_file_                           = nullptr;
+    QAction* act_open_file_                     = nullptr;
+    QAction* act_new_playlist_                  = nullptr;
+    QAction* act_load_playlist_                 = nullptr;
+    QAction* act_exit_                          = nullptr;
 
     // menu View
-    QMenu* m_menu_view;
-    QAction* m_act_set_sort_rule;
-    QAction* m_act_search_panel;
-    QAction* m_act_log_viewer;
-    QAction* m_act_show_desktop_lyrics;
-    QAction* m_act_lock_desktop_lyrics;
+    QMenu* menu_view_                           = nullptr;
+    QAction* act_set_sort_rule_                 = nullptr;
+    QAction* act_search_panel_                  = nullptr;
+    QAction* act_log_viewer_                    = nullptr;
+    QAction* act_show_desktop_lyrics_           = nullptr;
+    QAction* act_lock_desktop_lyrics_           = nullptr;
 
     // menu playback
-    QMenu* m_menu_playback;
-    QAction* m_act_open_eq;
+    QMenu* menu_playback_                       = nullptr;
+    QAction* act_open_eq_                       = nullptr;
 
     // menu Help
-    QMenu* m_menu_help;
-    QAction* m_act_about;
+    QMenu* menu_help_                           = nullptr;
+    QAction* act_about_                         = nullptr;
 
     // menu Settings
-    QMenu* m_menu_settings;
-    QAction* m_act_settings;
+    QMenu* menu_settings_                       = nullptr;
+    QAction* act_settings_                      = nullptr;
 
     // center window:组合三个内容控件 + 歌词面板
-    PlaylistTreeWidget* m_playlist_tree_widget = nullptr; // 左上方:播放列表导航
-    LibraryBrowserWidget* m_library_browser    = nullptr; // 左下方:媒体库浏览
-    SongTableView* m_song_table_view           = nullptr; // 右侧:当前播放列表歌曲表
-    QSplitter* m_left_splitter                 = nullptr; // 左:播放列表树(上)+ 库控件(下)
-    QSplitter* m_main_splitter                 = nullptr; // 主:左 + 歌曲表
-    SidePanel* m_side_panel                    = nullptr;
-    QWidget* m_center_widget;
-    QHBoxLayout* m_hbl_centre;
+    PlaylistTreeWidget* playlist_tree_widget_   = nullptr; // 左上方:播放列表导航
+    LibraryBrowserWidget* library_browser_      = nullptr; // 左下方:媒体库浏览
+    SongTableView* song_table_view_             = nullptr; // 右侧:当前播放列表歌曲表
+    QSplitter* left_splitter_                   = nullptr; // 左:播放列表树(上)+ 库控件(下)
+    QSplitter* main_splitter_                   = nullptr; // 主:左 + 歌曲表
+    SidePanel* side_panel_                      = nullptr;
+    QWidget* center_widget_                     = nullptr;
+    QHBoxLayout* hbl_centre_                    = nullptr;
 
-    DesktopLyricsWidget* m_desktop_lyrics_widget = nullptr;
+    DesktopLyricsWidget* desktop_lyrics_widget_ = nullptr;
 
 signals:
-    void sgnLoadPlaylist();
-    void sgnCurrentPlaylistChanged(PlaylistId pid);
-    void sgnAboutToClose();
-    void sgnOpenSearchPanelRequested();
-    void sgnOpenLogViewerRequested();
-    void sgnOpenSettingsPanelRequested();
-    void sgnCreatePlaylistRequested();
-    void sgnPlayTrackRequested(const QString& filepath);
-    void sgnSetSortRuleRequested();
-    void sgnShowAboutMessagebox();
-    void sgnShowDesktopLyricsRequested();
-    void sgnOpenEQWidgetRequested();
+    void sgn_load_playlist();
+    void sgn_current_playlist_changed(PlaylistId pid);
+    void sgn_about_to_close();
+    void sgn_oepn_search_panel_requested();
+    void sgn_open_log_viewer_requested();
+    void sgn_open_settings_panel_requested();
+    void sgn_create_playlist_requested();
+    void sgn_play_track_requested(const QString& filepath);
+    void sgn_set_sort_rule_requested();
+    void sgn_show_about_messagebox_requested();
+    void sgn_show_desktop_lirics_requested();
+    void sgn_open_eq_widget_requested();
 };

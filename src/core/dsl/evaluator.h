@@ -10,7 +10,7 @@
 namespace dsl
 {
 
-/// 运行时属性值。
+/// 运行时属性值
 struct Value
 {
     enum class Type
@@ -18,7 +18,7 @@ struct Value
         String,
         Int,
         Bool,
-        Null
+        Null,
     };
     Type type = Type::Null;
     QString str;
@@ -50,12 +50,12 @@ struct Value
     {
         return Value{};
     }
-    bool is_null() const
+    [[nodiscard]] bool is_null() const
     {
         return type == Type::Null;
     }
     /// bool 上下文: null 视为 false(对齐 docs/DSL.md §7)。
-    bool to_bool() const
+    [[nodiscard]] bool to_bool() const
     {
         return type == Type::Bool && flag;
     }
@@ -65,11 +65,12 @@ struct Value
 ///
 /// validate() 已保证 DSL 中引用的属性均合法; 宿主对已注册属性返回其值,
 /// 缺失时返回 Value::null()(排序按 nulls 策略, 分组归 "unknown")。
-class Row
+class Row // NOLINT(cppcoreguidelines-special-member-functions)
 {
 public:
-    virtual ~Row()                                    = default;
-    virtual Value property(const QString& name) const = 0;
+    virtual ~Row()                                                  = default;
+
+    [[nodiscard]] virtual Value property(const QString& name) const = 0;
 };
 
 /// 求值器: 把已验证的 Program 解释为排序比较器 / 分组键 / 分类键。
@@ -79,45 +80,45 @@ public:
 class Evaluator
 {
 public:
-    explicit Evaluator(const Program& prog);
+    explicit Evaluator(Program prog);
 
     // ---- 表达式求值(也用于 bucket 键 / 测试) ----
-    Value eval_expr(const Node& n, const Row& row) const;
+    [[nodiscard]] Value eval_expr(const Node& n, const Row& row) const;
 
     // ---- 排序: a 是否排在 b 前 ----
-    bool less(const Row& a, const Row& b) const;
+    [[nodiscard]] bool less(const Row& a, const Row& b) const;
 
     // ---- 分组: 每级一个键(空/缺失 → "unknown") ----
-    QStringList group_keys(const Row& row) const;
+    [[nodiscard]] QStringList group_keys(const Row& row) const;
 
     // ---- 分类: if/elif/else 命中分支的键; 未命中 → "未分类" ----
-    QString bucket_key(const Row& row) const;
+    [[nodiscard]] QString bucket_key(const Row& row) const;
 
-    bool has_sort() const
+    [[nodiscard]] bool has_sort() const
     {
         return !prog_.sort.isEmpty();
     }
-    bool has_group() const
+    [[nodiscard]] bool has_group() const
     {
         return prog_.has_group;
     }
-    bool has_bucket() const
+    [[nodiscard]] bool has_bucket() const
     {
         return prog_.has_bucket;
     }
-    const QVector<SortItem>& sort_items() const
+    [[nodiscard]] const QVector<SortItem>& sort_items() const
     {
         return prog_.sort;
     }
-    const QVector<GroupItem>& group_items() const
+    [[nodiscard]] const QVector<GroupItem>& group_items() const
     {
         return prog_.group;
     }
 
 private:
-    Value eval_primitive(const Node& n, const Row& row) const;
+    [[nodiscard]] Value eval_primitive(const Node& n, const Row& row) const;
     /// 非空值比较, 返回 -1/0/1(排序用, 字符串走 QCollator)。
-    int compare_values(const Value& a, const Value& b) const;
+    [[nodiscard]] int compare_values(const Value& a, const Value& b) const;
 
     Program prog_;
     QCollator collator_; // 语言感知、忽略大小写(排序/分组键序)

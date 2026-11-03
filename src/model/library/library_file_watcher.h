@@ -27,6 +27,6 @@ signals:
 private:
     void on_directory_changed(const QString& path);
 
-    QFileSystemWatcher m_watcher;
-    QTimer m_reconcile_timer;
+    QFileSystemWatcher watcher_;
+    QTimer reconcile_timer_;
 };

@@ -2,7 +2,7 @@
 
 #include <QObject>
 
-class AppContext;
+struct AppContext;
 class PlaybackController;
 class PlaylistController;
 class PlaylistTreeWidget;
@@ -14,7 +14,6 @@ class LibraryInteractionService : public QObject
 
 public:
     explicit LibraryInteractionService(AppContext& ctx, QObject* parent);
-    ~LibraryInteractionService();
 
     void bind();
 
@@ -28,5 +27,5 @@ private:
     PlaybackController* playback_ctl_;
     PlaylistController* playlist_ctl_;
 
-    bool m_bound = false;
+    bool bound_ = false;
 };

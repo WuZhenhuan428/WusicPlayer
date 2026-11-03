@@ -17,7 +17,6 @@ class ShortcutsPanel : public QWidget
     Q_OBJECT
 public:
     explicit ShortcutsPanel(ConfigManager* cfg_mgr, QWidget* parent = nullptr);
-    ~ShortcutsPanel();
 
     void set_view_model(QAbstractTableModel* model);
 
@@ -25,28 +24,28 @@ public:
 
     void load_from_json(const QJsonObject& json);
     QJsonObject save_to_json();
-    QString config_sub_key() const;
+    [[nodiscard]] static QString config_sub_key();
 
 protected:
     void closeEvent(QCloseEvent* event) override;
 
 signals:
-    void sgnApplyConfig();
-    void sgnDefaultConfig();
-    void sgnRestoreConfig();
+    void sgn_apply_config();
+    void sgn_default_config();
+    void sgn_restore_config();
 
 private:
-    QLabel* m_lb_search;
-    QLineEdit* m_le_search;
-    QTableView* m_table_view_shortcuts;
-    QPushButton* m_btn_apply;
-    QPushButton* m_btn_default;
-    QPushButton* m_btn_restore;
-    QHBoxLayout* m_hbl_search_line;
-    QHBoxLayout* m_hbl_buttom;
-    QVBoxLayout* m_vbl_main;
+    QLabel* lb_search_;
+    QLineEdit* le_search_;
+    QTableView* table_view_shortcuts_;
+    QPushButton* btn_apply_;
+    QPushButton* btn_default_;
+    QPushButton* btn_restore_;
+    QHBoxLayout* hbl_search_line_;
+    QHBoxLayout* hbl_buttom_;
+    QVBoxLayout* vbl_main_;
 
-    QListWidgetItem* m_list_item = nullptr;
+    QListWidgetItem* list_item_ = nullptr;
 
-    ConfigManager* m_cfg_mgr;
+    ConfigManager* cfg_mgr_;
 };

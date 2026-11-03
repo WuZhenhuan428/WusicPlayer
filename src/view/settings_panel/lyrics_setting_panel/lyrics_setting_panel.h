@@ -17,59 +17,58 @@ class LyricsSettingPanel : public QWidget
     Q_OBJECT
 public:
     explicit LyricsSettingPanel(rgb_t active, rgb_t inactive, QWidget* parent = nullptr);
-    ~LyricsSettingPanel() = default;
 
     QListWidgetItem* get_title_item();
     void set_line_edit_text(const QString& font_string);
     void set_line_edit_text(const QFont& font);
 
 private:
-    QFont m_font;
-    QString m_font_view;
+    QFont font_;
+    QString font_view_;
 
-    bool m_is_two_line;
+    bool is_two_line_;
 
-    rgb_t m_active_rgb   = rgb_t{0xFF, 0xFF, 0xFF};
-    rgb_t m_inactive_rgb = rgb_t{0x00, 0x00, 0x00};
+    rgb_t active_rgb_   = rgb_t{0xFF, 0xFF, 0xFF};
+    rgb_t inactive_rgb_ = rgb_t{0x00, 0x00, 0x00};
 
     void update_active_btn_color(rgb_t rgb);
     void update_inactive_btn_color(rgb_t rgb);
 
-    void init_UI();
+    void init_ui();
     void init_connections();
 
-    QString make_font_view(const QFont& font);
-    QString make_font_view(const QString& raw_string);
+    static QString make_font_view(const QFont& font);
+    static QString make_font_view(const QString& raw_string);
 
 signals:
-    void sgnFontChanged(QFont font);
-    void sgnDisplayModeChanged(bool is_two_line);
-    void sgnActiveColorChanged(rgb_t rgb);
-    void sgnInactiveColorChanged(rgb_t rgb);
+    void sgn_font_changed(QFont font);
+    void sgn_display_mode_changed(bool is_two_line);
+    void sgn_active_color_changed(rgb_t rgb);
+    void sgn_inactive_color_changed(rgb_t rgb);
 
 private:
     // font
-    QLabel* m_lb_font;
-    QLineEdit* m_le_font;
-    QPushButton* m_btn_font;
-    QHBoxLayout* m_hbl_font;
+    QLabel* lb_font_                 = nullptr;
+    QLineEdit* le_font_              = nullptr;
+    QPushButton* btn_font_           = nullptr;
+    QHBoxLayout* hbl_font_           = nullptr;
 
     // line select
-    QLabel* m_lb_mode;
-    QRadioButton* m_rb_oneline;
-    QRadioButton* m_rb_twoline;
-    QHBoxLayout* m_hbl_mode;
-    QButtonGroup* m_mode_group;
+    QLabel* lb_mode_                 = nullptr;
+    QRadioButton* rb_oneline_        = nullptr;
+    QRadioButton* rb_twoline_        = nullptr;
+    QHBoxLayout* hbl_mode_           = nullptr;
+    QButtonGroup* mode_group_        = nullptr;
 
     // color select
-    QLabel* m_lb_color;
-    QLabel* m_lb_active;
-    QLabel* m_lb_inactive;
-    QPushButton* m_btn_active_color;
-    QPushButton* m_btn_inactive_color;
-    QHBoxLayout* m_hbl_color;
+    QLabel* lb_color_                = nullptr;
+    QLabel* lb_active_               = nullptr;
+    QLabel* lb_inactive_             = nullptr;
+    QPushButton* btn_active_color_   = nullptr;
+    QPushButton* btn_inactive_color_ = nullptr;
+    QHBoxLayout* hbl_color_          = nullptr;
 
-    QVBoxLayout* m_vbl_main;
+    QVBoxLayout* vbl_main_           = nullptr;
 
-    QListWidgetItem* m_title_widget = nullptr;
+    QListWidgetItem* title_widget_   = nullptr;
 };

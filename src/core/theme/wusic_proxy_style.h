@@ -13,17 +13,17 @@
 class WusicProxyStyle : public QProxyStyle
 {
 public:
-    explicit WusicProxyStyle(const ThemePalette& palette,
-                             const QString& baseKey = QStringLiteral("Fusion"));
+    explicit WusicProxyStyle(ThemePalette palette,
+                             const QString& base_key = QStringLiteral("Fusion"));
 
-    void setPalette(const ThemePalette& palette);
-    const ThemePalette& palette() const
+    void set_palette(const ThemePalette& palette);
+    [[nodiscard]] const ThemePalette& palette() const
     {
-        return m_palette;
+        return palette_;
     }
 
     // ---- QStyle 必须覆写的接口 ----
-    QPalette standardPalette() const override;
+    [[nodiscard]] QPalette standardPalette() const override;
 
     void drawControl(ControlElement element, const QStyleOption* opt, QPainter* p,
                      const QWidget* w) const override;
@@ -42,28 +42,28 @@ public:
                   QStyleHintReturn* ret) const override;
 
 private:
-    ThemePalette m_palette;
+    ThemePalette palette_;
 
     // ---- 控件级绘制 ----
-    void drawButton(const QStyleOption* opt, QPainter* p) const;
-    void drawSlider(const QStyleOption* opt, QPainter* p) const;
-    void drawScrollBar(ComplexControl cc, const QStyleOptionComplex* opt, QPainter* p,
-                       const QWidget* w) const;
-    void drawMenuItem(const QStyleOption* opt, QPainter* p, const QWidget* w) const;
-    void drawMenuBarItem(const QStyleOption* opt, QPainter* p) const;
-    void drawHeader(const QStyleOption* opt, QPainter* p) const;
-    void drawComboBox(const QStyleOptionComplex* opt, QPainter* p) const;
-    void drawTabBarTab(const QStyleOption* opt, QPainter* p, const QWidget* w) const;
-    void drawSpinBox(const QStyleOptionComplex* opt, QPainter* p, const QWidget* w) const;
-    void drawToolButton(const QStyleOptionComplex* opt, QPainter* p) const;
+    void draw_button(const QStyleOption* opt, QPainter* p) const;
+    void draw_slider(const QStyleOption* opt, QPainter* p) const;
+    void draw_scroll_bar(ComplexControl cc, const QStyleOptionComplex* opt, QPainter* p,
+                         const QWidget* w) const;
+    void draw_menu_item(const QStyleOption* opt, QPainter* p, const QWidget* w) const;
+    void draw_menu_bar_item(const QStyleOption* opt, QPainter* p) const;
+    void draw_header(const QStyleOption* opt, QPainter* p) const;
+    void draw_combo_box(const QStyleOptionComplex* opt, QPainter* p) const;
+    void draw_tab_bar_bab(const QStyleOption* opt, QPainter* p, const QWidget* w) const;
+    void draw_spin_box(const QStyleOptionComplex* opt, QPainter* p, const QWidget* w) const;
+    void draw_tool_button(const QStyleOptionComplex* opt, QPainter* p) const;
 
     // ---- 图元级绘制 ----
-    void drawCheckIndicator(const QStyleOption* opt, QPainter* p) const;
-    void drawRadioIndicator(const QStyleOption* opt, QPainter* p) const;
-    void drawBranchIndicator(const QStyleOption* opt, QPainter* p) const;
+    void draw_check_indicator(const QStyleOption* opt, QPainter* p) const;
+    void draw_radio_indicator(const QStyleOption* opt, QPainter* p) const;
+    void draw_branch_indicator(const QStyleOption* opt, QPainter* p) const;
 
     // ---- 通用辅助 ----
-    void fill_round(QPainter* p, const QRect& r, const QColor& bg, int radius) const;
-    void stroke_round(QPainter* p, const QRect& r, const QColor& border, int radius,
-                      int w = 1) const;
+    static void fill_round(QPainter* p, const QRect& r, const QColor& bg, int radius);
+    static void stroke_round(QPainter* p, const QRect& r, const QColor& border, int radius,
+                             int w = 1);
 };

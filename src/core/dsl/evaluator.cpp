@@ -9,8 +9,9 @@ namespace
 {
 bool eq(const Value& a, const Value& b)
 {
-    if (a.type != b.type)
+    if (a.type != b.type) {
         return false;
+    }
     switch (a.type) {
     case Value::Type::String:
         return a.str == b.str;
@@ -27,12 +28,24 @@ bool eq(const Value& a, const Value& b)
 /// 比较运算符(表达式内, 码点序); 类型不同或 null → 不可比。
 int compare_cmp(const Value& a, const Value& b)
 {
-    if (a.type == Value::Type::Int && b.type == Value::Type::Int)
-        return (a.num < b.num) ? -1 : (a.num > b.num ? 1 : 0);
-    if (a.type == Value::Type::String && b.type == Value::Type::String)
+    if (a.type == Value::Type::Int && b.type == Value::Type::Int) {
+        if (a.num < b.num) {
+            return -1;
+        }
+        if (a.num > b.num) {
+            return 1;
+        }
+        return 0;
+    }
+    if (a.type == Value::Type::String && b.type == Value::Type::String) {
         return QString::compare(a.str, b.str, Qt::CaseSensitive);
-    if (a.type == Value::Type::Bool && b.type == Value::Type::Bool)
-        return (a.flag == b.flag) ? 0 : (a.flag ? 1 : -1);
+    }
+    if (a.type == Value::Type::Bool && b.type == Value::Type::Bool) {
+        if (a.flag == b.flag) {
+            return 0;
+        }
+        return a.flag ? 1 : -1;
+    }
     return 0; // 类型不同 → 视为无法比较
 }
 } // namespace
@@ -47,12 +60,12 @@ QString value_to_string(const Value& v)
     case Value::Type::Bool:
         return v.flag ? QStringLiteral("true") : QStringLiteral("false");
     case Value::Type::Null:
-        return QString();
+        return {};
     }
-    return QString();
+    return {};
 }
 
-Evaluator::Evaluator(const Program& prog) : prog_(prog)
+Evaluator::Evaluator(Program prog) : prog_(std::move(prog))
 {
     collator_.setCaseSensitivity(Qt::CaseInsensitive);
 }
@@ -78,48 +91,49 @@ Value Evaluator::eval_expr(const Node& n, const Row& row) const
 
 Value Evaluator::eval_primitive(const Node& n, const Row& row) const
 {
-    const auto& args = n.args;
-    const auto evalA = [&](int i) { return eval_expr(args[i], row); };
+    // NOLINTBEGIN(readability-braces-around-statements)
+    const auto& args  = n.args;
+    const auto eval_a = [&](int i) { return eval_expr(args[i], row); };
 
     // ---- 逻辑 ----
     if (n.name == QStringLiteral("and")) {
-        const Value a = evalA(0);
+        const Value a = eval_a(0);
         if (a.is_null())
             return Value::null();
         if (!a.flag)
             return Value::from_bool(false);
-        const Value b = evalA(1);
+        const Value b = eval_a(1);
         return b.is_null() ? Value::null() : Value::from_bool(b.flag);
     }
     if (n.name == QStringLiteral("or")) {
-        const Value a = evalA(0);
+        const Value a = eval_a(0);
         if (a.is_null())
             return Value::null();
         if (a.flag)
             return Value::from_bool(true);
-        const Value b = evalA(1);
+        const Value b = eval_a(1);
         return b.is_null() ? Value::null() : Value::from_bool(b.flag);
     }
     if (n.name == QStringLiteral("not")) {
-        const Value a = evalA(0);
+        const Value a = eval_a(0);
         return a.is_null() ? Value::null() : Value::from_bool(!a.flag);
     }
 
     // ---- 比较(==/!= 用于判空: null==null 为 true, 与任一非空不相等) ----
     if (n.name == QStringLiteral("==") || n.name == QStringLiteral("!=")) {
-        const Value a = evalA(0);
-        const Value b = evalA(1);
+        const Value a = eval_a(0);
+        const Value b = eval_a(1);
         if (a.is_null() || b.is_null()) {
-            const bool bothNull = a.is_null() && b.is_null();
-            return Value::from_bool(n.name == QStringLiteral("==") ? bothNull : !bothNull);
+            const bool both_null = a.is_null() && b.is_null();
+            return Value::from_bool(n.name == QStringLiteral("==") ? both_null : !both_null);
         }
         const bool e = eq(a, b);
         return Value::from_bool(n.name == QStringLiteral("==") ? e : !e);
     }
     if (n.name == QStringLiteral("<") || n.name == QStringLiteral("<=") ||
         n.name == QStringLiteral(">") || n.name == QStringLiteral(">=")) {
-        const Value a = evalA(0);
-        const Value b = evalA(1);
+        const Value a = eval_a(0);
+        const Value b = eval_a(1);
         if (a.is_null() || b.is_null())
             return Value::null();
         if (a.type != b.type)
@@ -138,8 +152,8 @@ Value Evaluator::eval_primitive(const Node& n, const Row& row) const
     if (n.name == QStringLiteral("+") || n.name == QStringLiteral("-") ||
         n.name == QStringLiteral("*") || n.name == QStringLiteral("/") ||
         n.name == QStringLiteral("%")) {
-        const Value a = evalA(0);
-        const Value b = evalA(1);
+        const Value a = eval_a(0);
+        const Value b = eval_a(1);
         if (a.is_null() || b.is_null())
             return Value::null();
         if (n.name == QStringLiteral("+"))
@@ -155,57 +169,57 @@ Value Evaluator::eval_primitive(const Node& n, const Row& row) const
         return Value::from_int(a.num % b.num);
     }
     if (n.name == QStringLiteral("neg")) {
-        const Value a = evalA(0);
+        const Value a = eval_a(0);
         return a.is_null() ? Value::null() : Value::from_int(-a.num);
     }
 
     // ---- 三元 ----
     if (n.name == QStringLiteral("ternary")) {
-        const Value c = evalA(0);
-        return c.to_bool() ? evalA(1) : evalA(2);
+        const Value c = eval_a(0);
+        return c.to_bool() ? eval_a(1) : eval_a(2);
     }
 
     // ---- 字符串函数 ----
     if (n.name == QStringLiteral("contains")) {
-        const Value a = evalA(0);
-        const Value b = evalA(1);
+        const Value a = eval_a(0);
+        const Value b = eval_a(1);
         return (a.is_null() || b.is_null()) ? Value::null()
                                             : Value::from_bool(a.str.contains(b.str));
     }
     if (n.name == QStringLiteral("starts_with")) {
-        const Value a = evalA(0);
-        const Value b = evalA(1);
+        const Value a = eval_a(0);
+        const Value b = eval_a(1);
         return (a.is_null() || b.is_null()) ? Value::null()
                                             : Value::from_bool(a.str.startsWith(b.str));
     }
     if (n.name == QStringLiteral("ends_with")) {
-        const Value a = evalA(0);
-        const Value b = evalA(1);
+        const Value a = eval_a(0);
+        const Value b = eval_a(1);
         return (a.is_null() || b.is_null()) ? Value::null()
                                             : Value::from_bool(a.str.endsWith(b.str));
     }
     if (n.name == QStringLiteral("matches")) {
-        const Value a = evalA(0);
-        const Value b = evalA(1);
+        const Value a = eval_a(0);
+        const Value b = eval_a(1);
         if (a.is_null() || b.is_null())
             return Value::null();
         const QRegularExpression re(b.str);
         return Value::from_bool(re.isValid() && re.match(a.str).hasMatch());
     }
     if (n.name == QStringLiteral("len")) {
-        const Value a = evalA(0);
-        return a.is_null() ? Value::null() : Value::from_int(a.str.size());
+        const Value a = eval_a(0);
+        return a.is_null() ? Value::null() : Value::from_int(static_cast<int>(a.str.size()));
     }
     if (n.name == QStringLiteral("upper")) {
-        const Value a = evalA(0);
+        const Value a = eval_a(0);
         return a.is_null() ? Value::null() : Value::from_string(a.str.toUpper());
     }
     if (n.name == QStringLiteral("lower")) {
-        const Value a = evalA(0);
+        const Value a = eval_a(0);
         return a.is_null() ? Value::null() : Value::from_string(a.str.toLower());
     }
     if (n.name == QStringLiteral("in")) {
-        const Value a = evalA(0);
+        const Value a = eval_a(0);
         if (a.is_null())
             return Value::null();
         for (int i = 1; i < args.size(); ++i) {
@@ -217,16 +231,32 @@ Value Evaluator::eval_primitive(const Node& n, const Row& row) const
     }
 
     return Value::null(); // 未识别原语(validate 应已拦截)
+    // NOLINTEND(readability-braces-around-statements)
 }
 
 int Evaluator::compare_values(const Value& a, const Value& b) const
 {
-    if (a.type == Value::Type::Int && b.type == Value::Type::Int)
-        return (a.num < b.num) ? -1 : (a.num > b.num ? 1 : 0);
-    if (a.type == Value::Type::String && b.type == Value::Type::String)
+    if (a.type == Value::Type::Int && b.type == Value::Type::Int) {
+        if (a.num < b.num) {
+            return -1;
+        }
+        if (a.num > b.num) {
+            return 1;
+        }
+        return 0;
+    }
+    if (a.type == Value::Type::String && b.type == Value::Type::String) {
         return collator_.compare(a.str, b.str);
-    if (a.type == Value::Type::Bool && b.type == Value::Type::Bool)
-        return (a.flag == b.flag) ? 0 : (a.flag ? 1 : -1);
+    }
+    if (a.type == Value::Type::Bool && b.type == Value::Type::Bool) {
+        if (a.flag == b.flag) {
+            return 0;
+        }
+        if (a.flag) {
+            return 1;
+        }
+        return -1;
+    }
     return 0;
 }
 
@@ -238,14 +268,16 @@ bool Evaluator::less(const Row& a, const Row& b) const
         const bool na  = va.is_null();
         const bool nb  = vb.is_null();
         if (na || nb) {
-            if (na && nb)
+            if (na && nb) {
                 continue;
+            }
             const bool first = (item.nulls == SortItem::Nulls::First);
             return na ? first : !first;
         }
         const int cmp = compare_values(va, vb);
-        if (cmp != 0)
+        if (cmp != 0) {
             return item.desc ? (cmp > 0) : (cmp < 0);
+        }
     }
     return false;
 }
@@ -257,12 +289,13 @@ QStringList Evaluator::group_keys(const Row& row) const
     for (const auto& item : prog_.group) {
         const Value v = row.property(item.property);
         QString key;
-        if (v.is_null())
+        if (v.is_null()) {
             key = QStringLiteral("unknown");
-        else {
+        } else {
             key = value_to_string(v);
-            if (key.isEmpty())
+            if (key.isEmpty()) {
                 key = QStringLiteral("unknown");
+            }
         }
         keys.append(key);
     }

@@ -12,7 +12,7 @@ class IThemePlugin : public IBasicPlugin
 public:
     /// 其他函数继承自IBasicPlugin
     /// 工厂方法：返回一个填充完整的 ThemePalette
-    virtual ThemePalette createPalette() const = 0;
+    [[nodiscard]] virtual ThemePalette create_palette() const = 0;
 };
 
 Q_DECLARE_INTERFACE(IThemePlugin, "com.wusicplayer.IThemePlugin/1.0")

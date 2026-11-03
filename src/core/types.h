@@ -21,22 +21,22 @@ public:
         return Id(QUuid::createUuid());
     }
 
-    QUuid to_uuid() const
+    [[nodiscard]] QUuid to_uuid() const
     {
         return uuid_;
     }
 
-    QString to_string() const
+    [[nodiscard]] QString to_string() const
     {
         return uuid_.toString();
     }
 
-    QString to_string_without_brace() const
+    [[nodiscard]] QString to_string_without_brace() const
     {
         return uuid_.toString(QUuid::WithoutBraces);
     }
 
-    bool is_null() const
+    [[nodiscard]] bool is_null() const
     {
         return uuid_.isNull();
     }
@@ -97,25 +97,25 @@ inline constexpr char kPlaylistEntriesMime[] = "application/x-wusic-playlist-ent
 
 enum class SortType
 {
-    not_sorted = 0,
-    album,
-    album_artist,
-    artist,
-    bitrate,
-    composer,
-    directory,
-    disc_number,
-    duration,
-    filename,
-    genre,
-    title,
-    track_number,
-    year
+    NotSorted = 0,
+    Album,
+    AlbumArtist,
+    Artist,
+    Bitrate,
+    Composer,
+    Directory,
+    DiscNumber,
+    Duration,
+    Filename,
+    Genre,
+    Title,
+    TrackNumber,
+    Year,
 };
 
 struct SortRule
 {
-    SortType type;
+    SortType type       = {};
     Qt::SortOrder order = Qt::AscendingOrder;
 };
 
@@ -142,7 +142,7 @@ struct TrackMetaData
     int track_number                            = 0;
     int year                                    = 0;
 
-    bool isValid                                = false;
+    bool is_valid                               = false;
 
     // 用于判断元数据是否真正发生变化(库刷新/播放列表刷新去重);
     // 注意: 依赖上方所有标量字段的默认初始化, 否则比较结果不确定
@@ -151,8 +151,8 @@ struct TrackMetaData
 
 enum class TrackSource
 {
-    external, // 外部条目:文件不在库中,元数据内联(当前所有条目的状态)
-    library   // 库条目:引用库中曲目(阶段 3 后出现)
+    External, // 外部条目:文件不在库中,元数据内联(当前所有条目的状态)
+    Library,  // 库条目:引用库中曲目(阶段 3 后出现)
 };
 
 /**
@@ -165,7 +165,7 @@ struct Track
 {
     EntryId entry_id = EntryId::create_uuid(); // 条目身份(播放列表内唯一)
     TrackId library_track_id;                  // 库级身份;外部条目为空
-    TrackSource source = TrackSource::external;
+    TrackSource source = TrackSource::External;
     QString filepath; // 规范化路径
     TrackMetaData meta;
     bool missing = false; // 文件缺失标记(阶段 3 使用)
@@ -177,7 +177,7 @@ struct Track
         t.filepath      = utils::path::normalize_path(filepath);
         t.meta.filepath = t.filepath;
         t.meta.filename = QFileInfo(t.filepath).fileName();
-        t.meta.isValid  = false;
+        t.meta.is_valid = false;
         return t;
     }
 
@@ -189,65 +189,65 @@ struct Track
         t.filepath      = utils::path::normalize_path(filepath);
         t.meta.filepath = t.filepath;
         t.meta.filename = QFileInfo(t.filepath).fileName();
-        t.meta.isValid  = false;
+        t.meta.is_valid = false;
         return t;
     }
 };
 
 struct TableColumn
 {
-    QString headerName;
-    SortType sortType;
+    QString header_name;
+    SortType sort_type;
     // 0 = Not Sorted (e.g. status icon) or Custom
 };
 
-static const QHash<QString, SortType> mapStrToSorttype{
+static const QHash<QString, SortType> gMapStrToSorttype{
     // 标准字段
-    {"title", SortType::title},
-    {"artist", SortType::artist},
-    {"album", SortType::album},
-    {"album artist", SortType::album_artist},
-    {"album_artist", SortType::album_artist}, // 兼容下划线
-    {"genre", SortType::genre},
-    {"composer", SortType::composer},
-    {"year", SortType::year},
-    {"date", SortType::year}, // 兼容别名
-    {"track", SortType::track_number},
-    {"track_number", SortType::track_number},
-    {"disc", SortType::disc_number},
-    {"disc_number", SortType::disc_number},
+    {"title", SortType::Title},
+    {"artist", SortType::Artist},
+    {"album", SortType::Album},
+    {"album artist", SortType::AlbumArtist},
+    {"album_artist", SortType::AlbumArtist}, // 兼容下划线
+    {"genre", SortType::Genre},
+    {"composer", SortType::Composer},
+    {"year", SortType::Year},
+    {"date", SortType::Year}, // 兼容别名
+    {"track", SortType::TrackNumber},
+    {"track_number", SortType::TrackNumber},
+    {"disc", SortType::DiscNumber},
+    {"disc_number", SortType::DiscNumber},
     // 文件属性
-    {"filename", SortType::filename},
-    {"path", SortType::directory},
-    {"filepath", SortType::directory},
-    {"directory", SortType::directory},
-    {"folder", SortType::directory},
-    {"bitrate", SortType::bitrate},
+    {"filename", SortType::Filename},
+    {"path", SortType::Directory},
+    {"filepath", SortType::Directory},
+    {"directory", SortType::Directory},
+    {"folder", SortType::Directory},
+    {"bitrate", SortType::Bitrate},
 };
 
 enum class PlayMode
 {
-    in_order = 0,
-    loop,
-    shuffle,
-    out_of_order_track,
-    out_of_order_group
+    InOrder = 0,
+    Loop,
+    Shuffle,
+    OutOfOrderByTrack,
+    OutOfOrderByGroup,
 };
 
 /**
  * @brief 向播放列表添加未入库文件时的解析策略。
  *
- * by_operation:按操作类型(文件夹→同步入库,单文件→外部文件)
- * import_to_library:未命中时把文件(父目录)注册到库,扫描后升级为库引用
- * keep_external:保持外部文件(不强制入库)
- * always_ask:每次询问(由 controller/UI 弹窗展开为 import/external)
+ * ByOperation: 按操作类型(文件夹→同步入库,单文件→外部文件)
+ * ImportToLibrary: 未命中时把文件(父目录)注册到库,扫描后升级为库引用
+ * KeepExternal: 保持外部文件(不强制入库)
+ * AlwaysAsk: 每次询问(由 controller/UI 弹窗展开为 import/external)
  */
 enum class AddFilePolicy
 {
-    by_operation = 0,
-    import_to_library,
-    keep_external,
-    always_ask
+    ByOperation = 0,
+    ImportToLibrary,
+    KeepExternal,
+    AlwaysAsk,
 };
 
 struct PlaybackQueueSnapshot
@@ -260,12 +260,12 @@ struct PlaybackQueueSnapshot
 enum class DisplayMode
 {
     OneLine,
-    TwoLine
+    TwoLine,
 };
 
 enum class AlignMode
 {
     Left,
     Middle,
-    Right
+    Right,
 };

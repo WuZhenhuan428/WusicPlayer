@@ -85,11 +85,11 @@ static void test_search_current_playlist(QCoreApplication& app)
     pm.add_track(pid, music_dir.path() + "/song one.mp3");
     pm.add_track(pid, music_dir.path() + "/other.mp3");
 
-    Track ext        = Track::from_filepath("/mnt/music/ext song.mp3");
-    ext.meta.title   = "Ext Song";
-    ext.meta.artist  = "Artist";
-    ext.meta.isValid = true;
-    pm.m_repo->find_playlist_by_id(pid)->add_track_object(ext);
+    Track ext         = Track::from_filepath("/mnt/music/ext song.mp3");
+    ext.meta.title    = "Ext Song";
+    ext.meta.artist   = "Artist";
+    ext.meta.is_valid = true;
+    pm.repo_->find_playlist_by_id(pid)->add_track_object(ext);
 
     PlaylistController pc(&pm, nullptr, &app);
     pc.switch_to_playlist(pid); // 设置当前列表(resolve_pid 无显式 pid 时使用)
@@ -132,7 +132,7 @@ static void test_search_current_playlist(QCoreApplication& app)
         CHECK(hits[0].filepath == norm(music_dir.path() + "/other.mp3"));
     }
     // 阶段6:条目身份 → 播放路径解析(播放经身份而非 filepath)
-    const auto& pl_tracks = pm.m_repo->find_playlist_by_id(pid)->get_tracks();
+    const auto& pl_tracks = pm.repo_->find_playlist_by_id(pid)->get_tracks();
     CHECK(!pl_tracks.isEmpty());
     CHECK(pc.track_file_path(pl_tracks[0].entry_id) == norm(music_dir.path() + "/song one.mp3"));
     CHECK(pc.track_file_path(EntryId::create_uuid()).isEmpty());

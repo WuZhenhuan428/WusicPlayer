@@ -3,108 +3,104 @@
 #include <QStyle>
 #include <algorithm>
 
-FontSelectDialog::FontSelectDialog(QFont default_font, QWidget* parent) : QDialog(parent)
+FontSelectDialog::FontSelectDialog(const QFont& default_font, QWidget* parent) : QDialog(parent)
 {
-    init_UI();
+    init_ui();
     init_connections();
     init_fonts();
-    m_family = default_font.family();
-    m_style  = default_font.styleName();
-    m_size   = default_font.pointSize();
-    this->update_styles(m_family);
-    this->update_sizes(m_family);
+    family_ = default_font.family();
+    style_  = default_font.styleName();
+    size_   = default_font.pointSize();
+    this->update_styles(family_);
+    this->update_sizes(family_);
     this->update_preview();
     this->setMinimumSize(800, 500);
 }
 
 QFont FontSelectDialog::select_font()
 {
-    QFont font = QFontDatabase::font(m_family, m_style, m_size);
+    QFont font = QFontDatabase::font(family_, style_, size_);
     return font;
 }
 
 void FontSelectDialog::init_fonts()
 {
-    m_fonts = QFontDatabase::families(QFontDatabase::Any);
-    m_list_font->addItems(m_fonts);
-    const int family_index = m_fonts.indexOf(m_family);
+    fonts_ = QFontDatabase::families(QFontDatabase::Any);
+    list_font_->addItems(fonts_);
+    const int family_index = static_cast<int>(fonts_.indexOf(family_));
     if (family_index >= 0) {
-        m_list_font->setCurrentRow(family_index);
+        list_font_->setCurrentRow(family_index);
     }
-    m_list_font->update();
+    list_font_->update();
 }
 
 void FontSelectDialog::init_connections()
 {
-    connect(m_list_font, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
-        m_family = item->text();
-        this->update_styles(m_family);
-        this->update_sizes(m_family);
+    connect(list_font_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
+        family_ = item->text();
+        this->update_styles(family_);
+        this->update_sizes(family_);
         this->update_preview();
     });
 
-    connect(m_list_style, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
-        m_style = item->text();
+    connect(list_style_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
+        style_ = item->text();
         this->update_preview();
     });
 
-    connect(m_list_size, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
-        m_size = item->text().toInt();
-        m_spin_box_size->setValue(m_size);
+    connect(list_size_, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
+        size_ = item->text().toInt();
+        sb_size_->setValue(size_);
         this->update_preview();
     });
 
-    connect(m_spin_box_size, &QSpinBox::valueChanged, this, [this](int value) {
-        m_size = value;
+    connect(sb_size_, &QSpinBox::valueChanged, this, [this](int value) {
+        size_ = value;
         this->update_preview();
     });
 
-    connect(m_btn_ok, &QPushButton::clicked, this, &QDialog::accept);
-    connect(m_btn_cancel, &QPushButton::clicked, this, &QDialog::reject);
+    connect(btn_ok_, &QPushButton::clicked, this, &QDialog::accept);
+    connect(btn_cancel_, &QPushButton::clicked, this, &QDialog::reject);
 }
 
 void FontSelectDialog::update_styles(const QString& family)
 {
     QStringList styles = QFontDatabase::styles(family);
-    m_list_style->clear();
-    m_list_style->addItems(styles);
-    const int style_index = styles.indexOf(m_style);
+    list_style_->clear();
+    list_style_->addItems(styles);
+    const int style_index = static_cast<int>(styles.indexOf(style_));
     if (style_index >= 0) {
-        m_list_style->setCurrentRow(style_index);
+        list_style_->setCurrentRow(style_index);
     } else if (!styles.isEmpty()) {
-        m_list_style->setCurrentRow(0);
-        m_style = styles.first();
+        list_style_->setCurrentRow(0);
+        style_ = styles.first();
     }
-    m_list_style->update();
+    list_style_->update();
 }
 
 void FontSelectDialog::update_sizes(const QString& family)
 {
     QList<int> sizes = QFontDatabase::pointSizes(family);
-    m_list_size->clear();
+    list_size_->clear();
 
     if (sizes.isEmpty()) {
-        m_spin_box_size->setRange(1, 999);
-        m_spin_box_size->setValue(m_size);
-        m_list_size->update();
+        sb_size_->setRange(1, 999);
+        sb_size_->setValue(size_);
+        list_size_->update();
         return;
     }
 
     int min = sizes.first();
     int max = sizes.first();
     for (int s : sizes) {
-        if (s < min) {
-            min = s;
-        }
-        if (s > max) {
-            max = s;
-        }
-        m_list_size->addItem(QString::number(s));
+        min = std::min(s, min);
+        max = std::max(s, max);
+        list_size_->addItem(QString::number(s));
     }
-    int valid_value = std::clamp(m_size, min, max);
-    m_size          = valid_value;
-    m_spin_box_size->setValue(valid_value);
-    m_spin_box_size->setRange(min, max);
+    int valid_value = std::clamp(size_, min, max);
+    size_           = valid_value;
+    sb_size_->setValue(valid_value);
+    sb_size_->setRange(min, max);
 
     int size_row = -1;
     for (int i = 0; i < sizes.size(); ++i) {
@@ -114,73 +110,75 @@ void FontSelectDialog::update_sizes(const QString& family)
         }
     }
     if (size_row >= 0) {
-        m_list_size->setCurrentRow(size_row);
+        list_size_->setCurrentRow(size_row);
     }
-    m_list_size->update();
+    list_size_->update();
 }
 
 void FontSelectDialog::update_preview()
 {
-    QFont font = QFontDatabase::font(m_family, m_style, m_size);
-    m_te_preview->setFont(font);
+    QFont font = QFontDatabase::font(family_, style_, size_);
+    te_preview_->setFont(font);
 }
 
-void FontSelectDialog::init_UI()
+void FontSelectDialog::init_ui()
 {
-    m_lb_font   = new QLabel(tr("Fonts:"), this);
-    m_list_font = new QListWidget(this);
-    m_vbl_font  = new QVBoxLayout;
+    lb_font_   = new QLabel(tr("Fonts:"), this);
+    list_font_ = new QListWidget(this);
+    vbl_font_  = new QVBoxLayout;
 
-    m_vbl_font->addWidget(m_lb_font);
-    m_vbl_font->addWidget(m_list_font);
+    vbl_font_->addWidget(lb_font_);
+    vbl_font_->addWidget(list_font_);
 
-    m_lb_style   = new QLabel(tr("Style:"), this);
-    m_list_style = new QListWidget(this);
-    m_vbl_style  = new QVBoxLayout;
-    m_vbl_style->addWidget(m_lb_style);
-    m_vbl_style->addWidget(m_list_style);
+    lb_style_   = new QLabel(tr("Style:"), this);
+    list_style_ = new QListWidget(this);
+    vbl_style_  = new QVBoxLayout;
+    vbl_style_->addWidget(lb_style_);
+    vbl_style_->addWidget(list_style_);
 
-    m_lb_size       = new QLabel(tr("Size:"), this);
-    m_spin_box_size = new QSpinBox(this);
-    m_list_size     = new QListWidget(this);
-    m_vbl_size      = new QVBoxLayout;
-    m_vbl_size->addWidget(m_lb_size);
-    m_vbl_size->addWidget(m_spin_box_size);
-    m_vbl_size->addWidget(m_list_size);
+    lb_size_   = new QLabel(tr("Size:"), this);
+    sb_size_   = new QSpinBox(this);
+    list_size_ = new QListWidget(this);
+    vbl_size_  = new QVBoxLayout;
+    vbl_size_->addWidget(lb_size_);
+    vbl_size_->addWidget(sb_size_);
+    vbl_size_->addWidget(list_size_);
 
-    m_hbl_font_all = new QHBoxLayout;
-    m_hbl_font_all->addLayout(m_vbl_font);
-    m_hbl_font_all->addLayout(m_vbl_style);
-    m_hbl_font_all->addLayout(m_vbl_size);
+    hbl_font_all_ = new QHBoxLayout;
+    hbl_font_all_->addLayout(vbl_font_);
+    hbl_font_all_->addLayout(vbl_style_);
+    hbl_font_all_->addLayout(vbl_size_);
 
-    m_te_preview = new QTextEdit(this);
-    m_te_preview->setText("The Quick Brown Fox Jumps Over The Lazy Dog 龙跳天门 虎卧凤阁");
-    m_te_preview->setReadOnly(true);
+    te_preview_ = new QTextEdit(this);
+    te_preview_->setText("The Quick Brown Fox Jumps Over The Lazy Dog 龙跳天门 虎卧凤阁");
+    te_preview_->setReadOnly(true);
 
     QStyle* style = this->style();
-    m_btn_ok      = new QPushButton("OK", this);
-    m_btn_ok->setIcon(style->standardIcon(QStyle::SP_DialogOkButton));
-    m_btn_cancel = new QPushButton("Cancel", this);
-    m_btn_cancel->setIcon(style->standardIcon(QStyle::SP_DialogCancelButton));
+    btn_ok_       = new QPushButton("OK", this);
+    btn_ok_->setIcon(style->standardIcon(QStyle::SP_DialogOkButton));
+    btn_cancel_ = new QPushButton("Cancel", this);
+    btn_cancel_->setIcon(style->standardIcon(QStyle::SP_DialogCancelButton));
 
-    m_hbl_btn = new QHBoxLayout;
-    m_hbl_btn->addStretch();
-    m_hbl_btn->addWidget(m_btn_ok);
-    m_hbl_btn->addWidget(m_btn_cancel);
+    hbl_btn_ = new QHBoxLayout;
+    hbl_btn_->addStretch();
+    hbl_btn_->addWidget(btn_ok_);
+    hbl_btn_->addWidget(btn_cancel_);
 
-    m_vbl_main = new QVBoxLayout;
-    m_vbl_main->addLayout(m_hbl_font_all);
-    m_vbl_main->addWidget(m_te_preview);
-    m_vbl_main->addStretch();
-    m_vbl_main->addLayout(m_hbl_btn);
+    vbl_main_ = new QVBoxLayout;
+    vbl_main_->addLayout(hbl_font_all_);
+    vbl_main_->addWidget(te_preview_);
+    vbl_main_->addStretch();
+    vbl_main_->addLayout(hbl_btn_);
 
-    this->setLayout(m_vbl_main);
+    this->setLayout(vbl_main_);
 }
 void FontSelectDialog::keyPressEvent(QKeyEvent* event)
 {
     switch (event->key()) {
     case Qt::Key_Escape:
         this->close();
+        break;
+    default:
         break;
     }
 }

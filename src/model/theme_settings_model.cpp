@@ -5,13 +5,13 @@ ThemeSettingsModel::ThemeSettingsModel(QObject* parent) : QAbstractTableModel(pa
 void ThemeSettingsModel::set_entries(const QVector<ThemeEntry>& entries)
 {
     beginResetModel();
-    m_entries = entries;
+    entries_ = entries;
     endResetModel();
 }
 
 int ThemeSettingsModel::rowCount(const QModelIndex& parent) const
 {
-    return parent.isValid() ? 0 : m_entries.size();
+    return parent.isValid() ? 0 : static_cast<int>(entries_.size());
 }
 
 int ThemeSettingsModel::columnCount(const QModelIndex& parent) const
@@ -21,10 +21,11 @@ int ThemeSettingsModel::columnCount(const QModelIndex& parent) const
 
 QVariant ThemeSettingsModel::data(const QModelIndex& index, int role) const
 {
-    if (!index.isValid() || index.row() < 0 || index.row() >= m_entries.size())
+    if (!index.isValid() || index.row() < 0 || index.row() >= entries_.size()) {
         return {};
+    }
 
-    const auto& e = m_entries.at(index.row());
+    const auto& e = entries_.at(index.row());
 
     if (role == Qt::DisplayRole) {
         switch (index.column()) {
@@ -35,22 +36,26 @@ QVariant ThemeSettingsModel::data(const QModelIndex& index, int role) const
         case ColAuthor:
             return e.author;
         case ColDark:
-            return e.isDark ? tr("Dark") : tr("Light");
+            return e.is_dark ? tr("Dark") : tr("Light");
+        default:
+            return {};
         }
     }
 
-    if (role == RoleIsDark)
-        return e.isDark;
-    if (role == Qt::TextAlignmentRole)
-        return int(Qt::AlignLeft | Qt::AlignVCenter);
-
+    if (role == RoleIsDark) {
+        return e.is_dark;
+    }
+    if (role == Qt::TextAlignmentRole) {
+        return static_cast<int>(Qt::AlignLeft | Qt::AlignVCenter);
+    }
     return {};
 }
 
 QVariant ThemeSettingsModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (orientation != Qt::Horizontal || role != Qt::DisplayRole)
+    if (orientation != Qt::Horizontal || role != Qt::DisplayRole) {
         return {};
+    }
     switch (section) {
     case ColName:
         return tr("Name");
@@ -60,6 +65,8 @@ QVariant ThemeSettingsModel::headerData(int section, Qt::Orientation orientation
         return tr("Author");
     case ColDark:
         return tr("Mode");
+    default:
+        return {};
     }
     return {};
 }

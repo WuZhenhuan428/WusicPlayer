@@ -6,7 +6,7 @@
 #include <QTimer>
 #include <QVector>
 
-class AppContext;
+struct AppContext;
 class INotificationDisplay;
 
 class NotificationService : public QObject

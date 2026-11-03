@@ -11,8 +11,9 @@
 
 namespace
 {
+// NOLINTNEXTLINE
 auto logger = LoggerManager::instance().file_logger("plugin_manager", {"gui", "console"});
-}
+} // namespace
 
 PluginManager::PluginManager(QObject* parent) : QObject(parent) {}
 
@@ -47,7 +48,7 @@ bool PluginManager::load_plugin(const QString& path)
     // 缓存元数据
     handle->iid        = handle->loader->metaData().value("IID").toString();
     handle->metadata   = handle->loader->metaData().value("MetaData").toObject();
-    handle->descriptor = this->resolve_descriptor(handle->interface, handle->metadata);
+    handle->descriptor = PluginManager::resolve_descriptor(handle->interface, handle->metadata);
 
     // 文件路径
     handle->file_path  = QDir(path).absolutePath();
@@ -70,11 +71,11 @@ void PluginManager::scan_directory(const QString& dir)
     }
 
     QStringList suffixes =
-#if defined(Q_OS_WIN)
+#ifdef Q_OS_WIN
         {"dll"}
-#elif defined(Q_OS_MACOS)
+#elifdef Q_OS_MACOS
         {"so", "dylib", "bundle"} /* 用于加载插件时三者均可用 */
-#elif defined(Q_OS_UNIX)
+#elifdef Q_OS_UNIX
         {"so"}
 #endif
     ;
@@ -167,7 +168,7 @@ QVector<QString> PluginManager::external_plugin_paths() const
     return vec;
 }
 
-const QVector<PluginDescriptor> PluginManager::descriptors() const
+QVector<PluginDescriptor> PluginManager::descriptors() const
 {
     QVector<PluginDescriptor> vec;
     for (const auto& [_, handle] : handles_) {

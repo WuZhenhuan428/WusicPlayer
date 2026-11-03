@@ -11,66 +11,65 @@ TextEditorDialog::TextEditorDialog(const QString& string, QWidget* parent) : QWi
     this->resize(600, 800);
 }
 
-TextEditorDialog::~TextEditorDialog() {}
-
 void TextEditorDialog::init_ui()
 {
-    m_btn_import_file = new QPushButton("Import file", this);
-    m_btn_save_as     = new QPushButton("Save as", this);
-    m_lb_font         = new QLabel(tr("Font: "), this);
-    m_cb_font         = new QFontComboBox(this);
-    m_lb_font_size    = new QLabel(tr("Size: "), this);
-    m_sb_font_size    = new QSpinBox(this);
-    m_sb_font_size->setMinimum(5);
-    m_sb_font_size->setMaximum(50);
-    m_hbl_settings = new QHBoxLayout();
-    m_hbl_settings->addWidget(m_btn_import_file);
-    m_hbl_settings->addWidget(m_btn_save_as);
-    m_hbl_settings->addStretch();
-    m_hbl_settings->addWidget(m_lb_font);
-    m_hbl_settings->addWidget(m_cb_font);
-    m_hbl_settings->addWidget(m_lb_font_size);
-    m_hbl_settings->addWidget(m_sb_font_size);
+    btn_import_file_ = new QPushButton("Import file", this);
+    btn_save_as_     = new QPushButton("Save as", this);
+    lb_font_         = new QLabel(tr("Font: "), this);
+    cb_font_         = new QFontComboBox(this);
+    lb_font_size_    = new QLabel(tr("Size: "), this);
+    sb_font_size_    = new QSpinBox(this);
+    sb_font_size_->setMinimum(5);
+    sb_font_size_->setMaximum(50);
+    hbl_settings_ = new QHBoxLayout();
+    hbl_settings_->addWidget(btn_import_file_);
+    hbl_settings_->addWidget(btn_save_as_);
+    hbl_settings_->addStretch();
+    hbl_settings_->addWidget(lb_font_);
+    hbl_settings_->addWidget(cb_font_);
+    hbl_settings_->addWidget(lb_font_size_);
+    hbl_settings_->addWidget(sb_font_size_);
 
-    m_text_editor      = new QTextEdit(this);
-    QFont default_font = m_text_editor->font();
-    m_cb_font->setCurrentFont(default_font);
-    m_sb_font_size->setValue(default_font.pointSize() > 0 ? default_font.pointSize() : 12);
+    text_editor_       = new QTextEdit(this);
+    QFont default_font = text_editor_->font();
+    cb_font_->setCurrentFont(default_font);
+    sb_font_size_->setValue(default_font.pointSize() > 0 ? default_font.pointSize() : 12);
 
-    m_btn_apply  = new QPushButton("OK", this);
-    m_btn_cancel = new QPushButton("Cancel", this);
-    m_hbl_btn    = new QHBoxLayout();
-    m_hbl_btn->addStretch();
-    m_hbl_btn->addWidget(m_btn_apply);
-    m_hbl_btn->addWidget(m_btn_cancel);
+    btn_apply_  = new QPushButton("OK", this);
+    btn_cancel_ = new QPushButton("Cancel", this);
+    hbl_btn_    = new QHBoxLayout();
+    hbl_btn_->addStretch();
+    hbl_btn_->addWidget(btn_apply_);
+    hbl_btn_->addWidget(btn_cancel_);
 
-    m_vbl_main = new QVBoxLayout();
-    m_vbl_main->addLayout(m_hbl_settings);
-    m_vbl_main->addWidget(m_text_editor);
-    m_vbl_main->addLayout(m_hbl_btn);
+    vbl_main_ = new QVBoxLayout();
+    vbl_main_->addLayout(hbl_settings_);
+    vbl_main_->addWidget(text_editor_);
+    vbl_main_->addLayout(hbl_btn_);
 
-    this->setLayout(m_vbl_main);
+    this->setLayout(vbl_main_);
 }
 
 void TextEditorDialog::init_connections()
 {
     // setup push buttons
-    connect(m_btn_import_file, &QPushButton::clicked, this, [this]() {
+    connect(btn_import_file_, &QPushButton::clicked, this, [this]() {
         QString file_name = QFileDialog::getOpenFileName(
             this, tr("Import lyrics file"), QString(),
             tr("LRC files (*.lrc);;Text files (*.txt);;All files (*)"));
 
-        if (file_name.isEmpty())
+        if (file_name.isEmpty()) {
             return;
+        }
 
         QFile file(file_name);
         if (file.open(QIODevice::ReadOnly)) {
-            this->m_text_editor->setText(file.readAll());
+            this->text_editor_->setText(file.readAll());
             file.close();
         }
     });
 
-    connect(m_btn_save_as, &QPushButton::clicked, this, [this]() {
+    connect(btn_save_as_, &QPushButton::clicked, this, [this]() {
         QString file_name = QFileDialog::getSaveFileName(
             this, tr("Save as"), QString(),
             tr("LRC files (*.lrc);;Text files (*.txt);;All files (*)"));
@@ -81,48 +80,48 @@ void TextEditorDialog::init_connections()
 
         QFile file(file_name);
         if (file.open(QIODevice::WriteOnly)) {
-            QString content      = m_text_editor->toPlainText();
+            QString content      = text_editor_->toPlainText();
             QByteArray str_bytes = content.toUtf8();
             file.write(str_bytes, str_bytes.length());
         }
     });
 
-    connect(m_btn_apply, &QPushButton::clicked, this, [this]() {
-        emit sgnText(m_text_editor->toPlainText());
+    connect(btn_apply_, &QPushButton::clicked, this, [this]() {
+        emit sgn_text(text_editor_->toPlainText());
         this->close();
     });
-    connect(m_btn_cancel, &QPushButton::clicked, this, [this]() { this->close(); });
+    connect(btn_cancel_, &QPushButton::clicked, this, [this]() { this->close(); });
 
     // setup font and text editor (apply to existing content + future input)
-    auto applyEditorFont = [this]() {
-        QFont font = m_cb_font->currentFont();
-        font.setPointSize(m_sb_font_size->value());
+    auto apply_editor_font = [this]() {
+        QFont font = cb_font_->currentFont();
+        font.setPointSize(sb_font_size_->value());
 
         QTextCharFormat fmt;
         fmt.setFontFamilies(QList<QString>() << font.family());
         fmt.setFontPointSize(font.pointSizeF());
 
-        QTextCursor cursor = m_text_editor->textCursor();
+        QTextCursor cursor = text_editor_->textCursor();
         cursor.beginEditBlock();
         cursor.select(QTextCursor::Document);
         cursor.mergeCharFormat(fmt);
         cursor.endEditBlock();
 
-        m_text_editor->mergeCurrentCharFormat(fmt);
-        m_text_editor->setCurrentFont(font);
+        text_editor_->mergeCurrentCharFormat(fmt);
+        text_editor_->setCurrentFont(font);
     };
 
-    connect(m_sb_font_size, &QSpinBox::valueChanged, this,
-            [applyEditorFont](int) { applyEditorFont(); });
+    connect(sb_font_size_, &QSpinBox::valueChanged, this,
+            [apply_editor_font](int) { apply_editor_font(); });
 
-    connect(m_cb_font, &QFontComboBox::currentFontChanged, this,
-            [applyEditorFont](const QFont&) { applyEditorFont(); });
+    connect(cb_font_, &QFontComboBox::currentFontChanged, this,
+            [apply_editor_font](const QFont&) { apply_editor_font(); });
 }
 
 bool TextEditorDialog::set_content(const QString& str)
 {
-    if (m_text_editor) {
-        m_text_editor->setPlainText(str);
+    if (text_editor_) {
+        text_editor_->setPlainText(str);
         return true;
     }
 
@@ -134,6 +133,8 @@ void TextEditorDialog::keyPressEvent(QKeyEvent* event)
     switch (event->key()) {
     case Qt::Key_Escape:
         this->close();
+        break;
+    default:
         break;
     }
 }

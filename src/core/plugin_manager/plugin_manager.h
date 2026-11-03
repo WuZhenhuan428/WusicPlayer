@@ -33,7 +33,7 @@ public:
     bool remove(const QString& id);
 
     /// 用于更新视图信息
-    const QVector<PluginDescriptor> descriptors() const;
+    QVector<PluginDescriptor> descriptors() const;
 
     /// 外部插件文件路径(用于持久化; 内建插件不在其中)
     QVector<QString> external_plugin_paths() const;
@@ -59,8 +59,9 @@ public:
     {
         QVector<T*> out;
         for (const auto& [_, handle] : handles_) {
-            if (!handle->file_path.isEmpty())
+            if (!handle->file_path.isEmpty()) {
                 continue;
+            }
             if (auto* t = qobject_cast<T*>(handle->interface)) {
                 out.push_back(t);
             }
@@ -74,8 +75,9 @@ public:
     {
         QVector<T*> out;
         for (const auto& [_, handle] : handles_) {
-            if (handle->file_path.isEmpty())
+            if (handle->file_path.isEmpty()) {
                 continue;
+            }
             if (auto* t = qobject_cast<T*>(handle->interface)) {
                 out.push_back(t);
             }
@@ -94,7 +96,7 @@ public:
     }
 
 private:
-    PluginDescriptor resolve_descriptor(IBasicPlugin* plugin, const QJsonObject& json);
+    static PluginDescriptor resolve_descriptor(IBasicPlugin* plugin, const QJsonObject& json);
 
     // QHash 是 CoW, unique_ptr 不可拷贝, 故使用 std::unordered_map
     std::unordered_map<QString /*id*/, std::unique_ptr<PluginHandle>> handles_;

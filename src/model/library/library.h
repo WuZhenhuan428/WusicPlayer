@@ -24,13 +24,14 @@ public:
 
     // ---- 只读查询 ----
     // 返回共享引用(权威副本由本容器持有, 零拷贝); nullptr 表示不存在
-    std::shared_ptr<const LibraryTrack> track_by_path(const QString& normalized_path) const;
-    std::shared_ptr<const LibraryTrack> track_by_id(TrackId id) const;
+    [[nodiscard]] std::shared_ptr<const LibraryTrack>
+    track_by_path(const QString& normalized_path) const;
+    [[nodiscard]] std::shared_ptr<const LibraryTrack> track_by_id(TrackId id) const;
     // 非拥有:返回内部容器的 const 引用,仅本次调用内有效
-    const QHash<QString, std::shared_ptr<const LibraryTrack>>& index() const;
-    int track_count() const;
+    [[nodiscard]] const QHash<QString, std::shared_ptr<const LibraryTrack>>& index() const;
+    [[nodiscard]] int track_count() const;
 
 private:
-    QHash<QString, std::shared_ptr<const LibraryTrack>> m_by_path; // path → track(共享)
-    QHash<TrackId, QString> m_id_to_path;                          // track_id → path
+    QHash<QString, std::shared_ptr<const LibraryTrack>> by_path_; // path → track(共享)
+    QHash<TrackId, QString> id_to_path_;                          // track_id → path
 };

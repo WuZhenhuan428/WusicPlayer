@@ -39,11 +39,11 @@ graph TD
         PC6[savePanelConfigs]
     end
 
-    MW[MainWindow] -->|sgnOpenSettingsPanelRequested| PC
-    MW -->|sgnOpenSearchPanelRequested| PC
-    MW -->|sgnOpenEQWidgetRequested| PC
-    LB[LibraryBrowserWidget] -->|sgnOpenLibrarySettingsRequested| PC
-    SP[SidePanel] -->|sgnDesktopLyricsConfigRequested| PC
+    MW[MainWindow] -->|sgn_open_settings_panel_requested| PC
+    MW -->|sgn_oepn_search_panel_requested| PC
+    MW -->|sgn_open_eq_widget_requested| PC
+    LB[LibraryBrowserWidget] -->|sgn_open_library_settings_requested| PC
+    SP[SidePanel] -->|sgn_desktop_lyrics_config_requested| PC
     AC -->|创建并注入| PC
 ```
 
@@ -111,11 +111,11 @@ private:
 
 ## 5. 信号链清理
 
-| 清理点                                                      | 处理                                                                                                                                  |
-|-------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| `LibraryInteractionService::sgnTrackPropertyRequested` 转发 | **死转发**(无消费方);`TagWritebackService` 已由 AppController 直连 `SongTableView::sgnTrackPropertyRequested`。移除转发信号 + connect |
-| `AppController::tag_edit_widget_`                           | 死成员(实际由 `TagWritebackService::m_tag_edit_widget` 管理),删除                                                                     |
-| 面板打开信号                                                | `MainWindow`/`LibraryBrowserWidget`/`SidePanel` → `PanelCoordinator`(一层),不再经 AppController 中转                                 |
+| 清理点                                                         | 处理                                                                                                                                     |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `LibraryInteractionService::sgn_track_property_requested` 转发 | **死转发**(无消费方);`TagWritebackService` 已由 AppController 直连 `SongTableView::sgn_track_property_requested`。移除转发信号 + connect |
+| `AppController::tag_edit_widget_`                              | 死成员(实际由 `TagWritebackService::m_tag_edit_widget` 管理),删除                                                                        |
+| 面板打开信号                                                   | `MainWindow`/`LibraryBrowserWidget`/`SidePanel` → `PanelCoordinator`(一层),不再经 AppController 中转                                     |
 
 ## 6. 验证
 
@@ -128,6 +128,6 @@ private:
 - `AppController`:683 → **388 行**;`PanelCoordinator`:**340 行**(`src/panel_coordinator.{h,cpp}`,顶层可执行目标)。
 - **PanelCoordinator 归属**:因依赖 view 组件(ShortcutsPanel/SearchPanel/SettingsPanel/EQWidget),不能放入 `wusic_controller` 库(会触发 view→controller 循环依赖,链接报 `ShortcutsPanel::staticMetaObject` relocation),故置于 `WusicPlayer` 可执行目标(与 `app_controller` 同层)。
 - 信号直连:MainWindow 的搜索/设置/EQ 信号、LibraryBrowserWidget 的媒体库配置信号、SidePanel 的歌词配置信号均直连 `PanelCoordinator`。
-- 死转发清理:移除 `LibraryInteractionService::sgnTrackPropertyRequested`(无消费方;TagWriteback 已由 AppController 直连 SongTableView);删除 `AppController::tag_edit_widget_` 死成员。
+- 死转发清理:移除 `LibraryInteractionService::sgn_track_property_requested`(无消费方;TagWriteback 已由 AppController 直连 SongTableView);删除 `AppController::tag_edit_widget_` 死成员。
 - **API 改造(第 4 项)**:`PlaylistManager::nextTrack/prevTrack`、`PlaylistController::nextTrack/prevTrack` 返回 `EntryId`(条目身份,不再返回 filepath);新增 `PlaylistController::trackFilePath(EntryId)`;`PlaybackService` 上/下曲与自然结束改为「身份 → 解析 → 播放」。返回 `EntryId` 而非库级 `TrackId`(播放列表上下文;外部条目无库级身份)。
 - 测试:`tb_playlist` 补 nextTrack/prevTrack 身份+导航断言;`tb_search_backend` 补 trackFilePath 解析;ctest 8/8 通过。

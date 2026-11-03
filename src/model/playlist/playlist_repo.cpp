@@ -1,6 +1,6 @@
 #include "playlist_repo.h"
 
-#include <algorithm>
+#include <ranges>
 
 #include <QCoreApplication>
 #include <QDir>
@@ -20,10 +20,11 @@
 #include "core/logger/logger_manager.h"
 namespace
 {
+// NOLINTNEXTLINE
 Logger* logger = LoggerManager::file_logger("playlist_repo", {"console", "gui"});
-}
+} // namespace
 
-static QJsonObject metaToJson(const TrackMetaData& meta)
+static QJsonObject meta_to_json(const TrackMetaData& meta)
 {
     QJsonObject obj;
     obj["album"]        = meta.album;
@@ -48,7 +49,7 @@ static QJsonObject metaToJson(const TrackMetaData& meta)
     return obj;
 }
 
-static void applyJsonToMeta(const QJsonObject& obj, TrackMetaData& meta)
+static void apply_json_to_meta(const QJsonObject& obj, TrackMetaData& meta)
 {
     meta.album        = obj.value("album").toString(meta.album);
     meta.album_artist = obj.value("album_artist").toString(meta.album_artist);
@@ -71,17 +72,17 @@ static void applyJsonToMeta(const QJsonObject& obj, TrackMetaData& meta)
     meta.year         = obj.value("year").toInt(meta.year);
 }
 
-static QString resolvePlaylistsCacheDir()
+static QString resolve_playlists_cache_dir()
 {
     QString base = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     if (base.isEmpty()) {
-        return QString();
+        return {};
     }
 
-    QDir baseDir(base);
-    baseDir.mkpath(".");
+    QDir base_dir(base);
+    base_dir.mkpath(".");
 
-    const QString playlists_dir = baseDir.filePath("playlists");
+    const QString playlists_dir = base_dir.filePath("playlists");
     QDir(playlists_dir).mkpath(".");
 
     return playlists_dir;
@@ -89,22 +90,20 @@ static QString resolvePlaylistsCacheDir()
 
 PlaylistRepo::PlaylistRepo(QObject* parent) : QObject(parent)
 {
-    m_cache_dir = resolvePlaylistsCacheDir();
+    cache_dir_ = resolve_playlists_cache_dir();
 }
-
-PlaylistRepo::~PlaylistRepo() {}
 
 void PlaylistRepo::clear_list()
 {
-    m_list.clear();
+    list_.clear();
 }
 
-void PlaylistRepo::save_list_to_cache(std::shared_ptr<Playlist> playlist)
+void PlaylistRepo::save_list_to_cache(const std::shared_ptr<Playlist>& playlist)
 {
     if (!playlist) {
         return;
     }
-    if (m_cache_dir.isEmpty()) {
+    if (cache_dir_.isEmpty()) {
         logger->warn("Cache dir is empty, skip saving playlist.");
         return;
     }
@@ -123,7 +122,7 @@ void PlaylistRepo::load_cache()
 {
     emit sgn_cache_load_started();
     load_cache_from_disk();
-    emit sgn_cache_load_finished(m_list.size());
+    emit sgn_cache_load_finished(static_cast<int>(list_.size()));
 }
 
 void PlaylistRepo::load_cache_async()
@@ -153,12 +152,12 @@ void PlaylistRepo::load_cache_async()
                     }
                 }
                 if (lists.isEmpty()) {
-                    emit self->sgn_cache_load_finished(self->m_list.size());
+                    emit self->sgn_cache_load_finished(static_cast<int>(self->list_.size()));
                     return;
                 }
-                self->m_list += lists;
+                self->list_ += lists;
                 emit self->sgn_playlist_changed();
-                emit self->sgn_cache_load_finished(self->m_list.size());
+                emit self->sgn_cache_load_finished(static_cast<int>(self->list_.size()));
             },
             Qt::QueuedConnection);
     });
@@ -168,12 +167,11 @@ void PlaylistRepo::load_cache_async()
 
 QString PlaylistRepo::cache_file_path(const PlaylistId& pid) const
 {
-    QDir dir(m_cache_dir);
+    QDir dir(cache_dir_);
     return dir.filePath(pid.to_string_without_brace() + ".wcpl");
 }
 
-bool PlaylistRepo::write_json_playlist(QIODevice& device,
-                                       const std::shared_ptr<Playlist>& playlist) const
+bool PlaylistRepo::write_json_playlist(QIODevice& device, const std::shared_ptr<Playlist>& playlist)
 {
     if (!playlist) {
         return false;
@@ -190,11 +188,11 @@ bool PlaylistRepo::write_json_playlist(QIODevice& device,
         QJsonObject t;
         t["entry_id"]         = track.entry_id.to_string_without_brace();
         t["library_track_id"] = track.library_track_id.to_string_without_brace();
-        t["source"]           = track.source == TrackSource::library ? "library" : "external";
+        t["source"]           = track.source == TrackSource::Library ? "library" : "external";
         t["filepath"]         = track.filepath;
         t["missing"]          = track.missing;
-        if (track.meta.isValid) {
-            t["meta"] = metaToJson(track.meta);
+        if (track.meta.is_valid) {
+            t["meta"] = meta_to_json(track.meta);
         }
         tracks.append(t);
     }
@@ -205,37 +203,37 @@ bool PlaylistRepo::write_json_playlist(QIODevice& device,
     return true;
 }
 
-bool PlaylistRepo::load_json_playlist(const QByteArray& data, const QString& fallbackName,
+bool PlaylistRepo::load_json_playlist(const QByteArray& data, const QString& fallback_name,
                                       std::shared_ptr<Playlist>& out_playlist,
-                                      bool* out_legacy_format) const
+                                      bool* out_legacy_format)
 {
     if (out_legacy_format) {
         *out_legacy_format = false;
     }
 
-    QJsonParseError parseError;
-    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
-    if (parseError.error != QJsonParseError::NoError || !doc.isObject()) {
+    QJsonParseError parse_error;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &parse_error);
+    if (parse_error.error != QJsonParseError::NoError || !doc.isObject()) {
         return false;
     }
 
-    QJsonObject root       = doc.object();
-    QJsonValue tracksValue = root.value("tracks");
-    if (!tracksValue.isArray()) {
+    QJsonObject root        = doc.object();
+    QJsonValue tracks_value = root.value("tracks");
+    if (!tracks_value.isArray()) {
         return false;
     }
 
-    QJsonValue idValue = root.value("id");
-    PlaylistId pid     = PlaylistId(idValue.toString());
+    QJsonValue id_value = root.value("id");
+    PlaylistId pid      = PlaylistId(id_value.toString());
     if (pid.is_null()) {
         pid = PlaylistId::create_uuid();
     }
 
-    QString name = root.value("name").toString(fallbackName);
+    QString name = root.value("name").toString(fallback_name);
     out_playlist->new_uuid(pid);
     out_playlist->set_playlist_name(name);
 
-    QJsonArray tracks = tracksValue.toArray();
+    QJsonArray tracks = tracks_value.toArray();
     for (const auto& item : tracks) {
         if (!item.isObject()) {
             continue;
@@ -254,19 +252,19 @@ bool PlaylistRepo::load_json_playlist(const QByteArray& data, const QString& fal
             *out_legacy_format = true;
         }
         Track t = tid.is_null() ? Track::from_filepath(filepath) : Track::from_entry(tid, filepath);
-        t.source           = obj.value("source").toString() == "library" ? TrackSource::library
-                                                                         : TrackSource::external;
+        t.source           = obj.value("source").toString() == "library" ? TrackSource::Library
+                                                                         : TrackSource::External;
         t.library_track_id = TrackId(obj.value("library_track_id").toString());
         t.missing          = obj.value("missing").toBool(false);
         out_playlist->add_track_object(t);
 
-        QJsonValue metaValue = obj.value("meta");
-        if (metaValue.isObject()) {
+        QJsonValue meta_value = obj.value("meta");
+        if (meta_value.isObject()) {
             TrackMetaData meta;
             meta.filepath = filepath;
             meta.filename = QFileInfo(filepath).fileName();
-            applyJsonToMeta(metaValue.toObject(), meta);
-            meta.isValid = true;
+            apply_json_to_meta(meta_value.toObject(), meta);
+            meta.is_valid = true;
             out_playlist->update_track_meta(t.entry_id, meta);
         }
     }
@@ -286,7 +284,7 @@ void PlaylistRepo::load_cache_from_disk()
         }
     }
     if (!lists.isEmpty()) {
-        m_list += lists;
+        list_ += lists;
         emit sgn_playlist_changed();
     }
 }
@@ -295,11 +293,11 @@ QVector<std::pair<std::shared_ptr<Playlist>, bool>>
 PlaylistRepo::load_cache_from_disk_to_vector() const
 {
     QVector<std::pair<std::shared_ptr<Playlist>, bool>> loaded;
-    if (m_cache_dir.isEmpty()) {
+    if (cache_dir_.isEmpty()) {
         return loaded;
     }
 
-    QDir dir(m_cache_dir);
+    QDir dir(cache_dir_);
     if (!dir.exists()) {
         return loaded;
     }
@@ -320,10 +318,10 @@ PlaylistRepo::load_cache_from_disk_to_vector() const
 
         QByteArray data = file.readAll();
         auto playlist   = std::make_shared<Playlist>();
-        QFileInfo fileInfo(filepath);
-        QString fallbackName = fileInfo.baseName();
-        bool legacy_format   = false;
-        if (!load_json_playlist(data, fallbackName, playlist, &legacy_format)) {
+        QFileInfo file_info(filepath);
+        QString fallback_name = file_info.baseName();
+        bool legacy_format    = false;
+        if (!load_json_playlist(data, fallback_name, playlist, &legacy_format)) {
             continue;
         }
         loaded.push_back({playlist, legacy_format});
@@ -337,9 +335,9 @@ PlaylistId PlaylistRepo::create_list()
     PlaylistId new_id = PlaylistId::create_uuid();
     auto new_playlist = std::make_shared<Playlist>();
     new_playlist->new_uuid(new_id);
-    QString default_name = QString("New playlist %1").arg(m_list.size() + 1);
+    QString default_name = QString("New playlist %1").arg(list_.size() + 1);
     new_playlist->set_playlist_name(default_name);
-    m_list.push_back(new_playlist);
+    list_.push_back(new_playlist);
 
     save_list_to_cache(new_playlist);
 
@@ -353,18 +351,18 @@ PlaylistId PlaylistRepo::load_list(const QString& filepath)
     QFile file(filepath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         logger->warn("Failed to open file for loading: {}", filepath);
-        return PlaylistId();
+        return {};
     }
 
     auto new_playlist = std::make_shared<Playlist>();
-    QFileInfo fileInfo(filepath);
-    QString fallbackName = fileInfo.baseName();
+    QFileInfo file_info(filepath);
+    QString fallback_name = file_info.baseName();
 
-    QByteArray data      = file.readAll();
-    if (!load_json_playlist(data, fallbackName, new_playlist)) {
+    QByteArray data       = file.readAll();
+    if (!load_json_playlist(data, fallback_name, new_playlist)) {
         // old style: use filename as playlist
         file.seek(0);
-        new_playlist->set_playlist_name(fallbackName);
+        new_playlist->set_playlist_name(fallback_name);
 
         QTextStream in(&file);
         while (!in.atEnd()) {
@@ -376,7 +374,7 @@ PlaylistId PlaylistRepo::load_list(const QString& filepath)
         }
     }
 
-    m_list.push_back(new_playlist);
+    list_.push_back(new_playlist);
     emit sgn_playlist_changed();
     logger->info("Loading playlist from: {}", filepath);
     return new_playlist->id();
@@ -391,16 +389,16 @@ PlaylistId PlaylistRepo::load_list_batched(const QString& filepath, int batch_si
     QFile file(filepath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         logger->warn("Failed to open file for loading: {}", filepath);
-        return PlaylistId();
+        return {};
     }
 
     struct LoadEntry
     {
         PlaylistId id;
         QString filepath;
-        bool hasMeta = false;
+        bool has_meta = false;
         TrackMetaData meta;
-        TrackSource source = TrackSource::external;
+        TrackSource source = TrackSource::External;
         TrackId library_track_id;
         bool missing = false;
     };
@@ -409,35 +407,35 @@ PlaylistId PlaylistRepo::load_list_batched(const QString& filepath, int batch_si
     entries.reserve(1024);
 
     auto new_playlist = std::make_shared<Playlist>();
-    QFileInfo fileInfo(filepath);
-    QString fallbackName = fileInfo.baseName();
+    QFileInfo file_info(filepath);
+    QString fallback_name = file_info.baseName();
 
-    QByteArray data      = file.readAll();
-    QJsonParseError parseError;
-    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
-    if (parseError.error == QJsonParseError::NoError && doc.isObject()) {
-        QJsonObject root       = doc.object();
-        QJsonValue tracksValue = root.value("tracks");
+    QByteArray data       = file.readAll();
+    QJsonParseError parse_error;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &parse_error);
+    if (parse_error.error == QJsonParseError::NoError && doc.isObject()) {
+        QJsonObject root        = doc.object();
+        QJsonValue tracks_value = root.value("tracks");
 
-        PlaylistId pid         = PlaylistId(root.value("id").toString());
+        PlaylistId pid          = PlaylistId(root.value("id").toString());
         if (pid.is_null()) {
             pid = PlaylistId::create_uuid();
         }
 
-        QString name = root.value("name").toString(fallbackName);
+        QString name = root.value("name").toString(fallback_name);
         new_playlist->new_uuid(pid);
         new_playlist->set_playlist_name(name);
 
-        if (tracksValue.isArray()) {
-            QJsonArray tracks = tracksValue.toArray();
+        if (tracks_value.isArray()) {
+            QJsonArray tracks = tracks_value.toArray();
             entries.reserve(tracks.size());
             for (const auto& item : tracks) {
                 if (!item.isObject()) {
                     continue;
                 }
-                QJsonObject obj   = item.toObject();
-                QString trackPath = obj.value("filepath").toString();
-                if (trackPath.isEmpty()) {
+                QJsonObject obj    = item.toObject();
+                QString track_path = obj.value("filepath").toString();
+                if (track_path.isEmpty()) {
                     continue;
                 }
                 EntryId eid = EntryId(obj.value("entry_id").toString());
@@ -447,27 +445,27 @@ PlaylistId PlaylistRepo::load_list_batched(const QString& filepath, int batch_si
                 }
                 LoadEntry entry;
                 entry.id       = eid.to_tag_of<PlaylistIdTag>();
-                entry.filepath = trackPath;
-                entry.source   = obj.value("source").toString() == "library" ? TrackSource::library
-                                                                             : TrackSource::external;
+                entry.filepath = track_path;
+                entry.source = obj.value("source").toString() == "library" ? TrackSource::Library
+                                                                           : TrackSource::External;
                 entry.library_track_id = TrackId(obj.value("library_track_id").toString());
                 entry.missing          = obj.value("missing").toBool(false);
-                QJsonValue metaValue   = obj.value("meta");
-                if (metaValue.isObject()) {
+                QJsonValue meta_value  = obj.value("meta");
+                if (meta_value.isObject()) {
                     TrackMetaData meta;
-                    meta.filepath = trackPath;
-                    meta.filename = QFileInfo(trackPath).fileName();
-                    applyJsonToMeta(metaValue.toObject(), meta);
-                    meta.isValid  = true;
-                    entry.hasMeta = true;
-                    entry.meta    = meta;
+                    meta.filepath = track_path;
+                    meta.filename = QFileInfo(track_path).fileName();
+                    apply_json_to_meta(meta_value.toObject(), meta);
+                    meta.is_valid  = true;
+                    entry.has_meta = true;
+                    entry.meta     = meta;
                 }
                 entries.push_back(entry);
             }
         }
     } else {
         file.seek(0);
-        new_playlist->set_playlist_name(fallbackName);
+        new_playlist->set_playlist_name(fallback_name);
 
         QTextStream in(&file);
         while (!in.atEnd()) {
@@ -484,30 +482,30 @@ PlaylistId PlaylistRepo::load_list_batched(const QString& filepath, int batch_si
         new_playlist->new_uuid(PlaylistId::create_uuid());
     }
 
-    m_list.push_back(new_playlist);
+    list_.push_back(new_playlist);
     emit sgn_playlist_changed();
 
-    const PlaylistId pid = new_playlist->id();
-    const int totalCount = entries.size();
-    emit sgn_playlist_load_started(pid, totalCount);
+    const PlaylistId pid  = new_playlist->id();
+    const int total_count = static_cast<int>(entries.size());
+    emit sgn_playlist_load_started(pid, total_count);
 
-    auto entriesPtr = std::make_shared<QVector<LoadEntry>>(std::move(entries));
-    auto indexPtr   = std::make_shared<int>(0);
+    auto entries_ptr = std::make_shared<QVector<LoadEntry>>(std::move(entries));
+    auto index_ptr   = std::make_shared<int>(0);
 
     QPointer<PlaylistRepo> self(this);
-    std::shared_ptr<Playlist> playlistPtr = new_playlist;
+    std::shared_ptr<Playlist>& playlist_ptr = new_playlist;
 
-    std::function<void()> processBatch;
-    processBatch = [self, playlistPtr, entriesPtr, indexPtr, batch_size, totalCount, pid,
-                    &processBatch]() mutable {
+    std::function<void()> process_batch;
+    process_batch = [self, playlist_ptr, entries_ptr, index_ptr, batch_size, total_count, pid,
+                     &process_batch]() mutable {
         if (!self) {
             return;
         }
 
-        int start = *indexPtr;
-        int end   = std::min(start + batch_size, totalCount);
+        int start = *index_ptr;
+        int end   = std::min(start + batch_size, total_count);
         for (int i = start; i < end; ++i) {
-            const LoadEntry& entry = entriesPtr->at(i);
+            const LoadEntry& entry = entries_ptr->at(i);
             if (entry.filepath.isEmpty()) {
                 continue;
             }
@@ -520,27 +518,27 @@ PlaylistId PlaylistRepo::load_list_batched(const QString& filepath, int batch_si
             t.source           = entry.source;
             t.library_track_id = entry.library_track_id;
             t.missing          = entry.missing;
-            playlistPtr->add_track_object(t);
-            if (entry.hasMeta) {
-                playlistPtr->update_track_meta(t.entry_id, entry.meta);
+            playlist_ptr->add_track_object(t);
+            if (entry.has_meta) {
+                playlist_ptr->update_track_meta(t.entry_id, entry.meta);
             }
         }
 
-        *indexPtr = end;
-        emit self->playlistBatchLoaded(pid, end, totalCount);
+        *index_ptr = end;
+        emit self->playlist_batch_loaded(pid, end, total_count);
 
-        if (end < totalCount) {
-            QTimer::singleShot(0, self, processBatch);
+        if (end < total_count) {
+            QTimer::singleShot(0, self, process_batch);
             return;
         }
 
-        self->save_list_to_cache(playlistPtr);
+        self->save_list_to_cache(playlist_ptr);
         emit self->sgn_playlist_load_finished(pid);
     };
 
-    QTimer::singleShot(0, this, processBatch);
+    QTimer::singleShot(0, this, process_batch);
 
-    logger->info("Loading playlist (batched) from: {} total: {}", filepath, totalCount);
+    logger->info("Loading playlist (batched) from: {} total: {}", filepath, total_count);
     return pid;
 }
 
@@ -586,8 +584,8 @@ void PlaylistRepo::remove_list(const PlaylistId& pid)
         logger->warn("Playlist {} not found", pid.to_string());
         return;
     }
-    m_list.removeOne(src);
-    if (!m_cache_dir.isEmpty()) {
+    list_.removeOne(src);
+    if (!cache_dir_.isEmpty()) {
         QFile::remove(cache_file_path(pid));
     }
     emit sgn_playlist_changed();
@@ -595,26 +593,25 @@ void PlaylistRepo::remove_list(const PlaylistId& pid)
 
 void PlaylistRepo::reorder_lists(const QVector<PlaylistId>& ordered_ids)
 {
-    if (ordered_ids.size() != m_list.size()) {
+    if (ordered_ids.size() != list_.size()) {
         logger->warn("[PlaylistRepo] reorder_lists: size mismatch {} vs {}", ordered_ids.size(),
-                     m_list.size());
+                     list_.size());
         return;
     }
     QVector<std::shared_ptr<Playlist>> new_order;
     new_order.reserve(ordered_ids.size());
     for (const PlaylistId& pid : ordered_ids) {
-        auto it =
-            std::find_if(m_list.begin(), m_list.end(),
-                         [&pid](const std::shared_ptr<Playlist>& pl) { return pl->id() == pid; });
-        if (it != m_list.end()) {
+        auto it = std::ranges::find_if(
+            list_, [&pid](const std::shared_ptr<Playlist>& pl) { return pl->id() == pid; });
+        if (it != list_.end()) {
             new_order.push_back(*it);
         }
     }
-    if (new_order.size() != m_list.size()) {
+    if (new_order.size() != list_.size()) {
         logger->warn("[PlaylistRepo] reorder_lists: dropped entries, abort");
         return;
     }
-    m_list = std::move(new_order);
+    list_ = std::move(new_order);
     emit sgn_playlist_changed();
 }
 
@@ -633,7 +630,7 @@ void PlaylistRepo::copy_list(const PlaylistId& src_uuid)
     // deep-copy
     auto new_playlist = std::make_shared<Playlist>(*src);
     new_playlist->new_uuid();
-    m_list.push_back(new_playlist);
+    list_.push_back(new_playlist);
 
     save_list_to_cache(new_playlist);
 
@@ -653,7 +650,7 @@ void PlaylistRepo::add_track_to_playlist(const PlaylistId& pid, const QString& f
     }
     logger->info("Add track {} to {}", filepath, pid.to_string());
 
-    Track newTrack = src->add_track(filepath);
+    Track new_track = src->add_track(filepath);
     save_list_to_cache(src);
     emit sgn_playlist_changed();
 }
@@ -700,10 +697,10 @@ void PlaylistRepo::add_track_objects(const PlaylistId& pid, const QVector<Track>
     emit sgn_playlist_changed();
 }
 
-bool PlaylistRepo::isEmpty()
+bool PlaylistRepo::empty()
 {
-    m_list.shrink_to_fit();
-    if (m_list.size() == 0) {
+    list_.shrink_to_fit();
+    if (list_.empty()) {
         return true;
     }
     return false;
@@ -711,10 +708,11 @@ bool PlaylistRepo::isEmpty()
 
 std::shared_ptr<Playlist> PlaylistRepo::find_playlist_by_id(const PlaylistId& pid)
 {
-    if (pid.is_null())
+    if (pid.is_null()) {
         return nullptr;
+    }
 
-    for (const auto& it : m_list) {
+    for (const auto& it : list_) {
         if (it->id() == pid) {
             return it;
         }
@@ -725,5 +723,5 @@ std::shared_ptr<Playlist> PlaylistRepo::find_playlist_by_id(const PlaylistId& pi
 
 const QVector<std::shared_ptr<Playlist>>& PlaylistRepo::get_lists()
 {
-    return m_list;
+    return list_;
 }

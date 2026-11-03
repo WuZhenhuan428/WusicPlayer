@@ -23,8 +23,9 @@
 #include "core/logger/logger_manager.h"
 namespace
 {
+// NOLINTNEXTLINE
 Logger* logger = LoggerManager::file_logger("song_table_view", {"console", "gui"});
-}
+} // namespace
 
 namespace
 {
@@ -39,7 +40,7 @@ QVector<TrackId> decode_library_tracks(const QMimeData* mime)
     }
     QVector<TrackId> tids;
     const QJsonArray arr = QJsonDocument::fromJson(raw).array();
-    for (const QJsonValue& v : arr) {
+    for (const auto& v : arr) {
         const TrackId tid = TrackId::from_string(v.toString());
         if (!tid.is_null()) {
             tids.push_back(tid);
@@ -82,7 +83,7 @@ void SongTableDropView::dropEvent(QDropEvent* event)
         QTreeView::dropEvent(event);
         return;
     }
-    emit sgnLibraryTracksDropped(tids);
+    emit sgn_library_tracks_dropped(tids);
     event->acceptProposedAction();
 }
 
@@ -94,55 +95,55 @@ SongTableView::SongTableView(QWidget* parent) : QWidget(parent)
 
 void SongTableView::init_ui()
 {
-    m_tree_view = new SongTableDropView;
-    m_tree_view->setContextMenuPolicy(Qt::CustomContextMenu);
-    m_tree_view->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    m_tree_view->setSortingEnabled(true);
-    m_tree_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    m_tree_view->setAlternatingRowColors(true);
-    m_tree_header = m_tree_view->header();
-    m_tree_header->setSectionResizeMode(0, QHeaderView::Interactive);
-    m_tree_header->setSectionsMovable(true);
-    m_tree_header->setFirstSectionMovable(true);
-    m_tree_header->setMinimumSectionSize(30);
-    m_tree_header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    m_tree_header->setContextMenuPolicy(Qt::CustomContextMenu);
-    m_tree_view->setHeaderHidden(false);
-    m_tree_header->setVisible(true);
+    tree_view_ = new SongTableDropView;
+    tree_view_->setContextMenuPolicy(Qt::CustomContextMenu);
+    tree_view_->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    tree_view_->setSortingEnabled(true);
+    tree_view_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    tree_view_->setAlternatingRowColors(true);
+    tree_header_ = tree_view_->header();
+    tree_header_->setSectionResizeMode(0, QHeaderView::Interactive);
+    tree_header_->setSectionsMovable(true);
+    tree_header_->setFirstSectionMovable(true);
+    tree_header_->setMinimumSectionSize(30);
+    tree_header_->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    tree_header_->setContextMenuPolicy(Qt::CustomContextMenu);
+    tree_view_->setHeaderHidden(false);
+    tree_header_->setVisible(true);
     // 组节点(有子节点)显示展开/收起箭头,类似 LibraryBrowser
-    m_tree_view->setRootIsDecorated(true);
-    m_tree_view->setIndentation(12);
+    tree_view_->setRootIsDecorated(true);
+    tree_view_->setIndentation(12);
 
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
-    layout->addWidget(m_tree_view);
+    layout->addWidget(tree_view_);
 }
 
 void SongTableView::init_connections()
 {
-    connect(m_tree_view, &QTreeView::customContextMenuRequested, this,
+    connect(tree_view_, &QTreeView::customContextMenuRequested, this,
             &SongTableView::call_song_context_menu);
-    connect(m_tree_view, &QTreeView::doubleClicked, this, [this](const QModelIndex& index) {
+    connect(tree_view_, &QTreeView::doubleClicked, this, [this](const QModelIndex& index) {
         if (!index.isValid()) {
             return;
         }
-        auto* model = m_tree_view->model();
+        auto* model = tree_view_->model();
         // 组节点(有子节点)双击 → 展开/折叠, 与 LibraryBrowser 行为一致
         if (model && model->hasChildren(index)) {
-            m_tree_view->setExpanded(index, !m_tree_view->isExpanded(index));
+            tree_view_->setExpanded(index, !tree_view_->isExpanded(index));
             return;
         }
-        emit sgnPlayTrackByModelIndex(index);
+        emit sgn_play_track_by_model_index(index);
     });
-    connect(m_tree_view, &SongTableDropView::sgnLibraryTracksDropped, this,
-            &SongTableView::sgnLibraryTracksDropped);
-    connect(m_tree_header, &QHeaderView::customContextMenuRequested, this,
+    connect(tree_view_, &SongTableDropView::sgn_library_tracks_dropped, this,
+            &SongTableView::sgn_library_tracks_dropped);
+    connect(tree_header_, &QHeaderView::customContextMenuRequested, this,
             &SongTableView::show_header_context_menu);
 }
 
-void SongTableView::setModel(QAbstractItemModel* model)
+void SongTableView::set_model(QAbstractItemModel* model)
 {
-    m_tree_view->setModel(model);
+    tree_view_->setModel(model);
     if (!model) {
         return;
     }
@@ -152,14 +153,14 @@ void SongTableView::setModel(QAbstractItemModel* model)
 
 void SongTableView::update_song_view()
 {
-    QAbstractItemModel* model = m_tree_view->model();
+    QAbstractItemModel* model = tree_view_->model();
     if (!model) {
         return;
     }
 
     // 批量设置: 分组多时逐次 setExpanded 会触发大量布局/重绘(卡顿来源)
-    const bool updates_enabled = m_tree_view->updatesEnabled();
-    m_tree_view->setUpdatesEnabled(false);
+    const bool updates_enabled = tree_view_->updatesEnabled();
+    tree_view_->setUpdatesEnabled(false);
 
     // 递归展开所有分组层级(含多级分组), 组行跨列合并
     std::function<void(const QModelIndex&)> expand_all = [&](const QModelIndex& parent) {
@@ -169,43 +170,43 @@ void SongTableView::update_song_view()
             if (!model->hasChildren(idx)) {
                 continue;
             }
-            m_tree_view->setFirstColumnSpanned(row, parent, true);
-            m_tree_view->setExpanded(idx, true);
+            tree_view_->setFirstColumnSpanned(row, parent, true);
+            tree_view_->setExpanded(idx, true);
             expand_all(idx);
         }
     };
     expand_all(QModelIndex());
 
-    m_tree_view->setUpdatesEnabled(updates_enabled);
+    tree_view_->setUpdatesEnabled(updates_enabled);
 }
 
 QTreeView* SongTableView::tree_view() const
 {
-    return m_tree_view;
+    return tree_view_;
 }
 
 QHeaderView* SongTableView::tree_header() const
 {
-    return m_tree_header;
+    return tree_header_;
 }
 
 void SongTableView::call_song_context_menu(const QPoint& pos)
 {
-    QModelIndex index = m_tree_view->indexAt(pos);
+    QModelIndex index = tree_view_->indexAt(pos);
     if (!index.isValid()) {
         return;
     }
     index       = index.sibling(index.row(), 0);
 
-    auto* model = qobject_cast<PlaylistViewModel*>(m_tree_view->model());
+    auto* model = qobject_cast<PlaylistViewModel*>(tree_view_->model());
     if (!model) {
         return;
     }
 
     // 收集选中曲目(过滤组节点:Node::id 为空即组节点)
     QVector<EntryId> selected;
-    const auto rows = m_tree_view->selectionModel() ? m_tree_view->selectionModel()->selectedRows(0)
-                                                    : QModelIndexList{};
+    const auto rows = tree_view_->selectionModel() ? tree_view_->selectionModel()->selectedRows(0)
+                                                   : QModelIndexList{};
     if (rows.contains(index)) {
         for (const QModelIndex& idx : rows) {
             auto* node = static_cast<Node*>(idx.internalPointer());
@@ -227,53 +228,53 @@ void SongTableView::call_song_context_menu(const QPoint& pos)
 
     if (selected.size() == 1) {
         // ---- 单选菜单:保持现有功能 + Add to Playlist ----
-        auto* node                = static_cast<Node*>(index.internalPointer());
-        const TrackMetaData meta  = node ? node->meta : TrackMetaData{};
-        const QString path        = meta.filepath;
-        const EntryId tid         = selected.first();
+        auto* node                  = static_cast<Node*>(index.internalPointer());
+        const TrackMetaData meta    = node ? node->meta : TrackMetaData{};
+        const QString path          = meta.filepath;
+        const EntryId tid           = selected.first();
 
-        QAction* actPlay          = menu.addAction(tr("&Play"));
-        QAction* actRemove        = menu.addAction(tr("&Remove"));
-        QAction* actRemoveMissing = menu.addAction(tr("Remove &Missing Tracks"));
+        QAction* act_play           = menu.addAction(tr("&Play"));
+        QAction* act_remove         = menu.addAction(tr("&Remove"));
+        QAction* act_remove_missing = menu.addAction(tr("Remove &Missing Tracks"));
         menu.addSeparator();
         build_add_to_playlist_menu(&menu, selected);
         menu.addSeparator();
-        QAction* actOpen = menu.addAction(tr("&Open in file explorer"));
-        QAction* actProp = menu.addAction(tr("Property"));
+        QAction* act_open = menu.addAction(tr("&Open in file explorer"));
+        QAction* act_prop = menu.addAction(tr("Property"));
 
-        connect(actPlay, &QAction::triggered, this,
-                [this, index]() { emit sgnPlayTrackByModelIndex(index); });
-        connect(actProp, &QAction::triggered, this,
-                [this, tid, meta, path] { emit sgnTrackPropertyRequested(tid, path, meta); });
-        connect(actOpen, &QAction::triggered, this, [path]() {
+        connect(act_play, &QAction::triggered, this,
+                [this, index]() { emit sgn_play_track_by_model_index(index); });
+        connect(act_prop, &QAction::triggered, this,
+                [this, tid, meta, path] { emit sgn_track_property_requested(tid, path, meta); });
+        connect(act_open, &QAction::triggered, this, [path]() {
             QFileInfo file_info(path);
             const QUrl url = QUrl::fromLocalFile(file_info.absolutePath());
             if (!QDesktopServices::openUrl(url)) {
                 logger->debug("Failed to open folder: {}", file_info.absolutePath());
             }
         });
-        connect(actRemove, &QAction::triggered, this,
-                [this, tid]() { emit sgnRemoveTrackRequested(tid); });
-        connect(actRemoveMissing, &QAction::triggered, this,
-                &SongTableView::sgnRemoveMissingTracksRequested);
+        connect(act_remove, &QAction::triggered, this,
+                [this, tid]() { emit sgn_remove_track_requested(tid); });
+        connect(act_remove_missing, &QAction::triggered, this,
+                &SongTableView::sgn_remove_missing_tracks_requested);
     } else {
         // ---- 多选菜单:仅 Remove(批量)+ Add to Playlist ----
-        QAction* actRemove = menu.addAction("&Remove Selected");
+        QAction* act_remove = menu.addAction("&Remove Selected");
         build_add_to_playlist_menu(&menu, selected);
-        connect(actRemove, &QAction::triggered, this,
-                [this, selected]() { emit sgnRemoveTracksRequested(selected); });
+        connect(act_remove, &QAction::triggered, this,
+                [this, selected]() { emit sgn_remove_tracks_requested(selected); });
     }
 
-    menu.exec(m_tree_view->viewport()->mapToGlobal(pos));
+    menu.exec(tree_view_->viewport()->mapToGlobal(pos));
 }
 
 void SongTableView::build_add_to_playlist_menu(QMenu* menu, const QVector<EntryId>& track_ids)
 {
-    if (track_ids.isEmpty() || !m_playlist_provider) {
+    if (track_ids.isEmpty() || !playlist_provider_) {
         return;
     }
     auto* sub        = menu->addMenu(tr("Add to Playlist..."));
-    const auto lists = m_playlist_provider();
+    const auto lists = playlist_provider_();
     if (lists.isEmpty()) {
         QAction* empty = sub->addAction(tr("(No playlist)"));
         empty->setEnabled(false);
@@ -282,30 +283,30 @@ void SongTableView::build_add_to_playlist_menu(QMenu* menu, const QVector<EntryI
     for (const auto& [pid, name] : lists) {
         QAction* act = sub->addAction(name);
         connect(act, &QAction::triggered, this,
-                [this, pid, track_ids]() { emit sgnCopyTracksToPlaylist(pid, track_ids); });
+                [this, pid, track_ids]() { emit sgn_copy_tracks_to_playlist(pid, track_ids); });
     }
 }
 
 void SongTableView::set_playlist_list_provider(PlaylistListProvider provider)
 {
-    m_playlist_provider = std::move(provider);
+    playlist_provider_ = std::move(provider);
 }
 
 void SongTableView::show_header_context_menu(const QPoint& pos)
 {
-    const int logical_index = m_tree_header->logicalIndexAt(pos);
+    const int logical_index = tree_header_->logicalIndexAt(pos);
     QMenu menu(this);
-    QAction* actInsert  = menu.addAction(tr("Insert Column"));
+    QAction* act_insert = menu.addAction(tr("Insert Column"));
     QAction* act_rename = menu.addAction(tr("Rename"));
-    QAction* actRemove  = menu.addAction(tr("Remove"));
+    QAction* act_remove = menu.addAction(tr("Remove"));
 
-    connect(actInsert, &QAction::triggered, this, [this, logical_index]() {
-        auto* my_model = qobject_cast<PlaylistViewModel*>(m_tree_view->model());
+    connect(act_insert, &QAction::triggered, this, [this, logical_index]() {
+        auto* my_model = qobject_cast<PlaylistViewModel*>(tree_view_->model());
         if (!my_model) {
             return;
         }
         WInsertColumnDialog dialog(tr("Insert Column"), this);
-        const int max_index = my_model->get_columns().size();
+        const int max_index = static_cast<int>(my_model->get_columns().size());
         dialog.set_max_index(max_index);
         dialog.set_index(logical_index);
         if (dialog.exec() == QDialog::Accepted) {
@@ -315,49 +316,49 @@ void SongTableView::show_header_context_menu(const QPoint& pos)
     });
 
     connect(act_rename, &QAction::triggered, this, [this, logical_index]() {
-        auto* my_model = qobject_cast<PlaylistViewModel*>(m_tree_view->model());
+        auto* my_model = qobject_cast<PlaylistViewModel*>(tree_view_->model());
         if (!my_model) {
             return;
         }
         const auto& cols = my_model->get_columns();
         bool ok          = false;
-        QString new_name =
-            QInputDialog::getText(this, tr("Rename column"), tr("Input new name for this column:"),
-                                  QLineEdit::EchoMode::Normal, cols[logical_index].headerName, &ok);
+        QString new_name = QInputDialog::getText(
+            this, tr("Rename column"), tr("Input new name for this column:"),
+            QLineEdit::EchoMode::Normal, cols[logical_index].header_name, &ok);
         if (ok && !new_name.isEmpty()) {
             my_model->rename_column(logical_index, new_name);
         }
     });
 
-    connect(actRemove, &QAction::triggered, this, [this, logical_index]() {
-        auto* my_model = qobject_cast<PlaylistViewModel*>(m_tree_view->model());
+    connect(act_remove, &QAction::triggered, this, [this, logical_index]() {
+        auto* my_model = qobject_cast<PlaylistViewModel*>(tree_view_->model());
         if (!my_model) {
             return;
         }
         WColumnIndexDialog dialog(tr("Remove column"), tr("The column index will remove"), this);
-        const int max_index = my_model->get_columns().size() - 1;
+        const int max_index = static_cast<int>(my_model->get_columns().size() - 1);
         dialog.set_max_index(max_index);
         dialog.set_index(logical_index);
         if (dialog.exec() == QDialog::Accepted) {
             my_model->remove_column(dialog.index());
         }
     });
-    menu.exec(m_tree_header->mapToGlobal(pos));
+    menu.exec(tree_header_->mapToGlobal(pos));
 }
 
 void SongTableView::load_from_json(const QJsonObject& json)
 {
     const QJsonObject obj = json.value(this->config_sub_key()).toObject();
-    m_tree_header->blockSignals(true);
-    m_tree_header->restoreState(
+    tree_header_->blockSignals(true);
+    tree_header_->restoreState(
         QByteArray::fromBase64(obj.value("tree_header_state").toString().toUtf8()));
-    m_tree_header->blockSignals(false);
+    tree_header_->blockSignals(false);
 }
 
 QJsonObject SongTableView::save_to_json()
 {
     QJsonObject obj;
-    obj["tree_header_state"] = QString::fromUtf8(m_tree_header->saveState().toBase64());
+    obj["tree_header_state"] = QString::fromUtf8(tree_header_->saveState().toBase64());
     return obj;
 }
 

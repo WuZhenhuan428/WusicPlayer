@@ -1,11 +1,14 @@
 #include "path.hpp"
 
+#include <algorithm>
+#include <ranges>
+
 namespace utils::path
 {
 QString canonical_path(const QString& filepath)
 {
     QFileInfo info(filepath);
-    const QString canonical = info.canonicalFilePath();
+    QString canonical = info.canonicalFilePath();
     if (!canonical.isEmpty()) {
         return canonical;
     }
@@ -29,25 +32,22 @@ QString normalize_path(const QString& filepath)
 bool contains_suffix(const QString& filename, const QStringList& extensions)
 {
     QFileInfo info(filename);
-    QString suffix(info.suffix());
-    for (const QString& ext : extensions) {
-        if (suffix.compare(ext,
+    const QString suffix(info.suffix());
+    return std::ranges::any_of(extensions, [&suffix](const QString& ext) {
+        return suffix.compare(ext,
 #ifdef Q_OS_WIN
-                           Qt::CaseInsensitive
+                              Qt::CaseInsensitive
 #else
-                           Qt::CaseSensitive
+                              Qt::CaseSensitive
 #endif
-                           ) == 0) {
-            return true;
-        }
-    }
-    return false;
+                              ) == 0;
+    });
 }
 
 std::optional<std::tuple<int, int, int>>
 parse_versioned_unix_so([[maybe_unused]] const std::string& filepath)
 {
-#if defined(Q_OS_UNIX)
+#ifdef Q_OS_UNIX
     // 整体思路: 寻找 ".so" 子串, 存在时解析版本号子串是否存在 / 合法
     if (!filepath.contains(".so")) {
         return std::nullopt;
@@ -65,82 +65,82 @@ parse_versioned_unix_so([[maybe_unused]] const std::string& filepath)
     int major = 0;
     int minor = 0;
     int patch = 0;
-    enum class VERSION_STATUS
+    enum class VersionStatus
     {
-        START,
-        MAJOR,
-        POINT_1,
-        MINOR,
-        POINT_2,
-        PATCH,
-        ERROR,
+        Start,
+        Major,
+        Point1,
+        Minor,
+        Point2,
+        Patch,
+        Error,
     };
     std::string version = filepath.substr(pos_so + 4, filepath.size()); // +4: 跳过第一个小数点
-    auto state          = VERSION_STATUS::START;
+    auto state          = VersionStatus::Start;
     // 循环结束后自动停止, 不存在 END 状态
-    for (auto ch_ : version) {
+    for (auto ch : version) {
         switch (state) {
-        case VERSION_STATUS::START:
-            if (ch_ >= '0' && ch_ <= '9') {
-                major += (ch_ - '0');
-                state = VERSION_STATUS::MAJOR;
+        case VersionStatus::Start:
+            if (ch >= '0' && ch <= '9') {
+                major += (ch - '0');
+                state = VersionStatus::Major;
             } else {
-                state = VERSION_STATUS::ERROR;
+                state = VersionStatus::Error;
             }
             break;
-        case VERSION_STATUS::MAJOR:
-            if (ch_ >= '0' && ch_ <= '9') {
+        case VersionStatus::Major:
+            if (ch >= '0' && ch <= '9') {
                 major *= 10;
-                major += (ch_ - '0');
-                state = VERSION_STATUS::MAJOR;
-            } else if (ch_ == '.') {
-                state = VERSION_STATUS::POINT_1;
+                major += (ch - '0');
+                state = VersionStatus::Major;
+            } else if (ch == '.') {
+                state = VersionStatus::Point1;
             } else {
-                state = VERSION_STATUS::ERROR;
+                state = VersionStatus::Error;
             }
             break;
-        case VERSION_STATUS::POINT_1:
-            if (ch_ >= '0' && ch_ <= '9') {
-                minor += (ch_ - '0');
-                state = VERSION_STATUS::MINOR;
+        case VersionStatus::Point1:
+            if (ch >= '0' && ch <= '9') {
+                minor += (ch - '0');
+                state = VersionStatus::Minor;
             } else {
-                state = VERSION_STATUS::ERROR;
+                state = VersionStatus::Error;
             }
             break;
-        case VERSION_STATUS::MINOR:
-            if (ch_ >= '0' && ch_ <= '9') {
+        case VersionStatus::Minor:
+            if (ch >= '0' && ch <= '9') {
                 minor *= 10;
-                minor += (ch_ - '0');
-                state = VERSION_STATUS::MINOR;
-            } else if (ch_ == '.') {
-                state = VERSION_STATUS::POINT_2;
+                minor += (ch - '0');
+                state = VersionStatus::Minor;
+            } else if (ch == '.') {
+                state = VersionStatus::Point2;
             } else {
-                state = VERSION_STATUS::ERROR;
+                state = VersionStatus::Error;
             }
             break;
-        case VERSION_STATUS::POINT_2:
-            if (ch_ >= '0' && ch_ <= '9') {
-                patch += (ch_ - '0');
-                state = VERSION_STATUS::PATCH;
+        case VersionStatus::Point2:
+            if (ch >= '0' && ch <= '9') {
+                patch += (ch - '0');
+                state = VersionStatus::Patch;
             } else {
-                state = VERSION_STATUS::ERROR;
+                state = VersionStatus::Error;
             }
             break;
-        case VERSION_STATUS::PATCH:
-            if (ch_ >= '0' && ch_ <= '9') {
+        case VersionStatus::Patch:
+            if (ch >= '0' && ch <= '9') {
                 patch *= 10;
-                patch += (ch_ - '0');
-                state = VERSION_STATUS::PATCH;
+                patch += (ch - '0');
+                state = VersionStatus::Patch;
             } else {
-                state = VERSION_STATUS::ERROR;
+                state = VersionStatus::Error;
             }
             break;
-        case VERSION_STATUS::ERROR:
+        case VersionStatus::Error:
             continue;
         }
     }
-    if (state == VERSION_STATUS::MAJOR || state == VERSION_STATUS::MINOR ||
-        state == VERSION_STATUS::PATCH) {
+    if (state == VersionStatus::Major || state == VersionStatus::Minor ||
+        state == VersionStatus::Patch) {
         return std::make_tuple(major, minor, patch);
     }
     // 只检查合法性也要按位检查, 和解析没多大区别了, 那就干脆解析吧...

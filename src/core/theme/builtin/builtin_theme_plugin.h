@@ -19,20 +19,19 @@ class BuiltinThemePlugin : public IThemePlugin
 
 public:
     // 注意: QObject 经接口链间接继承, 不能传 parent(由组合根以 unique_ptr 持有)
-    BuiltinThemePlugin(const QString& id, const QString& name, const QString& version,
-                       const QString& description, const QString& author,
-                       const QVector<QString>& categories, ThemePalette palette);
+    BuiltinThemePlugin(QString id, QString name, QString version, QString description,
+                       QString author, const QVector<QString>& categories, ThemePalette palette);
 
     // ---- IBasicPlugin ----
-    QString id() const override;
-    QString name() const override;
-    QString version() const override;
-    QString description() const override;
-    QString author() const override;
-    QVector<QString> categories() const override;
+    [[nodiscard]] QString id() const override;
+    [[nodiscard]] QString name() const override;
+    [[nodiscard]] QString version() const override;
+    [[nodiscard]] QString description() const override;
+    [[nodiscard]] QString author() const override;
+    [[nodiscard]] QVector<QString> categories() const override;
 
     // ---- IThemePlugin ----
-    ThemePalette createPalette() const override;
+    [[nodiscard]] ThemePalette create_palette() const override;
 
 private:
     QString id_;

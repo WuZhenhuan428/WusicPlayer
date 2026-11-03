@@ -36,8 +36,8 @@ struct std::formatter<QByteArray> : formatter<std::string_view>
 class Logger
 {
 public:
-    explicit Logger(const QString& name, QVector<std::shared_ptr<LogSink>> sinks, LogLevel level) :
-        name_(name), sinks_(std::move(sinks)), level_(level)
+    explicit Logger(QString name, QVector<std::shared_ptr<LogSink>> sinks, LogLevel level) :
+        name_(std::move(name)), sinks_(std::move(sinks)), level_(level)
     {}
 
     template <typename... Args>
@@ -57,7 +57,7 @@ public:
         LogRecord rec = this->make_record(level, std::move(msg), loc);
 
         {
-            std::lock_guard<std::mutex> lock(this->mutex_);
+            std::scoped_lock lock(this->mutex_);
             for (const auto& sink : this->sinks_) {
                 sink->write(rec);
             }
@@ -76,7 +76,7 @@ public:
             return;
         }
         {
-            std::lock_guard<std::mutex> lock(this->mutex_);
+            std::scoped_lock lock(this->mutex_);
             for (const auto& sink : this->sinks_) {
                 sink->write(rec);
             }
@@ -87,31 +87,31 @@ public:
     template <typename... Args>
     void trace(std::format_string<Args...> fmt, Args&&... args) const
     {
-        this->log(LogLevel::trace, fmt, std::forward<Args>(args)...);
+        this->log(LogLevel::Trace, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     void debug(std::format_string<Args...> fmt, Args&&... args) const
     {
-        this->log(LogLevel::debug, fmt, std::forward<Args>(args)...);
+        this->log(LogLevel::Debug, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     void info(std::format_string<Args...> fmt, Args&&... args) const
     {
-        this->log(LogLevel::info, fmt, std::forward<Args>(args)...);
+        this->log(LogLevel::Info, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     void warn(std::format_string<Args...> fmt, Args&&... args) const
     {
-        this->log(LogLevel::warn, fmt, std::forward<Args>(args)...);
+        this->log(LogLevel::Warn, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     void error(std::format_string<Args...> fmt, Args&&... args) const
     {
-        this->log(LogLevel::error, fmt, std::forward<Args>(args)...);
+        this->log(LogLevel::Error, fmt, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
@@ -120,10 +120,10 @@ public:
     {
         std::string raw = std::format(fmt, std::forward<Args>(args)...);
         QString msg     = QString::fromStdString(raw);
-        LogRecord rec   = this->make_record(LogLevel::warn, std::move(msg), loc);
+        LogRecord rec   = this->make_record(LogLevel::Warn, std::move(msg), loc);
 
         {
-            std::lock_guard<std::mutex> lock(this->mutex_);
+            std::scoped_lock lock(this->mutex_);
             for (const auto& sink : this->sinks_) {
                 sink->write(rec);
             }
@@ -133,7 +133,7 @@ public:
     template <typename... Args>
     [[noreturn]] void fatal(std::format_string<Args...> fmt, Args&&... args) const
     {
-        this->log(LogLevel::fatal, fmt, std::forward<Args>(args)...);
+        this->log(LogLevel::Fatal, fmt, std::forward<Args>(args)...);
         for (const auto& sink : this->sinks_) {
             sink->flush();
         }
@@ -152,13 +152,13 @@ public:
 
     void add_sink(std::shared_ptr<LogSink> sink)
     {
-        std::lock_guard<std::mutex> lock(this->mutex_);
+        std::scoped_lock lock(this->mutex_);
         this->sinks_.push_back(std::move(sink));
     }
 
     void remove_sink(const QString& sink_name)
     {
-        std::lock_guard<std::mutex> lock(this->mutex_);
+        std::scoped_lock lock(this->mutex_);
         for (auto it = sinks_.begin(); it != sinks_.end();) {
             if (it->get()->name() == sink_name) {
                 it = sinks_.erase(it);
@@ -170,12 +170,12 @@ public:
 
     void replace_sinks(QVector<std::shared_ptr<LogSink>>&& sinks)
     {
-        std::lock_guard<std::mutex> lock(this->mutex_);
+        std::scoped_lock lock(this->mutex_);
         this->sinks_ = std::move(sinks);
     }
 
 private:
-    const LogLocation from_std_source_ocation(std::source_location loc) const
+    static LogLocation from_std_source_ocation(std::source_location loc)
     {
         LogLocation qt_loc;
         qt_loc.file     = loc.file_name();
@@ -185,13 +185,13 @@ private:
         return qt_loc;
     }
 
-    const LogRecord make_record(LogLevel level, QString&& msg, std::source_location loc) const
+    LogRecord make_record(LogLevel level, QString&& msg, std::source_location loc) const
     {
         LogRecord r;
         r.level        = level;
         r.name         = name_;
-        r.message      = msg;
-        r.location     = this->from_std_source_ocation(loc);
+        r.message      = std::move(msg);
+        r.location     = Logger::from_std_source_ocation(loc);
         r.timestamp_ms = QDateTime::currentMSecsSinceEpoch();
         return r;
     }

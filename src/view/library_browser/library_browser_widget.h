@@ -26,7 +26,7 @@ class QTreeView;
  *   [搜索 QLineEdit(防抖)]
  *   [QTreeView 分组树(分组节点默认折叠)]
  *
- * 双击曲目 → 经 PlaybackQueueService 入队即播(未注入时发 sgnPlayRequested 兜底);
+ * 双击曲目 → 经 PlaybackQueueService 入队即播(未注入时发 sgn_play_requested 兜底);
  * 双击分组节点 → 展开/折叠。
  *
  * 右键 Item:播放 / 添加到播放列表 / 刷新(分组节点与曲目节点统一;不提供背景右键)。
@@ -45,9 +45,9 @@ public:
     void set_library_manager(LibraryManager* lib);
     void set_playback_queue_service(PlaybackQueueService* svc);
 
-    LibraryBrowseModel* model() const
+    [[nodiscard]] LibraryBrowseModel* model() const
     {
-        return m_model;
+        return model_;
     }
 
     // 需要目标播放列表(右键子菜单用):返回 (id, name) 列表(含当前列表)
@@ -57,19 +57,19 @@ public:
     // config S/L interface
     void load_from_json(const QJsonObject& json) override;
     QJsonObject save_to_json() override;
-    QString config_sub_key() const override;
+    [[nodiscard]] QString config_sub_key() const override;
 
 signals:
     // 双击库曲目请求播放(PlaybackQueueService 未注入时的兜底路径)
-    void sgnPlayRequested(const TrackId& track_id);
+    void sgn_play_requested(const TrackId& track_id);
     // 播放一组库曲目(右键"播放"批量)
-    void sgnPlayTracksRequested(QVector<TrackId> track_ids);
+    void sgn_play_tracks_requested(QVector<TrackId> track_ids);
     // 把库曲目复制到目标播放列表(右键"Add to Playlist")
-    void sgnAddTracksToPlaylist(PlaylistId dst_pid, QVector<TrackId> track_ids);
+    void sgn_add_tracks_to_playlist(PlaylistId dst_pid, QVector<TrackId> track_ids);
     // 右键菜单: 刷新媒体库
-    void sgnRefreshLibraryRequested();
+    void sdn_refresh_library_requested();
     // 配置按钮:跳转设置面板 "Media Library" 页
-    void sgnOpenLibrarySettingsRequested();
+    void sgn_open_library_settings_requested();
 
 private:
     void init_ui();
@@ -84,15 +84,15 @@ private:
     // 把模型当前状态(预设 or DSL)同步到分类下拉框
     void sync_grouping_combo();
 
-    QComboBox* m_cb_grouping    = nullptr;
-    QPushButton* m_btn_settings = nullptr;
-    QPushButton* m_btn_config   = nullptr;
-    QLineEdit* m_le_keyword     = nullptr;
-    QTreeView* m_tree           = nullptr;
-    LibraryBrowseModel* m_model = nullptr;
-    QTimer* m_tim_input         = nullptr;
-    PlaylistListProvider m_playlist_provider;
+    QComboBox* cb_grouping_    = nullptr;
+    QPushButton* btn_settings_ = nullptr;
+    QPushButton* btn_config_   = nullptr;
+    QLineEdit* le_keyword_     = nullptr;
+    QTreeView* tree_           = nullptr;
+    LibraryBrowseModel* model_ = nullptr;
+    QTimer* tim_input_         = nullptr;
+    PlaylistListProvider playlist_provider_;
 
-    LibraryManager* m_lib             = nullptr; // 非拥有
-    PlaybackQueueService* m_queue_svc = nullptr; // 非拥有
+    LibraryManager* lib_             = nullptr; // 非拥有
+    PlaybackQueueService* queue_svc_ = nullptr; // 非拥有
 };

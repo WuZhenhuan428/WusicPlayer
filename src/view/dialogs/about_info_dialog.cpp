@@ -13,8 +13,9 @@
 #include "core/logger/logger_manager.h"
 namespace
 {
+// NOLINTNEXTLINE
 static auto logger = LoggerManager::instance().file_logger("about_dialog", {"console", "gui"});
-}
+} // namespace
 
 AboutItem::AboutItem(const QString& title, const QString& text, const QString& url,
                      QWidget* parent) : QWidget(parent), url_(url)
@@ -67,7 +68,7 @@ AboutInfoDialog::AboutInfoDialog(QWidget* parent) : QWidget(parent)
     // 1.2 加载图标
     lb_app_icon_ = new QLabel(this);
     auto icon    = QPixmap(":icons/main_64_64.ico");
-    lb_app_icon_->setPixmap(std::move(icon));
+    lb_app_icon_->setPixmap(icon);
     hbl_header_->setAlignment(Qt::AlignLeft);
     hbl_header_->addWidget(lb_app_icon_);
     hbl_header_->addLayout(vbl_text_);
@@ -177,6 +178,8 @@ void AboutInfoDialog::keyPressEvent(QKeyEvent* event)
     switch (event->key()) {
     case Qt::Key_Escape:
         this->close();
+        break;
+    default:
         break;
     }
 }

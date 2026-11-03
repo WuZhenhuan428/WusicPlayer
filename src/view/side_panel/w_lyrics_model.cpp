@@ -8,12 +8,11 @@
 #include "core/logger/logger_manager.h"
 namespace
 {
+// NOLINTNEXTLINE
 Logger* logger = LoggerManager::file_logger("lyrics_model", {"console", "gui"});
-}
+} // namespace
 
 WLyricsModel::WLyricsModel(QObject* parent) : QAbstractListModel(parent) {}
-
-WLyricsModel::~WLyricsModel() {}
 
 void WLyricsModel::set_default_info(const TrackMetaData& meta)
 {
@@ -26,65 +25,65 @@ void WLyricsModel::set_default_info(const TrackMetaData& meta)
     const QString title_artist = title + QStringLiteral(" - ") + artist;
 
     beginResetModel();
-    m_parser.clear();
-    m_lrc_file            = {};
+    parser_.clear();
+    lrc_file_             = {};
     QString default_lines = QStringLiteral("[00:00.00] %1\n[00:01.00] %2").arg(title_artist, album);
-    m_raw_lyrics_text     = default_lines;
-    m_parser.parseString(default_lines.toUtf8().toStdString());
-    m_lrc_file    = m_parser.getData();
-    m_current_row = -1;
+    raw_lyrics_text_      = default_lines;
+    parser_.parseString(default_lines.toUtf8().toStdString());
+    lrc_file_    = parser_.getData();
+    current_row_ = -1;
     endResetModel();
 
-    emit sgnUseTimelineFollow(false);
-    emit currentLineChanged(album, title_artist);
+    emit sgn_use_timeline_follow(false);
+    emit current_line_changed(album, title_artist);
 }
 
 bool WLyricsModel::set_raw_lyrics(const QString& raw_data)
 {
     beginResetModel();
-    m_parser.clear();
-    m_lrc_file    = {};
-    m_current_row = -1;
+    parser_.clear();
+    lrc_file_    = {};
+    current_row_ = -1;
     if (raw_data.isEmpty()) {
-        m_raw_lyrics_text.clear();
+        raw_lyrics_text_.clear();
         endResetModel();
-        emit currentLineChanged(QString(), QString());
+        emit current_line_changed(QString(), QString());
         return false;
     }
-    if (!m_parser.parseString(raw_data.toStdString())) {
+    if (!parser_.parseString(raw_data.toStdString())) {
         endResetModel();
-        emit currentLineChanged(QString(), QString());
+        emit current_line_changed(QString(), QString());
         return false;
     }
-    m_lrc_file        = m_parser.getData();
-    m_raw_lyrics_text = raw_data;
-    if (m_lrc_file.type == LrcParser::LrcType::WordSync) {
-        m_lrc_file = LrcParser::wordToLine(m_lrc_file);
+    lrc_file_        = parser_.getData();
+    raw_lyrics_text_ = raw_data;
+    if (lrc_file_.type == LrcParser::LrcType::WordSync) {
+        lrc_file_ = LrcParser::wordToLine(lrc_file_);
     }
     endResetModel();
-    emit sgnUseTimelineFollow(true);
-    emit currentLineChanged(QString(), QString());
+    emit sgn_use_timeline_follow(true);
+    emit current_line_changed(QString(), QString());
     return true;
 }
 
 bool WLyricsModel::set_local_lrc(const QString& filepath)
 {
     beginResetModel();
-    m_parser.clear();
-    m_lrc_file    = {};
-    m_current_row = -1;
+    parser_.clear();
+    lrc_file_    = {};
+    current_row_ = -1;
     if (filepath.isEmpty()) {
-        m_raw_lyrics_text.clear();
+        raw_lyrics_text_.clear();
         endResetModel();
-        emit currentLineChanged(QString(), QString());
+        emit current_line_changed(QString(), QString());
         return false;
     }
     QFileInfo audio_fileinfo(filepath);
     if (!audio_fileinfo.exists()) {
         logger->warn("[WARNING] Audio file does not exist: {}", filepath);
-        m_raw_lyrics_text.clear();
+        raw_lyrics_text_.clear();
         endResetModel();
-        emit currentLineChanged(QString(), QString());
+        emit current_line_changed(QString(), QString());
         return false;
     }
     QString lrc_path = audio_fileinfo.path() + "/" + audio_fileinfo.completeBaseName() + ".lrc";
@@ -92,105 +91,104 @@ bool WLyricsModel::set_local_lrc(const QString& filepath)
     if (possibel_lrc_fileinfo.exists() && possibel_lrc_fileinfo.isFile()) {
         QFile lrc_file(lrc_path);
         if (lrc_file.open(QIODevice::ReadOnly)) {
-            m_raw_lyrics_text = QString::fromUtf8(lrc_file.readAll());
+            raw_lyrics_text_ = QString::fromUtf8(lrc_file.readAll());
             lrc_file.close();
         }
 
-        m_parser.parseFile(lrc_path.toStdString());
-        m_lrc_file = m_parser.getData();
-        if (m_lrc_file.type == LrcParser::LrcType::WordSync) {
-            m_lrc_file = LrcParser::wordToLine(m_lrc_file);
+        parser_.parseFile(lrc_path.toStdString());
+        lrc_file_ = parser_.getData();
+        if (lrc_file_.type == LrcParser::LrcType::WordSync) {
+            lrc_file_ = LrcParser::wordToLine(lrc_file_);
         }
         endResetModel();
-        emit sgnUseTimelineFollow(true);
-        emit currentLineChanged(QString(), QString());
+        emit sgn_use_timeline_follow(true);
+        emit current_line_changed(QString(), QString());
         return true;
     }
-    m_raw_lyrics_text.clear();
+    raw_lyrics_text_.clear();
     endResetModel();
-    emit currentLineChanged(QString(), QString());
+    emit current_line_changed(QString(), QString());
     return false;
 }
 
 bool WLyricsModel::set_lrc_file_path(const QString& lrc_path)
 {
     beginResetModel();
-    m_parser.clear();
-    m_lrc_file    = {};
-    m_current_row = -1;
+    parser_.clear();
+    lrc_file_    = {};
+    current_row_ = -1;
 
     if (lrc_path.isEmpty()) {
-        m_raw_lyrics_text.clear();
+        raw_lyrics_text_.clear();
         endResetModel();
-        emit currentLineChanged(QString(), QString());
+        emit current_line_changed(QString(), QString());
         return false;
     }
 
     QFileInfo lrc_file_info(lrc_path);
     if (!lrc_file_info.exists() || !lrc_file_info.isFile()) {
-        m_raw_lyrics_text.clear();
+        raw_lyrics_text_.clear();
         endResetModel();
-        emit currentLineChanged(QString(), QString());
+        emit current_line_changed(QString(), QString());
         return false;
     }
 
     QFile lrc_file(lrc_path);
     if (lrc_file.open(QIODevice::ReadOnly)) {
-        m_raw_lyrics_text = QString::fromUtf8(lrc_file.readAll());
+        raw_lyrics_text_ = QString::fromUtf8(lrc_file.readAll());
         lrc_file.close();
     }
 
-    if (!m_parser.parseFile(lrc_path.toStdString())) {
-        m_raw_lyrics_text.clear();
+    if (!parser_.parseFile(lrc_path.toStdString())) {
+        raw_lyrics_text_.clear();
         endResetModel();
-        emit currentLineChanged(QString(), QString());
+        emit current_line_changed(QString(), QString());
         return false;
     }
 
-    m_lrc_file = m_parser.getData();
-    if (m_lrc_file.type == LrcParser::LrcType::WordSync) {
-        m_lrc_file = LrcParser::wordToLine(m_lrc_file);
+    lrc_file_ = parser_.getData();
+    if (lrc_file_.type == LrcParser::LrcType::WordSync) {
+        lrc_file_ = LrcParser::wordToLine(lrc_file_);
     }
 
     endResetModel();
-    emit sgnUseTimelineFollow(true);
-    emit currentLineChanged(QString(), QString());
+    emit sgn_use_timeline_follow(true);
+    emit current_line_changed(QString(), QString());
     return true;
 }
 
 QString WLyricsModel::raw_lyrics_text() const
 {
-    return m_raw_lyrics_text;
+    return raw_lyrics_text_;
 }
 
 int WLyricsModel::get_row_by_position(qint64 pos_ms)
 {
-    if (m_lrc_file.lyrics.empty()) {
+    if (lrc_file_.lyrics.empty()) {
         return -1;
     }
     // dichotomy
-    auto it = std::upper_bound(m_lrc_file.lyrics.begin(), m_lrc_file.lyrics.end(), pos_ms,
-                               [](qint64 ms, const LrcParser::LrcUnit& unit) {
-                                   return ms < static_cast<qint64>(unit.time_ms);
-                               });
-    if (it == m_lrc_file.lyrics.begin()) {
+    auto it = std::ranges::upper_bound(
+        lrc_file_.lyrics, pos_ms, std::less<>{},
+        [](const LrcParser::LrcUnit& unit) { return static_cast<qint64>(unit.time_ms); });
+    if (it == lrc_file_.lyrics.begin()) {
         return 0;
     }
-    return std::distance(m_lrc_file.lyrics.begin(), it) - 1;
+    return static_cast<int>(std::distance(lrc_file_.lyrics.begin(), it) - 1);
 }
 
 int WLyricsModel::current_row() const
 {
-    return m_current_row;
+    return current_row_;
 }
 
 QModelIndex WLyricsModel::index(int row, int column, const QModelIndex& parent) const
 {
     if (!hasIndex(row, column, parent)) {
-        return QModelIndex();
+        return {};
     }
-    if (row < 0 || row >= static_cast<int>(m_lrc_file.lyrics.size())) {
-        return QModelIndex();
+    if (row < 0 || row >= rowCount(parent)) {
+        return {};
     }
     return createIndex(row, column);
 }
@@ -208,20 +206,21 @@ int WLyricsModel::rowCount(const QModelIndex& parent) const
     if (parent.isValid()) {
         return 0;
     }
-    return m_lrc_file.lyrics.size();
+    return static_cast<int>(lrc_file_.lyrics.size());
 }
 
 QVariant WLyricsModel::data(const QModelIndex& index, int role) const
 {
     if (!index.isValid()) {
-        return QVariant();
+        return {};
     }
-    int row = index.row();
-    if (row < 0 || row >= static_cast<int>(m_lrc_file.lyrics.size())) {
-        return QVariant();
+    const int row         = index.row();
+    const int lyrics_size = static_cast<int>(lrc_file_.lyrics.size());
+    if (row < 0 || row >= lyrics_size) {
+        return {};
     }
 
-    const auto& unit = m_lrc_file.lyrics.at(row);
+    const auto& unit = lrc_file_.lyrics.at(row);
 
     if (role == Qt::DisplayRole) {
         return QString::fromStdString(unit.text);
@@ -235,50 +234,54 @@ QVariant WLyricsModel::data(const QModelIndex& index, int role) const
     }
 
     if (role == UserDefineRole::CurrentLine) {
-        return row == m_current_row;
+        return row == current_row_;
     }
-    return QVariant();
+    return {};
 }
 
 void WLyricsModel::set_current_position(qint64 pos_ms)
 {
     const int new_row = get_row_by_position(pos_ms);
-    if (new_row == m_current_row)
+    if (new_row == current_row_) {
         return;
+    }
 
-    const int old_row = m_current_row;
-    m_current_row     = new_row;
+    const int old_row = current_row_;
+    current_row_      = new_row;
 
     if (old_row >= 0 && old_row < rowCount()) {
         const QModelIndex idx = index(old_row, 0);
         emit dataChanged(idx, idx, {UserDefineRole::CurrentLine});
     }
-    if (m_current_row >= 0 && m_current_row < rowCount()) {
-        const QModelIndex idx = index(m_current_row, 0);
+    if (current_row_ >= 0 && current_row_ < rowCount()) {
+        const QModelIndex idx = index(current_row_, 0);
         emit dataChanged(idx, idx, {UserDefineRole::CurrentLine});
-        emit currentLineChanged(current_line_text(), next_line_text());
+        emit current_line_changed(current_line_text(), next_line_text());
     } else {
-        emit currentLineChanged(QString(), QString());
+        emit current_line_changed(QString(), QString());
     }
 }
 
 QString WLyricsModel::prev_line_text() const
 {
-    if (m_current_row < 1 || m_current_row >= rowCount() + 1)
-        return QString();
-    return data(index(m_current_row - 1, 0), Qt::DisplayRole).toString();
+    if (current_row_ < 1 || current_row_ >= rowCount() + 1) {
+        return {};
+    }
+    return data(index(current_row_ - 1, 0), Qt::DisplayRole).toString();
 }
 
 QString WLyricsModel::current_line_text() const
 {
-    if (m_current_row < 0 || m_current_row >= rowCount())
-        return QString();
-    return data(index(m_current_row, 0), Qt::DisplayRole).toString();
+    if (current_row_ < 0 || current_row_ >= rowCount()) {
+        return {};
+    }
+    return data(index(current_row_, 0), Qt::DisplayRole).toString();
 }
 
 QString WLyricsModel::next_line_text() const
 {
-    if (m_current_row < -1 || m_current_row >= rowCount() - 1)
-        return QString();
-    return data(index(m_current_row + 1, 0), Qt::DisplayRole).toString();
+    if (current_row_ < -1 || current_row_ >= rowCount() - 1) {
+        return {};
+    }
+    return data(index(current_row_ + 1, 0), Qt::DisplayRole).toString();
 }

@@ -25,7 +25,7 @@ static Playlist make_playlist()
     Playlist pl(QStringLiteral("dsl-test"));
     auto mk = [&](const QString& title, int year, const QString& genre) {
         Track t           = Track::from_filepath(QStringLiteral("/tmp/%1.mp3").arg(title));
-        t.meta.isValid    = true;
+        t.meta.is_valid   = true;
         t.meta.title      = title;
         t.meta.year       = year;
         t.meta.genre      = genre;
@@ -151,12 +151,12 @@ int main()
     // 9) format() 占位符("Unknown xxx")在 DSL 中视为空值 → nulls/unknown 生效
     {
         TrackMetaData meta;
-        meta.isValid = true;
-        meta.title   = QStringLiteral("T");
-        meta.album   = QStringLiteral("Unknown Album");
-        meta.artist  = QStringLiteral("Unknown Artist");
-        meta.genre   = QStringLiteral("Unknown Genre");
-        dsl::TrackMetaRow row(meta);
+        meta.is_valid = true;
+        meta.title    = QStringLiteral("T");
+        meta.album    = QStringLiteral("Unknown Album");
+        meta.artist   = QStringLiteral("Unknown Artist");
+        meta.genre    = QStringLiteral("Unknown Genre");
+        dsl::TrackMetaRow row(&meta);
         CHECK(row.property(QStringLiteral("album")).is_null());
         CHECK(row.property(QStringLiteral("artist")).is_null());
         CHECK(row.property(QStringLiteral("genre")).is_null());
@@ -170,10 +170,10 @@ int main()
     {
         Playlist pl(QStringLiteral("dsl-unknown"));
         auto mk2 = [&](const QString& title, const QString& album) {
-            Track t        = Track::from_filepath(QStringLiteral("/tmp/%1.mp3").arg(title));
-            t.meta.isValid = true;
-            t.meta.title   = title;
-            t.meta.album   = album;
+            Track t         = Track::from_filepath(QStringLiteral("/tmp/%1.mp3").arg(title));
+            t.meta.is_valid = true;
+            t.meta.title    = title;
+            t.meta.album    = album;
             pl.add_track_object(t);
         };
         mk2(QStringLiteral("A"), QStringLiteral("Album X"));

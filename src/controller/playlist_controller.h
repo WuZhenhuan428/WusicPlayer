@@ -15,7 +15,6 @@ class PlaylistController : public QObject, public IConfigurable
 public:
     explicit PlaylistController(PlaylistManager* manager, QWidget* dialog_parent = nullptr,
                                 QObject* parent = nullptr);
-    ~PlaylistController();
 
     void import_files(const PlaylistId& pid = PlaylistId());
     void import_dir(const PlaylistId& pid = PlaylistId());
@@ -40,45 +39,46 @@ public:
     int copy_tracks_to_playlist(const PlaylistId& src_pid, const QVector<EntryId>& entry_ids,
                                 const PlaylistId& dst_pid);
 
-    auto view_model() const -> decltype(std::declval<PlaylistManager*>()->get_view_model());
+    [[nodiscard]] auto view_model() const
+        -> decltype(std::declval<PlaylistManager*>()->get_view_model());
     // 返回下一/上一曲目的条目身份(EntryId);空表示无曲目可切
-    EntryId next_track() const;
-    EntryId prev_track() const;
+    [[nodiscard]] EntryId next_track() const;
+    [[nodiscard]] EntryId prev_track() const;
     // 条目身份 → 播放路径(当前播放列表;找不到返回空)
-    QString track_file_path(const EntryId& eid) const;
-    void play(int queueIndex);
+    [[nodiscard]] QString track_file_path(const EntryId& eid) const;
+    void play(int queue_index);
     // 在当前播放列表中按路径定位并设置 context(play_track);找到返回 true(供定位同步),
     // 找不到(库直播/外部/不在列表)返回 false。不触发播放,由调用方统一播放。
     bool locate_filepath(const QString& filepath);
     void switch_to_playlist(const PlaylistId& id);
 
     void set_play_mode(PlayMode mode);
-    PlayMode play_mode() const;
+    [[nodiscard]] PlayMode play_mode() const;
 
     // 全局默认解析策略(设置面板配置;持久化于本模块 config)
     void set_add_file_policy(AddFilePolicy policy);
-    AddFilePolicy add_file_policy() const;
+    [[nodiscard]] AddFilePolicy add_file_policy() const;
 
-    const QVector<std::shared_ptr<Playlist>> playlists() const;
-    PlaylistId current_playlist_id() const;
-    EntryId current_track_id() const;
-    const TrackMetaData current_metadata() const;
-    const std::shared_ptr<Playlist> current_playlist();
+    [[nodiscard]] QVector<std::shared_ptr<Playlist>> playlists() const;
+    [[nodiscard]] PlaylistId current_playlist_id() const;
+    [[nodiscard]] EntryId current_track_id() const;
+    [[nodiscard]] TrackMetaData current_metadata() const;
+    std::shared_ptr<Playlist> current_playlist();
 
     std::shared_ptr<Playlist> find_playlist_by_id(PlaylistId pid);
 
     void set_group_rules(const QVector<SortRule>& rules);
     void set_sort_rules(const QVector<SortRule>& rules);
-    const QVector<SortRule> group_rules() const;
-    const QVector<SortRule> sort_rules() const;
+    [[nodiscard]] QVector<SortRule> group_rules() const;
+    [[nodiscard]] QVector<SortRule> sort_rules() const;
 
     // config S/L interface
     void load_from_json(const QJsonObject& json) override;
     QJsonObject save_to_json() override;
-    QString config_sub_key() const override;
+    [[nodiscard]] QString config_sub_key() const override;
 
-    PlaylistId last_playlist_id() const;
-    EntryId last_track_id() const;
+    [[nodiscard]] PlaylistId last_playlist_id() const;
+    [[nodiscard]] EntryId last_track_id() const;
 
 signals:
     void sgn_playlist_changed();
@@ -91,11 +91,11 @@ public slots:
 
 private:
     // 把全局策略展开为实际生效策略(always_ask 时弹窗询问)
-    AddFilePolicy resolve_policy(AddFilePolicy by_operation_default) const;
+    [[nodiscard]] AddFilePolicy resolve_policy(AddFilePolicy by_operation_default) const;
 
 private:
-    PlaylistManager* m_manager = nullptr;
-    QWidget* m_dialogParent    = nullptr;
-    PlaylistId m_last_playlist_id;
-    EntryId m_last_track_id;
+    PlaylistManager* manager_ = nullptr;
+    QWidget* dialog_parent_   = nullptr;
+    PlaylistId last_playlist_id_;
+    EntryId last_track_id_;
 };

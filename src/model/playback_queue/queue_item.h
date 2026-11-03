@@ -19,15 +19,15 @@ struct QueueItem
     QString filepath;              // 规范化路径(播放依据)
     TrackMetaData meta;            // 元数据快照(入队时解析一次,主面板直接读)
 
-    bool is_library() const
+    [[nodiscard]] bool is_library() const
     {
         return !library_track_id.is_null();
     }
-    bool is_playlist() const
+    [[nodiscard]] bool is_playlist() const
     {
         return !playlist_entry_id.is_null();
     }
-    bool is_external() const
+    [[nodiscard]] bool is_external() const
     {
         return !is_library() && !is_playlist();
     }

@@ -8,8 +8,9 @@
 
 namespace
 {
+// NOLINTNEXTLINE
 auto* logger = LoggerManager::instance().file_logger("plugin_controller", {"gui", "console"});
-}
+} // namespace
 
 PluginController::PluginController(QObject* parent) :
     QObject(parent), plugin_manager_(std::make_unique<PluginManager>())
@@ -91,7 +92,7 @@ QString PluginController::config_sub_key() const
     return QStringLiteral("plugins");
 }
 
-const QVector<PluginDescriptor> PluginController::descriptors()
+QVector<PluginDescriptor> PluginController::descriptors()
 {
     return plugin_manager_->descriptors();
 }

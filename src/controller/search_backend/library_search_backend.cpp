@@ -9,12 +9,12 @@ constexpr int kMaxResults = 200;
 
 LibrarySearchBackend::LibrarySearchBackend(LibraryManager* library) : library_(library) {}
 
-void LibrarySearchBackend::warmup(const PlaylistId&)
+void LibrarySearchBackend::warmup([[maybe_unused]] const PlaylistId& pid)
 {
     // 库索引由 LibraryManager 持续维护,无需预热
 }
 
-void LibrarySearchBackend::invalidate(const PlaylistId&)
+void LibrarySearchBackend::invalidate([[maybe_unused]] const PlaylistId& pid)
 {
     // 库索引由 LibraryManager 持续维护,无需失效
 }

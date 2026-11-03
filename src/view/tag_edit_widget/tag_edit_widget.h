@@ -54,7 +54,7 @@ private: // data structure
     EntryId m_tid;
 
 private: // ui widgets
-    QVBoxLayout* m_vbl_main;
+    QVBoxLayout* vbl_main_;
 
     QHBoxLayout* m_hbl_filepath;
     QLabel* m_lb_filepath;

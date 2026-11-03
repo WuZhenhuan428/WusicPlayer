@@ -56,8 +56,9 @@
 #include "core/logger/logger_manager.h"
 namespace
 {
+// NOLINTNEXTLINE
 Logger* logger = LoggerManager::file_logger("app_controller", {"console", "gui"});
-}
+} // namespace
 
 // 构造顺序: 独立组件 -> Controller -> (AppContext) -> Service
 AppController::AppController(PlaybackController* playback_controller, QObject* parent) :
@@ -80,17 +81,17 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
 
     // 其他资源初始化
     this->app_context_ = {
-        .main_window_              = this->main_window_.get(),
-        .playback_controller_      = this->playback_controller_,
-        .playlist_controller_      = this->playlist_controller_.get(),
-        .playlist_manager_         = this->playlist_manager_.get(),
-        .theme_service_            = this->theme_service_.get(),
-        .in_memory_search_backend_ = this->search_backend_.get(),
-        .log_sink_gui_ =
+        .main_window              = this->main_window_.get(),
+        .playback_controller      = this->playback_controller_,
+        .playlist_controller      = this->playlist_controller_.get(),
+        .playlist_manager         = this->playlist_manager_.get(),
+        .theme_service            = this->theme_service_.get(),
+        .in_memory_search_backend = this->search_backend_.get(),
+        .log_sink_gui =
             dynamic_cast<LogSinkGui*>(LoggerManager::instance().get_sink_by_name("gui").get()),
-        .library_manager_   = this->library_manager_.get(),
-        .plugin_controller_ = this->plugin_controller_.get(),
-        .event_bus_         = this->event_bus_.get(),
+        .library_manager   = this->library_manager_.get(),
+        .plugin_controller = this->plugin_controller_.get(),
+        .event_bus         = this->event_bus_.get(),
     };
     // 面板编排:设置/搜索/EQ/快捷键(构造时注册默认快捷键)
     panel_coordinator_           = std::make_unique<PanelCoordinator>(app_context_, this);
@@ -117,11 +118,11 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     builtin_dark_plugin_ = std::make_unique<BuiltinThemePlugin>(
         QStringLiteral("wusic.theme.dark"), QStringLiteral("Wusic Dark"), QStringLiteral("1.0.0"),
         QStringLiteral("Built-in dark theme"), QStringLiteral("WusicPlayer"),
-        QVector<QString>{QStringLiteral("theme")}, darkPalette());
+        QVector<QString>{QStringLiteral("theme")}, dark_palette());
     builtin_light_plugin_ = std::make_unique<BuiltinThemePlugin>(
         QStringLiteral("wusic.theme.light"), QStringLiteral("Wusic Light"), QStringLiteral("1.0.0"),
         QStringLiteral("Built-in light theme"), QStringLiteral("WusicPlayer"),
-        QVector<QString>{QStringLiteral("theme")}, lightPalette());
+        QVector<QString>{QStringLiteral("theme")}, light_palette());
     plugin_controller_->register_builtin(builtin_dark_plugin_.get());
     plugin_controller_->register_builtin(builtin_light_plugin_.get());
     // 主题管理器改为从 PluginManager 获取主题插件(内建 + 外部 .so)
@@ -163,21 +164,23 @@ AppController::AppController(PlaybackController* playback_controller, QObject* p
     configure_desktop_lyrics_window_relation();
 
     // 面板入口信号 → PanelCoordinator(组合根不再中转)
-    connect(main_window_.get(), &MainWindow::sgnOpenSearchPanelRequested, panel_coordinator_.get(),
-            &PanelCoordinator::open_search_panel);
-    connect(main_window_.get(), &MainWindow::sgnOpenLogViewerRequested, panel_coordinator_.get(),
-            &PanelCoordinator::open_log_viewer);
-    connect(main_window_.get(), &MainWindow::sgnOpenSettingsPanelRequested,
+    connect(main_window_.get(), &MainWindow::sgn_oepn_search_panel_requested,
+            panel_coordinator_.get(), &PanelCoordinator::open_search_panel);
+    connect(main_window_.get(), &MainWindow::sgn_open_log_viewer_requested,
+            panel_coordinator_.get(), &PanelCoordinator::open_log_viewer);
+    connect(main_window_.get(), &MainWindow::sgn_open_settings_panel_requested,
             panel_coordinator_.get(), &PanelCoordinator::open_settings_panel);
-    connect(main_window_.get(), &MainWindow::sgnShowDesktopLyricsRequested, this,
+    connect(main_window_.get(), &MainWindow::sgn_show_desktop_lirics_requested, this,
             &AppController::handle_show_desktop_lyrics_requested);
-    connect(main_window_.get(), &MainWindow::sgnAboutToClose, this, &AppController::save_config);
+    connect(main_window_.get(), &MainWindow::sgn_about_to_close, this, &AppController::save_config);
 
     connect(qApp, &QCoreApplication::aboutToQuit, this, &AppController::save_config);
 
     this->setup_status_bar_connections();
 }
 
+// 必须定义在这里: 成员为 std::unique_ptr<不完整类型>, 若让析构函数在头文件中隐式生成,
+// 任何仅包含 app_controller.h 的 TU(如 mocs_compilation.cpp / main.cpp)都会要求类型完整。
 AppController::~AppController() = default;
 
 void AppController::show_main_window()
@@ -197,40 +200,40 @@ void AppController::initialize_core_connections()
     // DesktopLyricsWidget* desktopLyrics = main_window_->desktop_lyrics_widget();
 
     playback_service_->bind();
-    connect(playback_service_.get(), &PlaybackService::sgnLocateCurrentTrack, this,
+    connect(playback_service_.get(), &PlaybackService::sgn_request_locate_current_track, this,
             &AppController::locate_current_track_in_view);
 
     // 媒体库控件:双击曲目 → 队列入队即播(积累期经 play_track_in_ui 播放)
     connect(playback_queue_service_.get(), &PlaybackQueueService::sgn_play_requested, this,
             [this](const QueueItem& item) { main_window_->play_track_in_ui(item.filepath); });
     connect(
-        library_browser, &LibraryBrowserWidget::sgnPlayRequested, this,
+        library_browser, &LibraryBrowserWidget::sgn_play_requested, this,
         [this](const TrackId& track_id) { playback_queue_service_->play_library_track(track_id); });
-    connect(library_browser, &LibraryBrowserWidget::sgnPlayTracksRequested, this,
+    connect(library_browser, &LibraryBrowserWidget::sgn_play_tracks_requested, this,
             [this](const QVector<TrackId>& track_ids) {
                 for (const TrackId& tid : track_ids) {
                     playback_queue_service_->play_library_track(tid);
                 }
             });
-    connect(library_browser, &LibraryBrowserWidget::sgnAddTracksToPlaylist, this,
+    connect(library_browser, &LibraryBrowserWidget::sgn_add_tracks_to_playlist, this,
             [this](const PlaylistId& dst_pid, const QVector<TrackId>& track_ids) {
                 playlist_controller_->add_library_tracks(dst_pid, track_ids);
             });
-    connect(library_browser, &LibraryBrowserWidget::sgnRefreshLibraryRequested, this,
+    connect(library_browser, &LibraryBrowserWidget::sdn_refresh_library_requested, this,
             [this]() { library_manager_->start_scan(); });
     // 媒体库拖入播放列表树 → 添加到对应列表;拖入歌曲表 → 添加到当前列表
-    connect(main_window_->playlist_tree_widget(), &PlaylistTreeWidget::sgnLibraryTracksDropped,
+    connect(main_window_->playlist_tree_widget(), &PlaylistTreeWidget::sgn_library_tracks_dropped,
             this, [this](const PlaylistId& pid, const QVector<TrackId>& track_ids) {
                 playlist_controller_->add_library_tracks(pid, track_ids);
             });
     // 播放列表条目拖入播放列表树 → 复制到目标列表(列表→列表)
-    connect(main_window_->playlist_tree_widget(), &PlaylistTreeWidget::sgnPlaylistEntriesDropped,
+    connect(main_window_->playlist_tree_widget(), &PlaylistTreeWidget::sgn_playlist_entries_dropped,
             this,
             [this](const PlaylistId& src_pid, const PlaylistId& dst_pid,
                    const QVector<EntryId>& entry_ids) {
                 playlist_controller_->copy_tracks_to_playlist(src_pid, entry_ids, dst_pid);
             });
-    connect(song_table_view, &SongTableView::sgnLibraryTracksDropped, this,
+    connect(song_table_view, &SongTableView::sgn_library_tracks_dropped, this,
             [this](const QVector<TrackId>& track_ids) {
                 playlist_controller_->add_library_tracks(
                     playlist_controller_->current_playlist_id(), track_ids);
@@ -246,36 +249,36 @@ void AppController::initialize_core_connections()
         }
         return lists;
     });
-    connect(library_browser, &LibraryBrowserWidget::sgnOpenLibrarySettingsRequested, this,
+    connect(library_browser, &LibraryBrowserWidget::sgn_open_library_settings_requested, this,
             [this]() { panel_coordinator_->open_settings_panel_page("Media Library"); });
 
     library_interaction_service_->bind();
-    connect(song_table_view, &SongTableView::sgnTrackPropertyRequested,
+    connect(song_table_view, &SongTableView::sgn_track_property_requested,
             tag_writeback_service_.get(), &TagWritebackService::request_track_property);
 
-    auto* lyricsModel = qobject_cast<WLyricsModel*>(side_panel->get_lyrics_panel()->model());
+    auto* lyrics_model = qobject_cast<WLyricsModel*>(side_panel->get_lyrics_panel()->model());
     connect(playback_controller, &PlaybackController::sgn_position_changed,
             side_panel->get_lyrics_panel(), &WLyricsPanel::scroll_by_position);
-    connect(side_panel, &SidePanel::sgnDesktopLyricsConfigRequested, this,
+    connect(side_panel, &SidePanel::sgn_desktop_lyrics_config_requested, this,
             [this]() { panel_coordinator_->open_settings_panel_page("Lyrics"); });
 
-    if (lyricsModel) {
+    if (lyrics_model) {
         lyrics_follow_conn_ =
-            connect(playback_controller, &PlaybackController::sgn_position_changed, lyricsModel,
+            connect(playback_controller, &PlaybackController::sgn_position_changed, lyrics_model,
                     &WLyricsModel::set_current_position);
-        connect(lyricsModel, &WLyricsModel::currentLineChanged, this,
-                [this](const QString& currText, const QString& nextText) {
-                    main_window_->desktop_lyrics_widget()->set_lrc_line(currText, nextText);
+        connect(lyrics_model, &WLyricsModel::current_line_changed, this,
+                [this](const QString& curr_text, const QString& next_text) {
+                    main_window_->desktop_lyrics_widget()->set_lrc_line(curr_text, next_text);
                 });
-        connect(lyricsModel, &WLyricsModel::currentLineChanged, this,
+        connect(lyrics_model, &WLyricsModel::current_line_changed, this,
                 [this]() { main_window_->desktop_lyrics_widget()->update_line_color(); });
-        connect(lyricsModel, &WLyricsModel::sgnUseTimelineFollow, this,
-                [this, playback_controller, lyricsModel](bool enable) {
+        connect(lyrics_model, &WLyricsModel::sgn_use_timeline_follow, this,
+                [this, playback_controller, lyrics_model](bool enable) {
                     if (enable) {
                         if (!lyrics_follow_conn_) {
                             lyrics_follow_conn_ = connect(
                                 playback_controller, &PlaybackController::sgn_position_changed,
-                                lyricsModel, &WLyricsModel::set_current_position);
+                                lyrics_model, &WLyricsModel::set_current_position);
                         }
                         return;
                     }
@@ -287,20 +290,20 @@ void AppController::initialize_core_connections()
                 });
     }
 
-    connect(main_window_.get(), &MainWindow::sgnCreatePlaylistRequested, playlist_controller,
+    connect(main_window_.get(), &MainWindow::sgn_create_playlist_requested, playlist_controller,
             &PlaylistController::create_new_playlist);
-    connect(main_window_.get(), &MainWindow::sgnLoadPlaylist, playlist_controller,
+    connect(main_window_.get(), &MainWindow::sgn_load_playlist, playlist_controller,
             &PlaylistController::load_playlist);
-    connect(main_window_.get(), &MainWindow::sgnSetSortRuleRequested, this,
+    connect(main_window_.get(), &MainWindow::sgn_set_sort_rule_requested, this,
             &AppController::handle_set_sort_rule_requested);
-    connect(main_window_.get(), &MainWindow::sgnShowAboutMessagebox, this,
+    connect(main_window_.get(), &MainWindow::sgn_show_about_messagebox_requested, this,
             &AppController::handle_show_about_messagebox);
-    connect(main_window_.get(), &MainWindow::sgnOpenEQWidgetRequested, panel_coordinator_.get(),
+    connect(main_window_.get(), &MainWindow::sgn_open_eq_widget_requested, panel_coordinator_.get(),
             &PanelCoordinator::open_eq_widget);
 
-    auto* locateShortcut = new QShortcut(QKeySequence(Qt::Key_Tab), song_table_view->tree_view());
-    locateShortcut->setContext(Qt::WidgetShortcut);
-    connect(locateShortcut, &QShortcut::activated, this,
+    auto* locate_shortcut = new QShortcut(QKeySequence(Qt::Key_Tab), song_table_view->tree_view());
+    locate_shortcut->setContext(Qt::WidgetShortcut);
+    connect(locate_shortcut, &QShortcut::activated, this,
             [this]() { locate_current_track_in_view(); });
 }
 
@@ -332,9 +335,9 @@ void AppController::handle_set_sort_rule_requested()
     auto* playlist_controller = playlist_controller_.get();
     auto* view_model          = playlist_controller->view_model();
     WSortTypeSetDialog dialog;
-    dialog.setText(view_model->dsl_source()); // 预填当前 DSL(便于编辑既有规则)
+    dialog.set_text(view_model->dsl_source()); // 预填当前 DSL(便于编辑既有规则)
     if (dialog.exec() == QDialog::Accepted) {
-        view_model->set_sort_expression(dialog.getText());
+        view_model->set_sort_expression(dialog.get_text());
         if (!view_model->dsl_error().isEmpty()) {
             QMessageBox::warning(&dialog, tr("Sort Rule Error"), view_model->dsl_error());
         }
@@ -352,22 +355,22 @@ void AppController::handle_show_about_messagebox()
 
 void AppController::handle_show_desktop_lyrics_requested()
 {
-    auto* desktopLyrics = main_window_->desktop_lyrics_widget();
-    if (desktopLyrics) {
+    auto* desktop_lyrics = main_window_->desktop_lyrics_widget();
+    if (desktop_lyrics) {
         configure_desktop_lyrics_window_relation();
-        desktopLyrics->show();
+        desktop_lyrics->show();
     }
 }
 
 void AppController::configure_desktop_lyrics_window_relation()
 {
-    auto* desktopLyrics = main_window_ ? main_window_->desktop_lyrics_widget() : nullptr;
-    if (!desktopLyrics) {
+    auto* desktop_lyrics = main_window_ ? main_window_->desktop_lyrics_widget() : nullptr;
+    if (!desktop_lyrics) {
         return;
     }
 
-    if (desktopLyrics->parentWidget() != nullptr) {
-        desktopLyrics->setParent(nullptr);
+    if (desktop_lyrics->parentWidget() != nullptr) {
+        desktop_lyrics->setParent(nullptr);
     }
 }
 
@@ -412,7 +415,7 @@ void AppController::initialize_config()
     // but not sufficient to create interfaces seprately
     // current:
     //      WControlBar -> m_btn_mode->icon
-    main_window_.get()->control_bar_widget()->set_play_mode(playlist_controller_->play_mode());
+    main_window_->control_bar_widget()->set_play_mode(playlist_controller_->play_mode());
 }
 
 void AppController::save_config()
@@ -439,13 +442,13 @@ void AppController::setup_status_bar_connections()
             [this](PlayingState state) {
                 QString hint = "";
                 switch (state) {
-                case PlayingState::PAUSE:
+                case PlayingState::Pause:
                     hint = tr("PAUSE");
                     break;
-                case PlayingState::PLAYING:
+                case PlayingState::Playing:
                     hint = tr("PLAYING");
                     break;
-                case PlayingState::STOP:
+                case PlayingState::Stop:
                     hint = tr("STOP");
                     break;
                 }
@@ -471,12 +474,12 @@ void AppController::setup_status_bar_connections()
                        : tr("0 track");
                 status_bar_controller_->register_item("playlist_track_num", tracks);
             }
-            // 双击列表项目时触发 &PlaylistTreeWidget::sgnSwitchPlaylist
+            // 双击列表项目时触发 &PlaylistTreeWidget::sgn_switch_playlist
             // CRUD 时触发 `&PlaylistController::sgn_playlist_changed`
             connect(playlist_controller_.get(), &PlaylistController::sgn_playlist_changed, this,
                     show_track_count);
-            connect(main_window_.get()->playlist_tree_widget(),
-                    &PlaylistTreeWidget::sgnSwitchPlaylist, this, show_track_count);
+            connect(main_window_->playlist_tree_widget(), &PlaylistTreeWidget::sgn_switch_playlist,
+                    this, show_track_count);
         },
         Qt::SingleShotConnection);
 }

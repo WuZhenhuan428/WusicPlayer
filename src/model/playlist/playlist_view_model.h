@@ -22,7 +22,11 @@ class PlaylistViewModel : public QAbstractItemModel
 
 public:
     explicit PlaylistViewModel(PlaylistRepo* repo, QObject* parent = nullptr);
-    ~PlaylistViewModel();
+    PlaylistViewModel(const PlaylistViewModel&)            = delete;
+    PlaylistViewModel& operator=(const PlaylistViewModel&) = delete;
+    PlaylistViewModel(PlaylistViewModel&&)                 = delete;
+    PlaylistViewModel& operator=(PlaylistViewModel&&)      = delete;
+    ~PlaylistViewModel() override;
 
     void rebuild();
     void rebuild_async();
@@ -41,17 +45,17 @@ public:
     void set_sort_expression(const QString& expression);
     void set_group_rules(const QVector<SortRule>& rules);
     void set_sort_rules(const QVector<SortRule>& rules);
-    const QVector<SortRule> group_rules() const;
-    const QVector<SortRule> sort_rules() const;
+    [[nodiscard]] QVector<SortRule> group_rules() const;
+    [[nodiscard]] QVector<SortRule> sort_rules() const;
     // 最近一次 DSL 解析/校验错误(空 = 无错误)
-    const QString& dsl_error() const
+    [[nodiscard]] const QString& dsl_error() const
     {
-        return m_layout_builder.dsl_error();
+        return layout_builder_.dsl_error();
     }
     // 当前生效的 DSL 源文本(空 = 未启用 DSL)
-    const QString& dsl_source() const
+    [[nodiscard]] const QString& dsl_source() const
     {
-        return m_layout_builder.dsl_source();
+        return layout_builder_.dsl_source();
     }
 
     /**
@@ -63,13 +67,15 @@ public:
 
     /* ==== View视图数据访问 ====*/
     // QAbstractItemModel Interface
-    QModelIndex index(int row, int column,
-                      const QModelIndex& parent = QModelIndex()) const override;
-    QModelIndex parent(const QModelIndex& child) const override;
-    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    [[nodiscard]] QModelIndex index(int row, int column,
+                                    const QModelIndex& parent = QModelIndex()) const override;
+    [[nodiscard]] QModelIndex parent(const QModelIndex& child) const override;
+    [[nodiscard]] int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    [[nodiscard]] int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+    [[nodiscard]] QVariant data(const QModelIndex& index,
+                                int role = Qt::DisplayRole) const override;
+    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation,
+                                      int role) const override;
 
     /**
      * @brief Inherited from QAbstractItemModel, When header is clicked, change the sort
@@ -79,19 +85,19 @@ public:
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
     // 拖拽源:列表→列表(携带源列表 id 与选中条目 id,JSON 序列化)
-    Qt::ItemFlags flags(const QModelIndex& index) const override;
-    QStringList mimeTypes() const override;
-    QMimeData* mimeData(const QModelIndexList& indexes) const override;
+    [[nodiscard]] Qt::ItemFlags flags(const QModelIndex& index) const override;
+    [[nodiscard]] QStringList mimeTypes() const override;
+    [[nodiscard]] QMimeData* mimeData(const QModelIndexList& indexes) const override;
 
     // Helper to get logic data
-    PlaybackQueueSnapshot
+    [[nodiscard]] PlaybackQueueSnapshot
     playback_queue_snapshot() const; // return value but not ptr because use rebuild_async()
-    PlaybackQueueSnapshot single_shuffle_queue_snapshot() const;
-    PlaybackQueueSnapshot group_shuffle_queue_snapshot() const;
-    EntryId track_at(int index) const; // Still useful for linear queue access
-    EntryId track_at(const QModelIndex& index) const;
-    QModelIndex get_current_track_index();
-    const QVector<EntryId>& playback_queue() const;
+    [[nodiscard]] PlaybackQueueSnapshot single_shuffle_queue_snapshot() const;
+    [[nodiscard]] PlaybackQueueSnapshot group_shuffle_queue_snapshot() const;
+    [[nodiscard]] EntryId track_at(int index) const; // Still useful for linear queue access
+    [[nodiscard]] EntryId track_at(const QModelIndex& index) const;
+    [[nodiscard]] QModelIndex get_current_track_index();
+    [[nodiscard]] const QVector<EntryId>& playback_queue() const;
 
     const Playlist& resolve_playlist();
 
@@ -100,44 +106,43 @@ public:
     void remove_column(int index);
     void rename_column(int index, const QString& new_name);
     void set_columns(const QVector<TableColumn>& columns);
-    const QVector<TableColumn>& get_columns() const;
+    [[nodiscard]] const QVector<TableColumn>& get_columns() const;
 
     /* ==== 播放顺序辅助（用于Player） ==== */
-    QVector<EntryId> generate_group_shuffle_queue();
-    QVector<EntryId> generate_single_shuffle_queue();
+    [[nodiscard]] QVector<EntryId> generate_group_shuffle_queue();
+    [[nodiscard]] QVector<EntryId> generate_single_shuffle_queue();
 
 private:
-    QVector<TableColumn> m_columns;
+    QVector<TableColumn> columns_;
     void init_default_columns();
 
-    QModelIndex find_track_index(const EntryId& tid) const;
+    [[nodiscard]] QModelIndex find_track_index(const EntryId& tid) const;
     // 由 Node 反向构造 QModelIndex(与 index() 保持一致)
     QModelIndex index_of_node(const Node* node) const;
-    QPersistentModelIndex m_active_track_index;
+    QPersistentModelIndex active_track_index_;
 
     void schedule_batch_rebuild();
 
 signals:
-    void changedPlaybackQueue();
-    void updatedTrackMetadata(const EntryId& tid);
-    void changedData(int row);
+    void playback_queue_changed();
+    void track_metadata_updated(const EntryId& tid);
+    void data_changed(int row);
 
 private:
-    PlaylistRepo* m_repo = nullptr;
-    PlaylistId m_pid;
-    EntryId m_active_track_id;
-    Node* m_root                  = nullptr;
+    PlaylistRepo* repo_ = nullptr;
+    PlaylistId pid_;
+    EntryId active_track_id_;
+    Node* root_                  = nullptr;
 
-    int m_rebuild_token           = 0;
+    int rebuild_token_           = 0;
 
-    QTimer* m_batch_rebuild_timer = nullptr;
+    QTimer* batch_rebuild_timer_ = nullptr;
 
-    QVector<EntryId>
-        m_playback_queue; // Linear queue for playback logic (separate from Tree structure)
-    QVector<EntryId> m_single_shuffle_queue;
-    QVector<EntryId> m_group_shuffle_queue;
+    QVector<EntryId> playback_queue_; // 顺序播放列表 (平铺, 与树状列表不同)
+    QVector<EntryId> single_shuffle_queue_;
+    QVector<EntryId> group_shuffle_queue_;
 
-    PlayMode m_play_mode;
+    PlayMode play_mode_ = PlayMode::InOrder;
 
-    PlaylistLayoutBuilder m_layout_builder;
+    PlaylistLayoutBuilder layout_builder_;
 };

@@ -8,130 +8,130 @@
 #include <QHeaderView>
 
 ThemeSettingsPage::ThemeSettingsPage(ThemeService* service, QWidget* parent) :
-    QWidget(parent), m_service(service)
+    QWidget(parent), service_(service)
 {
     init_ui();
     init_connections();
 
     // 初次扫描并填充表格
-    m_service->scan_themes();
-    m_table_view->setModel(m_service->model());
+    service_->scan_themes();
+    table_view_->setModel(service_->model());
     refresh_current_label();
 }
 
 void ThemeSettingsPage::init_ui()
 {
     // 来源过滤 RadioButton
-    m_source_group = new QButtonGroup(this);
-    m_source_group->setExclusive(true);
+    source_group_ = new QButtonGroup(this);
+    source_group_->setExclusive(true);
 
-    m_rb_all      = new QRadioButton(tr("All"), this);
-    m_rb_system   = new QRadioButton(tr("System"), this);
-    m_rb_builtin  = new QRadioButton(tr("Builtin"), this);
-    m_rb_external = new QRadioButton(tr("External"), this);
+    rb_all_      = new QRadioButton(tr("All"), this);
+    rb_system_   = new QRadioButton(tr("System"), this);
+    rb_builtin_  = new QRadioButton(tr("Builtin"), this);
+    rb_external_ = new QRadioButton(tr("External"), this);
 
-    m_source_group->addButton(m_rb_all, 0);
-    m_source_group->addButton(m_rb_system, 1);
-    m_source_group->addButton(m_rb_builtin, 2);
-    m_source_group->addButton(m_rb_external, 3);
-    m_rb_all->setChecked(true);
+    source_group_->addButton(rb_all_, 0);
+    source_group_->addButton(rb_system_, 1);
+    source_group_->addButton(rb_builtin_, 2);
+    source_group_->addButton(rb_external_, 3);
+    rb_all_->setChecked(true);
 
-    m_hbl_filter = new QHBoxLayout();
-    m_hbl_filter->addWidget(new QLabel(tr("Source:"), this));
-    m_hbl_filter->addWidget(m_rb_all);
-    m_hbl_filter->addWidget(m_rb_system);
-    m_hbl_filter->addWidget(m_rb_builtin);
-    m_hbl_filter->addWidget(m_rb_external);
-    m_hbl_filter->addStretch();
+    hbl_filter_ = new QHBoxLayout();
+    hbl_filter_->addWidget(new QLabel(tr("Source:"), this));
+    hbl_filter_->addWidget(rb_all_);
+    hbl_filter_->addWidget(rb_system_);
+    hbl_filter_->addWidget(rb_builtin_);
+    hbl_filter_->addWidget(rb_external_);
+    hbl_filter_->addStretch();
 
     // 图标模式选择
-    m_icon_group = new QButtonGroup(this);
-    m_icon_group->setExclusive(true);
-    m_rb_icon_auto  = new QRadioButton(tr("Auto"), this);
-    m_rb_icon_light = new QRadioButton(tr("Light"), this);
-    m_rb_icon_dark  = new QRadioButton(tr("Dark"), this);
-    m_icon_group->addButton(m_rb_icon_auto, 0);
-    m_icon_group->addButton(m_rb_icon_light, 1);
-    m_icon_group->addButton(m_rb_icon_dark, 2);
+    icon_group_ = new QButtonGroup(this);
+    icon_group_->setExclusive(true);
+    rb_icon_auto_  = new QRadioButton(tr("Auto"), this);
+    rb_icon_light_ = new QRadioButton(tr("Light"), this);
+    rb_icon_dark_  = new QRadioButton(tr("Dark"), this);
+    icon_group_->addButton(rb_icon_auto_, 0);
+    icon_group_->addButton(rb_icon_light_, 1);
+    icon_group_->addButton(rb_icon_dark_, 2);
 
     // 根据当前 ThemeManager 状态初始化选中
     switch (ThemeManager::instance().icon_mode()) {
-    case ThemeManager::IconLight:
-        m_rb_icon_light->setChecked(true);
+    case ThemeManager::IconMode::IconLight:
+        rb_icon_light_->setChecked(true);
         break;
-    case ThemeManager::IconDark:
-        m_rb_icon_dark->setChecked(true);
+    case ThemeManager::IconMode::IconDark:
+        rb_icon_dark_->setChecked(true);
         break;
     default:
-        m_rb_icon_auto->setChecked(true);
+        rb_icon_auto_->setChecked(true);
         break;
     }
 
     QHBoxLayout* hbl_icon = new QHBoxLayout();
     hbl_icon->addWidget(new QLabel(tr("Icon:"), this));
-    hbl_icon->addWidget(m_rb_icon_auto);
-    hbl_icon->addWidget(m_rb_icon_light);
-    hbl_icon->addWidget(m_rb_icon_dark);
+    hbl_icon->addWidget(rb_icon_auto_);
+    hbl_icon->addWidget(rb_icon_light_);
+    hbl_icon->addWidget(rb_icon_dark_);
     hbl_icon->addStretch();
 
     // 当前主题标签
-    m_lb_current = new QLabel(this);
-    m_lb_hint = new QLabel(tr("Double-click a theme to apply, or select and click Apply."), this);
+    lb_current_ = new QLabel(this);
+    lb_hint_    = new QLabel(tr("Double-click a theme to apply, or select and click Apply."), this);
 
     // 表格
-    m_table_view = new QTableView(this);
-    m_table_view->setSelectionBehavior(QAbstractItemView::SelectRows);
-    m_table_view->setSelectionMode(QAbstractItemView::SingleSelection);
-    m_table_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    m_table_view->verticalHeader()->setVisible(false);
-    m_table_view->horizontalHeader()->setStretchLastSection(true);
-    m_table_view->setAlternatingRowColors(true);
+    table_view_ = new QTableView(this);
+    table_view_->setSelectionBehavior(QAbstractItemView::SelectRows);
+    table_view_->setSelectionMode(QAbstractItemView::SingleSelection);
+    table_view_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    table_view_->verticalHeader()->setVisible(false);
+    table_view_->horizontalHeader()->setStretchLastSection(true);
+    table_view_->setAlternatingRowColors(true);
 
     // 按钮
-    m_btn_apply   = new QPushButton(tr("Apply"), this);
-    m_btn_rescan  = new QPushButton(tr("Rescan Plugins"), this);
+    btn_apply_   = new QPushButton(tr("Apply"), this);
+    btn_rescan_  = new QPushButton(tr("Rescan Plugins"), this);
 
-    m_hbl_actions = new QHBoxLayout();
-    m_hbl_actions->addStretch();
-    m_hbl_actions->addWidget(m_btn_rescan);
-    m_hbl_actions->addWidget(m_btn_apply);
+    hbl_actions_ = new QHBoxLayout();
+    hbl_actions_->addStretch();
+    hbl_actions_->addWidget(btn_rescan_);
+    hbl_actions_->addWidget(btn_apply_);
 
     // 主布局
-    m_vbl_main = new QVBoxLayout(this);
-    m_vbl_main->addLayout(m_hbl_filter);
-    m_vbl_main->addLayout(hbl_icon);
-    m_vbl_main->addWidget(m_lb_current);
-    m_vbl_main->addWidget(m_lb_hint);
-    m_vbl_main->addWidget(m_table_view);
-    m_vbl_main->addLayout(m_hbl_actions);
+    vbl_main_ = new QVBoxLayout(this);
+    vbl_main_->addLayout(hbl_filter_);
+    vbl_main_->addLayout(hbl_icon);
+    vbl_main_->addWidget(lb_current_);
+    vbl_main_->addWidget(lb_hint_);
+    vbl_main_->addWidget(table_view_);
+    vbl_main_->addLayout(hbl_actions_);
 }
 
 void ThemeSettingsPage::init_connections()
 {
-    connect(m_source_group, &QButtonGroup::idClicked, this,
+    connect(source_group_, &QButtonGroup::idClicked, this,
             &ThemeSettingsPage::on_source_filter_changed);
-    connect(m_btn_apply, &QPushButton::clicked, this, &ThemeSettingsPage::on_apply_clicked);
-    connect(m_btn_rescan, &QPushButton::clicked, this, &ThemeSettingsPage::on_rescan_clicked);
+    connect(btn_apply_, &QPushButton::clicked, this, &ThemeSettingsPage::on_apply_clicked);
+    connect(btn_rescan_, &QPushButton::clicked, this, &ThemeSettingsPage::on_rescan_clicked);
 
     // 双击表格行 → 直接应用
-    connect(m_table_view, &QTableView::doubleClicked, this,
+    connect(table_view_, &QTableView::doubleClicked, this,
             [this](const QModelIndex&) { on_apply_clicked(); });
 
     // 主题切换后刷新标签
-    connect(m_service, &ThemeService::sgn_current_theme_changed, this,
+    connect(service_, &ThemeService::sgn_current_theme_changed, this,
             [this]() { refresh_current_label(); });
 
     // 图标模式切换
-    connect(m_icon_group, &QButtonGroup::idClicked, this, [](int id) {
+    connect(icon_group_, &QButtonGroup::idClicked, this, [](int id) {
         switch (id) {
         case 1:
-            ThemeManager::instance().set_icon_mode(ThemeManager::IconLight);
+            ThemeManager::instance().set_icon_mode(ThemeManager::IconMode::IconLight);
             break;
         case 2:
-            ThemeManager::instance().set_icon_mode(ThemeManager::IconDark);
+            ThemeManager::instance().set_icon_mode(ThemeManager::IconMode::IconDark);
             break;
         default:
-            ThemeManager::instance().set_icon_mode(ThemeManager::IconAuto);
+            ThemeManager::instance().set_icon_mode(ThemeManager::IconMode::IconAuto);
             break;
         }
     });
@@ -139,17 +139,19 @@ void ThemeSettingsPage::init_connections()
 
 void ThemeSettingsPage::on_source_filter_changed(int /*id*/)
 {
-    auto* model = m_service->model();
-    if (!model)
+    auto* model = service_->model();
+    if (!model) {
         return;
+    }
 
     QString filter;
-    if (m_rb_system->isChecked())
+    if (rb_system_->isChecked()) {
         filter = tr("System");
-    else if (m_rb_builtin->isChecked())
+    } else if (rb_builtin_->isChecked()) {
         filter = tr("Builtin");
-    else if (m_rb_external->isChecked())
+    } else if (rb_external_->isChecked()) {
         filter = tr("External");
+    }
     // "All" 时 filter 为空，显示全部
 
     // 遍历模型行，隐藏不匹配的
@@ -157,22 +159,24 @@ void ThemeSettingsPage::on_source_filter_changed(int /*id*/)
         QModelIndex idx = model->index(r, ThemeSettingsModel::ColSource);
         QString source  = model->data(idx).toString();
         bool visible    = filter.isEmpty() || source == filter;
-        m_table_view->setRowHidden(r, !visible);
+        table_view_->setRowHidden(r, !visible);
     }
 }
 
 void ThemeSettingsPage::on_apply_clicked()
 {
-    auto sel = m_table_view->selectionModel()->selectedRows();
-    if (sel.isEmpty())
+    auto sel = table_view_->selectionModel()->selectedRows();
+    if (sel.isEmpty()) {
         return;
+    }
 
     int row = sel.first().row();
     // 行隐藏后 selection 可能指向被过滤掉的行，需要校验
-    if (m_table_view->isRowHidden(row))
+    if (table_view_->isRowHidden(row)) {
         return;
+    }
 
-    m_service->apply_theme(row);
+    service_->apply_theme(row);
 }
 
 void ThemeSettingsPage::on_rescan_clicked()
@@ -180,24 +184,25 @@ void ThemeSettingsPage::on_rescan_clicked()
     // 简易选择外部插件目录；用户可取消
     QString dir = QFileDialog::getExistingDirectory(
         this, tr("Select external theme plugins directory"), QString());
-    if (dir.isEmpty())
+    if (dir.isEmpty()) {
         return;
+    }
 
-    m_service->rescan_external_plugins(dir);
-    m_table_view->setModel(m_service->model());
+    service_->rescan_external_plugins(dir);
+    table_view_->setModel(service_->model());
     // 重新应用过滤
     on_source_filter_changed(0);
 }
 
 void ThemeSettingsPage::refresh_current_label()
 {
-    m_lb_current->setText(tr("Current: %1").arg(m_service->current_theme_name()));
+    lb_current_->setText(tr("Current: %1").arg(ThemeService::current_theme_name()));
 }
 
 QListWidgetItem* ThemeSettingsPage::get_title_item()
 {
-    if (!m_title_item) {
-        m_title_item = new QListWidgetItem(tr("Appearance"));
+    if (!title_item_) {
+        title_item_ = new QListWidgetItem(tr("Appearance"));
     }
-    return m_title_item;
+    return title_item_;
 }

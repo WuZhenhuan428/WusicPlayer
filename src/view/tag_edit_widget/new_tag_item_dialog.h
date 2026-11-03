@@ -19,48 +19,47 @@ class NewTagItemDialog : public QWidget
 
 public:
     explicit NewTagItemDialog(QStringList existed_props, QWidget* parent = nullptr);
-    ~NewTagItemDialog();
 
 protected:
     void keyPressEvent(QKeyEvent* event) override;
 
 signals:
-    void sgnResult(const QPair<QString, QString>& result);
+    void sgn_result(const QPair<QString, QString>& result);
 
 private:
     void init_ui();
     void init_connections();
     bool check_repetition();
-    QString name_to_key(const QString& name);
     void save_result();
 
     // bool verify_prop(QString property);
 private:
-    QPair<QString, QString> m_result;
-    QStringList m_existed_props;
-    QStringList m_common_types = {"Album",  "Album artist", "Artist",       "Comment",  "Composer",
-                                  "Date",   "Disc number",  "Genre",        "Language", "Length",
-                                  "Lyrics", "Title",        "Track number", "Other"};
+    QPair<QString, QString> result_;
+    QStringList existed_props_;
+    QStringList common_types_ = {
+        "Album", "Album artist", "Artist", "Comment", "Composer", "Date",         "Disc number",
+        "Genre", "Language",     "Length", "Lyrics",  "Title",    "Track number", "Other",
+    };
 
 private:
     // common properties ans "other"
-    QLabel* m_lb_type;
-    QComboBox* m_cb_type;
-    QHBoxLayout* m_hbl_type;
+    QLabel* lb_type_         = nullptr;
+    QComboBox* cb_type_      = nullptr;
+    QHBoxLayout* hbl_type_   = nullptr;
 
     // if m_cb_type = "other", enable m_le_other.
-    QLabel* m_lb_other;
-    QLineEdit* m_le_other;
-    QHBoxLayout* m_hbl_other;
+    QLabel* lb_other_        = nullptr;
+    QLineEdit* le_other_     = nullptr;
+    QHBoxLayout* hbl_other_  = nullptr;
 
-    QLabel* m_lb_value;
-    QLineEdit* m_le_value;
-    QHBoxLayout* m_hbl_value;
+    QLabel* lb_value_        = nullptr;
+    QLineEdit* le_value_     = nullptr;
+    QHBoxLayout* hbl_value_  = nullptr;
 
-    QPushButton* m_btn_help;
-    QPushButton* m_btn_apply;
-    QPushButton* m_btn_cancel;
-    QHBoxLayout* m_hbl_btn;
+    QPushButton* btn_help_   = nullptr;
+    QPushButton* btn_apply_  = nullptr;
+    QPushButton* btn_cancel_ = nullptr;
+    QHBoxLayout* hbl_btn_    = nullptr;
 
-    QVBoxLayout* m_vbl_main;
+    QVBoxLayout* vbl_main_   = nullptr;
 };

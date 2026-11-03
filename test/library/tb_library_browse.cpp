@@ -80,11 +80,11 @@ static void test_browse_model()
     scan_music(&lib, data_dir.filePath("lib.db"), music_root.path(), 3);
 
     LibraryBrowseModel model(&lib);
-    CHECK(model.grouping() == LibraryGrouping::artist); // 默认分类
+    CHECK(model.grouping() == LibraryGrouping::Artist); // 默认分类
     CHECK(model.columnCount() == 4);
 
     // ---- folder 分组 ----
-    model.set_grouping(LibraryGrouping::folder);
+    model.set_grouping(LibraryGrouping::Folder);
     CHECK(model.rowCount() == 2); // 两个目录
     const QModelIndex g0 = model.index(0, 0);
     const QModelIndex g1 = model.index(1, 0);
@@ -112,7 +112,7 @@ static void test_browse_model()
     CHECK(model.index(0, 0, leaf) == QModelIndex()); // 叶节点没有子
 
     // ---- 平铺(none):单组 All Tracks ----
-    model.set_grouping(LibraryGrouping::none);
+    model.set_grouping(LibraryGrouping::None);
     CHECK(model.rowCount() == 1);
     const QModelIndex g_all = model.index(0, 0);
     CHECK(g_all.isValid());
@@ -120,21 +120,21 @@ static void test_browse_model()
     CHECK(model.rowCount(g_all) == 3);
 
     // ---- 空标签分类:artist 回退 "Unknown Artist";year=0 → "(Unknown)" ----
-    model.set_grouping(LibraryGrouping::artist);
+    model.set_grouping(LibraryGrouping::Artist);
     CHECK(model.rowCount() == 1);
     const QModelIndex g_unk = model.index(0, 0);
     CHECK(model.data(g_unk, Qt::DisplayRole).toString().contains("Unknown Artist"));
     CHECK(model.rowCount(g_unk) == 3);
 
-    model.set_grouping(LibraryGrouping::year);
+    model.set_grouping(LibraryGrouping::Year);
     CHECK(model.rowCount() == 1); // 无年份 → "(Unknown)" 组
     CHECK(model.data(model.index(0, 0), Qt::DisplayRole).toString().contains("(Unknown)"));
     CHECK(model.rowCount(model.index(0, 0)) == 3);
-    model.set_grouping(LibraryGrouping::genre);
+    model.set_grouping(LibraryGrouping::Genre);
     CHECK(model.rowCount() == 1);
 
     // ---- FTS5 搜索:结果按当前分类分组 ----
-    model.set_grouping(LibraryGrouping::folder);
+    model.set_grouping(LibraryGrouping::Folder);
     model.set_keyword("gamma");
     CHECK(model.rowCount() == 1); // 只命中 B 目录
     const QModelIndex g_hit = model.index(0, 0);
@@ -176,7 +176,7 @@ static void test_set_library_reinject()
     // 先以空库构造,后注入
     LibraryBrowseModel model(nullptr);
     CHECK(model.rowCount() == 0);
-    model.set_grouping(LibraryGrouping::folder);
+    model.set_grouping(LibraryGrouping::Folder);
     model.set_keyword("beta");
     model.set_library(&lib);
     CHECK(model.rowCount() == 1); // 命中 B(关键字保留)

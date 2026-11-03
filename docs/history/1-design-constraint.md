@@ -67,7 +67,7 @@ view -> controller -> service -> model -> core
 ### 2.1 标识符
 
 | 类别                               | 规则                  | 示例                                         |
-|------------------------------------|-----------------------|----------------------------------------------|
+| ---------------------------------- | --------------------- | -------------------------------------------- |
 | 自定义类型(类、结构体、枚举、别名) | PascalCase            | `TrackMetaData`、`PlaylistManager`           |
 | 命名空间                           | snake_case            | `core::player`、`model::library`             |
 | 函数 / 类方法                      | snake_case            | `create_playlist()`、`get_playlist_id()`     |
@@ -85,7 +85,7 @@ view -> controller -> service -> model -> core
 
 - 信号统一 `sgn_` 前缀 + snake_case:`sgn_position_changed`、`sgn_track_property_requested`
 - 槽使用 snake_case (不强制前缀)
-- 现有混用命名 (`sgnTrackPropertyRequested`、`playlistChanged`) 在迁移阶段统一修改
+- 现有混用命名 (`sgn_track_property_requested`、`playlistChanged`) 在迁移阶段统一修改
 
 ### 2.3 Qt Widget 缩写前缀(局部使用)
 
@@ -94,7 +94,7 @@ widget 前缀仅用于**局部作用域**, 最典型的是 `init_ui()` 内的局
 常用缩写:
 
 | 前缀    | 类型                      |
-|---------|---------------------------|
+| ------- | ------------------------- |
 | `le_`   | QLineEdit                 |
 | `btn_`  | QPushButton               |
 | `lbl_`  | QLabel                    |
@@ -133,7 +133,7 @@ widget 前缀仅用于**局部作用域**, 最典型的是 `init_ui()` 内的局
 ### 3.1 所有权标注约定
 
 | 形式                 | 语义             | 说明                                                                   |
-|----------------------|------------------|------------------------------------------------------------------------|
+| -------------------- | ---------------- | ---------------------------------------------------------------------- |
 | `std::unique_ptr<T>` | 独占所有权       | 成员对象首选, 类析构时释放                                             |
 | `std::shared_ptr<T>` | 共享所有权       | 仅当确需共享(如 `Track` 同时被库与播放列表引用)                        |
 | `QPointer<T>`        | Qt 对象安全引用  | 指向可能被销毁的 QObject, 自动失效                                     |

@@ -30,11 +30,11 @@ hsv_t rgb_to_hsv(rgb_t rgb)
         hsv.h = 0; // 灰色，色相未定义，通常设为0
     } else {
         if (max == r) {
-            hsv.h = 60.0 * fmodf((g - b) / delta, 6.0f);
+            hsv.h = 60.0 * fmod((g - b) / delta, 6.0);
         } else if (max == g) {
-            hsv.h = 60.0 * (((b - r) / delta) + 2.0f);
+            hsv.h = 60.0 * (((b - r) / delta) + 2.0);
         } else {
-            hsv.h = 60.0 * (((r - g) / delta) + 4.0f);
+            hsv.h = 60.0 * (((r - g) / delta) + 4.0);
         }
 
         if (hsv.h < 0) {
@@ -49,15 +49,22 @@ rgb_t hsv_to_rgb(hsv_t hsv)
 {
     rgb_t rgb = {0, 0, 0};
 
-    float r = 0, g = 0, b = 0;
-    float h = 0, s = 0, v = 0;
-    float f = 0, p = 0, q = 0, t = 0;
-    int hi = 0;
+    double r  = 0;
+    double g  = 0;
+    double b  = 0;
+    double h  = 0;
+    double s  = 0;
+    double v  = 0;
+    double f  = 0;
+    double p  = 0;
+    double q  = 0;
+    double t  = 0;
+    int hi    = 0;
 
     // normalize
-    h      = hsv.h / 360.0;
-    s      = hsv.s / 100.0;
-    v      = hsv.v / 100.0;
+    h         = hsv.h / 360.0;
+    s         = hsv.s / 100.0;
+    v         = hsv.v / 100.0;
 
     // boundary
     if (s <= 0.0f) {
@@ -66,8 +73,8 @@ rgb_t hsv_to_rgb(hsv_t hsv)
         hi = (int)(h * 6) % 6;
         f  = (h * 6) - hi;
         p  = v * (1 - s);
-        q  = v * (1 - f * s);
-        t  = v * (1 - (1 - f) * s);
+        q  = v * (1 - (f * s));
+        t  = v * (1 - ((1 - f) * s));
 
         switch (hi) {
         case 0:
@@ -100,12 +107,14 @@ rgb_t hsv_to_rgb(hsv_t hsv)
             g = p;
             b = q;
             break;
+        default:
+            break;
         }
     }
 
-    rgb.r = (unsigned char)(r * 255.0f + 0.5f);
-    rgb.g = (unsigned char)(g * 255.0f + 0.5f);
-    rgb.b = (unsigned char)(b * 255.0f + 0.5f);
+    rgb.r = (unsigned char)((r * 255.0f) + 0.5f);
+    rgb.g = (unsigned char)((g * 255.0f) + 0.5f);
+    rgb.b = (unsigned char)((b * 255.0f) + 0.5f);
 
     return rgb;
 }

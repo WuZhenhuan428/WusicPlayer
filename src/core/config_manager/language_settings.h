@@ -14,16 +14,16 @@ class LanguageSettings : public QObject, public IConfigurable
 public:
     static LanguageSettings& instance();
 
-    QString locale() const;
+    [[nodiscard]] QString locale() const;
     void set_locale(const QString& locale);
 
     // ---- IConfigurable ----
     void load_from_json(const QJsonObject& json) override;
     QJsonObject save_to_json() override;
-    QString config_sub_key() const override;
+    [[nodiscard]] QString config_sub_key() const override;
 
 private:
     explicit LanguageSettings(QObject* parent = nullptr);
 
-    QString m_locale;
+    QString locale_;
 };

@@ -22,18 +22,18 @@ LanguageSettings& LanguageSettings::instance()
 }
 
 LanguageSettings::LanguageSettings(QObject* parent) :
-    QObject(parent), m_locale(detect_system_locale())
+    QObject(parent), locale_(detect_system_locale())
 {}
 
 QString LanguageSettings::locale() const
 {
-    return m_locale;
+    return locale_;
 }
 
 void LanguageSettings::set_locale(const QString& locale)
 {
-    if (!locale.isEmpty() && locale != m_locale) {
-        m_locale = locale;
+    if (!locale.isEmpty() && locale != locale_) {
+        locale_ = locale;
     }
 }
 
@@ -42,7 +42,7 @@ void LanguageSettings::load_from_json(const QJsonObject& json)
     const QJsonObject obj = json.value(this->config_sub_key()).toObject();
     const QString loc     = obj.value("locale").toString();
     if (!loc.isEmpty()) {
-        m_locale = loc;
+        locale_ = loc;
     }
 }
 
@@ -50,7 +50,7 @@ QJsonObject LanguageSettings::save_to_json()
 {
     QJsonObject obj;
     QJsonObject sub;
-    sub["locale"]               = m_locale;
+    sub["locale"]               = locale_;
     obj[this->config_sub_key()] = sub;
     return obj;
 }

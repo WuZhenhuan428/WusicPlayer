@@ -6,7 +6,7 @@
 #include <QObject>
 #include <QString>
 
-class AppContext;
+struct AppContext;
 class LibraryManager;
 class PlaylistManager;
 
@@ -44,7 +44,7 @@ public:
     int play_external(const QString& filepath, const TrackMetaData& meta = TrackMetaData{});
 
     // ---- 持久化 ----
-    bool save_to(const QString& path) const;
+    [[nodiscard]] bool save_to(const QString& path) const;
     bool load_from(const QString& path);
 
 signals:

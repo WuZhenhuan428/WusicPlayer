@@ -7,98 +7,97 @@
 #include <QMenu>
 #include <QMessageBox>
 
-#define DEFAULT_COVER_PATH ":/images/test_cover_chirno.png"
+const QString gDefaultCoverPath = ":/images/test_cover_chirno.png";
 
 #include "core/logger/logger_manager.h"
 namespace
 {
+// NOLINTNEXTLINE
 Logger* logger = LoggerManager::file_logger("side_panel", {"console", "gui"});
-}
+} // namespace
 
 SidePanel::SidePanel(QWidget* parent) : QWidget(parent)
 {
-    m_panel_splitter = new QSplitter(Qt::Vertical, this);
+    panel_splitter_ = new QSplitter(Qt::Vertical, this);
 
-    m_lb_cover       = new QLabel(this);
-    m_lb_cover->setAlignment(Qt::AlignCenter);
-    m_original_cover.load(DEFAULT_COVER_PATH);
-    m_lb_cover->setPixmap(m_original_cover);
+    lb_cover_       = new QLabel(this);
+    lb_cover_->setAlignment(Qt::AlignCenter);
+    original_cover_.load(gDefaultCoverPath);
+    lb_cover_->setPixmap(original_cover_);
 
-    m_lb_title = new ElidedLabel(this);
-    m_lb_title->setText("WusicPlayer"); // format: "title - artist"
-    m_lb_title->setAlignment(Qt::AlignHCenter);
+    lb_title_ = new ElidedLabel(this);
+    lb_title_->setText("WusicPlayer"); // format: "title - artist"
+    lb_title_->setAlignment(Qt::AlignHCenter);
 
-    m_lb_album = new ElidedLabel(this);
-    m_lb_album->setText(tr("Version 0.01"));
-    m_lb_album->setAlignment(Qt::AlignHCenter);
+    lb_album_ = new ElidedLabel(this);
+    lb_album_->setText(tr("Version 0.01"));
+    lb_album_->setAlignment(Qt::AlignHCenter);
 
-    m_lb_title->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    m_lb_album->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    lb_title_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    lb_album_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
-    m_lb_title->setFixedHeight(m_lb_title->sizeHint().height());
-    m_lb_album->setFixedHeight(m_lb_album->sizeHint().height());
+    lb_title_->setFixedHeight(lb_title_->sizeHint().height());
+    lb_album_->setFixedHeight(lb_album_->sizeHint().height());
 
-    m_lyrics_panel = new WLyricsPanel(this);
-    m_lyrics_panel->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(m_lyrics_panel, &QWidget::customContextMenuRequested, this,
+    lyrics_panel_ = new WLyricsPanel(this);
+    lyrics_panel_->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(lyrics_panel_, &QWidget::customContextMenuRequested, this,
             &SidePanel::show_lyrics_context_menu);
-    m_panel_splitter->addWidget(m_lb_cover);
-    m_panel_splitter->addWidget(m_lb_title);
-    m_panel_splitter->addWidget(m_lb_album);
-    m_panel_splitter->addWidget(m_lyrics_panel);
-    m_panel_splitter->setChildrenCollapsible(false);
+    panel_splitter_->addWidget(lb_cover_);
+    panel_splitter_->addWidget(lb_title_);
+    panel_splitter_->addWidget(lb_album_);
+    panel_splitter_->addWidget(lyrics_panel_);
+    panel_splitter_->setChildrenCollapsible(false);
 
-    m_vbl_main = new QVBoxLayout(this);
-    m_vbl_main->addWidget(m_panel_splitter);
+    vbl_main_ = new QVBoxLayout(this);
+    vbl_main_->addWidget(panel_splitter_);
 
-    // m_panel_splitter->setStyleSheet("QSplitter::handle { background: transparent; }");
+    // panel_splitter_->setStyleSheet("QSplitter::handle { background: transparent; }");
 
-    this->setLayout(m_vbl_main);
+    this->setLayout(vbl_main_);
 
-    m_panel_splitter->setContentsMargins(0, 0, 0, 0);
-    m_vbl_main->setContentsMargins(0, 0, 0, 0);
+    panel_splitter_->setContentsMargins(0, 0, 0, 0);
+    vbl_main_->setContentsMargins(0, 0, 0, 0);
     this->setContentsMargins(0, 0, 0, 0);
 
     // Debounce timer: avoids calling update_cover_scale() on every
     // intermediate resize event during window drag.  The cover is
     // updated only after the user pauses (or the drag ends).
-    m_resize_timer = new QTimer(this);
-    m_resize_timer->setSingleShot(true);
-    m_resize_timer->setInterval(10);
-    connect(m_resize_timer, &QTimer::timeout, this, &SidePanel::update_cover_scale);
+    resize_timer_ = new QTimer(this);
+    resize_timer_->setSingleShot(true);
+    resize_timer_->setInterval(10);
+    connect(resize_timer_, &QTimer::timeout, this, &SidePanel::update_cover_scale);
 }
-
-SidePanel::~SidePanel() {}
 
 void SidePanel::load_cover(const QString& filepath)
 {
     QPixmap pix = utils::audio::parse_cover_to_qpixmap(filepath);
     if (!pix.isNull()) {
-        m_original_cover = pix;
+        original_cover_ = std::move(pix);
     } else {
-        m_original_cover.load(DEFAULT_COVER_PATH);
+        original_cover_.load(gDefaultCoverPath);
     }
     update_cover_scale();
 }
 
 void SidePanel::load_meta_data(const TrackMetaData& meta)
 {
-    if (!meta.isValid) {
+    if (!meta.is_valid) {
         return;
     }
 
     if (meta.artist == "Unknown Artist") {
-        m_lb_title->setFullText(meta.title);
+        lb_title_->set_full_text(meta.title);
     } else {
         QString name = meta.title + " - " + meta.artist;
-        m_lb_title->setFullText(name);
+        lb_title_->set_full_text(name);
     }
-    m_lb_album->setFullText(meta.album);
+    lb_album_->set_full_text(meta.album);
 }
 
 void SidePanel::update_cover_scale()
 {
-    if (!m_original_cover || m_original_cover.isNull()) {
+    if (!original_cover_ || original_cover_.isNull()) {
         return;
     }
     // Use SidePanel's own width instead of parent width to avoid
@@ -107,11 +106,11 @@ void SidePanel::update_cover_scale()
     if (base_width <= 0) {
         return;
     }
-    QPixmap scaled = m_original_cover.scaled(base_width, base_width, Qt::KeepAspectRatio,
-                                             Qt::SmoothTransformation);
-    m_lb_cover->setFixedHeight(base_width);
-    m_lb_cover->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
-    m_lb_cover->setPixmap(scaled);
+    QPixmap scaled = original_cover_.scaled(base_width, base_width, Qt::KeepAspectRatio,
+                                            Qt::SmoothTransformation);
+    lb_cover_->setFixedHeight(base_width);
+    lb_cover_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
+    lb_cover_->setPixmap(scaled);
 }
 
 QSize SidePanel::minimumSizeHint() const
@@ -121,27 +120,27 @@ QSize SidePanel::minimumSizeHint() const
     // MainWindow QHBoxLayout from shrinking this panel.  We pin the
     // horizontal minimum to 0 so the stretch-based layout can always
     // contract freely.
-    return QSize(0, QWidget::minimumSizeHint().height());
+    return {0, QWidget::minimumSizeHint().height()};
 }
 
 WLyricsPanel* SidePanel::get_lyrics_panel() const
 {
-    return m_lyrics_panel;
+    return lyrics_panel_;
 }
 
 bool SidePanel::load_lyrics(const TrackMetaData& meta)
 {
-    m_last_lyrics_meta     = meta;
-    m_has_last_lyrics_meta = true;
+    last_lyrics_meta_     = meta;
+    has_last_lyrics_meta_ = true;
 
-    if (meta.isValid) {
+    if (meta.is_valid) {
         if (!meta.lyrics.isEmpty()) {
-            m_lyrics_panel->set_raw_lyrics(meta.lyrics);
+            lyrics_panel_->set_raw_lyrics(meta.lyrics);
             logger->debug("[LRC] Loaded from metadata.");
-        } else if (m_lyrics_panel->set_local_lrc(meta.filepath)) {
+        } else if (lyrics_panel_->set_local_lrc(meta.filepath)) {
             logger->debug("[LRC] Loaded from local .lrc file.");
         } else {
-            m_lyrics_panel->set_default_info(meta);
+            lyrics_panel_->set_default_info(meta);
             logger->debug("[LRC] Use default info");
         }
         return true;
@@ -153,10 +152,10 @@ void SidePanel::resizeEvent(QResizeEvent* event)
 {
     // Restart the debounce timer on every resize so that the cover
     // pixmap is only re-scaled once the user stops dragging.
-    m_resize_timer->start();
+    resize_timer_->start();
 
-    for (int i = 0; i < m_panel_splitter->count(); ++i) {
-        QSplitterHandle* handle = m_panel_splitter->handle(i);
+    for (int i = 0; i < panel_splitter_->count(); ++i) {
+        QSplitterHandle* handle = panel_splitter_->handle(i);
         if (handle) {
             handle->setEnabled(false);
         }
@@ -167,25 +166,25 @@ void SidePanel::resizeEvent(QResizeEvent* event)
 void SidePanel::show_lyrics_context_menu(const QPoint& pos)
 {
     QMenu menu(this);
-    QAction* actLoadLyrics   = menu.addAction(tr("Load Lyrics"));
-    QAction* actReloadLyrics = menu.addAction(tr("Reload Lyrics"));
-    QAction* actSearchLyrics = menu.addAction(tr("Lyrics Search"));
-    QMenu* subSave           = menu.addMenu(tr("Save Lyrics As"));
-    QAction* actSaveToTag    = subSave->addAction(tr("Save To Tag"));
-    QAction* actSaveToSource = subSave->addAction(tr("Save To Source Location"));
-    QAction* actSaveAs       = subSave->addAction(tr("Save As"));
+    QAction* act_load_lyrics    = menu.addAction(tr("Load Lyrics"));
+    QAction* act_reload_lyrics  = menu.addAction(tr("Reload Lyrics"));
+    QAction* act_search_lyrics  = menu.addAction(tr("Lyrics Search"));
+    QMenu* sub_save             = menu.addMenu(tr("Save Lyrics As"));
+    QAction* act_save_to_tag    = sub_save->addAction(tr("Save To Tag"));
+    QAction* act_save_to_source = sub_save->addAction(tr("Save To Source Location"));
+    QAction* act_save_as        = sub_save->addAction(tr("Save As"));
 
     menu.addSeparator();
-    QAction* actDesktopConfig = menu.addAction(tr("Desktop Lyrics Config"));
-    QAction* actToggleLyrics  = menu.addAction(tr("Show/Hide Desktop Lyrics"));
-    QAction* actToggleLock    = menu.addAction(tr("Lock/Unlock Desktop Lyrics"));
+    QAction* act_desktop_config  = menu.addAction(tr("Desktop Lyrics Config"));
+    QAction* act_toggle_lyrics   = menu.addAction(tr("Show/Hide Desktop Lyrics"));
+    QAction* act_toggle_lock     = menu.addAction(tr("Lock/Unlock Desktop Lyrics"));
 
-    auto getCurrentLyricsText = [this]() -> QString {
-        return m_lyrics_panel ? m_lyrics_panel->raw_lyrics_text().trimmed() : QString();
+    auto get_current_lyrics_text = [this]() -> QString {
+        return lyrics_panel_ ? lyrics_panel_->raw_lyrics_text().trimmed() : QString();
     };
 
-    auto ensureLyricsExists = [this, &getCurrentLyricsText]() -> bool {
-        if (getCurrentLyricsText().isEmpty()) {
+    auto ensure_lyrics_exists = [this, &get_current_lyrics_text]() -> bool {
+        if (get_current_lyrics_text().isEmpty()) {
             QMessageBox::information(this, tr("No Lyrics"),
                                      tr("Current playing audio has no lyrics."));
             return false;
@@ -193,14 +192,14 @@ void SidePanel::show_lyrics_context_menu(const QPoint& pos)
         return true;
     };
 
-    auto ensureLrcSuffix = [](QString path) -> QString {
+    auto ensure_lrc_suffix = [](QString path) -> QString {
         if (!path.endsWith(".lrc", Qt::CaseInsensitive)) {
             path += ".lrc";
         }
         return path;
     };
 
-    auto writeLyricsFile = [this](const QString& path, const QString& text) {
+    auto write_lyrics_file = [this](const QString& path, const QString& text) {
         QFile out(path);
         if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
             QMessageBox::warning(this, tr("Save Failed"), tr("Unable to write lyrics file."));
@@ -210,15 +209,15 @@ void SidePanel::show_lyrics_context_menu(const QPoint& pos)
         out.close();
     };
 
-    connect(actDesktopConfig, &QAction::triggered, this,
-            [this]() { emit sgnDesktopLyricsConfigRequested(); });
+    connect(act_desktop_config, &QAction::triggered, this,
+            [this]() { emit sgn_desktop_lyrics_config_requested(); });
 
-    connect(actToggleLyrics, &QAction::triggered, this,
-            [this]() { emit sgnToggleDesktopLyrics(); });
-    connect(actToggleLock, &QAction::triggered, this,
-            [this]() { emit sgnToggleDesktopLyricsLock(); });
+    connect(act_toggle_lyrics, &QAction::triggered, this,
+            [this]() { emit sgn_toggle_desktop_lyrics(); });
+    connect(act_toggle_lock, &QAction::triggered, this,
+            [this]() { emit sgn_toggle_desktop_lyricsLock(); });
 
-    connect(actLoadLyrics, &QAction::triggered, this, [this]() {
+    connect(act_load_lyrics, &QAction::triggered, this, [this]() {
         const QString file_path = QFileDialog::getOpenFileName(
             this, tr("Load Lyrics File"), QString(),
             tr("LRC files (*.lrc);;Text files (*.txt);;All files (*)"));
@@ -227,111 +226,111 @@ void SidePanel::show_lyrics_context_menu(const QPoint& pos)
             return;
         }
 
-        if (!m_lyrics_panel->set_lrc_file_path(file_path)) {
+        if (!lyrics_panel_->set_lrc_file_path(file_path)) {
             QMessageBox::warning(this, tr("Lyrics Format Error"),
                                  tr("The selected file format is invalid."));
         }
     });
 
-    connect(actReloadLyrics, &QAction::triggered, this, [this]() {
-        if (!m_has_last_lyrics_meta) {
+    connect(act_reload_lyrics, &QAction::triggered, this, [this]() {
+        if (!has_last_lyrics_meta_) {
             return;
         }
-        load_lyrics(m_last_lyrics_meta);
+        load_lyrics(last_lyrics_meta_);
     });
 
-    connect(actSaveToTag, &QAction::triggered, this,
-            [this, &getCurrentLyricsText, &ensureLyricsExists]() {
-                if (!ensureLyricsExists()) {
+    connect(act_save_to_tag, &QAction::triggered, this,
+            [this, &get_current_lyrics_text, &ensure_lyrics_exists]() {
+                if (!ensure_lyrics_exists()) {
                     return;
                 }
-                if (!m_has_last_lyrics_meta || m_last_lyrics_meta.filepath.isEmpty()) {
+                if (!has_last_lyrics_meta_ || last_lyrics_meta_.filepath.isEmpty()) {
                     QMessageBox::warning(this, tr("Save Failed"),
                                          tr("Unable to locate current audio file."));
                     return;
                 }
 
                 QMap<QString, QStringList> tags;
-                tags.insert("LYRICS", QStringList{getCurrentLyricsText()});
-                const bool ok = utils::audio::taglib_writeback(m_last_lyrics_meta.filepath, tags);
+                tags.insert("LYRICS", QStringList{get_current_lyrics_text()});
+                const bool ok = utils::audio::taglib_writeback(last_lyrics_meta_.filepath, tags);
                 if (!ok) {
                     QMessageBox::warning(this, tr("Save Failed"),
                                          tr("Unable to save lyrics into tags."));
                 }
             });
 
-    connect(
-        actSaveToSource, &QAction::triggered, this,
-        [this, &getCurrentLyricsText, &ensureLyricsExists, &ensureLrcSuffix, &writeLyricsFile]() {
-            if (!ensureLyricsExists()) {
-                return;
-            }
-            if (!m_has_last_lyrics_meta || m_last_lyrics_meta.filepath.isEmpty()) {
-                QMessageBox::warning(this, tr("Save Failed"),
-                                     tr("Unable to locate current audio file."));
-                return;
-            }
+    connect(act_save_to_source, &QAction::triggered, this,
+            [this, &get_current_lyrics_text, &ensure_lyrics_exists, &ensure_lrc_suffix,
+             &write_lyrics_file]() {
+                if (!ensure_lyrics_exists()) {
+                    return;
+                }
+                if (!has_last_lyrics_meta_ || last_lyrics_meta_.filepath.isEmpty()) {
+                    QMessageBox::warning(this, tr("Save Failed"),
+                                         tr("Unable to locate current audio file."));
+                    return;
+                }
 
-            QFileInfo audio_info(m_last_lyrics_meta.filepath);
-            const QString target =
-                ensureLrcSuffix(audio_info.absolutePath() + "/" + audio_info.completeBaseName());
-            writeLyricsFile(target, getCurrentLyricsText());
-        });
+                QFileInfo audio_info(last_lyrics_meta_.filepath);
+                const QString target = ensure_lrc_suffix(audio_info.absolutePath() + "/" +
+                                                         audio_info.completeBaseName());
+                write_lyrics_file(target, get_current_lyrics_text());
+            });
 
-    connect(
-        actSaveAs, &QAction::triggered, this,
-        [this, &getCurrentLyricsText, &ensureLyricsExists, &ensureLrcSuffix, &writeLyricsFile]() {
-            if (!ensureLyricsExists()) {
-                return;
-            }
+    connect(act_save_as, &QAction::triggered, this,
+            [this, &get_current_lyrics_text, &ensure_lyrics_exists, &ensure_lrc_suffix,
+             &write_lyrics_file]() {
+                if (!ensure_lyrics_exists()) {
+                    return;
+                }
 
-            QString file_path = QFileDialog::getSaveFileName(
-                this, tr("Save Lyrics As"), QString(),
-                tr("LRC files (*.lrc);;Text files (*.txt);;All files (*)"));
-            if (file_path.isEmpty()) {
-                return;
-            }
+                QString file_path = QFileDialog::getSaveFileName(
+                    this, tr("Save Lyrics As"), QString(),
+                    tr("LRC files (*.lrc);;Text files (*.txt);;All files (*)"));
+                if (file_path.isEmpty()) {
+                    return;
+                }
 
-            file_path = ensureLrcSuffix(file_path);
-            writeLyricsFile(file_path, getCurrentLyricsText());
-        });
+                file_path = ensure_lrc_suffix(file_path);
+                write_lyrics_file(file_path, get_current_lyrics_text());
+            });
 
-    connect(actSearchLyrics, &QAction::triggered, this, [this]() {
-        if (!m_lyrics_search_widget) {
-            m_lyrics_search_widget = new LyricsSearchWidget(this);
-            m_lyrics_search_widget->setWindowFlag(Qt::Window, true);
-            m_lyrics_search_widget->setAttribute(Qt::WA_DeleteOnClose, true);
+    connect(act_search_lyrics, &QAction::triggered, this, [this]() {
+        if (!lyrics_search_widget_) {
+            lyrics_search_widget_ = new LyricsSearchWidget(this);
+            lyrics_search_widget_->setWindowFlag(Qt::Window, true);
+            lyrics_search_widget_->setAttribute(Qt::WA_DeleteOnClose, true);
 
-            connect(m_lyrics_search_widget, &LyricsSearchWidget::sgnLyricSelected, this,
+            connect(lyrics_search_widget_, &LyricsSearchWidget::sgn_lyrics_selected, this,
                     [this](const lyrics_fetcher::LyricMeta& meta) {
-                        if (meta.lyricText.trimmed().isEmpty()) {
+                        if (meta.lyric_text.trimmed().isEmpty()) {
                             QMessageBox::information(this, tr("Lyrics Search"),
                                                      tr("Selected result has empty lyrics."));
                             return;
                         }
-                        m_lyrics_panel->set_raw_lyrics(meta.lyricText);
+                        lyrics_panel_->set_raw_lyrics(meta.lyric_text);
                     });
 
-            connect(m_lyrics_search_widget, &QObject::destroyed, this,
-                    [this]() { m_lyrics_search_widget = nullptr; });
+            connect(lyrics_search_widget_, &QObject::destroyed, this,
+                    [this]() { lyrics_search_widget_ = nullptr; });
         }
 
-        if (m_has_last_lyrics_meta) {
-            m_lyrics_search_widget->set_initial_query(m_last_lyrics_meta.title,
-                                                      m_last_lyrics_meta.artist);
+        if (has_last_lyrics_meta_) {
+            lyrics_search_widget_->set_initial_query(last_lyrics_meta_.title,
+                                                     last_lyrics_meta_.artist);
 
             lyrics_fetcher::TrackMeta context;
-            context.rawTitle    = m_last_lyrics_meta.title;
-            context.rawArtist   = m_last_lyrics_meta.artist;
-            context.rawAlbum    = m_last_lyrics_meta.album;
-            context.durationSec = m_last_lyrics_meta.duration_s;
-            m_lyrics_search_widget->set_search_context(context);
+            context.raw_title    = last_lyrics_meta_.title;
+            context.raw_artist   = last_lyrics_meta_.artist;
+            context.raw_album    = last_lyrics_meta_.album;
+            context.duration_sec = last_lyrics_meta_.duration_s;
+            lyrics_search_widget_->set_search_context(context);
         }
 
-        m_lyrics_search_widget->show();
-        m_lyrics_search_widget->raise();
-        m_lyrics_search_widget->activateWindow();
+        lyrics_search_widget_->show();
+        lyrics_search_widget_->raise();
+        lyrics_search_widget_->activateWindow();
     });
 
-    menu.exec(m_lyrics_panel->viewport()->mapToGlobal(pos));
+    menu.exec(lyrics_panel_->viewport()->mapToGlobal(pos));
 }

@@ -7,7 +7,7 @@
 #include <QVector>
 #include <QWidget>
 
-class AppContext;
+struct AppContext;
 class IEqPlugin;
 class QCheckBox;
 class QComboBox;
@@ -30,7 +30,7 @@ public:
 
 signals:
     /// 点击“跳转至设置页面”
-    void sgnOpenSettingsRequested();
+    void sgn_open_settings_requested();
 
 protected:
     void keyPressEvent(QKeyEvent* event) override;
@@ -44,20 +44,20 @@ private:
     void apply_to_backend();
 
     AppContext& ctx_;
-    QVector<IEqPlugin*> m_plugins;
-    IEqPlugin* m_current_plugin = nullptr;
-    QWidget* m_plugin_host      = nullptr; // 宿主(带 margin)
-    QWidget* m_plugin_widget    = nullptr; // 当前插件 UI
-    int m_loaded_index_         = -1;      // 已加载的插件索引(防重复切换)
+    QVector<IEqPlugin*> plugins_;
+    IEqPlugin* current_plugin_ = nullptr;
+    QWidget* plugin_host_      = nullptr; // 宿主(带 margin)
+    QWidget* plugin_widget_    = nullptr; // 当前插件 UI
+    int loaded_index_          = -1;      // 已加载的插件索引(防重复切换)
 
-    QComboBox* m_cb_plugins     = nullptr;
-    QLabel* m_lb_current        = nullptr;
-    QPushButton* m_btn_settings = nullptr;
-    QCheckBox* m_cb_enable      = nullptr;
-    QCheckBox* m_cb_instant     = nullptr;
-    QPushButton* m_btn_apply    = nullptr;
-    QPushButton* m_btn_reset    = nullptr;
-    QPushButton* m_btn_cancel   = nullptr;
+    QComboBox* cb_plugins_     = nullptr;
+    QLabel* lb_current_        = nullptr;
+    QPushButton* btn_settings_ = nullptr;
+    QCheckBox* cb_enable_      = nullptr;
+    QCheckBox* cb_instant_     = nullptr;
+    QPushButton* btn_apply_    = nullptr;
+    QPushButton* btn_reset_    = nullptr;
+    QPushButton* btn_cancel_   = nullptr;
 
-    QMetaObject::Connection m_instant_conn;
+    QMetaObject::Connection instant_conn_;
 };

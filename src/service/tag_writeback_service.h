@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QPointer>
 
-class AppContext;
+struct AppContext;
 class PlaylistController;
 class PlaybackController;
 class PlaylistManager;
@@ -17,9 +17,8 @@ class TagWritebackService : public QObject
 
 public:
     explicit TagWritebackService(AppContext& ctx, QObject* parent);
-    ~TagWritebackService();
 
-    void request_track_property(EntryId tid, QString filepath, TrackMetaData meta);
+    void request_track_property(EntryId tid, const QString& filepath, TrackMetaData meta);
 
 private:
     AppContext& ctx_;
@@ -29,5 +28,5 @@ private:
     MainWindow* main_window_;
     QPointer<TagEditWidget> tag_edit_widget_;
 
-    bool m_bound = false;
+    bool bound_ = false;
 };

@@ -31,14 +31,11 @@ struct Config
     QString author;
 };
 
-using TrackMeta  = lyrics_fetcher::TrackMeta;
-using LyricMeta  = lyrics_fetcher::LyricMeta;
-using LyricsSink = lyrics_fetcher::LyricsSink;
-
 // 返回搜索器基础信息（名称、版本、作者）。
-Config getConfig();
+Config get_config();
 
 // 根据歌曲元数据请求网易云歌词，并通过 manager 回调输出候选结果。
-void getLyrics(const TrackMeta& meta, LyricsSink& sink, QNetworkAccessManager* nam);
+void get_lyrics(const lyrics_fetcher::TrackMeta& meta, lyrics_fetcher::LyricsSink& sink,
+                QNetworkAccessManager* nam);
 
 } // namespace netease_qt6

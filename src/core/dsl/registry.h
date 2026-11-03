@@ -8,7 +8,7 @@
 namespace dsl
 {
 
-/// 属性值类型。
+/// 属性值类型
 enum class ValueType
 {
     String,
@@ -16,7 +16,7 @@ enum class ValueType
     Bool,
 };
 
-/// 属性声明(注册表条目)。
+/// 属性声明(注册表条目)
 struct PropertyDecl
 {
     QString name;
@@ -24,7 +24,7 @@ struct PropertyDecl
     QStringList aliases;
 };
 
-/// 节点静态类型(含 Any/Null 供类型检查)。
+/// 节点静态类型(含 Any/Null 供类型检查)
 enum class NodeType
 {
     String,
@@ -34,18 +34,18 @@ enum class NodeType
     Null,
 };
 
-/// 原语签名。
+/// 原语签名
 struct PrimitiveSig
 {
     QString name;
     QVector<NodeType> params;
-    NodeType ret             = NodeType::Any;
-    bool variadic            = false; // 变参(in)
-    int minArgs              = 0;
-    bool sameTypeFirst       = false; // == != <...: 前两参数须同类型
-    bool sameTypeLast        = false; // ternary: 后两参数须同类型
-    bool intOrStringOnly     = false; // < <= > >=: 参数仅 Int/String
-    bool variadicSameAsFirst = false; // in: 变参须与首参同类型
+    NodeType ret                = NodeType::Any;
+    bool variadic               = false; // 变参(in)
+    int min_args                = 0;
+    bool same_type_first        = false; // == != <...: 前两参数须同类型
+    bool same_type_last         = false; // ternary: 后两参数须同类型
+    bool int_or_string_only     = false; // < <= > >=: 参数仅 Int/String
+    bool variadic_same_as_first = false; // in: 变参须与首参同类型
 };
 
 /// 属性/原语注册表 + 静态校验。
@@ -58,9 +58,9 @@ public:
     static Registry& instance();
 
     /// 查属性(含别名); 返回规范声明或 nullptr。
-    const PropertyDecl* find_property(const QString& name) const;
+    [[nodiscard]] const PropertyDecl* find_property(const QString& name) const;
     /// 是否为已注册原语名。
-    bool is_primitive(const QString& name) const;
+    [[nodiscard]] bool is_primitive(const QString& name) const;
 
     /// 静态校验: 属性/原语名称 + 类型; 成功时把属性名规范化为规范名。
     /// 失败时设置 prog.ok=false 并写入错误(带 行:列)。
@@ -69,8 +69,8 @@ public:
 private:
     Registry();
     bool check_node(Node& n, Program& prog) const;
-    NodeType node_type(const Node& n) const;
-    void set_error(Program& prog, int line, int col, const QString& msg) const;
+    [[nodiscard]] NodeType node_type(const Node& n) const;
+    static void set_error(Program& prog, int line, int col, const QString& msg);
 
     QVector<PropertyDecl> properties_;
     QVector<PrimitiveSig> primitives_;

@@ -24,8 +24,10 @@ public:
     // 单例实现
     static LoggerManager& instance();
 
-    LoggerManager(const LoggerManager&)            = delete;
-    LoggerManager& operator=(const LoggerManager&) = delete;
+    LoggerManager(const LoggerManager& copy)            = delete;
+    LoggerManager& operator=(const LoggerManager& copy) = delete;
+    LoggerManager(LoggerManager&& move)                 = delete;
+    LoggerManager& operator=(LoggerManager&& move)      = delete;
 
     // 获取 Logger 实例
     std::shared_ptr<Logger> get(const QString& logger_name,
@@ -71,7 +73,7 @@ private:
     // 由 mark_app_ready() 统一补挂,避免在无 QApplication 时构造 QObject。
     QVector<std::shared_ptr<Logger>> pending_gui_loggers_;
 
-    bool app_ready_         = false;
+    bool app_ready_        = false;
 
-    LogLevel m_global_level = LogLevel::debug;
+    LogLevel global_level_ = LogLevel::Debug;
 };

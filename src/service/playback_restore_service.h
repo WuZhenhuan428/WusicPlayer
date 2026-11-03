@@ -3,7 +3,7 @@
 #include "core/types.h"
 #include <QObject>
 
-class AppContext;
+struct AppContext;
 class PlaybackController;
 class PlaylistController;
 
@@ -13,7 +13,6 @@ class PlaybackRestoreService : public QObject
 
 public:
     explicit PlaybackRestoreService(AppContext& ctx, QObject* parent);
-    ~PlaybackRestoreService();
 
     void restore();
 

@@ -9,9 +9,7 @@
 #include <string>
 #include <tuple>
 
-namespace utils
-{
-namespace path
+namespace utils::path
 {
 
 /// 返回规范路径, 失败则返回绝对路径
@@ -27,5 +25,4 @@ bool contains_suffix(const QString& filename, const QStringList& extensions);
 std::optional<std::tuple<int, int, int>> parse_versioned_unix_so(const std::string& filepath);
 std::optional<std::tuple<int, int, int>> parse_versioned_unix_so(const QString& filepath);
 
-} // namespace path
-} // namespace utils
+} // namespace utils::path

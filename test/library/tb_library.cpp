@@ -95,15 +95,15 @@ static void test_repo_roundtrip()
     CHECK(repo.is_open());
 
     LibraryTrack t;
-    t.track_id     = TrackId::create_uuid();
-    t.filepath     = norm("/music/01.mp3");
-    t.file_size    = 1024;
-    t.mtime        = 12345;
-    t.duration_ms  = 180000;
-    t.meta.title   = "Song One";
-    t.meta.artist  = "Artist";
-    t.meta.album   = "Album";
-    t.meta.isValid = true;
+    t.track_id      = TrackId::create_uuid();
+    t.filepath      = norm("/music/01.mp3");
+    t.file_size     = 1024;
+    t.mtime         = 12345;
+    t.duration_ms   = 180000;
+    t.meta.title    = "Song One";
+    t.meta.artist   = "Artist";
+    t.meta.album    = "Album";
+    t.meta.is_valid = true;
     CHECK(repo.upsert_track(t));
 
     CHECK(repo.track_count() == 1);
@@ -117,7 +117,7 @@ static void test_repo_roundtrip()
     CHECK(loaded[0].meta.duration_s == 180);
     CHECK(loaded[0].meta.title == "Song One");
     CHECK(loaded[0].meta.album == "Album");
-    CHECK(loaded[0].meta.isValid);
+    CHECK(loaded[0].meta.is_valid);
 
     // watched folders(幂等)
     CHECK(repo.add_watched_folder("/music"));
@@ -174,7 +174,7 @@ static void test_scanner_incremental()
     CHECK(finished);
     CHECK(updates.size() == 3);
     for (const auto& u : updates) {
-        CHECK(u.change == TrackChange::added);
+        CHECK(u.change == TrackChange::Added);
     }
     CHECK(!updates[0].track.track_id.is_null());
     CHECK(!updates[0].track.meta.title.isEmpty()); // 假文件标签无效 → 回退文件名
@@ -197,7 +197,7 @@ static void test_scanner_incremental()
     scanner.start_scan({dir.path()}, snap);
     CHECK(finished);
     CHECK(updates.size() == 1);
-    CHECK(updates[0].change == TrackChange::missing);
+    CHECK(updates[0].change == TrackChange::Missing);
     CHECK(updates[0].path == norm(f1));
 }
 
@@ -281,7 +281,7 @@ static void test_playlist_library_resolution()
     pm.add_track(pid, f1);
     auto tracks = playlists.last()->get_tracks();
     CHECK(tracks.size() == 1);
-    CHECK(tracks[0].source == TrackSource::library);
+    CHECK(tracks[0].source == TrackSource::Library);
     CHECK(!tracks[0].library_track_id.is_null());
     CHECK(tracks[0].filepath == norm(f1));
     CHECK(tracks[0].meta.title == "r1.mp3"); // 假文件回退文件名
@@ -291,7 +291,7 @@ static void test_playlist_library_resolution()
     pm.add_track(pid, f3);
     tracks = playlists.last()->get_tracks();
     CHECK(tracks.size() == 2);
-    CHECK(tracks[1].source == TrackSource::external);
+    CHECK(tracks[1].source == TrackSource::External);
     CHECK(tracks[1].library_track_id.is_null());
 }
 
@@ -404,7 +404,7 @@ static void test_add_folder_populates_library()
     const auto& tracks = playlists.last()->get_tracks();
     CHECK(tracks.size() == 2);
     for (const auto& t : tracks) {
-        CHECK(t.source == TrackSource::library);
+        CHECK(t.source == TrackSource::Library);
         CHECK(!t.library_track_id.is_null());
     }
 }
